@@ -1,6 +1,17 @@
 # Development Workflow
 
-## Backend
+This guide covers local development for both the FastAPI backend and the
+Tauri + Vue frontend.
+
+## Prerequisites
+
+- Python 3.11+
+- Node.js 20+
+- pnpm
+- Rust toolchain (for Tauri builds)
+- Docker (optional, for dev/CI workflows)
+
+## Backend setup
 
 ```bash
 cd backend
@@ -10,7 +21,9 @@ pip install -r requirements.txt
 python -m uvicorn app.main:app --reload --port 8000
 ```
 
-## Frontend (Vue + Tauri)
+The backend serves on `http://127.0.0.1:8000` with CORS enabled.
+
+## Frontend setup
 
 ```bash
 cd frontend
@@ -18,7 +31,9 @@ pnpm install
 pnpm run dev
 ```
 
-## Combined Dev Runner
+The UI dev server runs on `http://localhost:5173`.
+
+## Combined dev runner
 
 ```bash
 ./scripts/run_dev.sh
@@ -33,22 +48,60 @@ Windows:
 If you build the backend sidecar (`scripts/build_backend.*`), `pnpm run tauri dev`
 will auto-start the backend binary.
 
-## Smoke Test (Windows)
+## Configuration
 
-```powershell
-.\scripts\smoke_test.ps1
+API keys are stored in `config/api_keys.json`. You can edit manually or use the
+Settings panel in the UI. Example structure:
+
+```json
+{
+  "openai_api_key": "",
+  "deepseek_api_key": "",
+  "openrouter_api_key": "",
+  "groq_api_key": "",
+  "stability_api_key": "",
+  "flux_api_key": "",
+  "elevenlabs_api_key": "",
+  "playht_api_key": ""
+}
 ```
 
-## Frontend Tests
+Provider preferences are stored in `db/user_prefs.db` with keys:
+
+- `preferred_llm_provider`
+- `preferred_image_provider`
+- `preferred_audio_provider`
+
+## Backend endpoints (dev sanity)
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+## Tests
+
+Backend:
+
+```bash
+cd backend
+python -m pytest -v
+```
+
+Frontend unit tests:
 
 ```bash
 cd frontend
 pnpm test
 ```
 
-## Component Unit Tests
+Playwright UI tests:
 
-Unit tests use Vitest + @vue/test-utils. Test files are co-located with components:
+```bash
+cd frontend
+pnpm run test:e2e
+```
+
+Component tests are co-located with Vue components:
 
 - `src/components/StatusBanner.test.ts`
 - `src/components/CodePanel.test.ts`
@@ -59,51 +112,23 @@ Unit tests use Vitest + @vue/test-utils. Test files are co-located with componen
 - `src/components/UnityProjectPanel.test.ts`
 - `src/App.test.ts`
 
-## UI Tests (Playwright)
+## Linting and type checks
 
 ```bash
 cd frontend
-pnpm run test:e2e
+pnpm run lint:check
+pnpm run typecheck
 ```
 
-The tests mock backend endpoints using Playwright route interception.
+## Smoke test (Windows)
 
-## Backend Tests
-
-```bash
-cd backend
-python -m pytest -v
+```powershell
+.\scripts\smoke_test.ps1
 ```
 
-### Backend Test Files
+## Common issues
 
-Unit tests cover all modules and endpoints:
-
-- `tests/test_health.py` - Health check endpoint
-- `tests/test_config_keys.py` - API key configuration
-- `tests/test_prefs.py` - User preferences
-- `tests/test_output_latest.py` - Output path retrieval
-- `tests/test_unity_project.py` - Unity project generation endpoint
-- `tests/test_generate_code.py` - Code generation endpoint
-- `tests/test_generate_text.py` - Text generation endpoint
-- `tests/test_generate_image.py` - Image generation endpoint
-- `tests/test_generate_audio.py` - Audio generation endpoint
-- `tests/test_config.py` - Config module utilities
-- `tests/test_db.py` - SQLite preferences database
-- `tests/test_agent_manager.py` - Agent manager initialization
-- `tests/test_schemas.py` - Pydantic schemas and response helpers
-- `tests/test_unity_project_utils.py` - Unity project file utilities
-
-## Unity Project Output
-
-The backend can generate a Unity project folder in `output/` from prompts. Use
-the "Unity Project" panel in the UI, or call:
-
-```bash
-curl -X POST http://127.0.0.1:8000/generate/unity-project \
-  -H "Content-Type: application/json" \
-  -d '{"project_name":"MyUnityProject","code_prompt":"Create a player controller","image_prompt":"Fantasy landscape","provider_overrides":{"code":"openai"},"options":{"code":{"model":"gpt-4o-mini"}}}'
-```
-
-The output includes minimal Unity `ProjectSettings` and `.meta` files so the
-folder can be opened directly in the Unity editor.
+- Backend not reachable: confirm port 8000 is free and the backend is running.
+- Provider failures: verify `config/api_keys.json` and check `logs/`.
+- Unity output missing: confirm `output/` exists and requests include prompts.
+- Frontend build issues: delete `node_modules/` and reinstall with pnpm.
