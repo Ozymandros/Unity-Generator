@@ -89,4 +89,8 @@ input {
   padding: 10px 14px;
   border: none;
   border-radius: 6px;
-  background: #2563eb
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}
+</style>
