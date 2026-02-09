@@ -1,0 +1,31 @@
+# Python caches and local env
+__pycache__/
+*.py[cod]
+*.pyd
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+.tox/
+.nox/
+.cache/
+*.egg-info/
+dist/
+build/
+
+# VCS and editor files
+.git/
+.gitignore
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.vs/
+
+# Local config
+.env
+.env.*

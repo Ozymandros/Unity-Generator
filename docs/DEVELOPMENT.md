@@ -30,20 +30,13 @@ Windows:
 .\scripts\run_dev.ps1
 ```
 
-If you build the backend sidecar (`scripts/build_backend.*`), `npm run tauri dev`
+If you build the backend sidecar (`scripts/build_backend.*`), `pnpm run tauri dev`
 will auto-start the backend binary.
 
 ## Smoke Test (Windows)
 
 ```powershell
 .\scripts\smoke_test.ps1
-```
-
-## Backend Tests
-
-```bash
-cd backend
-pytest
 ```
 
 ## Frontend Tests
@@ -79,7 +72,6 @@ The tests mock backend endpoints using Playwright route interception.
 
 ```bash
 cd backend
-pip install -r requirements.txt
 python -m pytest -v
 ```
 

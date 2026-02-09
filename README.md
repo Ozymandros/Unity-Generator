@@ -16,7 +16,7 @@ the user and stored locally.
 
 ## Status
 
-Scaffolded base structure. Next steps are backend and UI bootstrapping.
+Scaffolded and functional. See docs for development and packaging details.
 
 ## Quick Start
 
@@ -60,7 +60,6 @@ pnpm run test:e2e
 See `docs/PACKAGING.md` for bundling the backend sidecar and building the
 Tauri app.
 
-## Docker / Devcontainer
+## Docker
 
-`docker-compose.yml` provides a dev/CI runner and `.devcontainer` enables
-VS Code Dev Containers. See `docs/PACKAGING.md`.
+`docker-compose.yml` provides a dev/CI runner. See `docs/PACKAGING.md`.

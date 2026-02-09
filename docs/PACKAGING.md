@@ -21,8 +21,8 @@ Windows:
 
 ```bash
 cd frontend
-npm install
-npm run tauri build
+pnpm install
+pnpm run tauri build
 ```
 
 The built app will start the backend sidecar automatically.
@@ -40,14 +40,4 @@ Dockerfiles:
 - `backend/Dockerfile`
 - `frontend/Dockerfile`
 
-## Devcontainer
 
-Open the repo in VS Code and use:
-
-```
-Dev Containers: Reopen in Container
-```
-
-The devcontainer uses `docker-compose.yml` and boots the backend service. Run
-the frontend service with docker-compose or locally. `runServices` starts both
-backend and frontend containers automatically.
