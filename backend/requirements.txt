@@ -4,3 +4,4 @@ semantic-kernel
 pydantic
 requests
 pytest
+debugpy
