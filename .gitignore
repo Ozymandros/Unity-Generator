@@ -54,3 +54,4 @@ Desktop.ini
 .vs/
 *.swp
 *.swo
+frontend/node_modules/

@@ -21,9 +21,10 @@
     "vue": "latest"
   },
   "devDependencies": {
-    "@eslint/js": "^9.0.0",
+    "@eslint/js": "9.39.2",
     "@playwright/test": "latest",
     "@tauri-apps/cli": "latest",
+    "@vue/test-utils": "^2.4.6",
     "@vitejs/plugin-vue": "latest",
     "eslint": "^9",
     "eslint-plugin-vue": "^9",
