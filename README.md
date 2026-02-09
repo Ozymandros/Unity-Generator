@@ -33,6 +33,12 @@ and assets without wiring multiple tools together.
 
 Scaffolded and functional. See docs for development and packaging details.
 
+## Documentation
+
+- [Architecture overview](docs/ARCHITECTURE.md)
+- [Development guide](docs/DEVELOPMENT.md)
+- [Packaging and distribution](docs/PACKAGING.md)
+
 ## Quick Start
 
 Backend:
