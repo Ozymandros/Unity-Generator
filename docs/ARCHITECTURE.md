@@ -1,13 +1,106 @@
 # Architecture Overview
 
-The system is split into a lightweight desktop UI (Tauri + Vue) and a local
-Python backend (FastAPI + Semantic Kernel). The backend orchestrates modular
-agents that call cloud AI providers using user-supplied API keys.
+Unity Generator is a local-first desktop application that pairs a Tauri + Vue UI
+with a FastAPI backend. The backend orchestrates modular agents that call cloud
+AI providers using user-supplied API keys.
 
-## Data Flow
+```mermaid
+flowchart TD
+  UI[Tauri + Vue UI] -->|HTTP| API[FastAPI Backend]
+  API --> AM[AgentManager]
+  AM --> CA[Code Agent]
+  AM --> TA[Text Agent]
+  AM --> IA[Image Agent]
+  AM --> AA[Audio Agent]
 
-1. User configures API keys and preferences in the UI.
-2. UI calls backend HTTP endpoints for generation tasks.
-3. Backend routes requests to appropriate agent.
-4. Agent calls provider wrappers (LLM/image/audio).
-5. Backend returns a unified response format to the UI.
+  CA --> LLM[LLM Providers]
+  TA --> LLM
+  IA --> IMG[Image Providers]
+  AA --> AUD[Audio Providers]
+
+  API -->|rw| KEYS[config/api_keys.json]
+  API -->|rw| PREFS[db/user_prefs.db]
+  API -->|write| OUT[output/<Project>_<timestamp>/]
+  API -->|logs| LOGS[logs/]
+```
+
+## High-level components
+
+- UI: Tauri desktop shell with a Vue frontend for prompts and settings.
+- Backend API: FastAPI app that exposes generation endpoints and preferences.
+- Agents: Orchestrators that transform prompts into provider-specific requests.
+- Providers: Thin wrappers around external APIs (LLM, image, audio).
+- Storage: Local JSON for API keys and SQLite for user preferences.
+- Output: Unity-ready project folders with metadata files.
+
+## Request flow
+
+1. UI collects prompts and provider settings.
+2. UI calls backend endpoints over HTTP.
+3. FastAPI routes to the correct agent via `AgentManager`.
+4. Agents call provider wrappers with the active API key.
+5. Provider responses are normalized into a common response shape.
+6. For Unity project requests, assets are written to `output/`.
+
+## Backend modules
+
+- `app/main.py`: FastAPI routes, request validation, and error handling.
+- `app/schemas.py`: Pydantic request/response models.
+- `app/agent_manager.py`: Agent wiring and runtime selection.
+- `services/*_provider.py`: API client logic and provider selection.
+- `app/unity_project.py`: Unity project scaffolding and asset writing.
+- `app/db.py`: SQLite preferences DB (`user_prefs.db`).
+- `app/config.py`: Repo-local paths, API key load/save.
+
+## Provider selection
+
+Providers are selected with a simple priority fallback when the request does not
+specify a provider. Priority is defined in each provider module:
+
+- LLM: `deepseek`, `openrouter`, `openai`, `groq`
+- Image: `stability`, `flux`
+- Audio: `elevenlabs`, `playht`
+
+The selected provider is based on preference keys in the SQLite DB and available
+API keys in `config/api_keys.json`.
+
+## Storage and data locations
+
+- API keys: `config/api_keys.json` (local file, not committed)
+- Preferences: `db/user_prefs.db` (SQLite)
+- Logs: `logs/` (rotated by Python logging config)
+- Generated output: `output/<ProjectName>_<timestamp>/`
+
+## Unity output layout
+
+The Unity project scaffold includes:
+
+- `Assets/Scripts/GeneratedScript.cs`
+- `Assets/Text/generated_text.txt`
+- `Assets/Textures/image_*.png`
+- `Assets/Audio/audio_1.mp3`
+- `ProjectSettings/ProjectVersion.txt`
+- Unity `.meta` files for all assets and folders
+
+The output is designed so Unity can open the folder immediately without manual
+setup.
+
+## Error handling and observability
+
+- Each endpoint wraps generation calls and returns a consistent response shape.
+- Failures are logged to a dedicated logger for failed requests.
+- Backend logs are written under `logs/`.
+
+## Security model
+
+- API keys are stored locally and never sent to third-party services except the
+  intended provider.
+- No keys are bundled with the application.
+- Keys are surfaced in the UI as masked values from the backend.
+
+## Extension points
+
+- Add a provider by extending `services/*_provider.py` and its key map.
+- Add an agent by extending `agents/` and wiring it in `AgentManager`.
+- Add a new endpoint by creating a request model in `schemas.py` and a route in
+  `main.py`.

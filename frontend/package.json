@@ -14,6 +14,7 @@
     "lint:check": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --ignore-pattern dist/**",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test"
   },
   "dependencies": {
@@ -21,10 +22,12 @@
     "vue": "latest"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
+    "@eslint/js": "9.39.2",
     "@playwright/test": "latest",
     "@tauri-apps/cli": "latest",
+    "@vue/test-utils": "^2.4.6",
     "@vitejs/plugin-vue": "latest",
+    "@vitest/coverage-v8": "^2.1.9",
     "eslint": "^9",
     "eslint-plugin-vue": "^9",
     "globals": "^17.3.0",

@@ -14,3 +14,31 @@ playwright.config.ts
 .DS_Store
 Dockerfile.dev
 .env.local
+# Node caches and build output
+node_modules/
+dist/
+build/
+.vite/
+.pnpm-store/
+.npm/
+.yarn/
+coverage/
+playwright-report/
+test-results/
+
+# Tauri / Rust build output
+src-tauri/target/
+src-tauri/.tauri/
+
+# VCS and editor files
+.git/
+.gitignore
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.vs/
+
+# Local config
+.env
+.env.*

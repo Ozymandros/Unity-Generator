@@ -1,11 +1,12 @@
 # Packaging
 
-This app bundles the Python backend as a Tauri sidecar. The expected binary is:
+Unity Generator bundles the Python backend as a Tauri sidecar. The expected
+backend binary names are:
 
 - `backend/dist/unity-generator-backend` (macOS/Linux)
 - `backend/dist/unity-generator-backend.exe` (Windows)
 
-## Build Backend Sidecar
+## Build backend sidecar
 
 ```bash
 ./scripts/build_backend.sh
@@ -17,15 +18,17 @@ Windows:
 .\scripts\build_backend.ps1
 ```
 
-## Build Tauri App
+The build scripts should place the executable in `backend/dist/`.
+
+## Build the Tauri app
 
 ```bash
 cd frontend
-npm install
-npm run tauri build
+pnpm install
+pnpm run tauri build
 ```
 
-The built app will start the backend sidecar automatically.
+The built app will start the backend sidecar automatically when launched.
 
 ## Docker Compose (Dev/CI)
 
@@ -33,21 +36,24 @@ The built app will start the backend sidecar automatically.
 docker-compose up --build
 ```
 
-This starts the backend at `http://localhost:8000` and the frontend dev server
-at `http://localhost:5173`.
+This starts:
+
+- Backend at `http://localhost:8000`
+- Frontend dev server at `http://localhost:5173`
 
 Dockerfiles:
 - `backend/Dockerfile`
 - `frontend/Dockerfile`
 
-## Devcontainer
+### Notes
 
-Open the repo in VS Code and use:
+- The compose file mounts repo folders as volumes for live reload.
+- API keys should be provided via `config/api_keys.json` on the host.
+- For repeatable builds, ensure `node_modules/` and venvs are ignored.
 
-```
-Dev Containers: Reopen in Container
-```
+## Release checklist (manual)
 
-The devcontainer uses `docker-compose.yml` and boots the backend service. Run
-the frontend service with docker-compose or locally. `runServices` starts both
-backend and frontend containers automatically.
+- Update dependencies in `frontend/package.json` and `backend/requirements.txt`.
+- Run tests for backend and frontend.
+- Build the backend sidecar and verify the binary exists in `backend/dist/`.
+- Build the Tauri app and run it once to validate sidecar startup.
