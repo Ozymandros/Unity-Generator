@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+semantic-kernel
+pydantic
+requests
+pytest

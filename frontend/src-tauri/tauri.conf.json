@@ -1,0 +1,33 @@
+{
+  "build": {
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev",
+    "devPath": "http://localhost:5173",
+    "distDir": "../dist"
+  },
+  "package": {
+    "productName": "Unity Generator",
+    "version": "0.1.0"
+  },
+  "tauri": {
+    "bundle": {
+      "active": true,
+      "externalBin": [
+        "../backend/dist/unity-generator-backend"
+      ]
+    },
+    "windows": [
+      {
+        "title": "Unity Generator",
+        "width": 1280,
+        "height": 800
+      }
+    ],
+    "allowlist": {
+      "all": false,
+      "shell": {
+        "open": true
+      }
+    }
+  }
+}
