@@ -41,3 +41,7 @@
 2026-02-09 15:55:02,397 WARNING failed_requests Code generation failed: Agent not available
 2026-02-09 15:55:02,416 WARNING failed_requests Image generation failed: Image agent unavailable
 2026-02-09 15:55:02,431 WARNING failed_requests Text generation failed: Text agent unavailable
+2026-02-09 17:05:09,540 WARNING failed_requests Audio generation failed: Audio agent unavailable
+2026-02-09 17:05:09,554 WARNING failed_requests Code generation failed: Agent not available
+2026-02-09 17:05:09,573 WARNING failed_requests Image generation failed: Image agent unavailable
+2026-02-09 17:05:09,588 WARNING failed_requests Text generation failed: Text agent unavailable

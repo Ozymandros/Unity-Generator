@@ -1,0 +1,11 @@
+{
+  "version": "0.1.0",
+  "name": "unity-generator",
+  "private": true,
+  "scripts": {
+    "test": "pnpm --dir frontend test",
+    "test:coverage": "pnpm --dir frontend test:coverage",
+    "test:e2e": "pnpm --dir frontend install && pnpm --dir frontend test:e2e",
+    "test:backend": "pytest -c backend/pytest.ini"
+  }
+}

@@ -353,3 +353,43 @@ json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
 2026-02-09 15:55:02,454 INFO httpx HTTP Request: POST http://testserver/prefs "HTTP/1.1 200 OK"
 2026-02-09 15:55:02,459 INFO httpx HTTP Request: GET http://testserver/prefs/k1 "HTTP/1.1 200 OK"
 2026-02-09 15:55:02,480 INFO httpx HTTP Request: POST http://testserver/generate/unity-project "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,297 WARNING app.agent_manager Agents not yet implemented.
+2026-02-09 17:05:09,331 WARNING app.config API key file not found at C:\Users\andreumv\AppData\Local\Temp\pytest-of-andreumv\pytest-19\test_load_api_keys_missing_fil0\config\api_keys.json
+2026-02-09 17:05:09,344 ERROR app.config API key file is not valid JSON.
+Traceback (most recent call last):
+  File "C:\Projects\Unity-Generator\backend\app\config.py", line 34, in load_api_keys
+    return json.loads(config_path.read_text(encoding="utf-8"))
+           ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\json\__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^
+  File "C:\Python313\Lib\json\decoder.py", line 345, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\json\decoder.py", line 363, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+2026-02-09 17:05:09,409 INFO httpx HTTP Request: POST http://testserver/config/keys "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,414 INFO httpx HTTP Request: GET http://testserver/config/keys "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,525 INFO httpx HTTP Request: POST http://testserver/generate/audio "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,530 INFO httpx HTTP Request: POST http://testserver/generate/audio "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,540 WARNING failed_requests Audio generation failed: Audio agent unavailable
+2026-02-09 17:05:09,542 INFO httpx HTTP Request: POST http://testserver/generate/audio "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,547 INFO httpx HTTP Request: POST http://testserver/generate/code "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,551 INFO httpx HTTP Request: POST http://testserver/generate/code "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,554 WARNING failed_requests Code generation failed: Agent not available
+2026-02-09 17:05:09,555 INFO httpx HTTP Request: POST http://testserver/generate/code "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,560 INFO httpx HTTP Request: POST http://testserver/generate/code "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,565 INFO httpx HTTP Request: POST http://testserver/generate/image "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,569 INFO httpx HTTP Request: POST http://testserver/generate/image "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,573 WARNING failed_requests Image generation failed: Image agent unavailable
+2026-02-09 17:05:09,574 INFO httpx HTTP Request: POST http://testserver/generate/image "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,580 INFO httpx HTTP Request: POST http://testserver/generate/text "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,584 INFO httpx HTTP Request: POST http://testserver/generate/text "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,588 WARNING failed_requests Text generation failed: Text agent unavailable
+2026-02-09 17:05:09,589 INFO httpx HTTP Request: POST http://testserver/generate/text "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,595 INFO httpx HTTP Request: GET http://testserver/health "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,611 INFO httpx HTTP Request: GET http://testserver/output/latest "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,619 INFO httpx HTTP Request: POST http://testserver/prefs "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,624 INFO httpx HTTP Request: GET http://testserver/prefs/k1 "HTTP/1.1 200 OK"
+2026-02-09 17:05:09,651 INFO httpx HTTP Request: POST http://testserver/generate/unity-project "HTTP/1.1 200 OK"
