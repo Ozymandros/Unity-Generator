@@ -15,5 +15,5 @@
       ]
     }
   },
-  "postCreateCommand": "cd backend && pip install -r requirements.txt"
+  "postCreateCommand": "apk add --no-cache nodejs npm python3 py3-pip && cd backend && pip install -r requirements.txt"
 }
