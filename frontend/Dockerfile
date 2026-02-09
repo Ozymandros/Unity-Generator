@@ -1,11 +1,11 @@
 FROM node:20-slim
 
-WORKDIR /app/frontend
+WORKDIR /workspaces/Unity-Generator/frontend
 
-COPY package.json /app/frontend/package.json
+COPY package.json /workspaces/Unity-Generator/frontend/package.json
 RUN npm install
 
-COPY . /app/frontend
+COPY . /workspaces/Unity-Generator/frontend
 
 EXPOSE 5173
 

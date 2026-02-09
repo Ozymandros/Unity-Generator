@@ -4,12 +4,12 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    working_dir: /app/backend
+    working_dir: /workspaces/Unity-Generator/backend
     volumes:
-      - ./backend:/app/backend
-      - ./config:/app/config
-      - ./db:/app/db
-      - ./output:/app/output
+      - ./backend:/workspaces/Unity-Generator/backend
+      - ./config:/workspaces/Unity-Generator/config
+      - ./db:/workspaces/Unity-Generator/db
+      - ./output:/workspaces/Unity-Generator/output
     ports:
       - "8000:8000"
 
@@ -17,9 +17,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    working_dir: /app/frontend
+    working_dir: /workspaces/Unity-Generator/frontend
     volumes:
-      - ./frontend:/app/frontend
+      - ./frontend:/workspaces/Unity-Generator/frontend
     ports:
       - "5173:5173"
     depends_on:

@@ -2,7 +2,7 @@
   "name": "Unity-Generator Devcontainer",
   "dockerComposeFile": "../docker-compose.yml",
   "service": "backend",
-  "workspaceFolder": "/app",
+  "workspaceFolder": "/workspaces/Unity-Generator",
   "runServices": ["backend", "frontend"],
   "shutdownAction": "stopCompose",
   "customizations": {

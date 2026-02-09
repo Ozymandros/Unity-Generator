@@ -1,11 +1,11 @@
 FROM python:3.11-slim
 
-WORKDIR /app/backend
+WORKDIR /workspaces/Unity-Generator/backend
 
-COPY requirements.txt /app/backend/requirements.txt
+COPY requirements.txt /workspaces/Unity-Generator/backend/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . /app/backend
+COPY . /workspaces/Unity-Generator/backend
 
 EXPOSE 8000
 

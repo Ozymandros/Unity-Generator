@@ -1,0 +1,16 @@
+.git
+.gitignore
+node_modules
+dist
+.vscode
+.idea
+test-results
+README.md
+.devcontainer
+playwright.config.ts
+*.swp
+*.swo
+*~
+.DS_Store
+Dockerfile.dev
+.env.local
