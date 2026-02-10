@@ -1,0 +1,132 @@
+---
+description: "Backend Python/FastAPI guidelines: architecture patterns, FastAPI best practices, Python conventions"
+globs:
+  - "backend/**/*.py"
+  - "services/**/*.py"
+  - "agents/**/*.py"
+alwaysApply: false
+---
+
+# Backend Guidelines (Python/FastAPI)
+
+## Architecture Patterns
+
+### Layered Architecture
+
+- `app/main.py`: API routes and request handling (presentation layer)
+- `app/schemas.py`: Pydantic models for request/response validation
+- `app/agent_manager.py`: Business logic orchestration
+- `agents/`: Domain-specific agent implementations
+- `services/`: Provider wrappers and external service integrations
+- `app/db.py`: Data access layer for SQLite
+- `app/config.py`: Configuration management
+
+### Design Patterns
+
+- **Dependency Injection**: Pass dependencies (like API keys, database connections) as parameters rather than accessing globals
+- **Provider Pattern**: Use abstraction layers (like `services/*_provider.py`) to decouple business logic from external APIs
+
+## Code Organization
+
+- **Module Structure**: Each module should have a single, clear responsibility
+- **Import Organization**: Group imports: standard library, third-party, local (with blank lines between groups)
+- **Class Design**: Use classes to encapsulate state and behavior; prefer composition over inheritance
+- **Error Handling**: Use FastAPI's exception handlers for consistent error responses
+
+## FastAPI Specific
+
+- **Route Handlers**: Keep route handlers thin; delegate business logic to service/agent layers
+- **Request Validation**: Use Pydantic models for all request/response schemas
+- **Response Models**: Always define response models using Pydantic BaseModel
+- **Error Responses**: Use consistent error response format (see `@app/schemas.py` for `error_response` helper)
+- **Async/Await**: Use async functions for I/O-bound operations (database, HTTP requests)
+
+## Python Best Practices
+
+- **Type Hints**: Use type hints for all function signatures, parameters, and return types
+- **Docstrings**: Follow Google or NumPy docstring style
+- **Logging**: Use Python's `logging` module with appropriate log levels (DEBUG, INFO, WARNING, ERROR)
+- **Constants**: Define constants at module level using UPPER_CASE
+- **Path Handling**: Use `pathlib.Path` instead of string paths
+- **Environment Variables**: Load configuration from environment variables with sensible defaults
+
+## Example Backend Code Pattern
+
+```python
+import logging
+from typing import Any, Dict, Optional
+from pydantic import BaseModel, Field
+
+from app.schemas import error_response, ok_response
+from app.agent_manager import AgentManager
+
+LOGGER = logging.getLogger(__name__)
+agent_manager = AgentManager()
+
+
+class GenerateRequest(BaseModel):
+    """Request model for code generation."""
+    prompt: str = Field(..., description="Generation prompt", min_length=1)
+    provider: Optional[str] = Field(None, description="Optional provider override")
+    options: Dict[str, Any] = Field(default_factory=dict, description="Provider-specific options")
+
+
+async def generate_code_endpoint(request: GenerateRequest) -> GenerationResponse:
+    """
+    Generate code using the specified agent.
+    
+    Args:
+        request: Validated generation request containing prompt and options.
+    
+    Returns:
+        GenerationResponse with success status and generated content or error.
+    
+    Example:
+        POST /generate/code
+        {
+            "prompt": "Create a Unity MonoBehaviour script",
+            "provider": "openai",
+            "options": {"model": "gpt-4o-mini"}
+        }
+    """
+    if not request.prompt or len(request.prompt.strip()) == 0:
+        return error_response("Prompt cannot be empty")
+    
+    try:
+        result = agent_manager.run_code(
+            prompt=request.prompt,
+            provider=request.provider,
+            options=request.options
+        )
+        return ok_response(result)
+    except RuntimeError as e:
+        LOGGER.error(f"Code generation failed: {e}")
+        return error_response(str(e))
+    except Exception as e:
+        LOGGER.exception("Unexpected error during code generation")
+        return error_response("Internal server error")
+```
+
+## Additional Best Practices
+
+### Performance
+
+- Use async/await for I/O operations; avoid blocking the event loop
+
+### Security
+
+- Never commit API keys; use environment variables or local config files
+- Validate and sanitize all user inputs
+- Don't expose sensitive information in error messages
+
+### Maintainability
+
+- Write comments that explain "why", not "what" (code should be self-documenting)
+- Prefer small, incremental refactorings over large rewrites
+- Keep documentation up-to-date with code changes
+
+### Consistency
+
+- Follow project naming conventions (snake_case for Python)
+- Use consistent code formatting (Black for Python)
+- Follow existing project structure patterns

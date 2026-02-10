@@ -1,0 +1,49 @@
+---
+description: "Code review checklist for ensuring code quality, documentation, validation, and best practices"
+alwaysApply: false
+---
+
+# Code Review Checklist
+
+When generating or reviewing code, ensure:
+
+## Documentation
+
+- [ ] Functions have comprehensive documentation (JSDoc/docstrings)
+- [ ] Example usage is included in comments
+- [ ] Parameters and return types are documented
+
+## Validation & Error Handling
+
+- [ ] Input validation is present and thorough
+- [ ] Early returns are used for error conditions
+- [ ] Error handling is appropriate and consistent
+- [ ] Error messages are clear and user-friendly
+
+## Code Quality
+
+- [ ] Variable names are descriptive and meaningful
+- [ ] Type hints/annotations are complete
+- [ ] Code follows single responsibility principle
+- [ ] No code duplication (DRY principle)
+- [ ] Code is simple and intuitive (KISS principle)
+
+## Architecture
+
+- [ ] Architecture layers are respected (separation of concerns)
+- [ ] Backend uses Pydantic models for validation
+- [ ] Frontend uses TypeScript types for type safety
+- [ ] Dependencies are injected rather than accessed globally
+
+## Project-Specific
+
+- [ ] Backend functions return `GenerationResponse` format
+- [ ] Frontend components use `StatusBanner` for status display
+- [ ] API calls go through centralized `api/client.ts`
+- [ ] Logging is appropriate (backend) or error messages are user-friendly (frontend)
+
+## Testing
+
+- [ ] Tests are written for new functionality
+- [ ] Test names are descriptive
+- [ ] Tests follow Arrange-Act-Assert pattern

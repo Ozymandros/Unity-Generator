@@ -1,0 +1,72 @@
+---
+description: "Backend project-specific conventions: agent patterns, provider selection, response formats, Unity project utilities"
+globs:
+  - "backend/**/*.py"
+  - "services/**/*.py"
+  - "agents/**/*.py"
+alwaysApply: false
+---
+
+# Backend Project-Specific Conventions
+
+## Agent Pattern
+
+Agents in `agents/` should follow this signature:
+
+```python
+def run(prompt: str, provider: str | None, options: Dict[str, Any], api_keys: Dict[str, str]) -> Dict[str, Any]:
+    """
+    Run the agent with the given prompt and options.
+    
+    Args:
+        prompt: The generation prompt.
+        provider: Optional provider override.
+        options: Provider-specific options.
+        api_keys: Dictionary of API keys for providers.
+    
+    Returns:
+        Dictionary with generated content and metadata.
+    """
+    # Implementation...
+```
+
+## Provider Selection
+
+Use the `services/provider_select.py` pattern for provider fallback logic:
+
+- Define provider priority lists (e.g., `LLM_PRIORITY = ["deepseek", "openrouter", "openai", "groq"]`)
+- Use `select_provider()` helper function
+- Map provider names to API key names using key maps (e.g., `LLM_KEY_MAP`)
+
+## Response Format
+
+Always return `GenerationResponse` with these fields:
+
+- `success`: bool - Whether the operation succeeded
+- `date`: str - ISO format timestamp
+- `error`: Optional[str] - Error message if failed
+- `data`: Optional[Dict[str, Any]] - Response data if successful
+
+Use helper functions from `@app/schemas.py`:
+- `ok_response(data)` for successful responses
+- `error_response(message)` for error responses
+
+## API Keys
+
+- Load API keys via `app/config.py` functions (`load_api_keys()`)
+- Never hardcode API keys in source code
+- Store keys in `config/api_keys.json` (not committed to git)
+
+## Unity Projects
+
+Use `app/unity_project.py` utilities for creating Unity project structures:
+
+- `create_unity_project()` for generating complete Unity project scaffolds
+- Follow the Unity output layout pattern (Assets/, ProjectSettings/, .meta files)
+
+## Testing
+
+- Use pytest for backend tests
+- Place tests in `backend/tests/`
+- Use descriptive test names that explain what is being tested
+- Follow Arrange-Act-Assert pattern

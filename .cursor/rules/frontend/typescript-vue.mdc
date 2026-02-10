@@ -1,0 +1,180 @@
+---
+description: "Frontend TypeScript/Vue/Tauri guidelines: Vue 3 Composition API, TypeScript best practices, component patterns"
+globs:
+  - "frontend/src/**/*.ts"
+  - "frontend/src/**/*.vue"
+  - "frontend/tests/**/*.ts"
+alwaysApply: false
+---
+
+# Frontend Guidelines (TypeScript/Vue/Tauri)
+
+## Architecture Patterns
+
+### Component-Based Architecture
+
+- Break UI into small, reusable Vue components
+- **Separation of Concerns**:
+  - `components/`: Presentational components (UI only)
+  - `api/`: API client layer (HTTP communication)
+  - `App.vue`: Main application shell and routing logic
+
+### State Management
+
+- Use Vue's reactive refs/composables for local state
+- Avoid global state unless necessary
+- Leverage TypeScript's type system; avoid `any` types
+
+## Vue 3 Composition API
+
+- **Script Setup**: Use `<script setup lang="ts">` syntax for all components
+- **Reactivity**: Use `ref()` for primitive values, `reactive()` for objects (prefer `ref` for consistency)
+- **Composables**: Extract reusable logic into composables (functions returning reactive state)
+- **Props**: Define props with TypeScript interfaces and `defineProps<T>()`
+- **Emits**: Define emits with TypeScript types using `defineEmits<T>()`
+- **Lifecycle**: Use composition API lifecycle hooks (`onMounted`, `onUnmounted`, etc.)
+
+## TypeScript Best Practices
+
+- **Type Definitions**: Define interfaces/types for all data structures
+- **Strict Mode**: Enable strict TypeScript checking
+- **Type Inference**: Let TypeScript infer types where possible, but be explicit for public APIs
+- **Null Safety**: Use optional chaining (`?.`) and nullish coalescing (`??`) appropriately
+- **Async/Await**: Prefer async/await over Promise chains for readability
+
+## API Client Pattern
+
+- **Centralized Client**: Keep all API calls in `api/client.ts`
+- **Type Safety**: Define request/response types matching backend schemas
+- **Error Handling**: Handle errors consistently; provide user-friendly error messages
+- **Response Validation**: Validate API responses match expected types
+
+## Component Structure
+
+- **Template**: Keep templates simple; move complex logic to script section
+- **Styling**: Use scoped styles; prefer CSS Grid/Flexbox for layouts
+- **Accessibility**: Include proper ARIA labels and semantic HTML
+- **Performance**: Use `v-if` vs `v-show` appropriately; avoid unnecessary re-renders
+
+## Example Frontend Code Pattern
+
+```typescript
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import type { GenerationRequest, GenerationResponse } from "../api/client";
+import { generateCode } from "../api/client";
+import StatusBanner from "./StatusBanner.vue";
+
+const prompt = ref<string>("");
+const provider = ref<string>("");
+const model = ref<string>("");
+const status = ref<string | null>(null);
+const tone = ref<"ok" | "error">("ok");
+const result = ref<string>("");
+
+/**
+ * Validates the prompt input before submission.
+ *
+ * @param promptValue - The prompt string to validate.
+ * @returns True if valid, false otherwise.
+ *
+ * @example
+ * ```typescript
+ * if (!validatePrompt(prompt.value)) {
+ *   status.value = "Prompt cannot be empty";
+ *   return;
+ * }
+ * ```
+ */
+function validatePrompt(promptValue: string): boolean {
+  if (!promptValue || promptValue.trim().length === 0) {
+    return false;
+  }
+  return promptValue.trim().length >= 3;
+}
+
+/**
+ * Generates code using the backend API.
+ * Updates status and result refs based on the response.
+ *
+ * @example
+ * ```typescript
+ * await run();
+ * // Updates status.value and result.value based on API response
+ * ```
+ */
+async function run(): Promise<void> {
+  if (!validatePrompt(prompt.value)) {
+    tone.value = "error";
+    status.value = "Prompt must be at least 3 characters";
+    return;
+  }
+
+  status.value = "Generating code...";
+  tone.value = "ok";
+
+  try {
+    const request: GenerationRequest = {
+      prompt: prompt.value.trim(),
+      provider: provider.value || undefined,
+      options: model.value ? { model: model.value } : undefined,
+    };
+
+    const response: GenerationResponse = await generateCode(request);
+
+    if (!response.success) {
+      tone.value = "error";
+      status.value = response.error || "Failed to generate code";
+      return;
+    }
+
+    status.value = "Code generated successfully";
+    result.value = String(response.data?.content || "");
+  } catch (error) {
+    tone.value = "error";
+    status.value = error instanceof Error ? error.message : "Unknown error occurred";
+  }
+}
+
+onMounted(() => {
+  // Initialize component state if needed
+});
+</script>
+
+<template>
+  <div class="panel">
+    <h2>Unity C# Code</h2>
+    <StatusBanner :status="status" :tone="tone" />
+    <!-- Rest of template -->
+  </div>
+</template>
+
+<style scoped>
+/* Component-specific styles */
+</style>
+```
+
+## Additional Best Practices
+
+### Performance
+
+- Debounce user input for API calls
+- Use loading states appropriately
+- Consider caching for expensive operations (but keep it simple)
+
+### Security
+
+- Validate and sanitize all user inputs
+- Don't expose sensitive information in error messages
+
+### Maintainability
+
+- Write comments that explain "why", not "what"
+- Prefer small, incremental refactorings over large rewrites
+- Keep documentation up-to-date with code changes
+
+### Consistency
+
+- Follow project naming conventions (camelCase for TypeScript)
+- Use consistent code formatting (Prettier for TypeScript)
+- Follow existing project structure patterns

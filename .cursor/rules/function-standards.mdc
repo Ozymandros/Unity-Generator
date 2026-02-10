@@ -1,0 +1,110 @@
+---
+description: "Function writing standards: JSDoc/docstrings, input validation, early returns, meaningful names, examples"
+alwaysApply: true
+---
+
+# Function Writing Standards
+
+When writing functions, **always** follow these requirements:
+
+## Documentation
+
+- Add descriptive JSDoc comments (TypeScript/JavaScript) or docstrings (Python) that explain:
+  - What the function does
+  - Parameters with types and descriptions
+  - Return value with type and description
+  - Any exceptions that may be raised
+  - At least one example usage in comments
+
+## Input Validation
+
+- Validate all inputs at the function entry point
+- Check for null/undefined/None values
+- Validate types and ranges where applicable
+- Provide clear error messages for invalid inputs
+
+## Error Handling
+
+- Use early returns for error conditions (fail fast)
+- Prefer explicit error handling over silent failures
+- Use appropriate exception types (Python) or error types (TypeScript)
+- Log errors appropriately before raising/throwing
+
+## Code Quality
+
+- Use meaningful, descriptive variable names that convey intent
+- Avoid abbreviations unless they're widely understood
+- Keep functions focused and small (ideally < 50 lines)
+- Prefer composition over inheritance
+- Use type hints/annotations for all function signatures
+
+## Example Templates
+
+### Python Function Template
+
+```python
+def process_user_data(user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Process user data and return normalized result.
+    
+    Args:
+        user_id: Unique identifier for the user. Must be non-empty string.
+        data: Dictionary containing user data fields. Must contain 'name' and 'email' keys.
+    
+    Returns:
+        Dictionary with processed user data including normalized fields.
+    
+    Raises:
+        ValueError: If user_id is empty or data is missing required fields.
+        TypeError: If user_id is not a string or data is not a dictionary.
+    
+    Example:
+        >>> process_user_data("user123", {"name": "John", "email": "john@example.com"})
+        {'id': 'user123', 'name': 'John', 'email': 'john@example.com', 'normalized': True}
+    """
+    if not isinstance(user_id, str) or not user_id:
+        raise ValueError("user_id must be a non-empty string")
+    
+    if not isinstance(data, dict):
+        raise TypeError("data must be a dictionary")
+    
+    if "name" not in data or "email" not in data:
+        raise ValueError("data must contain 'name' and 'email' keys")
+    
+    # Process data...
+    return {"id": user_id, **data, "normalized": True}
+```
+
+### TypeScript Function Template
+
+```typescript
+/**
+ * Process user data and return normalized result.
+ *
+ * @param userId - Unique identifier for the user. Must be non-empty string.
+ * @param data - Object containing user data fields. Must contain 'name' and 'email' properties.
+ * @returns Object with processed user data including normalized fields.
+ * @throws {Error} If userId is empty or data is missing required fields.
+ *
+ * @example
+ * ```typescript
+ * const result = processUserData("user123", { name: "John", email: "john@example.com" });
+ * // Returns: { id: "user123", name: "John", email: "john@example.com", normalized: true }
+ * ```
+ */
+function processUserData(
+  userId: string,
+  data: { name: string; email: string }
+): { id: string; name: string; email: string; normalized: boolean } {
+  if (!userId || typeof userId !== "string") {
+    throw new Error("userId must be a non-empty string");
+  }
+
+  if (!data?.name || !data?.email) {
+    throw new Error("data must contain 'name' and 'email' properties");
+  }
+
+  // Process data...
+  return { id: userId, ...data, normalized: true };
+}
+```
