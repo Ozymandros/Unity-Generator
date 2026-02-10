@@ -1,5 +1,18 @@
 # Unity Generator
 
+![CI](https://github.com/Ozymandros/Unity-Generator/actions/workflows/ci.yml/badge.svg)
+![CodeQL](https://github.com/Ozymandros/Unity-Generator/actions/workflows/codeql.yml/badge.svg)
+![Dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![Semantic Kernel](https://img.shields.io/badge/Semantic%20Kernel-512BD4)
+![Vue](https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
+![Tauri](https://img.shields.io/badge/Tauri-1.x-24C8DB?logo=tauri&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![pnpm](https://img.shields.io/badge/pnpm-F69220?logo=pnpm&logoColor=white)
+![Playwright](https://img.shields.io/badge/Playwright-45ba4b?logo=playwright&logoColor=white)
+
 Unity Generator is a lightweight desktop app for generating Unity C# code, text,
 images, and audio using cloud AI providers. It ships a Tauri + Vue UI with a
 local FastAPI backend orchestrated by Semantic Kernel. All API keys are provided
