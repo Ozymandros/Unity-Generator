@@ -10,6 +10,10 @@ on:
   schedule:
     - cron: "0 6 * * 1"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   analyze:
     name: CodeQL (${{ matrix.language }})
@@ -35,9 +39,11 @@ jobs:
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
 
-      - name: Enable Corepack
+      - name: Setup pnpm
         if: matrix.language == 'javascript-typescript'
-        run: corepack enable
+        uses: pnpm/action-setup@v4
+        with:
+          version: "9"
 
       - name: Install frontend dependencies
         if: matrix.language == 'javascript-typescript'
