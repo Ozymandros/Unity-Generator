@@ -1,0 +1,24 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.5, pytest-9.0.1, pluggy-1.6.0 -- C:\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Projects\Unity-Generator\backend
+configfile: pytest.ini
+plugins: anyio-4.12.1
+collecting ... collected 14 items
+
+tests/test_unity_skills.py::TestUnityCodeSkill::test_init PASSED         [  7%]
+tests/test_unity_skills.py::TestUnityCodeSkill::test_generate_csharp_prompt PASSED [ 14%]
+tests/test_unity_skills.py::TestUnityCodeSkill::test_generate_csharp_empty_prompt PASSED [ 21%]
+tests/test_unity_skills.py::TestUnityCodeSkill::test_validate_syntax_valid_code PASSED [ 28%]
+tests/test_unity_skills.py::TestUnityCodeSkill::test_validate_syntax_invalid_code PASSED [ 35%]
+tests/test_unity_skills.py::TestUnityCodeSkill::test_extract_csharp_from_markdown PASSED [ 42%]
+tests/test_unity_skills.py::TestUnityCodeSkill::test_extract_csharp_from_plain_text PASSED [ 50%]
+tests/test_unity_skills.py::TestUnityProjectSkill::test_init_default_output PASSED [ 57%]
+tests/test_unity_skills.py::TestUnityProjectSkill::test_init_custom_output PASSED [ 64%]
+tests/test_unity_skills.py::TestUnityProjectSkill::test_write_asset_safe_path PASSED [ 71%]
+tests/test_unity_skills.py::TestUnityProjectSkill::test_write_asset_creates_directories PASSED [ 78%]
+tests/test_unity_skills.py::TestUnityProjectSkill::test_write_asset_path_traversal_prevention PASSED [ 85%]
+tests/test_unity_skills.py::TestUnityProjectSkill::test_create_folder PASSED [ 92%]
+tests/test_unity_skills.py::TestUnityProjectSkill::test_get_output_path PASSED [100%]
+
+============================= 14 passed in 1.20s ==============================

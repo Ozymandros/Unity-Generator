@@ -1,0 +1,134 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.5, pytest-9.0.1, pluggy-1.6.0 -- C:\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Projects\Unity-Generator\backend
+configfile: pytest.ini
+plugins: anyio-4.12.1
+collecting ... collected 9 items
+
+backend\tests\test_kernel.py::test_create_kernel_success FAILED          [ 11%]
+backend\tests\test_kernel.py::test_create_kernel_with_custom_output PASSED [ 22%]
+backend\tests\test_kernel.py::test_create_kernel_semantic_functions_registered FAILED [ 33%]
+backend\tests\test_native_plugins.py::TestUnityProjectPlugin::test_create_folder_structure PASSED [ 44%]
+backend\tests\test_native_plugins.py::TestUnityProjectPlugin::test_write_csharp_script PASSED [ 55%]
+backend\tests\test_native_plugins.py::TestUnityProjectPlugin::test_write_script_security_traversal FAILED [ 66%]
+backend\tests\test_native_plugins.py::TestMemoryPrefsPlugin::test_get_user_preference FAILED [ 77%]
+backend\tests\test_native_plugins.py::TestMemoryPrefsPlugin::test_set_user_preference FAILED [ 88%]
+backend\tests\test_native_plugins.py::TestMemoryPrefsPlugin::test_convenience_methods FAILED [100%]
+
+================================== FAILURES ===================================
+_________________________ test_create_kernel_success __________________________
+
+    def test_create_kernel_success():
+        """Test that create_kernel initializes correctly."""
+        settings = {"unity_version": "2022.3"}
+        kernel = create_kernel(settings)
+        assert kernel is not None
+    
+        # Check if plugins are registered
+        # Note: plugin names are case-sensitive as per kernel.py
+>       plugins = [p.name for p in kernel.plugins]
+                   ^^^^^^
+E       AttributeError: 'str' object has no attribute 'name'
+
+backend\tests\test_kernel.py:14: AttributeError
+------------------------------ Captured log call ------------------------------
+WARNING  backend.app.kernel:kernel.py:117 Could not register semantic functions: 'Kernel' object has no attribute 'add_plugin_from_directory'
+______________ test_create_kernel_semantic_functions_registered _______________
+
+    def test_create_kernel_semantic_functions_registered():
+        """Test that UnityCodeExpert semantic functions are registered."""
+        kernel = create_kernel({})
+    
+        # UnityCodeExpert should be in plugins if the directory exists
+        # If running in a test env where agents/plugins/semantic exists
+>       plugins = [p.name for p in kernel.plugins]
+                   ^^^^^^
+E       AttributeError: 'str' object has no attribute 'name'
+
+backend\tests\test_kernel.py:36: AttributeError
+------------------------------ Captured log call ------------------------------
+WARNING  backend.app.kernel:kernel.py:117 Could not register semantic functions: 'Kernel' object has no attribute 'add_plugin_from_directory'
+_________ TestUnityProjectPlugin.test_write_script_security_traversal _________
+
+self = <test_native_plugins.TestUnityProjectPlugin object at 0x00000246A1C99E00>
+
+    def test_write_script_security_traversal(self):
+         with TemporaryDirectory() as tmpdir:
+            plugin = UnityProjectPlugin(output_root=Path(tmpdir))
+            project_path = plugin.create_folder_structure("TestProject")
+    
+>           with pytest.raises(ValueError, match="escape"):
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE <class 'ValueError'>
+
+backend\tests\test_native_plugins.py:40: Failed
+_______________ TestMemoryPrefsPlugin.test_get_user_preference ________________
+
+self = <test_native_plugins.TestMemoryPrefsPlugin object at 0x00000246A185D1D0>
+mock_db = {'preferred_llm_provider': 'openai', 'unity_version': '2022.3'}
+
+    def test_get_user_preference(self, mock_db):
+        plugin = MemoryPrefsPlugin()
+>       assert plugin.get_user_preference("preferred_llm_provider") == "openai"
+E       AssertionError: assert None == 'openai'
+E        +  where None = get_user_preference('preferred_llm_provider')
+E        +    where get_user_preference = <agents.plugins.native.memory_prefs_plugin.MemoryPrefsPlugin object at 0x00000246A1C9B230>.get_user_preference
+
+backend\tests\test_native_plugins.py:65: AssertionError
+_______________ TestMemoryPrefsPlugin.test_set_user_preference ________________
+
+self = <test_native_plugins.TestMemoryPrefsPlugin object at 0x00000246A185D310>
+mock_db = {'preferred_llm_provider': 'openai', 'unity_version': '2022.3'}
+
+    def test_set_user_preference(self, mock_db):
+        plugin = MemoryPrefsPlugin()
+        plugin.set_user_preference("test_key", "test_value")
+>       assert mock_db["test_key"] == "test_value"
+               ^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'test_key'
+
+backend\tests\test_native_plugins.py:71: KeyError
+_______________ TestMemoryPrefsPlugin.test_convenience_methods ________________
+
+self = <test_native_plugins.TestMemoryPrefsPlugin object at 0x00000246A1C9A190>
+mock_db = {'preferred_llm_provider': 'openai', 'unity_version': '2022.3'}
+
+    def test_convenience_methods(self, mock_db):
+        plugin = MemoryPrefsPlugin()
+>       assert plugin.get_preferred_provider("llm") == "openai"
+E       AssertionError: assert None == 'openai'
+E        +  where None = get_preferred_provider('llm')
+E        +    where get_preferred_provider = <agents.plugins.native.memory_prefs_plugin.MemoryPrefsPlugin object at 0x00000246A1C4FE30>.get_preferred_provider
+
+backend\tests\test_native_plugins.py:75: AssertionError
+============================== warnings summary ===============================
+<frozen abc>:106
+<frozen abc>:106
+  <frozen abc>:106: DeprecationWarning: This class will be removed in a future version.
+
+tests/test_kernel.py: 18 warnings
+  C:\Python313\Lib\inspect.py:602: PydanticDeprecatedSince20: The `__fields__` attribute is deprecated, use `model_fields` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    value = getter(object, key)
+
+tests/test_kernel.py: 18 warnings
+  C:\Python313\Lib\inspect.py:602: PydanticDeprecatedSince20: The `__fields_set__` attribute is deprecated, use `model_fields_set` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    value = getter(object, key)
+
+tests/test_kernel.py: 18 warnings
+  C:\Python313\Lib\inspect.py:602: PydanticDeprecatedSince211: Accessing the 'model_computed_fields' attribute on the instance is deprecated. Instead, you should access this attribute from the model class. Deprecated in Pydantic V2.11 to be removed in V3.0.
+    value = getter(object, key)
+
+tests/test_kernel.py: 18 warnings
+  C:\Python313\Lib\inspect.py:602: PydanticDeprecatedSince211: Accessing the 'model_fields' attribute on the instance is deprecated. Instead, you should access this attribute from the model class. Deprecated in Pydantic V2.11 to be removed in V3.0.
+    value = getter(object, key)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED backend\tests\test_kernel.py::test_create_kernel_success - AttributeEr...
+FAILED backend\tests\test_kernel.py::test_create_kernel_semantic_functions_registered
+FAILED backend\tests\test_native_plugins.py::TestUnityProjectPlugin::test_write_script_security_traversal
+FAILED backend\tests\test_native_plugins.py::TestMemoryPrefsPlugin::test_get_user_preference
+FAILED backend\tests\test_native_plugins.py::TestMemoryPrefsPlugin::test_set_user_preference
+FAILED backend\tests\test_native_plugins.py::TestMemoryPrefsPlugin::test_convenience_methods
+================== 6 failed, 3 passed, 74 warnings in 1.89s ===================

@@ -187,18 +187,20 @@ Requirements:
             LOGGER.warning("No class definition found in code")
             return False
         
-        # 4. Try to compile with csc if available (optional, more thorough)
-        # This is a lightweight check - full compilation would require Unity or .NET SDK
+        # 4. Check for unterminated strings (odd number of quotes on a line)
         try:
-            # Basic regex check for common syntax errors
-            # Check for unterminated strings
-            string_pattern = r'"[^"]*$'
-            if re.search(string_pattern, code, re.MULTILINE):
-                LOGGER.warning("Possible unterminated string literal")
-                return False
+            for line in code.splitlines():
+                trimmed = line.strip()
+                # Skip comments
+                if trimmed.startswith("//") or trimmed.startswith("/*") or trimmed.startswith("*"):
+                    continue
+                # Count quotes: check if even (naive but effective for lightweight check)
+                if line.count('"') % 2 != 0:
+                    LOGGER.warning("Possible unterminated string literal")
+                    return False
         except Exception as e:
             LOGGER.debug(f"Syntax validation check failed: {e}")
-            # Don't fail validation on regex errors, just log
+            # Don't fail validation on errors, just log
         
         return True
 

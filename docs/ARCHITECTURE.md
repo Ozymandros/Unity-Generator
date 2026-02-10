@@ -7,16 +7,19 @@ AI providers using user-supplied API keys.
 ```mermaid
 flowchart TD
   UI[Tauri + Vue UI] -->|HTTP| API[FastAPI Backend]
-  API --> AM[AgentManager]
-  AM --> CA[Code Agent]
-  AM --> TA[Text Agent]
-  AM --> IA[Image Agent]
-  AM --> AA[Audio Agent]
-
-  CA --> LLM[LLM Providers]
-  TA --> LLM
-  IA --> IMG[Image Providers]
-  AA --> AUD[Audio Providers]
+  API --> SK[Semantic Kernel]
+  SK --> NP[Native Plugins]
+  SK --> SF[Semantic Functions]
+  
+  NP -->|Unity Ops| UPP[UnityProjectPlugin]
+  NP -->|Prefs| MPP[MemoryPrefsPlugin]
+  NP -->|Orchestration| POP[ProviderOrchestratorPlugin]
+  
+  SF -->|Prompts| UCE[UnityCodeExpert]
+  
+  POP --> LLM[LLM Providers]
+  POP --> IMG[Image Providers]
+  POP --> AUD[Audio Providers]
 
   API -->|rw| KEYS[config/api_keys.json]
   API -->|rw| PREFS[db/user_prefs.db]
@@ -28,8 +31,9 @@ flowchart TD
 
 - UI: Tauri desktop shell with a Vue frontend for prompts and settings.
 - Backend API: FastAPI app that exposes generation endpoints and preferences.
-- Agents: Orchestrators that transform prompts into provider-specific requests.
-- Providers: Thin wrappers around external APIs (LLM, image, audio).
+- Semantic Kernel: Core orchestration engine that manages agents, native plugins, and semantic functions.
+- Native Plugins: Python-based logic for system operations (UnityProjectPlugin, MemoryPrefsPlugin, ProviderOrchestratorPlugin).
+- Semantic Functions: AI-driven content generation prompts (UnityCodeExpert).
 - Storage: Local JSON for API keys and SQLite for user preferences.
 - Output: Unity-ready project folders with metadata files.
 

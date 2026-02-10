@@ -107,8 +107,8 @@ def create_kernel(settings: Dict[str, Any]) -> "Kernel":
             # Register UnityCodeExpert semantic functions
             unity_code_expert_dir = semantic_plugins_dir / "UnityCodeExpert"
             if unity_code_expert_dir.exists():
-                kernel.add_plugin_from_directory(
-                    plugin_directory=str(unity_code_expert_dir),
+                kernel.add_plugin_from_prompt_directory(
+                    parent_directory=str(semantic_plugins_dir),
                     plugin_name="UnityCodeExpert"
                 )
                 LOGGER.debug("Registered UnityCodeExpert semantic functions")

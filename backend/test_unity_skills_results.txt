@@ -1,0 +1,23 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.5, pytest-9.0.1, pluggy-1.6.0 -- C:\Python313\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Projects\Unity-Generator\backend
+configfile: pytest.ini
+plugins: anyio-4.12.1
+collecting ... collected 0 items / 1 error
+
+=================================== ERRORS ====================================
+_________________ ERROR collecting tests/test_unity_skills.py _________________
+ImportError while importing test module 'C:\Projects\Unity-Generator\backend\tests\test_unity_skills.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Python313\Lib\importlib\__init__.py:88: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests\test_unity_skills.py:11: in <module>
+    from agents.unity_skills import UnityCodeSkill, UnityProjectSkill
+E   ModuleNotFoundError: No module named 'agents'
+=========================== short test summary info ===========================
+ERROR tests/test_unity_skills.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+============================== 1 error in 0.12s ===============================
