@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "type": "completion",
+  "description": "Ensures Unity class name matches filename, a critical Unity requirement",
+  "completion": {
+    "max_tokens": 3000,
+    "temperature": 0.1,
+    "top_p": 1.0,
+    "presence_penalty": 0.0,
+    "frequency_penalty": 0.0
+  },
+  "input": {
+    "parameters": [
+      {
+        "name": "code",
+        "description": "The C# code to fix",
+        "defaultValue": ""
+      },
+      {
+        "name": "filename",
+        "description": "The filename (without .cs extension) that the class must match",
+        "defaultValue": ""
+      }
+    ]
+  }
+}

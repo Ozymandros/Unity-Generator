@@ -94,7 +94,13 @@ Desktop.ini
 *.swp
 *.swo
 frontend/node_modules/
-agents/
+
+# AI Agents / UI Editors
+.agents/
+.agent/
+.claude/
+.cursor/
+.qwen/
 
 # Python cache directories at any level
 **/__pycache__/

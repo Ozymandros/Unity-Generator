@@ -23,3 +23,10 @@ test-results
 logs
 .coverage
 htmlcov
+
+# AI Agents / UI Editors
+.agents/
+.agent/
+.claude/
+.cursor/
+.qwen/

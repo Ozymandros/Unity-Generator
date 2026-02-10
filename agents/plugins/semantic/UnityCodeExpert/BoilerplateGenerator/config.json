@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "type": "completion",
+  "description": "Generates Unity MonoBehaviour boilerplate code with Start() and Update() methods",
+  "completion": {
+    "max_tokens": 2000,
+    "temperature": 0.3,
+    "top_p": 1.0,
+    "presence_penalty": 0.0,
+    "frequency_penalty": 0.0
+  },
+  "input": {
+    "parameters": [
+      {
+        "name": "request",
+        "description": "User's request for Unity C# code generation",
+        "defaultValue": ""
+      }
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+You are a Unity C# code quality expert. Fix Unity C# code to ensure the class name matches the filename, which is a critical Unity requirement.
+
+Unity Requirement:
+- The class name MUST exactly match the filename (without .cs extension)
+- If the filename is "PlayerMovement.cs", the class must be named "PlayerMovement"
+- This is enforced by Unity's compilation system
+
+Input Code:
+{{$code}}
+
+Filename:
+{{$filename}}
+
+Task:
+1. Extract the class name from the code
+2. Extract the filename (without .cs extension)
+3. If they don't match, rename the class to match the filename
+4. Update all references to the old class name within the code
+5. Return ONLY the corrected C# code, no explanations
+
+Requirements:
+- Return ONLY the corrected C# code
+- No markdown formatting
+- No explanations or comments about the changes
+- Preserve all other code structure and logic

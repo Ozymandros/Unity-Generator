@@ -46,3 +46,10 @@ Thumbs.db
 # Python cache directories (if any Python scripts exist)
 **/__pycache__/
 **/__pycache__/**
+
+# AI Agents / UI Editors
+.agents/
+.agent/
+.claude/
+.cursor/
+.qwen/
