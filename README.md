@@ -39,25 +39,30 @@ Scaffolded and functional. See docs for development and packaging details.
 - [Development guide](docs/DEVELOPMENT.md)
 - [Packaging and distribution](docs/PACKAGING.md)
 
+## Integrated Tooling
+
+Unity Generator is optimized for development with **VS Code**:
+
+- **Native Workflow**: Use the `Dev: Backend + Frontend` launch configuration to debug both stacks simultaneously.
+- **Docker Support**: Integrated tasks for `docker-compose` and remote machine debugging are provided for isolated testing.
+- **Editor Setup**: Configured for **Volar (Vue 3)** and **TypeScript**, with type checking mapped to internal monorepo paths.
+- **Architecture**: While Docker is used for dev/CI, the final product uses the **Tauri Sidecar pattern** (NOT Docker) for a zero-dependency installation experience.
+
+All contributions must follow the **SRP**, **KISS**, and **Clean Architecture** principles outlined in the development guide.
+
 ## Quick Start
 
-Backend:
+1. **Setup**: Install all dependencies (Backend & Frontend)
 
-```bash
-cd backend
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python -m uvicorn app.main:app --reload --port 8000
-```
+   ```bash
+   pnpm run setup
+   ```
 
-Frontend:
+2. **Run**: Start the Tauri development environment
 
-```bash
-cd frontend
-pnpm install
-pnpm run dev
-```
+   ```bash
+   pnpm run dev
+   ```
 
 ## How it works
 
@@ -75,16 +80,19 @@ or copy `config/api_keys.example.json` and fill it in manually.
 ### Supported providers
 
 LLM:
+
 - `openai`
 - `deepseek`
 - `openrouter`
 - `groq`
 
 Image:
+
 - `stability`
 - `flux`
 
 Audio:
+
 - `elevenlabs`
 - `playht`
 
@@ -106,9 +114,11 @@ The UI stores preferred providers in the local SQLite DB:
 Base URL: `http://127.0.0.1:8000`
 
 Health:
+
 - `GET /health`
 
 Generation:
+
 - `POST /generate/code`
 - `POST /generate/text`
 - `POST /generate/image`
@@ -125,6 +135,7 @@ Request body:
 ```
 
 Unity project generation:
+
 - `POST /generate/unity-project`
 
 Request body:
@@ -145,14 +156,17 @@ Request body:
 ```
 
 Configuration:
+
 - `GET /config/keys`
 - `POST /config/keys`
 
 Preferences:
+
 - `GET /prefs/{key}`
 - `POST /prefs`
 
 Output:
+
 - `GET /output/latest`
 
 ## Outputs
@@ -167,17 +181,16 @@ Output:
 ## Tests
 
 ```bash
-cd backend
-pytest
-```
+# All tests (Backend & Frontend)
+pnpm run test:all
 
-```bash
-cd frontend
-pnpm test
-```
+# Backend only
+pnpm run test:backend
 
-```bash
-cd frontend
+# Frontend unit tests
+pnpm run test:frontend
+
+# E2E tests
 pnpm run test:e2e
 ```
 

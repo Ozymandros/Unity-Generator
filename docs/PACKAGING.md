@@ -6,26 +6,38 @@ backend binary names are:
 - `backend/dist/unity-generator-backend` (macOS/Linux)
 - `backend/dist/unity-generator-backend.exe` (Windows)
 
+## Cleaning build artifacts
+
+To remove previous build artifacts and binaries:
+
+```bash
+pnpm run clean
+```
+
 ## Build backend sidecar
 
-```bash
-./scripts/build_backend.sh
-```
-
-Windows:
-
-```powershell
-.\scripts\build_backend.ps1
-```
-
-The build scripts should place the executable in `backend/dist/`.
-
-## Build the Tauri app
+To compile the Python backend into a sidecar binary:
 
 ```bash
-cd frontend
-pnpm install
-pnpm run tauri build
+pnpm run build:backend
+```
+
+The script places the executable in `backend/dist/`.
+
+## Build the Tauri app (Installer)
+
+To build the complete Tauri desktop application:
+
+```bash
+pnpm run tauri:build
+```
+
+## Complete Packaging
+
+To clean, build the sidecar, and bundle the app in one command:
+
+```bash
+pnpm run package
 ```
 
 The built app will start the backend sidecar automatically when launched.
@@ -42,6 +54,7 @@ This starts:
 - Frontend dev server at `http://localhost:5173`
 
 Dockerfiles:
+
 - `backend/Dockerfile`
 - `frontend/Dockerfile`
 

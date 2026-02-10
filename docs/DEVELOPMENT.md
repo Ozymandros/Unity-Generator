@@ -10,8 +10,78 @@ Tauri + Vue frontend.
 - pnpm
 - Rust toolchain (for Tauri builds)
 - Docker (optional, for dev/CI workflows)
+- **VS Code** (recommended IDE) with **Volar** extension
 
-## Backend setup
+## Integrated Development Environment
+
+The project is optimized for VS Code with integrated configurations to manage the backend, frontend, and Docker environments.
+
+### VS Code Workflows
+
+#### Native Development (Recommended)
+
+To iterate on the Vue 3 frontend and FastAPI backend simultaneously, use the **Dev: Backend + Frontend** compound launch configuration.
+
+1. Open the Debug panel (`Ctrl+Shift+D`).
+2. Select `Dev: Backend + Frontend` from the dropdown.
+3. Press `F5` to start both services with live reload and breakpoints enabled.
+
+#### Docker Debugging
+
+If you prefer to work within a containerized environment:
+
+- Use the **Attach Backend (Docker debugpy)** workflow.
+- This configuration automatically triggers `docker-compose up` via integrated tasks, allowing you to attach the debugger to the Python process running inside Docker.
+
+### Task Automation (`tasks.json`)
+
+Several convenience tasks are available via `Ctrl+Shift+P` -> `Tasks: Run Task`:
+
+- `backend: dev`: Starts only the FastAPI server.
+- `frontend: dev`: Starts only the Vite/Vue dev server.
+- `dev: all`: Runs both in parallel (used by the smoke test logic).
+
+### Editor Setup (`settings.json`)
+
+- **Vue 3 Support**: The project is optimized for **Volar**. Default formatters and type checking are configured to prioritize Vue 3 + TypeScript.
+- **TypeScript Mapping**: The TypeScript SDK is specifically mapped to `frontend/node_modules` to ensure consistent type checking across the internal monorepo structure.
+
+### Architecture Note: Sidecar vs. Docker
+
+It is critical to distinguish between the development environment and the final product:
+
+- **Docker**: Used primarily for testing, CI, and isolated debugging sessions.
+- **Tauri Sidecar**: The final distributed application uses the **Tauri Sidecar pattern**. The Python backend is compiled into a standalone binary via `scripts/build_backend.ps1` and bundled into the native installer. **The production app does NOT require Docker.**
+
+## Project Standards
+
+All code modifications must adhere to the following principles defined in our core guidelines:
+
+- **SRP (Single Responsibility Principle)**: Each module or class should have one reason to change.
+- **KISS (Keep It Simple, Stupid)**: Avoid over-engineering; favor readable code over clever solutions.
+- **Clean Architecture**: Maintain clear boundaries between services, agents, and the API layer.
+
+## Project setup
+
+To install all dependencies for both frontend and backend:
+
+```bash
+pnpm run setup
+```
+
+## Running the app
+
+To start the Tauri development environment:
+
+```bash
+pnpm run dev
+```
+
+This starts the Tauri integration which handles the backend sidecar.
+
+## Manual individual setup (Optional)
+
+### Backend setup
 
 ```bash
 cd backend
@@ -23,7 +93,7 @@ python -m uvicorn app.main:app --reload --port 8000
 
 The backend serves on `http://127.0.0.1:8000` with CORS enabled.
 
-## Frontend setup
+### Frontend setup
 
 ```bash
 cd frontend
@@ -32,21 +102,6 @@ pnpm run dev
 ```
 
 The UI dev server runs on `http://localhost:5173`.
-
-## Combined dev runner
-
-```bash
-./scripts/run_dev.sh
-```
-
-Windows:
-
-```powershell
-.\scripts\run_dev.ps1
-```
-
-If you build the backend sidecar (`scripts/build_backend.*`), `pnpm run tauri dev`
-will auto-start the backend binary.
 
 ## Configuration
 
@@ -80,24 +135,27 @@ curl http://127.0.0.1:8000/health
 
 ## Tests
 
-Backend:
+To run all tests (Backend & Frontend):
 
 ```bash
-cd backend
-python -m pytest -v
+pnpm run test:all
 ```
 
-Frontend unit tests:
+### Backend tests
 
 ```bash
-cd frontend
-pnpm test
+pnpm run test:backend
 ```
 
-Playwright UI tests:
+### Frontend unit tests
 
 ```bash
-cd frontend
+pnpm run test:frontend
+```
+
+### Playwright E2E tests
+
+```bash
 pnpm run test:e2e
 ```
 
@@ -115,8 +173,7 @@ Component tests are co-located with Vue components:
 ## Linting and type checks
 
 ```bash
-cd frontend
-pnpm run lint:check
+pnpm run lint
 pnpm run typecheck
 ```
 

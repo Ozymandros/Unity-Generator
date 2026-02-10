@@ -1,10 +1,25 @@
 {
   "name": "unity-generator",
   "private": true,
+  "description": "Desktop app to generate Unity assets using AI (Tauri + FastAPI)",
   "scripts": {
-    "test": "pnpm --dir frontend test",
-    "test:coverage": "pnpm --dir frontend test:coverage",
-    "test:e2e": "pnpm --dir frontend install && pnpm --dir frontend test:e2e",
-    "test:backend": "pytest -c backend/pytest.ini"
+    "setup": "pnpm install && pnpm --dir frontend install && pip install -r backend/requirements.txt",
+    "dev": "pnpm --dir frontend dev:tauri",
+    "clean": "pnpm run clean:backend && pnpm run clean:frontend",
+    "clean:backend": "powershell -Command \"Remove-Item -Recycle -Force backend/dist, backend/build, frontend/src-tauri/binaries/backend-* -ErrorAction SilentlyContinue\"",
+    "clean:frontend": "pnpm --dir frontend run clean",
+    "build:backend": "powershell -ExecutionPolicy Bypass -File scripts/build_backend.ps1",
+    "build:frontend": "pnpm --dir frontend build",
+    "tauri": "pnpm --dir frontend tauri",
+    "package": "pnpm run clean && pnpm run build:backend && pnpm run tauri:build",
+    "tauri:build": "pnpm --dir frontend tauri build",
+    "test:all": "pnpm run test:backend && pnpm run test:frontend",
+    "test:backend": "pytest -c backend/pytest.ini",
+    "test:frontend": "pnpm --dir frontend test",
+    "lint": "pnpm --dir frontend lint",
+    "typecheck": "pnpm --dir frontend typecheck"
+  },
+  "dependencies": {
+    "pnpm": "^latest"
   }
 }
