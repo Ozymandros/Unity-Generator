@@ -16,5 +16,5 @@
       ]
     }
   },
-  "postCreateCommand": "apk add --no-cache nodejs npm python3 py3-pip && cd backend && pip install -r requirements.txt"
+  "postCreateCommand": "apt-get update && apt-get install -y nodejs npm python3 python3-pip && npm install -g @tauri-apps/cli && cd backend && pip install -r requirements.txt"
 }

@@ -95,3 +95,5 @@ Desktop.ini
 *.swp
 *.swo
 frontend/node_modules/
+agents/
+**/__pycache__/
