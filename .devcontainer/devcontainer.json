@@ -5,6 +5,22 @@
   "workspaceFolder": "/workspaces/Unity-Generator",
   "runServices": ["backend", "frontend"],
   "shutdownAction": "stopCompose",
+  "forwardPorts": [8000, 5173, 5678],
+  "portsAttributes": {
+    "8000": {
+      "label": "Backend (FastAPI)",
+      "protocol": "http",
+      "onAutoForward": "openBrowserOnce"
+    },
+    "5173": {
+      "label": "Frontend (Vite)",
+      "protocol": "http",
+      "onAutoForward": "openBrowserOnce"
+    },
+    "5678": {
+      "label": "Python Debugpy"
+    }
+  },
   "customizations": {
     "vscode": {
       "extensions": [
