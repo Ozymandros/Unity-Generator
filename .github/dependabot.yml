@@ -6,12 +6,6 @@ updates:
       interval: "weekly"
     allow:
       - dependency-type: "all"
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    allow:
-      - dependency-type: "all"
   - package-ecosystem: "pip"
     directory: "/backend"
     schedule:

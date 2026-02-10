@@ -1,8 +1,8 @@
 # Unity Generator
 
-![CI](https://github.com/Ozymandros/Unity-Generator/actions/workflows/ci.yml/badge.svg)
-![CodeQL](https://github.com/Ozymandros/Unity-Generator/actions/workflows/codeql.yml/badge.svg)
-![Dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot&logoColor=white)
+[![CI](https://github.com/Ozymandros/Unity-Generator/actions/workflows/ci.yml/badge.svg)](https://github.com/Ozymandros/Unity-Generator/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Ozymandros/Unity-Generator/actions/workflows/codeql.yml/badge.svg)](https://github.com/Ozymandros/Unity-Generator/security/code-scanning)
+[![Dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot&logoColor=white)](https://github.com/Ozymandros/Unity-Generator/security/dependabot)
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
 ![Semantic Kernel](https://img.shields.io/badge/Semantic%20Kernel-512BD4)
@@ -11,7 +11,7 @@
 ![Tauri](https://img.shields.io/badge/Tauri-1.x-24C8DB?logo=tauri&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![pnpm](https://img.shields.io/badge/pnpm-F69220?logo=pnpm&logoColor=white)
-![Playwright](https://img.shields.io/badge/Playwright-45ba4b?logo=playwright&logoColor=white)
+[![Playwright](https://img.shields.io/badge/Playwright-45ba4b?logo=playwright&logoColor=white)](https://github.com/Ozymandros/Unity-Generator/actions/workflows/ci.yml)
 
 Unity Generator is a lightweight desktop app for generating Unity C# code, text,
 images, and audio using cloud AI providers. It ships a Tauri + Vue UI with a
