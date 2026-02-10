@@ -28,6 +28,7 @@
         "ms-python.debugpy",
         "ms-azuretools.vscode-docker",
         "ms-azuretools.vscode-containers",
+        "ms-semantic-kernel.semantic-kernel",
         "Vue.volar"
       ]
     }

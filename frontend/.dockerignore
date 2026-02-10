@@ -42,3 +42,7 @@ Thumbs.db
 # Local config
 .env
 .env.*
+
+# Python cache directories (if any Python scripts exist)
+**/__pycache__/
+**/__pycache__/**

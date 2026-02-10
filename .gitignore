@@ -2,7 +2,7 @@
 .venv/
 venv/
 env/
-__pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
 *.so
@@ -38,7 +38,7 @@ output/
 logs/
 db/*.db
 config/api_keys.json
-__pycache__/
+**/__pycache__/
 *.py[cod]
 *.pyd
 .venv/
@@ -95,4 +95,7 @@ Desktop.ini
 *.swo
 frontend/node_modules/
 agents/
+
+# Python cache directories at any level
 **/__pycache__/
+**/__pycache__/**

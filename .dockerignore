@@ -12,8 +12,10 @@ Thumbs.db
 README.md
 node_modules
 .pytest_cache
-__pycache__
+**/__pycache__/
+**/__pycache__/**
 *.pyc
+*.py[cod]
 .venv
 venv
 env
