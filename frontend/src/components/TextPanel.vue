@@ -10,6 +10,8 @@ import { generateText } from "../api/client";
 const prompt = ref("");
 const provider = ref("");
 const model = ref("");
+const temperature = ref(0.7);
+const maxTokens = ref(2048);
 const status = ref<string | null>(null);
 const tone = ref<"ok" | "error">("ok");
 const result = ref("");
@@ -21,7 +23,11 @@ async function run() {
     const response = await generateText({
       prompt: prompt.value,
       provider: provider.value || undefined,
-      options: { model: model.value || undefined },
+      options: { 
+        model: model.value || undefined,
+        temperature: temperature.value,
+        max_tokens: maxTokens.value,
+      },
     });
     if (!response.success) {
       tone.value = "error";
@@ -45,16 +51,30 @@ async function run() {
       <label>Prompt</label>
       <textarea v-model="prompt" rows="6"></textarea>
     </div>
-    <div class="row">
-      <div class="field">
-        <label>Provider (optional)</label>
-        <input v-model="provider" placeholder="openai | deepseek | openrouter | groq" />
+    
+    <div class="field-group">
+      <div class="row">
+        <div class="field">
+          <label>Provider (optional)</label>
+          <input v-model="provider" placeholder="openai | deepseek..." />
+        </div>
+        <div class="field">
+          <label>Model (optional)</label>
+          <input v-model="model" placeholder="gpt-4o-mini" />
+        </div>
       </div>
-      <div class="field">
-        <label>Model (optional)</label>
-        <input v-model="model" placeholder="gpt-4o-mini" />
+      <div class="row">
+        <div class="field">
+           <label>Temperature</label>
+           <input type="number" v-model.number="temperature" step="0.1" min="0" max="2" />
+        </div>
+        <div class="field">
+           <label>Max Tokens</label>
+           <input type="number" v-model.number="maxTokens" step="100" />
+        </div>
       </div>
     </div>
+
     <button class="primary" @click="run">Generate</button>
 
     <div class="field">
@@ -73,6 +93,9 @@ async function run() {
   flex-direction: column;
   margin-bottom: 10px;
 }
+.field-group {
+  margin-bottom: 12px;
+}
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -83,6 +106,8 @@ input {
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .primary {
   margin: 8px 0 14px;

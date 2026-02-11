@@ -31,10 +31,16 @@ def _call_stability(
     prompt: str, options: Dict[str, Any], api_key: str
 ) -> Dict[str, Any]:
     url = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
+    
+    # Map quality to model: standard -> sd3-turbo, hd -> sd3
+    quality = options.get("quality", "standard")
+    model = "sd3-turbo" if quality == "standard" else "sd3"
+    
     payload = {
         "prompt": prompt,
         "aspect_ratio": options.get("aspect_ratio", "1:1"),
         "output_format": options.get("output_format", "png"),
+        "model": model,
     }
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -47,13 +53,25 @@ def _call_stability(
         "image": data.get("image"),
         "provider": "stability",
         "raw": data,
+        "model": model,
     }
 
 
 def _call_flux(prompt: str, options: Dict[str, Any], api_key: str) -> Dict[str, Any]:
     url = "https://api.replicate.com/v1/predictions"
+    
+    # Map quality to version: standard -> flux-schnell, hd -> flux-dev
+    # Note: These version strings might need to be exact Replicate model IDs or aliases.
+    # Assuming the provider handles "flux-schnell" and "flux-dev" aliases or we use default.
+    # For now, preserving existing default "flux-dev" if not generic.
+    # Actually, let's just use the options.get("version") override if present, else map quality.
+    
+    quality = options.get("quality", "standard")
+    default_version = "flux-schnell" if quality == "standard" else "flux-dev"
+    version = options.get("version", default_version)
+
     payload = {
-        "version": options.get("version", "flux-dev"),
+        "version": version,
         "input": {"prompt": prompt},
     }
     headers = {
@@ -67,4 +85,5 @@ def _call_flux(prompt: str, options: Dict[str, Any], api_key: str) -> Dict[str, 
         "image": data.get("output"),
         "provider": "flux",
         "raw": data,
+        "version": version,
     }

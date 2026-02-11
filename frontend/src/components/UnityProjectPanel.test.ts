@@ -75,17 +75,29 @@ describe("UnityProjectPanel", () => {
     expect(wrapper.text()).toContain("Project generation failed");
   });
 
-  it("shows JSON parse error before calling API", async () => {
-    const wrapper = mount(UnityProjectPanel);
-    const textareas = wrapper.findAll("textarea");
-    const codeOptionsTextarea = textareas[4];
+  it("passes structured options to API", async () => {
+    vi.mocked(client.generateUnityProject).mockResolvedValue({
+      success: true,
+      date: new Date().toISOString(),
+      error: null,
+      data: { project_path: "C:/output/TestProject" },
+    });
 
-    await codeOptionsTextarea.setValue("{");
+    const wrapper = mount(UnityProjectPanel);
+    
+    // Trigger generation with default values
     await wrapper.find("button.primary").trigger("click");
     await flushPromises();
 
-    expect(client.generateUnityProject).not.toHaveBeenCalled();
-    expect(wrapper.text()).toContain("Options JSON invalid");
+    expect(client.generateUnityProject).toHaveBeenCalledWith(
+      expect.objectContaining({
+        options: expect.objectContaining({
+            code: expect.objectContaining({ temperature: 0.7, max_tokens: 2048 }),
+            image: expect.objectContaining({ aspect_ratio: "1:1", quality: "standard" }),
+            audio: expect.objectContaining({ stability: 0.5 }),
+        })
+      })
+    );
   });
 
   it("opens the output folder with Tauri when available", async () => {

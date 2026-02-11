@@ -33,7 +33,14 @@ def _call_elevenlabs(
     voice_id = options.get("voice_id", "Rachel")
     model_id = options.get("model_id", "eleven_multilingual_v2")
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
-    payload = {"text": text, "model_id": model_id}
+    payload = {
+        "text": text,
+        "model_id": model_id,
+        "voice_settings": {
+            "stability": options.get("stability", 0.5),
+            "similarity_boost": options.get("similarity_boost", 0.75),
+        },
+    }
     headers = {
         "xi-api-key": api_key,
         "Content-Type": "application/json",

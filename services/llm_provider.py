@@ -40,6 +40,7 @@ def _call_openai(prompt: str, options: Dict[str, Any], api_key: str) -> Dict[str
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": options.get("temperature", 0.7),
+        "max_tokens": options.get("max_tokens", 2048),
     }
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.post(url, json=payload, headers=headers, timeout=60)
@@ -57,6 +58,7 @@ def _call_deepseek(
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": options.get("temperature", 0.7),
+        "max_tokens": options.get("max_tokens", 2048),
     }
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.post(url, json=payload, headers=headers, timeout=60)
@@ -74,6 +76,7 @@ def _call_openrouter(
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": options.get("temperature", 0.7),
+        "max_tokens": options.get("max_tokens", 2048),
     }
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.post(url, json=payload, headers=headers, timeout=60)
@@ -89,6 +92,7 @@ def _call_groq(prompt: str, options: Dict[str, Any], api_key: str) -> Dict[str, 
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": options.get("temperature", 0.7),
+        "max_tokens": options.get("max_tokens", 2048),
     }
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.post(url, json=payload, headers=headers, timeout=60)

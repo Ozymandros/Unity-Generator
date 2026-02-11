@@ -10,6 +10,7 @@ import { generateImage } from "../api/client";
 const prompt = ref("");
 const provider = ref("");
 const aspectRatio = ref("1:1");
+const quality = ref("standard");
 const status = ref<string | null>(null);
 const tone = ref<"ok" | "error">("ok");
 const result = ref("");
@@ -21,7 +22,10 @@ async function run() {
     const response = await generateImage({
       prompt: prompt.value,
       provider: provider.value || undefined,
-      options: { aspect_ratio: aspectRatio.value },
+      options: { 
+        aspect_ratio: aspectRatio.value,
+        quality: quality.value,
+      },
     });
     if (!response.success) {
       tone.value = "error";
@@ -45,16 +49,35 @@ async function run() {
       <label>Prompt</label>
       <textarea v-model="prompt" rows="6"></textarea>
     </div>
-    <div class="row">
-      <div class="field">
-        <label>Provider (optional)</label>
-        <input v-model="provider" placeholder="stability | flux" />
+    
+    <div class="field-group">
+      <div class="row">
+        <div class="field">
+          <label>Provider (optional)</label>
+          <input v-model="provider" placeholder="stability | flux" />
+        </div>
       </div>
-      <div class="field">
-        <label>Aspect Ratio</label>
-        <input v-model="aspectRatio" placeholder="1:1" />
+      <div class="row">
+        <div class="field">
+           <label>Aspect Ratio</label>
+           <select v-model="aspectRatio">
+             <option value="1:1">1:1 Square</option>
+             <option value="16:9">16:9 Landscape</option>
+             <option value="9:16">9:16 Portrait</option>
+             <option value="4:3">4:3 Standard</option>
+             <option value="3:2">3:2 Classic</option>
+           </select>
+        </div>
+        <div class="field">
+           <label>Quality</label>
+           <select v-model="quality">
+             <option value="standard">Standard</option>
+             <option value="hd">HD</option>
+           </select>
+        </div>
       </div>
     </div>
+
     <button class="primary" @click="run">Generate</button>
 
     <div class="field">
@@ -73,16 +96,22 @@ async function run() {
   flex-direction: column;
   margin-bottom: 10px;
 }
+.field-group {
+  margin-bottom: 12px;
+}
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
 textarea,
-input {
+input,
+select {
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .primary {
   margin: 8px 0 14px;

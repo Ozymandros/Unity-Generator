@@ -10,6 +10,7 @@ import { generateAudio } from "../api/client";
 const prompt = ref("");
 const provider = ref("");
 const voiceId = ref("");
+const stability = ref(0.5);
 const status = ref<string | null>(null);
 const tone = ref<"ok" | "error">("ok");
 const result = ref("");
@@ -21,7 +22,10 @@ async function run() {
     const response = await generateAudio({
       prompt: prompt.value,
       provider: provider.value || undefined,
-      options: { voice_id: voiceId.value || undefined },
+      options: { 
+        voice_id: voiceId.value || undefined,
+        stability: stability.value,
+      },
     });
     if (!response.success) {
       tone.value = "error";
@@ -45,16 +49,26 @@ async function run() {
       <label>Prompt</label>
       <textarea v-model="prompt" rows="6"></textarea>
     </div>
-    <div class="row">
-      <div class="field">
-        <label>Provider (optional)</label>
-        <input v-model="provider" placeholder="elevenlabs | playht" />
+    
+    <div class="field-group">
+      <div class="row">
+        <div class="field">
+          <label>Provider (optional)</label>
+          <input v-model="provider" placeholder="elevenlabs | playht" />
+        </div>
       </div>
-      <div class="field">
-        <label>Voice ID (optional)</label>
-        <input v-model="voiceId" placeholder="Rachel" />
+      <div class="row">
+        <div class="field">
+          <label>Voice ID (optional)</label>
+          <input v-model="voiceId" placeholder="Rachel" />
+        </div>
+        <div class="field">
+          <label>Stability</label>
+          <input type="number" v-model.number="stability" step="0.1" min="0" max="1" />
+        </div>
       </div>
     </div>
+
     <button class="primary" @click="run">Generate</button>
 
     <div class="field">
@@ -73,6 +87,9 @@ async function run() {
   flex-direction: column;
   margin-bottom: 10px;
 }
+.field-group {
+  margin-bottom: 12px;
+}
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -83,6 +100,8 @@ input {
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .primary {
   margin: 8px 0 14px;

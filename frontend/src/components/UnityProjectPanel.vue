@@ -12,31 +12,27 @@ const codePrompt = ref("");
 const textPrompt = ref("");
 const imagePrompt = ref("");
 const audioPrompt = ref("");
+
+// Providers
 const codeProvider = ref("");
 const textProvider = ref("");
 const imageProvider = ref("");
 const audioProvider = ref("");
-const codeOptions = ref("{}");
-const textOptions = ref("{}");
-const imageOptions = ref("{}");
-const audioOptions = ref("{}");
+
+// Structured Options
+const codeTemperature = ref(0.7);
+const codeMaxTokens = ref(2048);
+const textTemperature = ref(0.7);
+const textMaxTokens = ref(2048);
+const imageAspectRatio = ref("1:1");
+const imageQuality = ref("standard");
+const audioVoiceId = ref("");
+const audioStability = ref(0.5);
+
 const status = ref<string | null>(null);
 const tone = ref<"ok" | "error">("ok");
 const result = ref("");
 const lastProjectPath = ref("");
-
-function parseOptions(raw: string) {
-  if (!raw.trim()) {
-    return {};
-  }
-  try {
-    return JSON.parse(raw);
-  } catch (error) {
-    const err = new Error(`Options JSON invalid: ${String(error)}`) as Error & { cause?: unknown };
-    err.cause = error;
-    throw err;
-  }
-}
 
 async function openWithTauri(path: string) {
   const tauri = (window as unknown as { __TAURI__?: { shell?: { open: (path: string) => Promise<void> } } })
@@ -65,10 +61,10 @@ async function run() {
         audio: audioProvider.value || undefined,
       },
       options: {
-        code: parseOptions(codeOptions.value),
-        text: parseOptions(textOptions.value),
-        image: parseOptions(imageOptions.value),
-        audio: parseOptions(audioOptions.value),
+        code: { temperature: codeTemperature.value, max_tokens: codeMaxTokens.value },
+        text: { temperature: textTemperature.value, max_tokens: textMaxTokens.value },
+        image: { aspect_ratio: imageAspectRatio.value, quality: imageQuality.value },
+        audio: { voice_id: audioVoiceId.value || undefined, stability: audioStability.value },
       },
     });
     if (!response.success) {
@@ -133,32 +129,92 @@ async function openOutputFolder() {
       <input v-model="projectName" />
     </div>
 
-    <div class="field">
-      <label>Code Prompt</label>
-      <textarea v-model="codePrompt" rows="4"></textarea>
+    <div class="section-group">
+      <div class="field">
+        <label>Code Prompt</label>
+        <textarea v-model="codePrompt" rows="3"></textarea>
+      </div>
+      <div class="options-row">
+        <div class="field-sm">
+           <label>Temp</label>
+           <input type="number" v-model.number="codeTemperature" step="0.1" min="0" max="2" />
+        </div>
+        <div class="field-sm">
+           <label>Max Tokens</label>
+           <input type="number" v-model.number="codeMaxTokens" step="100" />
+        </div>
+      </div>
     </div>
-    <div class="field">
-      <label>Text Prompt</label>
-      <textarea v-model="textPrompt" rows="4"></textarea>
+
+    <div class="section-group">
+      <div class="field">
+        <label>Text Prompt</label>
+        <textarea v-model="textPrompt" rows="3"></textarea>
+      </div>
+      <div class="options-row">
+        <div class="field-sm">
+           <label>Temp</label>
+           <input type="number" v-model.number="textTemperature" step="0.1" min="0" max="2" />
+        </div>
+        <div class="field-sm">
+           <label>Max Tokens</label>
+           <input type="number" v-model.number="textMaxTokens" step="100" />
+        </div>
+      </div>
     </div>
-    <div class="field">
-      <label>Image Prompt</label>
-      <textarea v-model="imagePrompt" rows="4"></textarea>
+
+    <div class="section-group">
+      <div class="field">
+        <label>Image Prompt</label>
+        <textarea v-model="imagePrompt" rows="3"></textarea>
+      </div>
+       <div class="options-row">
+        <div class="field-sm">
+           <label>Aspect Ratio</label>
+           <select v-model="imageAspectRatio">
+             <option value="1:1">1:1 Square</option>
+             <option value="16:9">16:9 Landscape</option>
+             <option value="9:16">9:16 Portrait</option>
+             <option value="4:3">4:3 Standard</option>
+             <option value="3:2">3:2 Classic</option>
+           </select>
+        </div>
+        <div class="field-sm">
+           <label>Quality</label>
+           <select v-model="imageQuality">
+             <option value="standard">Standard</option>
+             <option value="hd">HD</option>
+           </select>
+        </div>
+      </div>
     </div>
-    <div class="field">
-      <label>Audio Prompt</label>
-      <textarea v-model="audioPrompt" rows="4"></textarea>
+
+    <div class="section-group">
+      <div class="field">
+        <label>Audio Prompt</label>
+        <textarea v-model="audioPrompt" rows="3"></textarea>
+      </div>
+       <div class="options-row">
+        <div class="field-sm">
+           <label>Voice ID</label>
+           <input v-model="audioVoiceId" placeholder="Optional" />
+        </div>
+        <div class="field-sm">
+           <label>Stability</label>
+           <input type="number" v-model.number="audioStability" step="0.1" min="0" max="1" />
+        </div>
+      </div>
     </div>
 
     <h3>Provider Overrides (optional)</h3>
     <div class="row">
       <div class="field">
         <label>Code Provider</label>
-        <input v-model="codeProvider" placeholder="openai | deepseek | openrouter | groq" />
+        <input v-model="codeProvider" placeholder="openai | deepseek..." />
       </div>
       <div class="field">
         <label>Text Provider</label>
-        <input v-model="textProvider" placeholder="openai | deepseek | openrouter | groq" />
+        <input v-model="textProvider" placeholder="openai | deepseek..." />
       </div>
       <div class="field">
         <label>Image Provider</label>
@@ -168,24 +224,6 @@ async function openOutputFolder() {
         <label>Audio Provider</label>
         <input v-model="audioProvider" placeholder="elevenlabs | playht" />
       </div>
-    </div>
-
-    <h3>Options (JSON)</h3>
-    <div class="field">
-      <label>Code Options</label>
-      <textarea v-model="codeOptions" rows="4"></textarea>
-    </div>
-    <div class="field">
-      <label>Text Options</label>
-      <textarea v-model="textOptions" rows="4"></textarea>
-    </div>
-    <div class="field">
-      <label>Image Options</label>
-      <textarea v-model="imageOptions" rows="4"></textarea>
-    </div>
-    <div class="field">
-      <label>Audio Options</label>
-      <textarea v-model="audioOptions" rows="4"></textarea>
     </div>
 
     <button class="primary" @click="run">Generate Project</button>
@@ -207,16 +245,41 @@ async function openOutputFolder() {
   flex-direction: column;
   margin-bottom: 10px;
 }
+.section-group {
+  border: 1px solid #eee;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  background-color: #fafafa;
+}
+.options-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+.field-sm {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.field-sm label {
+  font-size: 0.85em;
+  color: #666;
+  margin-bottom: 4px;
+}
 .row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
 textarea,
-input {
+input,
+select {
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .primary {
   margin: 8px 0 14px;
