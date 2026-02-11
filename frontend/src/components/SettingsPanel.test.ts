@@ -36,7 +36,7 @@ describe("SettingsPanel", () => {
 
     // Check for key input fields (password type)
     const passwordInputs = wrapper.findAll('input[type="password"]');
-    expect(passwordInputs.length).toBe(8); // 8 API key fields
+    expect(passwordInputs.length).toBe(10); // 10 API key fields (added Google and Anthropic)
 
     // Check for preference inputs (selects)
     const selects = wrapper.findAll("select");

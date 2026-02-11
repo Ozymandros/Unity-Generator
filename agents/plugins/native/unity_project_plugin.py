@@ -116,7 +116,15 @@ class UnityProjectPlugin:
         name="generate_meta_file",
         description="Creates a Unity .meta file for a generated asset"
     )
-    def generate_meta_file(self, file_path: str, is_folder: bool = False, guid: Optional[str] = None) -> str:
+    def generate_meta_file(
+        self, 
+        file_path: str, 
+        is_folder: bool = False, 
+        guid: Optional[str] = None,
+        texture_type: int = 1, # Default to Texture
+        sprite_mode: int = 0, # Default to Single
+        ppu: int = 100
+    ) -> str:
         """
         Generate a Unity .meta file to avoid import errors.
         
@@ -124,21 +132,12 @@ class UnityProjectPlugin:
             file_path: Path to the original file or folder.
             is_folder: If True, generates a .meta for a folder.
             guid: Optional GUID. If not provided, a new UUID is generated.
+            texture_type: Unity TextureImporterType (default 1=Texture, 8=Sprite).
+            sprite_mode: Unity SpriteImportMode (default 0=Single, 1=Single, 2=Multiple).
+            ppu: Pixels Per Unit for Sprites.
         
         Returns:
             Path to the created .meta file.
-        
-        Raises:
-            ValueError: If file_path is empty.
-            IOError: If the file cannot be written.
-        
-        Example:
-            >>> plugin = UnityProjectPlugin()
-            >>> meta_path = plugin.generate_meta_file("Assets/Scripts/Player.cs")
-            >>> meta_path.endswith(".meta")
-            True
-            >>> Path(meta_path).exists()
-            True
         """
         if not file_path:
             raise ValueError("file_path cannot be empty")
@@ -172,7 +171,10 @@ MonoImporter:
   assetBundleVariant:
 """
         elif path.suffix in [".png", ".jpg", ".jpeg", ".tga"]:
-            # TextureImporter for textures
+            # TextureImporter for textures and sprites
+            # If resolution is low (pixel art), use Point filter
+            filter_mode = 0 if ppu <= 256 else 1 # 0: Point, 1: Bilinear
+            
             content = f"""fileFormatVersion: 2
 guid: {guid_value}
 TextureImporter:
@@ -181,14 +183,30 @@ TextureImporter:
   serializedVersion: 12
   mipmaps:
     mipMapMode: 0
-    enableMipMap: 1
+    enableMipMap: 0
     sRGBTexture: 1
+  textureType: {texture_type}
+  textureShape: 1
+  singleChannelComponent: 0
+  filterMode: {filter_mode}
+  aniso: 1
+  mipmapBias: 0
+  wrapMode: 0
   textureFormat: 1
   maxTextureSize: 2048
   textureCompression: 1
   compressionQuality: 50
-  spriteMode: 0
+  spriteMode: {sprite_mode}
+  spritePixelsToUnits: {ppu}
+  spriteMeshType: 1
+  spritePivot: {{x: 0.5, y: 0.5}}
+  spriteBorder: {{x: 0, y: 0, z: 0, w: 0}}
+  spriteGenerateFallbackPhysicsShape: 1
   alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  atlasGenerateRect: 1
+  androidETC2FallbackOverride: 0
+  secondaryTextures: []
   platformSettings: []
   userData:
   assetBundleName:

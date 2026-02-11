@@ -5,6 +5,7 @@ import CodePanel from "./components/CodePanel.vue";
 import TextPanel from "./components/TextPanel.vue";
 import ImagePanel from "./components/ImagePanel.vue";
 import AudioPanel from "./components/AudioPanel.vue";
+import SpritesPanel from "./components/SpritesPanel.vue";
 import UnityProjectPanel from "./components/UnityProjectPanel.vue";
 import { healthCheck } from "./api/client";
 
@@ -14,6 +15,7 @@ const tabs = [
   "Text",
   "Image",
   "Audio",
+  "Sprites",
   "Unity Project",
 ] as const;
 const active = ref<(typeof tabs)[number]>("Settings");
@@ -58,6 +60,7 @@ onMounted(async () => {
       <TextPanel v-else-if="active === 'Text'" />
       <ImagePanel v-else-if="active === 'Image'" />
       <AudioPanel v-else-if="active === 'Audio'" />
+      <SpritesPanel v-else-if="active === 'Sprites'" />
       <UnityProjectPanel v-else-if="active === 'Unity Project'" />
     </main>
   </div>

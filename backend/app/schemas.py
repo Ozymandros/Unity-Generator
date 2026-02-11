@@ -37,6 +37,14 @@ class UnityProjectRequest(BaseModel):
     options: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
 
 
+class SpritesRequest(BaseModel):
+    prompt: str
+    provider: Optional[str] = None
+    api_key: Optional[str] = None
+    resolution: int = 64
+    options: Dict[str, Any] = Field(default_factory=dict)
+
+
 def ok_response(data: Dict[str, Any]) -> GenerationResponse:
     return GenerationResponse(
         success=True,

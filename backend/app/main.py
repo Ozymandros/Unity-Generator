@@ -18,6 +18,7 @@ from .schemas import (
     ApiKeysRequest,
     PrefRequest,
     UnityProjectRequest,
+    SpritesRequest,
     ok_response,
     error_response,
 )
@@ -101,6 +102,26 @@ def generate_audio(request: GenerationRequest):
     except Exception as exc:
         logging.getLogger("failed_requests").warning(
             "Audio generation failed: %s", exc
+        )
+        return error_response(str(exc))
+
+
+@app.post("/generate/sprites")
+def generate_sprites(request: SpritesRequest):
+    try:
+        from services.sprite_service import generate_sprite
+        provider = request.provider or get_pref("preferred_image_provider")
+        data = generate_sprite(
+            request.prompt, 
+            provider, 
+            request.api_key, 
+            request.resolution,
+            request.options
+        )
+        return ok_response(data)
+    except Exception as exc:
+        logging.getLogger("failed_requests").warning(
+            "Sprite generation failed: %s", exc
         )
         return error_response(str(exc))
 

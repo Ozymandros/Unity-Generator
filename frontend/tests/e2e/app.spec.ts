@@ -12,6 +12,7 @@ const ENDPOINTS = {
   GENERATE_TEXT: `${BACKEND_URL}/generate/text`,
   GENERATE_IMAGE: `${BACKEND_URL}/generate/image`,
   GENERATE_AUDIO: `${BACKEND_URL}/generate/audio`,
+  GENERATE_SPRITES: `${BACKEND_URL}/generate/sprites`,
   GENERATE_UNITY_PROJECT: `${BACKEND_URL}/generate/unity-project`,
   OUTPUT_LATEST: `${BACKEND_URL}/output/latest`,
 } as const;
@@ -77,6 +78,7 @@ test.beforeEach(async ({ page }) => {
   await setupRouteHandler(page, ENDPOINTS.GENERATE_TEXT, { content: "NPC: Welcome, traveler." });
   await setupRouteHandler(page, ENDPOINTS.GENERATE_IMAGE, { image: "fake-image-base64" });
   await setupRouteHandler(page, ENDPOINTS.GENERATE_AUDIO, { audio_url: "https://example.com/audio.mp3" });
+  await setupRouteHandler(page, ENDPOINTS.GENERATE_SPRITES, { image: "fake-sprite-base64", resolution: 64 });
   await setupRouteHandler(page, ENDPOINTS.GENERATE_UNITY_PROJECT, {
     project_path: "C:/Projects/Unity-Generator/output/TestProject",
   });
@@ -491,4 +493,23 @@ test("handles empty response data gracefully", async ({ page }) => {
   
   // Result should be empty but not crash
   await expect(page.locator("textarea").last()).toHaveValue("");
+});
+
+test("generates and previews 2D sprites", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Sprites" }).click();
+  
+  await page.locator("textarea").fill("A pixel art health potion");
+  
+  // Select 32x resolution button
+  await page.getByRole("button", { name: "32x" }).click();
+  
+  // Select palette size
+  await page.getByLabel("Palette Size").selectOption("16");
+  
+  await page.getByRole("button", { name: "Generate Sprite" }).click();
+  
+  await expect(page.getByText("Sprite generated.")).toBeVisible();
+  await expect(page.locator("img")).toBeVisible();
+  await expect(page.getByText("32x32px")).toBeVisible();
 });

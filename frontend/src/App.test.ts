@@ -69,13 +69,14 @@ describe("App", () => {
     await flushPromises();
 
     const buttons = wrapper.findAll("nav button");
-    expect(buttons.length).toBe(6);
+    expect(buttons.length).toBe(7);
     expect(buttons.map((b) => b.text())).toEqual([
       "Settings",
       "Code",
       "Text",
       "Image",
       "Audio",
+      "Sprites",
       "Unity Project",
     ]);
   });

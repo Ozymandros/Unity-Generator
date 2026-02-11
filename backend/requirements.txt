@@ -6,3 +6,5 @@ requests
 pytest
 debugpy
 ruff
+Pillow
+numpy

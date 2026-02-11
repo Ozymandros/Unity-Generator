@@ -18,7 +18,7 @@ function getBackendUrl(): string {
 
 async function post<T extends GenerationResponse>(
   path: string,
-  body: GenerationRequest
+  body: GenerationRequest | SpritesRequest | { keys: Record<string, string> } | { key: string, value: string }
 ): Promise<T> {
   const response = await fetch(`${getBackendUrl()}${path}`, {
     method: "POST",
@@ -42,6 +42,18 @@ export function generateImage(body: GenerationRequest) {
 
 export function generateAudio(body: GenerationRequest) {
   return post<GenerationResponse>("/generate/audio", body);
+}
+
+export type SpritesRequest = {
+  prompt: string;
+  provider?: string;
+  api_key?: string;
+  resolution: number;
+  options?: Record<string, unknown>;
+};
+
+export function generateSprites(body: SpritesRequest) {
+  return post<GenerationResponse>("/generate/sprites", body);
 }
 
 export async function saveApiKeys(keys: Record<string, string>) {
