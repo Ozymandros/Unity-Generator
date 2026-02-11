@@ -1,6 +1,6 @@
 fastapi
 uvicorn
-semantic-kernel
+semantic-kernel>=1.15.0
 pydantic
 requests
 pytest
@@ -8,3 +8,4 @@ debugpy
 ruff
 Pillow
 numpy
+jinja2

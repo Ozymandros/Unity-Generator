@@ -3,9 +3,16 @@ export default {};
 </script>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onUnmounted } from "vue";
 import StatusBanner from "./StatusBanner.vue";
-import { generateUnityProject, getLatestOutput } from "../api/client";
+import {
+  generateUnityProject,
+  getLatestOutput,
+  finalizeProject,
+  getFinalizeJobStatus,
+  downloadFinalizedProject,
+} from "../api/client";
+import type { FinalizeJobStatusResponse } from "../api/client";
 import { 
   TEXT_PROVIDERS, 
   IMAGE_PROVIDERS, 
@@ -39,6 +46,22 @@ const imageQuality = ref("standard");
 const audioVoiceId = ref("");
 const audioStability = ref(0.5);
 
+// Unity Engine Settings
+const unityInstallPackages = ref(false);
+const unityGenerateScene = ref(false);
+const unitySetupUrp = ref(false);
+const unityPackages = ref("com.unity.textmeshpro");
+const unitySceneName = ref("MainScene");
+const unityEditorPath = ref("");
+const unityTimeout = ref(300);
+
+// Finalize job state
+const finalizeJobId = ref("");
+const finalizeStatus = ref<FinalizeJobStatusResponse | null>(null);
+const finalizeLogs = ref<string[]>([]);
+const finalizePolling = ref(false);
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+
 const status = ref<string | null>(null);
 const tone = ref<"ok" | "error">("ok");
 const result = ref("");
@@ -47,6 +70,29 @@ const lastProjectPath = ref("");
 const availableVoices = computed(() => {
   const p = AUDIO_PROVIDERS.find((x) => x.value === audioProvider.value);
   return p ? p.models || [] : [];
+});
+
+const isFinalizing = computed(() => {
+  if (!finalizeStatus.value) return false;
+  return ["pending", "running"].includes(finalizeStatus.value.status);
+});
+
+const finalizeProgress = computed(() => {
+  return finalizeStatus.value?.progress ?? 0;
+});
+
+const finalizeStep = computed(() => {
+  return finalizeStatus.value?.step ?? "";
+});
+
+const finalizeDownloadUrl = computed(() => {
+  if (
+    finalizeStatus.value?.status === "completed" &&
+    finalizeStatus.value?.zip_path
+  ) {
+    return downloadFinalizedProject(finalizeJobId.value);
+  }
+  return "";
 });
 
 async function openWithTauri(path: string) {
@@ -96,6 +142,107 @@ async function run() {
   }
 }
 
+async function runFinalize() {
+  status.value = "Starting finalize workflow...";
+  tone.value = "ok";
+  finalizeLogs.value = [];
+  finalizeStatus.value = null;
+
+  try {
+    const packages = unityInstallPackages.value
+      ? unityPackages.value
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+
+    const response = await finalizeProject({
+      project_name: projectName.value,
+      project_path: lastProjectPath.value || undefined,
+      code_prompt: codePrompt.value || undefined,
+      text_prompt: textPrompt.value || undefined,
+      image_prompt: imagePrompt.value || undefined,
+      audio_prompt: audioPrompt.value || undefined,
+      provider_overrides: {
+        code: codeProvider.value || undefined,
+        text: textProvider.value || undefined,
+        image: imageProvider.value || undefined,
+        audio: audioProvider.value || undefined,
+      },
+      options: {
+        code: { temperature: codeTemperature.value, max_tokens: codeMaxTokens.value },
+        text: { temperature: textTemperature.value, max_tokens: textMaxTokens.value },
+        image: { aspect_ratio: imageAspectRatio.value, quality: imageQuality.value },
+        audio: { voice_id: audioVoiceId.value || undefined, stability: audioStability.value },
+      },
+      unity_settings: {
+        install_packages: unityInstallPackages.value,
+        generate_scene: unityGenerateScene.value,
+        setup_urp: unitySetupUrp.value,
+        packages,
+        scene_name: unitySceneName.value,
+        unity_editor_path: unityEditorPath.value || undefined,
+        timeout: unityTimeout.value,
+      },
+    });
+
+    if (!response.success) {
+      tone.value = "error";
+      status.value = "Failed to create finalize job.";
+      return;
+    }
+
+    finalizeJobId.value = response.job_id;
+    status.value = `Finalize job started (${response.job_id})`;
+    startPolling();
+  } catch (error) {
+    tone.value = "error";
+    status.value = String(error);
+  }
+}
+
+function startPolling() {
+  stopPolling();
+  finalizePolling.value = true;
+  pollTimer = setInterval(pollStatus, 2000);
+}
+
+function stopPolling() {
+  finalizePolling.value = false;
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+}
+
+async function pollStatus() {
+  if (!finalizeJobId.value) {
+    stopPolling();
+    return;
+  }
+  try {
+    const statusResp = await getFinalizeJobStatus(finalizeJobId.value);
+    finalizeStatus.value = statusResp;
+    finalizeLogs.value = statusResp.logs_tail || [];
+
+    if (statusResp.status === "completed") {
+      stopPolling();
+      tone.value = "ok";
+      status.value = "Finalization completed successfully!";
+      lastProjectPath.value = statusResp.project_path || "";
+    } else if (statusResp.status === "failed") {
+      stopPolling();
+      tone.value = "error";
+      const errMsg = statusResp.errors?.join("; ") || "Unknown error";
+      status.value = `Finalization failed: ${errMsg}`;
+    }
+  } catch (error) {
+    stopPolling();
+    tone.value = "error";
+    status.value = `Polling error: ${String(error)}`;
+  }
+}
+
 async function openOutputFolder() {
   try {
     const response: { success: boolean; data?: Record<string, unknown> | null; error?: string | null } =
@@ -132,6 +279,10 @@ async function openOutputFolder() {
     status.value = `Open failed: ${String(error)}`;
   }
 }
+
+onUnmounted(() => {
+  stopPolling();
+});
 </script>
 
 <template>
@@ -268,6 +419,100 @@ async function openOutputFolder() {
       <label>Result (JSON)</label>
       <textarea v-model="result" rows="10" readonly></textarea>
     </div>
+
+    <!-- Unity Engine Settings -->
+    <h3>Unity Engine Settings</h3>
+    <div class="section-group">
+      <div class="toggle-row">
+        <label class="toggle-label">
+          <input type="checkbox" v-model="unityGenerateScene" />
+          Generate Default Scene
+        </label>
+        <label class="toggle-label">
+          <input type="checkbox" v-model="unityInstallPackages" />
+          Auto-Install UPM Packages
+        </label>
+        <label class="toggle-label">
+          <input type="checkbox" v-model="unitySetupUrp" />
+          Setup URP
+        </label>
+      </div>
+
+      <div v-if="unityInstallPackages" class="field">
+        <label>UPM Packages (comma-separated)</label>
+        <input v-model="unityPackages" placeholder="com.unity.textmeshpro, com.unity.render-pipelines.universal" />
+      </div>
+
+      <div v-if="unityGenerateScene" class="field">
+        <label>Scene Name</label>
+        <input v-model="unitySceneName" placeholder="MainScene" />
+      </div>
+
+      <div class="options-row">
+        <div class="field-sm">
+          <label>Unity Editor Path (optional)</label>
+          <input v-model="unityEditorPath" placeholder="Auto-detect or UNITY_EDITOR_PATH env var" />
+        </div>
+        <div class="field-sm">
+          <label>Timeout (seconds)</label>
+          <input type="number" v-model.number="unityTimeout" min="30" max="1800" />
+        </div>
+      </div>
+    </div>
+
+    <button
+      class="primary finalize-btn"
+      @click="runFinalize"
+      :disabled="isFinalizing"
+    >
+      {{ isFinalizing ? "Finalizing..." : "Finalize with Unity Engine" }}
+    </button>
+
+    <!-- Finalize Progress & Log Viewer -->
+    <div v-if="finalizeStatus" class="section-group finalize-status">
+      <div class="progress-header">
+        <span class="step-label">{{ finalizeStep }}</span>
+        <span class="progress-pct">{{ finalizeProgress }}%</span>
+      </div>
+      <div class="progress-bar-track">
+        <div
+          class="progress-bar-fill"
+          :style="{ width: finalizeProgress + '%' }"
+          :class="{
+            'bar-running': isFinalizing,
+            'bar-done': finalizeStatus.status === 'completed',
+            'bar-error': finalizeStatus.status === 'failed',
+          }"
+        ></div>
+      </div>
+
+      <div class="log-viewer" ref="logViewer">
+        <div
+          v-for="(line, idx) in finalizeLogs"
+          :key="idx"
+          class="log-line"
+          :class="{ 'log-error': line.includes('[error]') || line.includes('failed') }"
+        >
+          {{ line }}
+        </div>
+        <div v-if="finalizeLogs.length === 0" class="log-empty">
+          Waiting for logs...
+        </div>
+      </div>
+
+      <div v-if="finalizeStatus.errors && finalizeStatus.errors.length > 0" class="error-list">
+        <strong>Errors:</strong>
+        <ul>
+          <li v-for="(err, idx) in finalizeStatus.errors" :key="idx">{{ err }}</li>
+        </ul>
+      </div>
+
+      <div v-if="finalizeDownloadUrl" class="download-row">
+        <a :href="finalizeDownloadUrl" class="download-link" download>
+          Download Finalized Project (.zip)
+        </a>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -316,6 +561,9 @@ select {
   width: 100%;
   box-sizing: border-box;
 }
+input[type="checkbox"] {
+  width: auto;
+}
 .primary {
   margin: 8px 0 14px;
   padding: 10px 14px;
@@ -325,6 +573,10 @@ select {
   color: white;
   cursor: pointer;
 }
+.primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 .secondary {
   margin: 0 0 14px;
   padding: 10px 14px;
@@ -333,5 +585,134 @@ select {
   background: transparent;
   color: #2563eb;
   cursor: pointer;
+}
+
+/* Unity Engine Settings */
+.toggle-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  user-select: none;
+}
+.finalize-btn {
+  background: #059669;
+}
+.finalize-btn:hover:not(:disabled) {
+  background: #047857;
+}
+
+/* Finalize status */
+.finalize-status {
+  border-color: #c7d2fe;
+  background: #f8fafc;
+}
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.step-label {
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 500;
+}
+.progress-pct {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 600;
+}
+.progress-bar-track {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.bar-running {
+  background: #2563eb;
+}
+.bar-done {
+  background: #059669;
+}
+.bar-error {
+  background: #dc2626;
+}
+
+/* Log viewer */
+.log-viewer {
+  max-height: 200px;
+  overflow-y: auto;
+  background: #1e293b;
+  color: #e2e8f0;
+  border-radius: 6px;
+  padding: 10px;
+  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+.log-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.log-error {
+  color: #fca5a5;
+}
+.log-empty {
+  color: #64748b;
+  font-style: italic;
+}
+
+/* Error list */
+.error-list {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.error-list strong {
+  color: #991b1b;
+}
+.error-list ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+.error-list li {
+  color: #dc2626;
+  font-size: 0.85rem;
+}
+
+/* Download */
+.download-row {
+  text-align: center;
+  padding: 8px 0;
+}
+.download-link {
+  display: inline-block;
+  padding: 10px 20px;
+  background: #059669;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+.download-link:hover {
+  background: #047857;
 }
 </style>

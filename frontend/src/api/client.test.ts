@@ -11,6 +11,9 @@ import {
   healthCheck,
   saveApiKeys,
   setPref,
+  finalizeProject,
+  getFinalizeJobStatus,
+  downloadFinalizedProject,
 } from "./client";
 
 const mockFetch = vi.fn();
@@ -140,6 +143,52 @@ describe("api client", () => {
     expect(mockFetch).toHaveBeenCalledWith(
       "http://127.0.0.1:8000/health",
       expect.objectContaining({ method: "GET" })
+    );
+  });
+
+  it("calls finalizeProject", async () => {
+    mockFetch.mockReturnValueOnce(
+      mockResponse({ success: true, job_id: "abc123", message: "created" })
+    );
+    const result = await finalizeProject({
+      project_name: "TestProject",
+      unity_settings: { generate_scene: true, scene_name: "MainScene" },
+    });
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://127.0.0.1:8000/api/v1/project/finalize",
+      expect.objectContaining({ method: "POST" })
+    );
+    expect(result.job_id).toBe("abc123");
+  });
+
+  it("calls getFinalizeJobStatus", async () => {
+    mockFetch.mockReturnValueOnce(
+      mockResponse({
+        job_id: "abc123",
+        status: "running",
+        step: "unity_run",
+        progress: 50,
+        logs_tail: ["log line"],
+        errors: [],
+        started_at: null,
+        finished_at: null,
+        project_path: null,
+        zip_path: null,
+      })
+    );
+    const result = await getFinalizeJobStatus("abc123");
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://127.0.0.1:8000/api/v1/project/finalize/abc123",
+      expect.objectContaining({ method: "GET" })
+    );
+    expect(result.status).toBe("running");
+    expect(result.progress).toBe(50);
+  });
+
+  it("returns download URL for downloadFinalizedProject", () => {
+    const url = downloadFinalizedProject("abc123");
+    expect(url).toBe(
+      "http://127.0.0.1:8000/api/v1/project/finalize/abc123/download"
     );
   });
 });

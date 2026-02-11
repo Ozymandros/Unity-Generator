@@ -16,7 +16,8 @@ describe("UnityProjectPanel", () => {
     expect(wrapper.find('input').exists()).toBe(true); // Project Name
     expect(wrapper.findAll("textarea").length).toBeGreaterThan(0);
     expect(wrapper.findAll("select").length).toBeGreaterThan(0);
-    expect(wrapper.find("button.primary").text()).toBe("Generate Project");
+    // First primary button is Generate Project
+    expect(wrapper.findAll("button.primary")[0].text()).toBe("Generate Project");
   });
 
   it("calls generateUnityProject API on button click", async () => {
@@ -174,5 +175,101 @@ describe("UnityProjectPanel", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("Tauri not available in web build");
+  });
+
+  // -------------------------------------------------------------------
+  // Unity Engine Settings & Finalize
+  // -------------------------------------------------------------------
+
+  it("renders Unity Engine Settings section", () => {
+    const wrapper = mount(UnityProjectPanel);
+    expect(wrapper.text()).toContain("Unity Engine Settings");
+    expect(wrapper.findAll('input[type="checkbox"]').length).toBe(3);
+  });
+
+  it("renders finalize button", () => {
+    const wrapper = mount(UnityProjectPanel);
+    const buttons = wrapper.findAll("button.primary");
+    const finalizeBtn = buttons.find((b) =>
+      b.text().includes("Finalize with Unity Engine")
+    );
+    expect(finalizeBtn).toBeTruthy();
+  });
+
+  it("shows UPM packages input when toggle is checked", async () => {
+    const wrapper = mount(UnityProjectPanel);
+    // The first checkbox is Generate Default Scene, second is Install Packages
+    const checkboxes = wrapper.findAll('input[type="checkbox"]');
+    // Second checkbox controls install_packages
+    await checkboxes[1].setValue(true);
+    await flushPromises();
+    expect(wrapper.text()).toContain("UPM Packages");
+  });
+
+  it("shows scene name input when generate scene is checked", async () => {
+    const wrapper = mount(UnityProjectPanel);
+    const checkboxes = wrapper.findAll('input[type="checkbox"]');
+    // First checkbox controls generate_scene
+    await checkboxes[0].setValue(true);
+    await flushPromises();
+    expect(wrapper.text()).toContain("Scene Name");
+  });
+
+  it("calls finalizeProject API on finalize button click", async () => {
+    vi.mocked(client.finalizeProject).mockResolvedValue({
+      success: true,
+      job_id: "test-job-123",
+      message: "Job created",
+    });
+
+    vi.mocked(client.getFinalizeJobStatus).mockResolvedValue({
+      job_id: "test-job-123",
+      status: "completed",
+      step: "done",
+      progress: 100,
+      logs_tail: ["Finalization complete"],
+      errors: [],
+      started_at: null,
+      finished_at: null,
+      project_path: "C:/output/TestProject",
+      zip_path: "C:/output/TestProject.zip",
+    });
+
+    const wrapper = mount(UnityProjectPanel);
+    const buttons = wrapper.findAll("button.primary");
+    const finalizeBtn = buttons.find((b) =>
+      b.text().includes("Finalize with Unity Engine")
+    );
+    await finalizeBtn!.trigger("click");
+    await flushPromises();
+
+    expect(client.finalizeProject).toHaveBeenCalledWith(
+      expect.objectContaining({
+        project_name: "UnityProject",
+        unity_settings: expect.objectContaining({
+          install_packages: false,
+          generate_scene: false,
+          setup_urp: false,
+        }),
+      })
+    );
+  });
+
+  it("shows error when finalize job fails", async () => {
+    vi.mocked(client.finalizeProject).mockResolvedValue({
+      success: false,
+      job_id: "",
+      message: "",
+    });
+
+    const wrapper = mount(UnityProjectPanel);
+    const buttons = wrapper.findAll("button.primary");
+    const finalizeBtn = buttons.find((b) =>
+      b.text().includes("Finalize with Unity Engine")
+    );
+    await finalizeBtn!.trigger("click");
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("Failed to create finalize job");
   });
 });

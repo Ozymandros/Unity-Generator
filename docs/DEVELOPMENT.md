@@ -183,9 +183,64 @@ pnpm run typecheck
 .\scripts\smoke_test.ps1
 ```
 
+## Unity Engine Integration (local development)
+
+To test the Unity finalize workflow locally you need a Unity Editor installation.
+
+### Setup
+
+1. Install Unity Hub and a Unity Editor version (2022.3 LTS recommended).
+2. Set the Unity path via environment variable:
+
+```powershell
+# Windows
+$env:UNITY_EDITOR_PATH = "C:\Program Files\Unity\Hub\Editor\2022.3.0f1\Editor\Unity.exe"
+```
+
+```bash
+# Linux / macOS
+export UNITY_EDITOR_PATH="/path/to/Unity"
+```
+
+Alternatively, set it in the UI Settings panel or via the preferences API.
+
+### Testing the finalize flow
+
+1. Start the backend (`pnpm run dev` or `uvicorn`).
+2. In the UI, fill in prompts and enable Unity Engine Settings toggles.
+3. Click **Finalize with Unity Engine**.
+4. Watch the log viewer for real-time progress.
+5. On completion, download the `.zip` artifact.
+
+### Debugging Unity batch execution
+
+- Unity writes its log to platform-specific locations:
+  - **Windows**: `%LOCALAPPDATA%\Unity\Editor\Editor.log`
+  - **macOS**: `~/Library/Logs/Unity/Editor.log`
+  - **Linux**: `~/.config/unity3d/Editor.log`
+- The finalize job status includes the last 5000 chars of the Editor.log via the
+  polling endpoint.
+- For deeper debugging, open the Editor.log file directly while the job is
+  running.
+
+### Jinja2 C# templates
+
+Editor automation scripts are generated from Jinja2 templates in
+`backend/templates/unity/`. To modify the automation:
+
+1. Edit the `.cs.j2` template.
+2. Restart the backend (templates are loaded at render time, so hot-reload is
+   supported with `--reload`).
+3. Run a finalize job to test the rendered output.
+
 ## Common issues
 
 - Backend not reachable: confirm port 8000 is free and the backend is running.
 - Provider failures: verify `config/api_keys.json` and check `logs/`.
 - Unity output missing: confirm `output/` exists and requests include prompts.
 - Frontend build issues: delete `node_modules/` and reinstall with pnpm.
+- Unity finalize fails: check that `UNITY_EDITOR_PATH` is set and the Unity
+  license is activated. Review `logs_tail` in the job status or the raw
+  `Editor.log`.
+- Timeout during finalize: increase the timeout in Unity Engine Settings
+  (default 300s). Large projects with many packages may need more time.
