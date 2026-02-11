@@ -7,10 +7,12 @@ from .provider_select import select_provider
 
 IMAGE_KEY_MAP = {
     "stability": "stability_api_key",
+    "openai": "openai_api_key",
+    "google": "google_api_key",
     "flux": "flux_api_key",
 }
 
-IMAGE_PRIORITY = ["stability", "flux"]
+IMAGE_PRIORITY = ["stability", "openai", "google", "flux"]
 
 
 def generate_image(
@@ -20,11 +22,25 @@ def generate_image(
     api_keys: Dict[str, str],
 ) -> Dict[str, Any]:
     selected = select_provider(provider, api_keys, IMAGE_PRIORITY, IMAGE_KEY_MAP)
+    if selected == "openai":
+        return _call_openai_image(prompt, options, api_keys[IMAGE_KEY_MAP[selected]])
+    if selected == "google":
+        return _call_google_image(prompt, options, api_keys[IMAGE_KEY_MAP[selected]])
     if selected == "stability":
         return _call_stability(prompt, options, api_keys[IMAGE_KEY_MAP[selected]])
     if selected == "flux":
         return _call_flux(prompt, options, api_keys[IMAGE_KEY_MAP[selected]])
     raise RuntimeError(f"Unsupported image provider: {selected}")
+
+
+def _call_openai_image(prompt: str, options: Dict[str, Any], api_key: str) -> Dict[str, Any]:
+    # Placeholder for OpenAI DALL-E 3 API integration
+    return {"image": "base64_openai_stub", "provider": "openai", "model": "dall-e-3"}
+
+
+def _call_google_image(prompt: str, options: Dict[str, Any], api_key: str) -> Dict[str, Any]:
+    # Placeholder for Google Imagen API integration
+    return {"image": "base64_google_stub", "provider": "google", "model": "imagen-3"}
 
 
 def _call_stability(

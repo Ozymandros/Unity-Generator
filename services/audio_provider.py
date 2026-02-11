@@ -7,10 +7,12 @@ from .provider_select import select_provider
 
 AUDIO_KEY_MAP = {
     "elevenlabs": "elevenlabs_api_key",
+    "openai": "openai_api_key",
+    "google": "google_api_key",
     "playht": "playht_api_key",
 }
 
-AUDIO_PRIORITY = ["elevenlabs", "playht"]
+AUDIO_PRIORITY = ["elevenlabs", "openai", "google", "playht"]
 
 
 def generate_audio(
@@ -20,11 +22,25 @@ def generate_audio(
     api_keys: Dict[str, str],
 ) -> Dict[str, Any]:
     selected = select_provider(provider, api_keys, AUDIO_PRIORITY, AUDIO_KEY_MAP)
+    if selected == "openai":
+        return _call_openai_audio(prompt, options, api_keys[AUDIO_KEY_MAP[selected]])
+    if selected == "google":
+        return _call_google_audio(prompt, options, api_keys[AUDIO_KEY_MAP[selected]])
     if selected == "elevenlabs":
         return _call_elevenlabs(prompt, options, api_keys[AUDIO_KEY_MAP[selected]])
     if selected == "playht":
         return _call_playht(prompt, options, api_keys[AUDIO_KEY_MAP[selected]])
     raise RuntimeError(f"Unsupported audio provider: {selected}")
+
+
+def _call_openai_audio(text: str, options: Dict[str, Any], api_key: str) -> Dict[str, Any]:
+    # Placeholder for OpenAI TTS API integration
+    return {"audio_bytes": b"openai_audio_stub", "provider": "openai"}
+
+
+def _call_google_audio(text: str, options: Dict[str, Any], api_key: str) -> Dict[str, Any]:
+    # Placeholder for Google Cloud TTS API integration
+    return {"audio_bytes": b"google_audio_stub", "provider": "google"}
 
 
 def _call_elevenlabs(

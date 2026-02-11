@@ -9,6 +9,8 @@ import { getPref, saveApiKeys, setPref } from "../api/client";
 import { TEXT_PROVIDERS, IMAGE_PROVIDERS, AUDIO_PROVIDERS } from "../constants/providers";
 
 const backendUrl = ref(localStorage.getItem("backendUrl") || "http://127.0.0.1:8000");
+const googleKey = ref("");
+const anthropicKey = ref("");
 const openaiKey = ref("");
 const deepseekKey = ref("");
 const openrouterKey = ref("");
@@ -36,6 +38,8 @@ onMounted(async () => {
 async function save() {
   localStorage.setItem("backendUrl", backendUrl.value);
   const response = await saveApiKeys({
+    google_api_key: googleKey.value,
+    anthropic_api_key: anthropicKey.value,
     openai_api_key: openaiKey.value,
     deepseek_api_key: deepseekKey.value,
     openrouter_api_key: openrouterKey.value,
@@ -68,6 +72,8 @@ async function save() {
     </div>
 
     <h3>LLM Keys</h3>
+    <div class="field"><label>Google (Gemini)</label><input v-model="googleKey" type="password" /></div>
+    <div class="field"><label>Anthropic</label><input v-model="anthropicKey" type="password" /></div>
     <div class="field"><label>OpenAI</label><input v-model="openaiKey" type="password" /></div>
     <div class="field"><label>DeepSeek</label><input v-model="deepseekKey" type="password" /></div>
     <div class="field"><label>OpenRouter</label><input v-model="openrouterKey" type="password" /></div>

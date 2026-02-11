@@ -6,11 +6,20 @@ export type ProviderOption = {
 
 export const TEXT_PROVIDERS: ProviderOption[] = [
   {
+    value: "google",
+    label: "Google (Gemini)",
+    models: [
+      { value: "gemini-1.5-pro", label: "Gemini 1.5 Pro" },
+      { value: "gemini-1.5-flash", label: "Gemini 1.5 Flash" },
+    ],
+  },
+  {
     value: "openai",
     label: "OpenAI",
     models: [
       { value: "gpt-4o", label: "GPT-4o" },
       { value: "gpt-4o-mini", label: "GPT-4o Mini" },
+      { value: "o1-preview", label: "o1 Preview" },
     ],
   },
   {
@@ -48,6 +57,8 @@ export const TEXT_PROVIDERS: ProviderOption[] = [
 
 export const IMAGE_PROVIDERS: ProviderOption[] = [
   { value: "stability", label: "Stability AI" },
+  { value: "openai", label: "OpenAI (DALL-E 3)" },
+  { value: "google", label: "Google (Imagen)" },
   { value: "flux", label: "Flux (Replicate)" },
 ];
 
@@ -55,13 +66,15 @@ export const AUDIO_PROVIDERS: ProviderOption[] = [
   { 
     value: "elevenlabs", 
     label: "ElevenLabs",
-    models: [ // Reusing 'models' for voices here or maybe adding a new property? 'models' fits the pattern.
+    models: [
       { value: "Rachel", label: "Rachel" },
       { value: "Drew", label: "Drew" },
       { value: "Clyde", label: "Clyde" },
       { value: "Mimi", label: "Mimi" },
     ]
   },
+  { value: "openai", label: "OpenAI (TTS)" },
+  { value: "google", label: "Google (TTS)" },
   { 
     value: "playht", 
     label: "PlayHT",

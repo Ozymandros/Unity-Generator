@@ -50,7 +50,7 @@ def generate_code(request: GenerationRequest):
     try:
         provider = request.provider or get_pref("preferred_llm_provider")
         data = agent_manager.run_code(
-            request.prompt, provider, request.options
+            request.prompt, provider, request.options, request.api_key
         )
         return ok_response(data)
     except Exception as exc:
@@ -65,7 +65,7 @@ def generate_text(request: GenerationRequest):
     try:
         provider = request.provider or get_pref("preferred_llm_provider")
         data = agent_manager.run_text(
-            request.prompt, provider, request.options
+            request.prompt, provider, request.options, request.api_key
         )
         return ok_response(data)
     except Exception as exc:
@@ -80,7 +80,7 @@ def generate_image(request: GenerationRequest):
     try:
         provider = request.provider or get_pref("preferred_image_provider")
         data = agent_manager.run_image(
-            request.prompt, provider, request.options
+            request.prompt, provider, request.options, request.api_key
         )
         return ok_response(data)
     except Exception as exc:
@@ -95,7 +95,7 @@ def generate_audio(request: GenerationRequest):
     try:
         provider = request.provider or get_pref("preferred_audio_provider")
         data = agent_manager.run_audio(
-            request.prompt, provider, request.options
+            request.prompt, provider, request.options, request.api_key
         )
         return ok_response(data)
     except Exception as exc:

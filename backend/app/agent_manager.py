@@ -32,45 +32,45 @@ class AgentManager:
         self.image_agent = image_agent
         self.audio_agent = audio_agent
 
-    def run_code(self, prompt: str, provider: str | None, options: Dict[str, Any]):
+    def run_code(self, prompt: str, provider: str | None, options: Dict[str, Any], api_key: str | None = None):
         api_keys = load_api_keys()
-        if provider and "api_key" in options:
+        if provider and api_key:
             key_name = LLM_KEY_MAP.get(provider)
             if key_name:
-                api_keys[key_name] = options["api_key"]
+                api_keys[key_name] = api_key
         
         if not self.code_agent:
             raise RuntimeError("CodeAgent is not available.")
         return self.code_agent.run(prompt, provider, options, api_keys)
 
-    def run_text(self, prompt: str, provider: str | None, options: Dict[str, Any]):
+    def run_text(self, prompt: str, provider: str | None, options: Dict[str, Any], api_key: str | None = None):
         api_keys = load_api_keys()
-        if provider and "api_key" in options:
+        if provider and api_key:
             key_name = LLM_KEY_MAP.get(provider)
             if key_name:
-                api_keys[key_name] = options["api_key"]
+                api_keys[key_name] = api_key
 
         if not self.text_agent:
             raise RuntimeError("TextAgent is not available.")
         return self.text_agent.run(prompt, provider, options, api_keys)
 
-    def run_image(self, prompt: str, provider: str | None, options: Dict[str, Any]):
+    def run_image(self, prompt: str, provider: str | None, options: Dict[str, Any], api_key: str | None = None):
         api_keys = load_api_keys()
-        if provider and "api_key" in options:
+        if provider and api_key:
             key_name = IMAGE_KEY_MAP.get(provider)
             if key_name:
-                api_keys[key_name] = options["api_key"]
+                api_keys[key_name] = api_key
 
         if not self.image_agent:
             raise RuntimeError("ImageAgent is not available.")
         return self.image_agent.run(prompt, provider, options, api_keys)
 
-    def run_audio(self, prompt: str, provider: str | None, options: Dict[str, Any]):
+    def run_audio(self, prompt: str, provider: str | None, options: Dict[str, Any], api_key: str | None = None):
         api_keys = load_api_keys()
-        if provider and "api_key" in options:
+        if provider and api_key:
             key_name = AUDIO_KEY_MAP.get(provider)
             if key_name:
-                api_keys[key_name] = options["api_key"]
+                api_keys[key_name] = api_key
 
         if not self.audio_agent:
             raise RuntimeError("AudioAgent is not available.")

@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 class GenerationRequest(BaseModel):
     prompt: str
     provider: Optional[str] = None
+    api_key: Optional[str] = None
     options: Dict[str, Any] = Field(default_factory=dict)
 
 
