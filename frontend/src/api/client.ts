@@ -89,6 +89,9 @@ export type UnityProjectRequest = {
   audio_prompt?: string;
   provider_overrides?: Record<string, string | undefined>;
   options?: Record<string, Record<string, unknown>>;
+  unity_template?: string;
+  unity_version?: string;
+  unity_platform?: string;
 };
 
 export async function generateUnityProject(body: UnityProjectRequest) {

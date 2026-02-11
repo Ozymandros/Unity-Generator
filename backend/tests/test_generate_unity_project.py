@@ -1,0 +1,78 @@
+import pytest
+from fastapi.testclient import TestClient
+from app.main import app as fastapi_app
+
+def test_generate_unity_project_schema(monkeypatch):
+    # Patch AgentManager methods to return dummy data
+    from app.main import agent_manager
+    monkeypatch.setattr(agent_manager, "run_code", lambda *args, **kwargs: {"content": "dummy code"})
+    monkeypatch.setattr(agent_manager, "run_text", lambda *args, **kwargs: {"content": "dummy text"})
+    import base64
+    valid_image = base64.b64encode(b"dummydata").decode("utf-8")
+    monkeypatch.setattr(agent_manager, "run_image", lambda *args, **kwargs: {"image": valid_image})
+    monkeypatch.setattr(agent_manager, "run_audio", lambda *args, **kwargs: {"audio_bytes": b"dummydata"})
+    # Patch API key loading only for this test
+    import app.config
+    import app.agent_manager
+    dummy_keys = {
+        "openai": "dummy-key",
+        "openai_api_key": "dummy-key",
+        "stable-diffusion": "dummy-key",
+        "stable_diffusion": "dummy-key",
+        "stable_diffusion_api_key": "dummy-key",
+        "elevenlabs": "dummy-key",
+        "elevenlabs_api_key": "dummy-key"
+    }
+    monkeypatch.setattr(app.config, "load_api_keys", lambda: dummy_keys)
+    monkeypatch.setattr(app.agent_manager, "load_api_keys", lambda: dummy_keys)
+    client = TestClient(fastapi_app)
+    payload = {
+        "project_name": "TestProject",
+        "code_prompt": "Player movement script",
+        "text_prompt": "Game intro text",
+        "image_prompt": "Player sprite",
+        "audio_prompt": "Jump sound",
+        "provider_overrides": {
+            "code": "openai",
+            "text": "openai",
+            "image": "stable-diffusion",
+            "audio": "elevenlabs"
+        },
+        "options": {
+            "code": {"temperature": 0.7, "max_tokens": 128},
+            "text": {"temperature": 0.7, "max_tokens": 128},
+            "image": {"aspect_ratio": "1:1", "quality": "standard"},
+            "audio": {"voice_id": "default", "stability": 0.5}
+        },
+        "unity_template": "3d",
+        "unity_version": "2022.3",
+        "unity_platform": "windows"
+    }
+    response = client.post("/generate/unity-project", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"]
+    assert "project_path" in data["data"]
+    assert data["data"]["project_path"]
+
+@pytest.mark.parametrize("template,version,platform", [
+    ("2d", "2021.3", "mac"),
+    ("urp", "2022.3", "linux"),
+    ("hdrp", "2023.1", "android"),
+    ("mobile", "2022.3", "ios"),
+    ("vr", "2023.1", "windows")
+])
+def test_generate_unity_project_variants(template, version, platform):
+    client = TestClient(fastapi_app)
+    payload = {
+        "project_name": f"Test_{template}_{platform}",
+        "unity_template": template,
+        "unity_version": version,
+        "unity_platform": platform
+    }
+    response = client.post("/generate/unity-project", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"]
+    assert "project_path" in data["data"]
+    assert data["data"]["project_path"]

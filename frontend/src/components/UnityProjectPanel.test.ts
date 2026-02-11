@@ -30,13 +30,20 @@ describe("UnityProjectPanel", () => {
 
     const wrapper = mount(UnityProjectPanel);
     const textareas = wrapper.findAll("textarea");
+    await wrapper.find('input').setValue('TestProject');
+    await wrapper.findAll('select')[0].setValue('3d'); // Unity Template
+    await wrapper.findAll('select')[1].setValue('2022.3'); // Unity Version
+    await wrapper.findAll('select')[2].setValue('windows'); // Unity Platform
     await textareas[0].setValue("Create player controller");
     await wrapper.find("button.primary").trigger("click");
     await flushPromises();
 
     expect(client.generateUnityProject).toHaveBeenCalledWith(
       expect.objectContaining({
-        project_name: "UnityProject",
+        project_name: "TestProject",
+        unity_template: "3d",
+        unity_version: "2022.3",
+        unity_platform: "windows",
         code_prompt: "Create player controller",
       })
     );
@@ -51,6 +58,10 @@ describe("UnityProjectPanel", () => {
     });
 
     const wrapper = mount(UnityProjectPanel);
+    await wrapper.find('input').setValue('MyUnityProject');
+    await wrapper.findAll('select')[0].setValue('3d');
+    await wrapper.findAll('select')[1].setValue('2022.3');
+    await wrapper.findAll('select')[2].setValue('windows');
     await wrapper.find("button.primary").trigger("click");
     await flushPromises();
 
@@ -71,6 +82,10 @@ describe("UnityProjectPanel", () => {
     });
 
     const wrapper = mount(UnityProjectPanel);
+    await wrapper.find('input').setValue('FailProject');
+    await wrapper.findAll('select')[0].setValue('3d');
+    await wrapper.findAll('select')[1].setValue('2022.3');
+    await wrapper.findAll('select')[2].setValue('windows');
     await wrapper.find("button.primary").trigger("click");
     await flushPromises();
 
@@ -86,19 +101,12 @@ describe("UnityProjectPanel", () => {
     });
 
     const wrapper = mount(UnityProjectPanel);
-    
-    // Set Code Temp to Creative (1.0) - Find select by checking options or order. Code temp is 1st select after prompts?
-    // Order in template: Image Aspect(4), Quality(5). Audio Voice(6), Stability(7).
-    // Code Temp is in first section group.
-    // Let's rely on finding by v-model roughly or just scanning all selects.
-    // Simulating user usage by setting values.
-    
-    // Code Temp (index 0)
-    await wrapper.findAll("select")[0].setValue(1.0);
-    // Code Max Tokens (index 1)
-    await wrapper.findAll("select")[1].setValue(4096);
-    
-    // Trigger generation
+    await wrapper.find('input').setValue('TestProject');
+    await wrapper.findAll('select')[0].setValue('3d');
+    await wrapper.findAll('select')[1].setValue('2022.3');
+    await wrapper.findAll('select')[2].setValue('windows');
+    await wrapper.findAll("select")[3].setValue(1.0); // Code Temp
+    await wrapper.findAll("select")[4].setValue(4096); // Code Max Tokens
     await wrapper.find("button.primary").trigger("click");
     await flushPromises();
 
@@ -108,7 +116,10 @@ describe("UnityProjectPanel", () => {
             code: expect.objectContaining({ temperature: 1.0, max_tokens: 4096 }),
             image: expect.objectContaining({ aspect_ratio: "1:1", quality: "standard" }), // Defaults
             audio: expect.objectContaining({ stability: 0.5 }), // Default
-        })
+        }),
+        unity_template: "3d",
+        unity_version: "2022.3",
+        unity_platform: "windows",
       })
     );
   });
@@ -127,6 +138,10 @@ describe("UnityProjectPanel", () => {
     };
 
     const wrapper = mount(UnityProjectPanel);
+    await wrapper.find('input').setValue('TestProject');
+    await wrapper.findAll('select')[0].setValue('3d');
+    await wrapper.findAll('select')[1].setValue('2022.3');
+    await wrapper.findAll('select')[2].setValue('windows');
     await wrapper.find("button.primary").trigger("click");
     await flushPromises();
 

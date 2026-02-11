@@ -54,6 +54,29 @@ const unityPackages = ref("com.unity.textmeshpro");
 const unitySceneName = ref("MainScene");
 const unityEditorPath = ref("");
 const unityTimeout = ref(300);
+const unityTemplate = ref("");
+const unityVersion = ref("");
+const unityPlatform = ref("");
+const UNITY_TEMPLATES = [
+  { value: "2d", label: "2D" },
+  { value: "3d", label: "3D" },
+  { value: "urp", label: "Universal Render Pipeline (URP)" },
+  { value: "hdrp", label: "High Definition Render Pipeline (HDRP)" },
+  { value: "mobile", label: "Mobile" },
+  { value: "vr", label: "VR" },
+];
+const UNITY_VERSIONS = [
+  { value: "2022.3", label: "2022.3 LTS" },
+  { value: "2021.3", label: "2021.3 LTS" },
+  { value: "2023.1", label: "2023.1" },
+];
+const UNITY_PLATFORMS = [
+  { value: "windows", label: "Windows" },
+  { value: "mac", label: "macOS" },
+  { value: "linux", label: "Linux" },
+  { value: "android", label: "Android" },
+  { value: "ios", label: "iOS" },
+];
 
 // Finalize job state
 const finalizeJobId = ref("");
@@ -108,6 +131,27 @@ async function openWithTauri(path: string) {
 async function run() {
   status.value = "Generating Unity project...";
   tone.value = "ok";
+  // Validation: required fields
+  if (!projectName.value.trim()) {
+    tone.value = "error";
+    status.value = "Project name is required.";
+    return;
+  }
+  if (!unityTemplate.value) {
+    tone.value = "error";
+    status.value = "Unity template selection is required.";
+    return;
+  }
+  if (!unityVersion.value) {
+    tone.value = "error";
+    status.value = "Unity version selection is required.";
+    return;
+  }
+  if (!unityPlatform.value) {
+    tone.value = "error";
+    status.value = "Target platform selection is required.";
+    return;
+  }
   try {
     const response = await generateUnityProject({
       project_name: projectName.value,
@@ -127,6 +171,9 @@ async function run() {
         image: { aspect_ratio: imageAspectRatio.value, quality: imageQuality.value },
         audio: { voice_id: audioVoiceId.value || undefined, stability: audioStability.value },
       },
+      unity_template: unityTemplate.value,
+      unity_version: unityVersion.value,
+      unity_platform: unityPlatform.value,
     });
     if (!response.success) {
       tone.value = "error";
@@ -291,8 +338,31 @@ onUnmounted(() => {
     <StatusBanner :status="status" :tone="tone" />
 
     <div class="field">
-      <label>Project Name</label>
-      <input v-model="projectName" />
+      <label>Project Name <span style="color:#dc2626">*</span></label>
+      <input v-model="projectName" required />
+    </div>
+    <div class="field">
+      <label>Unity Template <span style="color:#dc2626">*</span></label>
+      <select v-model="unityTemplate" required>
+        <option value="">Select template...</option>
+        <option v-for="tpl in UNITY_TEMPLATES" :key="tpl.value" :value="tpl.value">{{ tpl.label }}</option>
+      </select>
+    </div>
+    <div class="options-row">
+      <div class="field-sm">
+        <label>Unity Version <span style="color:#dc2626">*</span></label>
+        <select v-model="unityVersion" required>
+          <option value="">Select version...</option>
+          <option v-for="ver in UNITY_VERSIONS" :key="ver.value" :value="ver.value">{{ ver.label }}</option>
+        </select>
+      </div>
+      <div class="field-sm">
+        <label>Target Platform <span style="color:#dc2626">*</span></label>
+        <select v-model="unityPlatform" required>
+          <option value="">Select platform...</option>
+          <option v-for="plat in UNITY_PLATFORMS" :key="plat.value" :value="plat.value">{{ plat.label }}</option>
+        </select>
+      </div>
     </div>
 
     <div class="section-group">

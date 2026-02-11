@@ -35,6 +35,9 @@ class UnityProjectRequest(BaseModel):
     audio_prompt: Optional[str] = None
     provider_overrides: Dict[str, Optional[str]] = Field(default_factory=dict)
     options: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
+    unity_template: str = Field(default="", description="Unity project template (2d, 3d, urp, hdrp, mobile, vr)")
+    unity_version: str = Field(default="", description="Unity version (e.g., 2022.3)")
+    unity_platform: str = Field(default="", description="Target platform (windows, mac, linux, android, ios)")
 
 
 class SpritesRequest(BaseModel):
