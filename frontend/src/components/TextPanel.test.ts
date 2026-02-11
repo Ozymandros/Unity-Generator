@@ -13,6 +13,7 @@ describe("TextPanel", () => {
   it("renders form fields", () => {
     const wrapper = mount(TextPanel);
     expect(wrapper.find("textarea").exists()).toBe(true);
+    expect(wrapper.findAll("select").length).toBeGreaterThan(0);
     expect(wrapper.find("button.primary").text()).toBe("Generate");
   });
 
@@ -26,11 +27,36 @@ describe("TextPanel", () => {
 
     const wrapper = mount(TextPanel);
     await wrapper.find("textarea").setValue("Write a greeting");
+    
+    // Select provider (index 0)
+    const providerSelect = wrapper.findAll("select")[0];
+    await providerSelect.setValue("openai");
+    
+    // Select model (index 1) - dependent on provider
+    const modelSelect = wrapper.findAll("select")[1];
+    await modelSelect.setValue("gpt-4o-mini");
+
+    // Select Temperature (index 2)
+    const tempSelect = wrapper.findAll("select")[2];
+    await tempSelect.setValue(1.0); // Creative
+
+    // Select Length (index 3)
+    const lengthSelect = wrapper.findAll("select")[3];
+    await lengthSelect.setValue(1024); // Short
+
     await wrapper.find("button.primary").trigger("click");
     await flushPromises();
 
     expect(client.generateText).toHaveBeenCalledWith(
-      expect.objectContaining({ prompt: "Write a greeting" })
+      expect.objectContaining({ 
+          prompt: "Write a greeting",
+          provider: "openai",
+          options: expect.objectContaining({ 
+            model: "gpt-4o-mini",
+            temperature: 1.0,
+            max_tokens: 1024
+          })
+      })
     );
   });
 

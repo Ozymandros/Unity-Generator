@@ -1,5 +1,10 @@
 import logging
+import sys
+import os
 from typing import Any, Dict
+
+# Add project root to sys.path to allow importing services
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

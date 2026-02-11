@@ -13,8 +13,9 @@ describe("UnityProjectPanel", () => {
 
   it("renders form fields", () => {
     const wrapper = mount(UnityProjectPanel);
-    expect(wrapper.find('input[type="text"]').exists() || wrapper.find("input").exists()).toBe(true);
+    expect(wrapper.find('input').exists()).toBe(true); // Project Name
     expect(wrapper.findAll("textarea").length).toBeGreaterThan(0);
+    expect(wrapper.findAll("select").length).toBeGreaterThan(0);
     expect(wrapper.find("button.primary").text()).toBe("Generate Project");
   });
 
@@ -85,16 +86,27 @@ describe("UnityProjectPanel", () => {
 
     const wrapper = mount(UnityProjectPanel);
     
-    // Trigger generation with default values
+    // Set Code Temp to Creative (1.0) - Find select by checking options or order. Code temp is 1st select after prompts?
+    // Order in template: Image Aspect(4), Quality(5). Audio Voice(6), Stability(7).
+    // Code Temp is in first section group.
+    // Let's rely on finding by v-model roughly or just scanning all selects.
+    // Simulating user usage by setting values.
+    
+    // Code Temp (index 0)
+    await wrapper.findAll("select")[0].setValue(1.0);
+    // Code Max Tokens (index 1)
+    await wrapper.findAll("select")[1].setValue(4096);
+    
+    // Trigger generation
     await wrapper.find("button.primary").trigger("click");
     await flushPromises();
 
     expect(client.generateUnityProject).toHaveBeenCalledWith(
       expect.objectContaining({
         options: expect.objectContaining({
-            code: expect.objectContaining({ temperature: 0.7, max_tokens: 2048 }),
-            image: expect.objectContaining({ aspect_ratio: "1:1", quality: "standard" }),
-            audio: expect.objectContaining({ stability: 0.5 }),
+            code: expect.objectContaining({ temperature: 1.0, max_tokens: 4096 }),
+            image: expect.objectContaining({ aspect_ratio: "1:1", quality: "standard" }), // Defaults
+            audio: expect.objectContaining({ stability: 0.5 }), // Default
         })
       })
     );

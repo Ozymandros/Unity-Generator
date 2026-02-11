@@ -13,7 +13,7 @@ describe("CodePanel", () => {
   it("renders form fields", () => {
     const wrapper = mount(CodePanel);
     expect(wrapper.find("textarea").exists()).toBe(true);
-    expect(wrapper.findAll("input").length).toBeGreaterThanOrEqual(2);
+    expect(wrapper.findAll("select").length).toBeGreaterThanOrEqual(2);
     expect(wrapper.find("button.primary").text()).toBe("Generate");
   });
 

@@ -13,6 +13,7 @@ describe("AudioPanel", () => {
   it("renders form fields", () => {
     const wrapper = mount(AudioPanel);
     expect(wrapper.find("textarea").exists()).toBe(true);
+    expect(wrapper.findAll("select").length).toBeGreaterThan(0);
     expect(wrapper.find("button.primary").text()).toBe("Generate");
   });
 
@@ -26,11 +27,24 @@ describe("AudioPanel", () => {
 
     const wrapper = mount(AudioPanel);
     await wrapper.find("textarea").setValue("A battle cry");
+    
+    // Select provider
+    const providerSelect = wrapper.findAll("select")[0];
+    await providerSelect.setValue("elevenlabs");
+    
+    // Select voice (should be available after provider selection)
+    const voiceSelect = wrapper.findAll("select")[1];
+    await voiceSelect.setValue("Rachel");
+
     await wrapper.find("button.primary").trigger("click");
     await flushPromises();
 
     expect(client.generateAudio).toHaveBeenCalledWith(
-      expect.objectContaining({ prompt: "A battle cry" })
+      expect.objectContaining({ 
+        prompt: "A battle cry",
+        provider: "elevenlabs",
+        options: expect.objectContaining({ voice_id: "Rachel" })
+      })
     );
   });
 

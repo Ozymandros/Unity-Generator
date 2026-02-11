@@ -220,8 +220,13 @@ test("generates code with provider and model options", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Code" }).click();
   await page.locator("textarea").first().fill("Create a controller");
-  await page.getByPlaceholder("openai | deepseek | openrouter | groq").fill("deepseek");
-  await page.getByPlaceholder("gpt-4o-mini").fill("deepseek-coder");
+  
+  // Select provider and model using dropdowns
+  // Provider is the first select in the options row
+  await page.locator("select").nth(0).selectOption("deepseek");
+  // Model is the second select (dependent on provider)
+  await page.locator("select").nth(1).selectOption("deepseek-coder");
+  
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByText("Code generated.")).toBeVisible();
 
@@ -316,9 +321,19 @@ test("generates unity project with provider overrides", async ({ page }) => {
   await page.locator("input").first().fill("CustomProject");
   await page.locator("textarea").first().fill("Generate code");
   
-  // Fill provider overrides (need to find them by their placeholders)
-  const codeProviderInput = page.getByPlaceholder("openai | deepseek | openrouter | groq").first();
-  await codeProviderInput.fill("deepseek");
+  // Fill provider overrides - Code Provider is the first select in the overrides section
+  // Structure: [Code Prov, Text Prov, Image Prov, Audio Prov]
+  // We need to target the correct select. In UnityProjectPanel, there are many selects.
+  // 1. Settings (Code Temp/MaxTokens) -> 2 selects
+  // 2. Settings (Text Temp/MaxTokens) -> 2 selects
+  // 3. Settings (Image Aspect/Quality) -> 2 selects
+  // 4. Settings (Audio Voice/Stability) -> 2 selects
+  // 5. Provider Overrides -> 4 selects
+  
+  // The provider overrides are at the bottom.
+  // Let's select by label if possible, or by index. 
+  // "Code Provider" label.
+  await page.getByLabel("Code Provider").selectOption("deepseek");
   
   await page.getByRole("button", { name: "Generate Project" }).click();
   await expect(page.getByText("Unity project generated.")).toBeVisible();
@@ -419,7 +434,11 @@ test("fills and saves API keys in settings", async ({ page }) => {
     await passwordInputs[0].fill("sk-test-openai-key"); // OpenAI key
     await passwordInputs[4].fill("sk-test-stability-key"); // Stability key
   }
-  
+
+  // Set preferred providers using selects
+  await page.getByLabel("LLM").selectOption("openai");
+  await page.getByLabel("Image").selectOption("stability");
+
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByText("Saved locally.")).toBeVisible();
 

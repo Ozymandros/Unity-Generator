@@ -6,9 +6,11 @@ export default {};
 import { ref } from "vue";
 import StatusBanner from "./StatusBanner.vue";
 import { generateImage } from "../api/client";
+import { IMAGE_PROVIDERS, ASPECT_RATIOS, QUALITY_OPTIONS } from "../constants/providers";
 
 const prompt = ref("");
 const provider = ref("");
+const apiKey = ref("");
 const aspectRatio = ref("1:1");
 const quality = ref("standard");
 const status = ref<string | null>(null);
@@ -25,6 +27,7 @@ async function run() {
       options: { 
         aspect_ratio: aspectRatio.value,
         quality: quality.value,
+        api_key: apiKey.value || undefined,
       },
     });
     if (!response.success) {
@@ -53,26 +56,28 @@ async function run() {
     <div class="field-group">
       <div class="row">
         <div class="field">
-          <label>Provider (optional)</label>
-          <input v-model="provider" placeholder="stability | flux" />
+          <label>Provider</label>
+          <select v-model="provider">
+            <option value="" disabled>Select Provider</option>
+            <option v-for="p in IMAGE_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>API Key (Optional)</label>
+          <input v-model="apiKey" type="password" placeholder="Override key..." />
         </div>
       </div>
       <div class="row">
         <div class="field">
            <label>Aspect Ratio</label>
            <select v-model="aspectRatio">
-             <option value="1:1">1:1 Square</option>
-             <option value="16:9">16:9 Landscape</option>
-             <option value="9:16">9:16 Portrait</option>
-             <option value="4:3">4:3 Standard</option>
-             <option value="3:2">3:2 Classic</option>
+             <option v-for="ar in ASPECT_RATIOS" :key="ar.value" :value="ar.value">{{ ar.label }}</option>
            </select>
         </div>
         <div class="field">
            <label>Quality</label>
            <select v-model="quality">
-             <option value="standard">Standard</option>
-             <option value="hd">HD</option>
+             <option v-for="q in QUALITY_OPTIONS" :key="q.value" :value="q.value">{{ q.label }}</option>
            </select>
         </div>
       </div>

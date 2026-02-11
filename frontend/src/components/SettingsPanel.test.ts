@@ -38,7 +38,10 @@ describe("SettingsPanel", () => {
     const passwordInputs = wrapper.findAll('input[type="password"]');
     expect(passwordInputs.length).toBe(8); // 8 API key fields
 
-    // Check for preference inputs
+    // Check for preference inputs (selects)
+    const selects = wrapper.findAll("select");
+    expect(selects.length).toBe(3); // LLM, Image, Audio preferences
+
     expect(wrapper.find("button.primary").text()).toBe("Save");
   });
 

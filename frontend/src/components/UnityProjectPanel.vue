@@ -3,9 +3,19 @@ export default {};
 </script>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import StatusBanner from "./StatusBanner.vue";
 import { generateUnityProject, getLatestOutput } from "../api/client";
+import { 
+  TEXT_PROVIDERS, 
+  IMAGE_PROVIDERS, 
+  AUDIO_PROVIDERS, 
+  ASPECT_RATIOS, 
+  QUALITY_OPTIONS, 
+  TEMPERATURE_PRESETS, 
+  LENGTH_PRESETS,
+  STABILITY_PRESETS 
+} from "../constants/providers";
 
 const projectName = ref("UnityProject");
 const codePrompt = ref("");
@@ -33,6 +43,11 @@ const status = ref<string | null>(null);
 const tone = ref<"ok" | "error">("ok");
 const result = ref("");
 const lastProjectPath = ref("");
+
+const availableVoices = computed(() => {
+  const p = AUDIO_PROVIDERS.find((x) => x.value === audioProvider.value);
+  return p ? p.models || [] : [];
+});
 
 async function openWithTauri(path: string) {
   const tauri = (window as unknown as { __TAURI__?: { shell?: { open: (path: string) => Promise<void> } } })
@@ -137,11 +152,15 @@ async function openOutputFolder() {
       <div class="options-row">
         <div class="field-sm">
            <label>Temp</label>
-           <input type="number" v-model.number="codeTemperature" step="0.1" min="0" max="2" />
+           <select v-model.number="codeTemperature">
+             <option v-for="t in TEMPERATURE_PRESETS" :key="t.value" :value="t.value">{{ t.label }}</option>
+           </select>
         </div>
         <div class="field-sm">
            <label>Max Tokens</label>
-           <input type="number" v-model.number="codeMaxTokens" step="100" />
+           <select v-model.number="codeMaxTokens">
+             <option v-for="l in LENGTH_PRESETS" :key="l.value" :value="l.value">{{ l.label }}</option>
+           </select>
         </div>
       </div>
     </div>
@@ -154,11 +173,15 @@ async function openOutputFolder() {
       <div class="options-row">
         <div class="field-sm">
            <label>Temp</label>
-           <input type="number" v-model.number="textTemperature" step="0.1" min="0" max="2" />
+           <select v-model.number="textTemperature">
+             <option v-for="t in TEMPERATURE_PRESETS" :key="t.value" :value="t.value">{{ t.label }}</option>
+           </select>
         </div>
         <div class="field-sm">
            <label>Max Tokens</label>
-           <input type="number" v-model.number="textMaxTokens" step="100" />
+           <select v-model.number="textMaxTokens">
+             <option v-for="l in LENGTH_PRESETS" :key="l.value" :value="l.value">{{ l.label }}</option>
+           </select>
         </div>
       </div>
     </div>
@@ -172,18 +195,13 @@ async function openOutputFolder() {
         <div class="field-sm">
            <label>Aspect Ratio</label>
            <select v-model="imageAspectRatio">
-             <option value="1:1">1:1 Square</option>
-             <option value="16:9">16:9 Landscape</option>
-             <option value="9:16">9:16 Portrait</option>
-             <option value="4:3">4:3 Standard</option>
-             <option value="3:2">3:2 Classic</option>
+             <option v-for="ar in ASPECT_RATIOS" :key="ar.value" :value="ar.value">{{ ar.label }}</option>
            </select>
         </div>
         <div class="field-sm">
            <label>Quality</label>
            <select v-model="imageQuality">
-             <option value="standard">Standard</option>
-             <option value="hd">HD</option>
+             <option v-for="q in QUALITY_OPTIONS" :key="q.value" :value="q.value">{{ q.label }}</option>
            </select>
         </div>
       </div>
@@ -197,11 +215,16 @@ async function openOutputFolder() {
        <div class="options-row">
         <div class="field-sm">
            <label>Voice ID</label>
-           <input v-model="audioVoiceId" placeholder="Optional" />
+           <select v-model="audioVoiceId">
+             <option value="">Default / Random</option>
+             <option v-for="v in availableVoices" :key="v.value" :value="v.value">{{ v.label }}</option>
+           </select>
         </div>
         <div class="field-sm">
            <label>Stability</label>
-           <input type="number" v-model.number="audioStability" step="0.1" min="0" max="1" />
+           <select v-model.number="audioStability">
+             <option v-for="s in STABILITY_PRESETS" :key="s.value" :value="s.value">{{ s.label }}</option>
+           </select>
         </div>
       </div>
     </div>
@@ -210,19 +233,31 @@ async function openOutputFolder() {
     <div class="row">
       <div class="field">
         <label>Code Provider</label>
-        <input v-model="codeProvider" placeholder="openai | deepseek..." />
+        <select v-model="codeProvider">
+           <option value="">Default (Global Pref)</option>
+           <option v-for="p in TEXT_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
+        </select>
       </div>
       <div class="field">
         <label>Text Provider</label>
-        <input v-model="textProvider" placeholder="openai | deepseek..." />
+        <select v-model="textProvider">
+           <option value="">Default (Global Pref)</option>
+           <option v-for="p in TEXT_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
+        </select>
       </div>
       <div class="field">
         <label>Image Provider</label>
-        <input v-model="imageProvider" placeholder="stability | flux" />
+        <select v-model="imageProvider">
+           <option value="">Default (Global Pref)</option>
+           <option v-for="p in IMAGE_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
+        </select>
       </div>
       <div class="field">
         <label>Audio Provider</label>
-        <input v-model="audioProvider" placeholder="elevenlabs | playht" />
+        <select v-model="audioProvider">
+           <option value="">Default (Global Pref)</option>
+           <option v-for="p in AUDIO_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
+        </select>
       </div>
     </div>
 

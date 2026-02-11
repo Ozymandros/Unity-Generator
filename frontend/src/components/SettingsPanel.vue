@@ -6,6 +6,7 @@ export default {};
 import { onMounted, ref } from "vue";
 import StatusBanner from "./StatusBanner.vue";
 import { getPref, saveApiKeys, setPref } from "../api/client";
+import { TEXT_PROVIDERS, IMAGE_PROVIDERS, AUDIO_PROVIDERS } from "../constants/providers";
 
 const backendUrl = ref(localStorage.getItem("backendUrl") || "http://127.0.0.1:8000");
 const openaiKey = ref("");
@@ -83,15 +84,21 @@ async function save() {
     <h3>Preferred Providers</h3>
     <div class="field">
       <label>LLM</label>
-      <input v-model="preferredLlm" placeholder="deepseek" />
+      <select v-model="preferredLlm">
+        <option v-for="p in TEXT_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
+      </select>
     </div>
     <div class="field">
       <label>Image</label>
-      <input v-model="preferredImage" placeholder="stability" />
+      <select v-model="preferredImage">
+        <option v-for="p in IMAGE_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
+      </select>
     </div>
     <div class="field">
       <label>Audio</label>
-      <input v-model="preferredAudio" placeholder="elevenlabs" />
+      <select v-model="preferredAudio">
+        <option v-for="p in AUDIO_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
+      </select>
     </div>
 
     <button class="primary" @click="save">Save</button>
@@ -111,7 +118,8 @@ label {
   font-weight: 600;
   margin-bottom: 4px;
 }
-input {
+input,
+select {
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 6px;

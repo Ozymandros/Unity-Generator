@@ -87,8 +87,8 @@ All contributions must follow the **SRP**, **KISS**, and **Clean Architecture** 
 
 ## Configuration
 
-API keys are stored locally in `config/api_keys.json`. Use the Settings panel,
-or copy `config/api_keys.example.json` and fill it in manually.
+API keys are stored locally in `config/api_keys.json`. Use the **Settings** panel to configure keys and set preferred providers.
+The UI uses dropdown menus to let you easily select from supported providers and models.
 
 ### Supported providers
 
@@ -143,7 +143,7 @@ Request body:
 {
   "prompt": "Generate a Unity player controller",
   "provider": "openai",
-  "options": {"model": "gpt-4o-mini", "temperature": 0.2}
+  "options": {"model": "gpt-4o-mini", "temperature": 0.2, "max_tokens": 2048}
 }
 ```
 

@@ -8,6 +8,7 @@ export type GenerationResponse = {
 export type GenerationRequest = {
   prompt: string;
   provider?: string;
+  api_key?: string;
   options?: Record<string, unknown>;
 };
 

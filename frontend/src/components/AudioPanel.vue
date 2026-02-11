@@ -3,17 +3,24 @@ export default {};
 </script>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import StatusBanner from "./StatusBanner.vue";
 import { generateAudio } from "../api/client";
+import { AUDIO_PROVIDERS } from "../constants/providers";
 
 const prompt = ref("");
 const provider = ref("");
+const apiKey = ref("");
 const voiceId = ref("");
 const stability = ref(0.5);
 const status = ref<string | null>(null);
 const tone = ref<"ok" | "error">("ok");
 const result = ref("");
+
+const availableVoices = computed(() => {
+  const p = AUDIO_PROVIDERS.find((x) => x.value === provider.value);
+  return p ? p.models || [] : [];
+});
 
 async function run() {
   status.value = "Generating audio...";
@@ -25,6 +32,7 @@ async function run() {
       options: { 
         voice_id: voiceId.value || undefined,
         stability: stability.value,
+        api_key: apiKey.value || undefined,
       },
     });
     if (!response.success) {
@@ -53,14 +61,24 @@ async function run() {
     <div class="field-group">
       <div class="row">
         <div class="field">
-          <label>Provider (optional)</label>
-          <input v-model="provider" placeholder="elevenlabs | playht" />
+          <label>Provider</label>
+          <select v-model="provider">
+            <option value="" disabled>Select Provider</option>
+            <option v-for="p in AUDIO_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>API Key (Optional)</label>
+          <input v-model="apiKey" type="password" placeholder="Override key..." />
         </div>
       </div>
       <div class="row">
         <div class="field">
-          <label>Voice ID (optional)</label>
-          <input v-model="voiceId" placeholder="Rachel" />
+          <label>Voice (optional)</label>
+          <select v-model="voiceId">
+            <option value="" disabled>Select Voice</option>
+            <option v-for="v in availableVoices" :key="v.value" :value="v.value">{{ v.label }}</option>
+          </select>
         </div>
         <div class="field">
           <label>Stability</label>
@@ -96,7 +114,8 @@ async function run() {
   gap: 12px;
 }
 textarea,
-input {
+input,
+select {
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 6px;
