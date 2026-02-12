@@ -2,6 +2,7 @@
   "dependencies": {
     "pnpm": "^latest"
   },
+  "version": "0.1.1",
   "description": "Desktop app to generate Unity assets using AI (Tauri + FastAPI)",
   "name": "unity-generator",
   "private": true,
