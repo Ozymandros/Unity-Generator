@@ -18,10 +18,10 @@
     "tauri:build": "pnpm --dir frontend tauri build",
 
     "// --- Quality Control: Unified ---": "",
-    "check:all": "pnpm run lint:all && pnpm run typecheck:all && pnpm run test:all",
-    "lint:all": "pnpm --dir backend lint && pnpm --dir frontend lint",
-    "test:all": "pnpm run test:backend && pnpm run test:frontend",
-    "typecheck:all": "pnpm run typecheck:backend && pnpm run typecheck:frontend",
+    "check:all": "pnpm lint:all && pnpm typecheck:all && pnpm test:all && pnpm --dir frontend test:e2e",
+    "lint:all": "pnpm lint:backend && pnpm lint:frontend",
+    "test:all": "pnpm test:backend && pnpm test:frontend",
+    "typecheck:all": "pnpm typecheck:backend && pnpm typecheck:frontend",
 
     "// --- Quality Control: Frontend & Backend ---": "",
     "lint:backend": "pnpm --dir backend lint",
