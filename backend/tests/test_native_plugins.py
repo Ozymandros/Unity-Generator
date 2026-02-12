@@ -1,12 +1,13 @@
 
 import pytest
 from pathlib import Path
+from typing import Dict, Any
 from tempfile import TemporaryDirectory
 from agents.plugins.native.unity_project_plugin import UnityProjectPlugin
 from agents.plugins.native.memory_prefs_plugin import MemoryPrefsPlugin
 
 class TestUnityProjectPlugin:
-    def test_create_folder_structure(self):
+    def test_create_folder_structure(self) -> None:
         with TemporaryDirectory() as tmpdir:
             plugin = UnityProjectPlugin(output_root=Path(tmpdir))
             project_path = plugin.create_folder_structure("TestProject")
@@ -17,7 +18,7 @@ class TestUnityProjectPlugin:
             assert (Path(project_path) / "Assets" / "Textures").exists()
             assert (Path(project_path) / "Assets" / "Scripts.meta").exists()
 
-    def test_write_csharp_script(self):
+    def test_write_csharp_script(self) -> None:
         with TemporaryDirectory() as tmpdir:
             plugin = UnityProjectPlugin(output_root=Path(tmpdir))
             project_path = plugin.create_folder_structure("TestProject")
@@ -32,7 +33,7 @@ class TestUnityProjectPlugin:
             assert "PlayerController.cs" in script_path
             assert (Path(script_path).parent / "PlayerController.cs.meta").exists()
 
-    def test_write_script_security_traversal(self):
+    def test_write_script_security_traversal(self) -> None:
          with TemporaryDirectory() as tmpdir:
             plugin = UnityProjectPlugin(output_root=Path(tmpdir))
             project_path = plugin.create_folder_structure("TestProject")
@@ -47,32 +48,35 @@ class TestUnityProjectPlugin:
                 )
 
 class TestMemoryPrefsPlugin:
+    def test_finalize_job_with_unity_error(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        pass # Placeholder for the new test
+
     @pytest.fixture
-    def mock_db(self, monkeypatch):
+    def mock_db(self, monkeypatch: pytest.MonkeyPatch) -> Dict[str, str]:
         # Mock database calls for MemoryPrefsPlugin
         prefs = {"preferred_llm_provider": "openai", "unity_version": "2022.3"}
         
-        def mock_get_pref(key):
+        def mock_get_pref(key: str) -> Any:
             return prefs.get(key)
             
-        def mock_set_pref(key, value):
+        def mock_set_pref(key: str, value: Any) -> None:
             prefs[key] = value
             
         monkeypatch.setattr("agents.plugins.native.memory_prefs_plugin.get_pref", mock_get_pref)
         monkeypatch.setattr("agents.plugins.native.memory_prefs_plugin.set_pref", mock_set_pref)
         return prefs
 
-    def test_get_user_preference(self, mock_db):
+    def test_get_user_preference(self, mock_db: Dict[str, str]) -> None:
         plugin = MemoryPrefsPlugin()
         assert plugin.get_user_preference("preferred_llm_provider") == "openai"
         assert plugin.get_user_preference("missing") is None
 
-    def test_set_user_preference(self, mock_db):
+    def test_set_user_preference(self, mock_db: Dict[str, str]) -> None:
         plugin = MemoryPrefsPlugin()
         plugin.set_user_preference("test_key", "test_value")
         assert mock_db["test_key"] == "test_value"
 
-    def test_convenience_methods(self, mock_db):
+    def test_convenience_methods(self, mock_db: Dict[str, str]) -> None:
         plugin = MemoryPrefsPlugin()
         assert plugin.get_preferred_provider("llm") == "openai"
         assert plugin.get_unity_version() == "2022.3"

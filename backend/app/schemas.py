@@ -1,21 +1,65 @@
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
+
+
+class CodeOptions(BaseModel):
+    model: Optional[str] = None
+    temperature: float = 0.7
+    max_tokens: int = 2000
+    language: str = "csharp"
+
+
+class TextOptions(BaseModel):
+    model: Optional[str] = None
+    temperature: float = 0.7
+    max_tokens: int = 1000
+
+
+class ImageOptions(BaseModel):
+    model: Optional[str] = None
+    quality: str = "standard"
+    aspect_ratio: str = "1:1"
+    output_format: str = "png"
+    size: Optional[str] = None
+
+
+class AudioOptions(BaseModel):
+    model: Optional[str] = None
+    voice: str = "alloy"
+    format: str = "mp3"
+
+
+class AgentResult(BaseModel):
+    content: Optional[str] = None
+    image: Optional[str] = None
+    audio: Optional[str] = None
+    provider: str
+    model: Optional[str] = None
+    raw: Optional[Dict[str, Any]] = None
 
 
 class GenerationRequest(BaseModel):
     prompt: str
     provider: Optional[str] = None
     api_key: Optional[str] = None
-    options: Dict[str, Any] = Field(default_factory=dict)
+    options: Union[CodeOptions, TextOptions, ImageOptions, AudioOptions, Dict[str, Any]] = Field(default_factory=dict)
 
 
 class GenerationResponse(BaseModel):
     success: bool
-    date: str
-    error: Optional[str]
-    data: Optional[Dict[str, Any]]
+    date: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    error: Optional[str] = None
+    data: Optional[Union[AgentResult, Dict[str, Any]]] = None
+
+
+def ok_response(data: Union[AgentResult, Dict[str, Any]]) -> GenerationResponse:
+    return GenerationResponse(success=True, data=data)
+
+
+def error_response(message: str) -> GenerationResponse:
+    return GenerationResponse(success=False, error=message)
 
 
 class ApiKeysRequest(BaseModel):
@@ -34,7 +78,7 @@ class UnityProjectRequest(BaseModel):
     image_prompt: Optional[str] = None
     audio_prompt: Optional[str] = None
     provider_overrides: Dict[str, Optional[str]] = Field(default_factory=dict)
-    options: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
+    options: Dict[str, Any] = Field(default_factory=dict)
     unity_template: str = Field(default="", description="Unity project template (2d, 3d, urp, hdrp, mobile, vr)")
     unity_version: str = Field(default="", description="Unity version (e.g., 2022.3)")
     unity_platform: str = Field(default="", description="Target platform (windows, mac, linux, android, ios)")
@@ -45,7 +89,7 @@ class SpritesRequest(BaseModel):
     provider: Optional[str] = None
     api_key: Optional[str] = None
     resolution: int = 64
-    options: Dict[str, Any] = Field(default_factory=dict)
+    options: ImageOptions = Field(default_factory=ImageOptions)
 
 
 # ---------------------------------------------------------------------------
@@ -82,7 +126,7 @@ class FinalizeProjectRequest(BaseModel):
     image_prompt: Optional[str] = None
     audio_prompt: Optional[str] = None
     provider_overrides: Dict[str, Optional[str]] = Field(default_factory=dict)
-    options: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
+    options: Dict[str, Any] = Field(default_factory=dict)
 
     # Unity Engine settings
     unity_settings: UnityEngineSettings = Field(default_factory=UnityEngineSettings)
@@ -111,24 +155,4 @@ class FinalizeJobStatusResponse(BaseModel):
     zip_path: Optional[str] = None
 
 
-# ---------------------------------------------------------------------------
-# Helper response builders
-# ---------------------------------------------------------------------------
 
-
-def ok_response(data: Dict[str, Any]) -> GenerationResponse:
-    return GenerationResponse(
-        success=True,
-        date=datetime.now(timezone.utc).isoformat(),
-        error=None,
-        data=data,
-    )
-
-
-def error_response(message: str) -> GenerationResponse:
-    return GenerationResponse(
-        success=False,
-        date=datetime.now(timezone.utc).isoformat(),
-        error=message,
-        data=None,
-    )

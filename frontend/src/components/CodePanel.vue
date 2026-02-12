@@ -79,7 +79,7 @@ async function run() {
           <label>Model</label>
           <select v-model="model" :disabled="!provider">
             <option value="" disabled>Select Model</option>
-            <option v-for="m in availableModels" :key="m" :value="m">{{ m }}</option>
+            <option v-for="m in availableModels" :key="m.value" :value="m.value">{{ m.label }}</option>
           </select>
         </div>
       </div>

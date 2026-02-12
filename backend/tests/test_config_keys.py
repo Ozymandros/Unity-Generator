@@ -1,15 +1,14 @@
 from fastapi.testclient import TestClient
+from pathlib import Path
+import pytest
 
 from app.main import app
 
 
-def test_config_keys_roundtrip(tmp_path, monkeypatch) -> None:
+def test_get_api_keys(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     from app import config
 
-    def fake_root():
-        return tmp_path
-
-    monkeypatch.setattr(config, "get_repo_root", fake_root)
+    monkeypatch.setattr(config, "get_repo_root", lambda: tmp_path)
 
     client = TestClient(app)
     response = client.post(
@@ -25,3 +24,16 @@ def test_config_keys_roundtrip(tmp_path, monkeypatch) -> None:
     payload = response.json()
     assert payload["success"] is True
     assert "openai_api_key" in payload["data"]["keys"]
+
+
+def test_post_api_keys(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    from app import config
+    monkeypatch.setattr(config, "get_repo_root", lambda: tmp_path)
+    
+    client = TestClient(app)
+    response = client.post(
+        "/config/keys",
+        json={"keys": {"test_key": "test_value"}}
+    )
+    assert response.status_code == 200
+    assert response.json()["success"] is True

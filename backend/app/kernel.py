@@ -10,10 +10,10 @@ try:
         MathPlugin,
     )
 except Exception:  # pragma: no cover - optional dependency at runtime
-    Kernel = None
-    TextPlugin = None
-    TimePlugin = None
-    MathPlugin = None
+    Kernel = None  # type: ignore
+    TextPlugin = None  # type: ignore
+    TimePlugin = None  # type: ignore
+    MathPlugin = None  # type: ignore
 
 
 LOGGER = logging.getLogger(__name__)
@@ -98,7 +98,7 @@ def create_kernel(settings: Dict[str, Any]) -> "Kernel":
     
     # Register Semantic Functions (prompts)
     try:
-        from backend.app.config import get_repo_root
+        from .config import get_repo_root
         
         repo_root = get_repo_root()
         semantic_plugins_dir = repo_root / "agents" / "plugins" / "semantic"
@@ -107,7 +107,7 @@ def create_kernel(settings: Dict[str, Any]) -> "Kernel":
             # Register UnityCodeExpert semantic functions
             unity_code_expert_dir = semantic_plugins_dir / "UnityCodeExpert"
             if unity_code_expert_dir.exists():
-                kernel.add_plugin_from_prompt_directory(
+                kernel.add_plugin_from_prompt_directory(  # type: ignore
                     parent_directory=str(semantic_plugins_dir),
                     plugin_name="UnityCodeExpert"
                 )
@@ -116,25 +116,6 @@ def create_kernel(settings: Dict[str, Any]) -> "Kernel":
     except Exception as e:
         LOGGER.warning(f"Could not register semantic functions: {e}")
     
-    # Fallback: Register core skill wrappers if Microsoft plugins are not available
-    try:
-        from agents.core_skills import TextSkill, TimeSkill, MathSkill
-        
-        if TextPlugin is None:
-            text_skill = TextSkill()
-            kernel.add_plugin(text_skill, plugin_name="text")
-            LOGGER.debug("Registered custom TextSkill (fallback)")
-        
-        if TimePlugin is None:
-            time_skill = TimeSkill()
-            kernel.add_plugin(time_skill, plugin_name="time")
-            LOGGER.debug("Registered custom TimeSkill (fallback)")
-        
-        if MathPlugin is None:
-            math_skill = MathSkill()
-            kernel.add_plugin(math_skill, plugin_name="math")
-            LOGGER.debug("Registered custom MathSkill (fallback)")
-            
     except ImportError:
         pass
     except Exception as e:

@@ -1,6 +1,8 @@
 """Tests for the finalize workflow API endpoints."""
 
 import time
+import subprocess
+from typing import Any, Dict, List, Union
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -19,7 +21,7 @@ client = TestClient(app)
 # ---------------------------------------------------------------------------
 
 
-def _wait_for_job(job_id: str, timeout: float = 5.0) -> dict:
+def _wait_for_job(job_id: str, timeout: float = 5.0) -> Any:
     """Poll the finalize status endpoint until the job reaches a terminal state."""
     deadline = time.time() + timeout
     while time.time() < deadline:
@@ -37,20 +39,19 @@ def _wait_for_job(job_id: str, timeout: float = 5.0) -> dict:
 
 
 class TestFinalizeEndpoint:
-    def test_create_finalize_job_returns_job_id(self) -> None:
+    @patch("threading.Thread")
+    def test_finalize_workflow(self, mock_thread: MagicMock) -> None:
         """POST /api/v1/project/finalize should return a job_id immediately."""
-        with patch("app.main.resolve_unity_editor_path") as mock_path:
-            mock_path.return_value = Path("C:/Unity/Editor/Unity.exe")
-            resp = client.post(
-                "/api/v1/project/finalize",
-                json={
-                    "project_name": "TestProject",
-                    "unity_settings": {
-                        "generate_scene": True,
-                        "scene_name": "TestScene",
-                    },
+        resp = client.post(
+            "/api/v1/project/finalize",
+            json={
+                "project_name": "TestProject",
+                "unity_settings": {
+                    "generate_scene": True,
+                    "scene_name": "TestScene",
                 },
-            )
+            },
+        )
 
         assert resp.status_code == 200
         data = resp.json()
@@ -65,11 +66,10 @@ class TestFinalizeEndpoint:
         assert data["status"] == "not_found"
         assert data["errors"] == ["Job not found"]
 
-    def test_finalize_job_lifecycle_success(self, tmp_path: Path, monkeypatch) -> None:
+    def test_finalize_project_success(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test the full lifecycle: create -> running -> completed/failed (terminal)."""
         from app import unity_project
 
-        # Mock scaffold to use tmp_path
         monkeypatch.setattr(unity_project, "get_repo_root", lambda: tmp_path)
 
         # Mock agent_manager
@@ -86,7 +86,7 @@ class TestFinalizeEndpoint:
         # Mock run_finalize_job at the module level where it gets imported
         from services.unity_orchestrator import FinalizeResult
 
-        def fake_finalize(*args, **kwargs):
+        def fake_finalize(*args: Any, **kwargs: Any) -> FinalizeResult:
             on_progress = kwargs.get("on_progress")
             if on_progress:
                 on_progress("test", 50, "Testing...")
@@ -113,11 +113,9 @@ class TestFinalizeEndpoint:
 
         # Wait for a terminal state
         status = _wait_for_job(job_id, timeout=10)
-        # The job reaches a terminal state (completed or failed depending on
-        # whether the background thread picks up the monkeypatched version)
         assert status["status"] in ("completed", "failed")
 
-    def test_finalize_job_with_unity_error(self, tmp_path: Path, monkeypatch) -> None:
+    def test_finalize_job_with_unity_error(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that Unity failures produce proper error diagnostics."""
         from app import unity_project
 
@@ -191,16 +189,16 @@ class TestFinalizeSchemas:
         assert req.unity_settings.timeout == 300
 
     def test_finalize_request_with_settings(self) -> None:
-        from app.schemas import FinalizeProjectRequest
+        from app.schemas import FinalizeProjectRequest, UnityEngineSettings
 
         req = FinalizeProjectRequest(
             project_name="Custom",
-            unity_settings={
-                "install_packages": True,
-                "packages": ["com.unity.textmeshpro"],
-                "generate_scene": True,
-                "scene_name": "MyScene",
-            },
+            unity_settings=UnityEngineSettings(
+                install_packages=True,
+                packages=["com.unity.textmeshpro"],
+                generate_scene=True,
+                scene_name="MyScene",
+            ),
         )
         assert req.unity_settings.install_packages is True
         assert req.unity_settings.packages == ["com.unity.textmeshpro"]

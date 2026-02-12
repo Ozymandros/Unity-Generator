@@ -4,7 +4,7 @@ import os
 import platform
 import shutil
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 
 LOGGER = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ def load_api_keys() -> Dict[str, Any]:
         LOGGER.warning("API key file not found at %s", config_path)
         return {}
     try:
-        return json.loads(config_path.read_text(encoding="utf-8"))
+        return cast(Dict[str, Any], json.loads(config_path.read_text(encoding="utf-8")))
     except json.JSONDecodeError:
         LOGGER.exception("API key file is not valid JSON.")
         return {}

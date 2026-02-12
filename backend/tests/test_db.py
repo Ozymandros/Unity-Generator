@@ -7,7 +7,7 @@ import pytest
 from app import db
 
 
-def test_init_db_creates_table(tmp_path, monkeypatch):
+def test_init_db_creates_table(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that init_db creates the user_prefs table."""
     from app import config
     monkeypatch.setattr(config, "get_repo_root", lambda: tmp_path)
@@ -25,7 +25,7 @@ def test_init_db_creates_table(tmp_path, monkeypatch):
     conn.close()
 
 
-def test_set_and_get_pref(tmp_path, monkeypatch):
+def test_set_and_get_pref(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test set_pref and get_pref roundtrip."""
     from app import config
     monkeypatch.setattr(config, "get_repo_root", lambda: tmp_path)
@@ -38,7 +38,7 @@ def test_set_and_get_pref(tmp_path, monkeypatch):
     assert value == "test_value"
 
 
-def test_get_pref_returns_none_for_missing_key(tmp_path, monkeypatch):
+def test_get_pref_returns_none_for_missing_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test get_pref returns None when key doesn't exist."""
     from app import config
     monkeypatch.setattr(config, "get_repo_root", lambda: tmp_path)
@@ -50,7 +50,7 @@ def test_get_pref_returns_none_for_missing_key(tmp_path, monkeypatch):
     assert value is None
 
 
-def test_set_pref_upsert_behavior(tmp_path, monkeypatch):
+def test_set_pref_upsert_behavior(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that set_pref overwrites existing values."""
     from app import config
     monkeypatch.setattr(config, "get_repo_root", lambda: tmp_path)
@@ -65,7 +65,7 @@ def test_set_pref_upsert_behavior(tmp_path, monkeypatch):
     assert value == "second_value"
 
 
-def test_multiple_prefs(tmp_path, monkeypatch):
+def test_multiple_prefs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test storing multiple preferences."""
     from app import config
     monkeypatch.setattr(config, "get_repo_root", lambda: tmp_path)

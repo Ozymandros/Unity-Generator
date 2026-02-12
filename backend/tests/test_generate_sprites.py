@@ -3,19 +3,21 @@ from unittest.mock import patch, MagicMock
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
+from typing import Dict
+from app.schemas import AgentResult
 
 @pytest.fixture
-def client():
+def client() -> TestClient:
     return TestClient(app)
 
-def test_generate_sprites_success(client):
+def test_generate_sprites_success(client: TestClient) -> None:
     """Test successful sprite generation endpoint."""
     with patch("services.sprite_service.generate_sprite") as mock_gen:
-        mock_gen.return_value = {
-            "image": "fake-base64",
-            "resolution": 32,
-            "provider": "openai"
-        }
+        mock_gen.return_value = AgentResult(
+            image="fake-base64",
+            provider="openai",
+            raw={"resolution": 32}
+        )
         
         response = client.post(
             "/generate/sprites",
@@ -30,9 +32,9 @@ def test_generate_sprites_success(client):
         data = response.json()
         assert data["success"] is True
         assert data["data"]["image"] == "fake-base64"
-        assert data["data"]["resolution"] == 32
+        assert data["data"]["raw"]["resolution"] == 32
 
-def test_generate_sprites_error_handling(client):
+def test_generate_sprites_error_handling(client: TestClient) -> None:
     """Test error handling in sprites endpoint."""
     with patch("services.sprite_service.generate_sprite") as mock_gen:
         mock_gen.side_effect = ValueError("Processing failed")
@@ -47,10 +49,10 @@ def test_generate_sprites_error_handling(client):
         assert data["success"] is False
         assert "Processing failed" in data["error"]
 
-def test_generate_sprites_uses_image_provider_preference(client):
+def test_generate_sprites_uses_image_provider_preference(client: TestClient) -> None:
     """Test that sprites endpoint uses preferred_image_provider if none specified."""
     with patch("services.sprite_service.generate_sprite") as mock_gen:
-        mock_gen.return_value = {"image": "data"}
+        mock_gen.return_value = AgentResult(image="data", provider="stability")
         with patch("app.main.get_pref", return_value="stability"):
             client.post("/generate/sprites", json={"prompt": "test"})
             

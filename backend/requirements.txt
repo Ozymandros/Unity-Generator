@@ -6,6 +6,9 @@ requests
 pytest
 debugpy
 ruff
+mypy
+pyright
+types-requests
 Pillow
 numpy
 jinja2

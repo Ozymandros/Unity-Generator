@@ -4,8 +4,10 @@ import pytest
 from PIL import Image
 from services.sprite_service import process_pixel_art, generate_sprite
 from unittest.mock import patch, MagicMock
+from typing import Dict
+from app.schemas import AgentResult
 
-def test_process_pixel_art_resizing():
+def test_process_pixel_art_resizing() -> None:
     # Create a 100x100 red square image
     img = Image.new("RGBA", (100, 100), (255, 0, 0, 255))
     
@@ -15,7 +17,7 @@ def test_process_pixel_art_resizing():
     assert processed.size == (32, 32)
     assert processed.getpixel((0, 0)) == (255, 0, 0, 255)
 
-def test_process_pixel_art_quantization():
+def test_process_pixel_art_quantization() -> None:
     # Create a gradient image with many colors
     img = Image.new("RGBA", (64, 64))
     for x in range(64):
@@ -29,7 +31,7 @@ def test_process_pixel_art_quantization():
     colors = processed.convert("RGB").getcolors()
     assert len(colors) <= 8
 
-def test_process_pixel_art_autocrop():
+def test_process_pixel_art_autocrop() -> None:
     # Create a 64x64 image with a 10x10 red square in the middle
     img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
     for x in range(27, 37):
@@ -45,7 +47,7 @@ def test_process_pixel_art_autocrop():
 
 @patch("services.sprite_service.generate_image")
 @patch("services.sprite_service.load_api_keys")
-def test_generate_sprite_workflow(mock_load_keys, mock_gen_image):
+def test_generate_sprite_workflow(mock_load_keys: MagicMock, mock_gen_image: MagicMock) -> None:
     mock_load_keys.return_value = {"openai_api_key": "test"}
     
     # Create a fake response image
@@ -54,11 +56,10 @@ def test_generate_sprite_workflow(mock_load_keys, mock_gen_image):
     img.save(buffered, format="PNG")
     img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
     
-    mock_gen_image.return_value = {
-        "success": True,
-        "image": img_str,
-        "provider": "openai"
-    }
+    mock_gen_image.return_value = AgentResult(
+        image=img_str,
+        provider="openai"
+    )
     
     result = generate_sprite(
         prompt="A green square",
@@ -68,8 +69,8 @@ def test_generate_sprite_workflow(mock_load_keys, mock_gen_image):
         options={"palette_size": 16, "auto_crop": False}
     )
     
-    assert result["resolution"] == 16
-    assert "image" in result
+    assert result.raw["resolution"] == 16
+    assert len(result.image) > 100
     # Decode result image and check size
-    res_img = Image.open(io.BytesIO(base64.b64decode(result["image"])))
+    res_img = Image.open(io.BytesIO(base64.b64decode(result.image)))
     assert res_img.size == (16, 16)

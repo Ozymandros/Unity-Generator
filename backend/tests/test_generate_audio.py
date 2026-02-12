@@ -5,17 +5,18 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.schemas import AgentResult
 
 
 @pytest.fixture
-def client():
+def client() -> TestClient:
     return TestClient(app)
 
 
-def test_generate_audio_success(client, monkeypatch):
+def test_generate_audio_success(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test successful audio generation."""
     mock_agent_manager = MagicMock()
-    mock_agent_manager.run_audio.return_value = {"audio_url": "https://example.com/audio.mp3"}
+    mock_agent_manager.run_audio.return_value = AgentResult(audio="https://example.com/audio.mp3", provider="elevenlabs")
     
     monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
     
@@ -27,13 +28,13 @@ def test_generate_audio_success(client, monkeypatch):
     assert response.status_code == 200
     payload = response.json()
     assert payload["success"] is True
-    assert "audio_url" in payload["data"]
+    assert payload["data"]["audio"] == "https://example.com/audio.mp3"
 
 
-def test_generate_audio_uses_audio_provider_preference(client, monkeypatch):
+def test_generate_audio_uses_audio_provider_preference(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that provider falls back to preferred_audio_provider."""
     mock_agent_manager = MagicMock()
-    mock_agent_manager.run_audio.return_value = {"audio_url": "url"}
+    mock_agent_manager.run_audio.return_value = AgentResult(audio="url", provider="elevenlabs")
     
     monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
     monkeypatch.setattr("app.main.get_pref", lambda key: "elevenlabs")
@@ -48,7 +49,7 @@ def test_generate_audio_uses_audio_provider_preference(client, monkeypatch):
     assert call_args[0][1] == "elevenlabs"
 
 
-def test_generate_audio_error_handling(client, monkeypatch):
+def test_generate_audio_error_handling(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test error response when generation fails."""
     mock_agent_manager = MagicMock()
     mock_agent_manager.run_audio.side_effect = RuntimeError("Audio agent unavailable")

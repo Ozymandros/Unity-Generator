@@ -1,16 +1,19 @@
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app as fastapi_app
+from app.schemas import AgentResult
 
-def test_generate_unity_project_schema(monkeypatch):
+def test_generate_unity_project_schema(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Mock download to avoid network requests
+    monkeypatch.setattr("app.unity_project._download", lambda *args: b"fake content")
     # Patch AgentManager methods to return dummy data
     from app.main import agent_manager
-    monkeypatch.setattr(agent_manager, "run_code", lambda *args, **kwargs: {"content": "dummy code"})
-    monkeypatch.setattr(agent_manager, "run_text", lambda *args, **kwargs: {"content": "dummy text"})
+    monkeypatch.setattr(agent_manager, "run_code", lambda *args, **kwargs: AgentResult(content="dummy code", provider="openai"))
+    monkeypatch.setattr(agent_manager, "run_text", lambda *args, **kwargs: AgentResult(content="dummy text", provider="openai"))
     import base64
     valid_image = base64.b64encode(b"dummydata").decode("utf-8")
-    monkeypatch.setattr(agent_manager, "run_image", lambda *args, **kwargs: {"image": valid_image})
-    monkeypatch.setattr(agent_manager, "run_audio", lambda *args, **kwargs: {"audio_bytes": b"dummydata"})
+    monkeypatch.setattr(agent_manager, "run_image", lambda *args, **kwargs: AgentResult(image=valid_image, provider="openai"))
+    monkeypatch.setattr(agent_manager, "run_audio", lambda *args, **kwargs: AgentResult(audio="https://dummy-url", provider="openai"))
     # Patch API key loading only for this test
     import app.config
     import app.agent_manager
@@ -62,7 +65,7 @@ def test_generate_unity_project_schema(monkeypatch):
     ("mobile", "2022.3", "ios"),
     ("vr", "2023.1", "windows")
 ])
-def test_generate_unity_project_variants(template, version, platform):
+def test_generate_unity_project_variants(template: str, version: str, platform: str) -> None:
     client = TestClient(fastapi_app)
     payload = {
         "project_name": f"Test_{template}_{platform}",

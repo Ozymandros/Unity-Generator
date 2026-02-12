@@ -119,7 +119,7 @@ class TestScriptInjection:
 class TestRunUnityBatch:
     @patch("services.unity_orchestrator.subprocess.run")
     @patch("services.unity_orchestrator._read_editor_log", return_value="")
-    def test_successful_run(self, mock_log, mock_run, tmp_path: Path) -> None:
+    def test_successful_run(self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path) -> None:
         mock_run.return_value = subprocess.CompletedProcess(
             args=[], returncode=0, stdout="OK", stderr=""
         )
@@ -138,7 +138,7 @@ class TestRunUnityBatch:
 
     @patch("services.unity_orchestrator.subprocess.run")
     @patch("services.unity_orchestrator._read_editor_log", return_value="")
-    def test_nonzero_exit(self, mock_log, mock_run, tmp_path: Path) -> None:
+    def test_nonzero_exit(self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path) -> None:
         mock_run.return_value = subprocess.CompletedProcess(
             args=[], returncode=1, stdout="", stderr="Error occurred"
         )
@@ -155,7 +155,7 @@ class TestRunUnityBatch:
         "services.unity_orchestrator._read_editor_log",
         return_value="Assets/Bad.cs(1,1): error CS0001: fail",
     )
-    def test_log_errors_detected(self, mock_log, mock_run, tmp_path: Path) -> None:
+    def test_log_errors_detected(self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path) -> None:
         mock_run.return_value = subprocess.CompletedProcess(
             args=[], returncode=0, stdout="", stderr=""
         )
@@ -173,7 +173,7 @@ class TestRunUnityBatch:
         side_effect=subprocess.TimeoutExpired(cmd="Unity", timeout=10),
     )
     @patch("services.unity_orchestrator._read_editor_log", return_value="")
-    def test_timeout(self, mock_log, mock_run, tmp_path: Path) -> None:
+    def test_timeout(self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path) -> None:
         unity_path = tmp_path / "Unity.exe"
         unity_path.touch()
 
@@ -188,7 +188,7 @@ class TestRunUnityBatch:
         side_effect=FileNotFoundError("Not found"),
     )
     @patch("services.unity_orchestrator._read_editor_log", return_value="")
-    def test_unity_not_found(self, mock_log, mock_run, tmp_path: Path) -> None:
+    def test_unity_not_found(self, mock_run: MagicMock, mock_log: MagicMock, tmp_path: Path) -> None:
         result = run_unity_batch(Path("/nonexistent/Unity"), tmp_path)
 
         assert result.success is False
@@ -197,7 +197,7 @@ class TestRunUnityBatch:
 
     @patch("services.unity_orchestrator.subprocess.run")
     @patch("services.unity_orchestrator._read_editor_log", return_value="")
-    def test_custom_execute_method(self, mock_log, mock_run, tmp_path: Path) -> None:
+    def test_custom_execute_method(self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path) -> None:
         mock_run.return_value = subprocess.CompletedProcess(
             args=[], returncode=0, stdout="", stderr=""
         )

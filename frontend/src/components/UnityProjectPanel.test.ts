@@ -105,8 +105,10 @@ describe("UnityProjectPanel", () => {
     await wrapper.findAll('select')[0].setValue('3d');
     await wrapper.findAll('select')[1].setValue('2022.3');
     await wrapper.findAll('select')[2].setValue('windows');
-    await wrapper.findAll("select")[3].setValue(1.0); // Code Temp
-    await wrapper.findAll("select")[4].setValue(4096); // Code Max Tokens
+    // Selects 3, 6, 9, 12 are Providers.
+    // Code Temp is Select 4, Max Tokens is Select 5.
+    await wrapper.findAll("select")[4].setValue(1.0); // Code Temp
+    await wrapper.findAll("select")[5].setValue(4096); // Code Max Tokens
     await wrapper.find("button.primary").trigger("click");
     await flushPromises();
 

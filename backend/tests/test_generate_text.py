@@ -5,17 +5,18 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.schemas import AgentResult
 
 
 @pytest.fixture
-def client():
+def client() -> TestClient:
     return TestClient(app)
 
 
-def test_generate_text_success(client, monkeypatch):
+def test_generate_text_success(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test successful text generation."""
     mock_agent_manager = MagicMock()
-    mock_agent_manager.run_text.return_value = {"content": "Hello, world!"}
+    mock_agent_manager.run_text.return_value = AgentResult(content="Hello, world!", provider="openai")
     
     monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
     
@@ -30,10 +31,10 @@ def test_generate_text_success(client, monkeypatch):
     assert payload["data"]["content"] == "Hello, world!"
 
 
-def test_generate_text_uses_preference_fallback(client, monkeypatch):
+def test_generate_text_uses_preference_fallback(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that provider falls back to preference when not specified."""
     mock_agent_manager = MagicMock()
-    mock_agent_manager.run_text.return_value = {"content": "text"}
+    mock_agent_manager.run_text.return_value = AgentResult(content="text", provider="groq")
     
     monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
     monkeypatch.setattr("app.main.get_pref", lambda key: "groq")
@@ -48,7 +49,7 @@ def test_generate_text_uses_preference_fallback(client, monkeypatch):
     assert call_args[0][1] == "groq"
 
 
-def test_generate_text_error_handling(client, monkeypatch):
+def test_generate_text_error_handling(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test error response when generation fails."""
     mock_agent_manager = MagicMock()
     mock_agent_manager.run_text.side_effect = RuntimeError("Text agent unavailable")

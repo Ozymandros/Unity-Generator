@@ -1,12 +1,14 @@
+import pytest
 from pathlib import Path
 from unittest.mock import MagicMock
 
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.schemas import AgentResult
 
 
-def test_unity_project_generation(tmp_path: Path, monkeypatch) -> None:
+def test_unity_project_generation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     from app import unity_project
 
     def fake_root() -> Path:
@@ -16,7 +18,7 @@ def test_unity_project_generation(tmp_path: Path, monkeypatch) -> None:
     
     # Mock agent_manager to return generated code
     mock_agent_manager = MagicMock()
-    mock_agent_manager.run_code.return_value = {"content": "public class PlayerController {}"}
+    mock_agent_manager.run_code.return_value = AgentResult(content="public class PlayerController {}", provider="openai")
     monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
 
     client = TestClient(app)

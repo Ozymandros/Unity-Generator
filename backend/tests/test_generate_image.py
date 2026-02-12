@@ -5,17 +5,18 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.schemas import AgentResult
 
 
 @pytest.fixture
-def client():
+def client() -> TestClient:
     return TestClient(app)
 
 
-def test_generate_image_success(client, monkeypatch):
+def test_generate_image_success(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test successful image generation."""
     mock_agent_manager = MagicMock()
-    mock_agent_manager.run_image.return_value = {"image": "base64-data"}
+    mock_agent_manager.run_image.return_value = AgentResult(image="base64-data", provider="openai")
     
     monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
     
@@ -30,10 +31,10 @@ def test_generate_image_success(client, monkeypatch):
     assert payload["data"]["image"] == "base64-data"
 
 
-def test_generate_image_uses_image_provider_preference(client, monkeypatch):
+def test_generate_image_uses_image_provider_preference(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that provider falls back to preferred_image_provider."""
     mock_agent_manager = MagicMock()
-    mock_agent_manager.run_image.return_value = {"image": "data"}
+    mock_agent_manager.run_image.return_value = AgentResult(image="data", provider="dalle")
     
     monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
     monkeypatch.setattr("app.main.get_pref", lambda key: "dalle")
@@ -48,7 +49,7 @@ def test_generate_image_uses_image_provider_preference(client, monkeypatch):
     assert call_args[0][1] == "dalle"
 
 
-def test_generate_image_error_handling(client, monkeypatch):
+def test_generate_image_error_handling(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test error response when generation fails."""
     mock_agent_manager = MagicMock()
     mock_agent_manager.run_image.side_effect = RuntimeError("Image agent unavailable")

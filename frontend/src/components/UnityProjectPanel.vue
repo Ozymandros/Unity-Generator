@@ -1,10 +1,8 @@
-<script lang="ts">
-export default {};
-</script>
 
 <script setup lang="ts">
 import { ref, computed, onUnmounted } from "vue";
 import StatusBanner from "./StatusBanner.vue";
+import PromptInputSection from "./generic/PromptInputSection.vue";
 import {
   generateUnityProject,
   getLatestOutput,
@@ -25,26 +23,22 @@ import {
 } from "../constants/providers";
 
 const projectName = ref("UnityProject");
+// Code
 const codePrompt = ref("");
-const textPrompt = ref("");
-const imagePrompt = ref("");
-const audioPrompt = ref("");
-
-// Providers
 const codeProvider = ref("");
+const codeOptions = ref({ temperature: 0.7, max_tokens: 2048 });
+// Text
+const textPrompt = ref("");
 const textProvider = ref("");
+const textOptions = ref({ temperature: 0.7, max_tokens: 2048 });
+// Image
+const imagePrompt = ref("");
 const imageProvider = ref("");
+const imageOptions = ref({ aspect_ratio: "1:1", quality: "standard" });
+// Audio
+const audioPrompt = ref("");
 const audioProvider = ref("");
-
-// Structured Options
-const codeTemperature = ref(0.7);
-const codeMaxTokens = ref(2048);
-const textTemperature = ref(0.7);
-const textMaxTokens = ref(2048);
-const imageAspectRatio = ref("1:1");
-const imageQuality = ref("standard");
-const audioVoiceId = ref("");
-const audioStability = ref(0.5);
+const audioOptions = ref({ voice_id: "", stability: 0.5 });
 
 // Unity Engine Settings
 const unityInstallPackages = ref(false);
@@ -166,10 +160,10 @@ async function run() {
         audio: audioProvider.value || undefined,
       },
       options: {
-        code: { temperature: codeTemperature.value, max_tokens: codeMaxTokens.value },
-        text: { temperature: textTemperature.value, max_tokens: textMaxTokens.value },
-        image: { aspect_ratio: imageAspectRatio.value, quality: imageQuality.value },
-        audio: { voice_id: audioVoiceId.value || undefined, stability: audioStability.value },
+        code: { ...codeOptions.value },
+        text: { ...textOptions.value },
+        image: { ...imageOptions.value },
+        audio: { ...audioOptions.value },
       },
       unity_template: unityTemplate.value,
       unity_version: unityVersion.value,
@@ -217,10 +211,10 @@ async function runFinalize() {
         audio: audioProvider.value || undefined,
       },
       options: {
-        code: { temperature: codeTemperature.value, max_tokens: codeMaxTokens.value },
-        text: { temperature: textTemperature.value, max_tokens: textMaxTokens.value },
-        image: { aspect_ratio: imageAspectRatio.value, quality: imageQuality.value },
-        audio: { voice_id: audioVoiceId.value || undefined, stability: audioStability.value },
+        code: { ...codeOptions.value },
+        text: { ...textOptions.value },
+        image: { ...imageOptions.value },
+        audio: { ...audioOptions.value },
       },
       unity_settings: {
         install_packages: unityInstallPackages.value,
@@ -365,122 +359,120 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <div class="section-group">
-      <div class="field">
-        <label>Code Prompt</label>
-        <textarea v-model="codePrompt" rows="3"></textarea>
-      </div>
-      <div class="options-row">
-        <div class="field-sm">
-           <label>Temp</label>
-           <select v-model.number="codeTemperature">
-             <option v-for="t in TEMPERATURE_PRESETS" :key="t.value" :value="t.value">{{ t.label }}</option>
-           </select>
-        </div>
-        <div class="field-sm">
-           <label>Max Tokens</label>
-           <select v-model.number="codeMaxTokens">
-             <option v-for="l in LENGTH_PRESETS" :key="l.value" :value="l.value">{{ l.label }}</option>
-           </select>
-        </div>
-      </div>
-    </div>
 
-    <div class="section-group">
-      <div class="field">
-        <label>Text Prompt</label>
-        <textarea v-model="textPrompt" rows="3"></textarea>
-      </div>
-      <div class="options-row">
-        <div class="field-sm">
-           <label>Temp</label>
-           <select v-model.number="textTemperature">
-             <option v-for="t in TEMPERATURE_PRESETS" :key="t.value" :value="t.value">{{ t.label }}</option>
-           </select>
+    <PromptInputSection
+      label="Code Prompt"
+      type="code"
+      v-model="codePrompt"
+      :provider="codeProvider"
+      :providers="TEXT_PROVIDERS"
+      :options="codeOptions"
+      @update:provider="val => codeProvider = val"
+      @update:options="val => codeOptions = val"
+    >
+      <template #options="{ options, updateOptions }">
+        <div class="options-row">
+          <div class="field-sm">
+            <label>Temp</label>
+            <select v-model.number="options.temperature" @change="updateOptions({ temperature: options.temperature })">
+              <option v-for="t in TEMPERATURE_PRESETS" :key="t.value" :value="t.value">{{ t.label }}</option>
+            </select>
+          </div>
+          <div class="field-sm">
+            <label>Max Tokens</label>
+            <select v-model.number="options.max_tokens" @change="updateOptions({ max_tokens: options.max_tokens })">
+              <option v-for="l in LENGTH_PRESETS" :key="l.value" :value="l.value">{{ l.label }}</option>
+            </select>
+          </div>
         </div>
-        <div class="field-sm">
-           <label>Max Tokens</label>
-           <select v-model.number="textMaxTokens">
-             <option v-for="l in LENGTH_PRESETS" :key="l.value" :value="l.value">{{ l.label }}</option>
-           </select>
-        </div>
-      </div>
-    </div>
+      </template>
+    </PromptInputSection>
 
-    <div class="section-group">
-      <div class="field">
-        <label>Image Prompt</label>
-        <textarea v-model="imagePrompt" rows="3"></textarea>
-      </div>
-       <div class="options-row">
-        <div class="field-sm">
-           <label>Aspect Ratio</label>
-           <select v-model="imageAspectRatio">
-             <option v-for="ar in ASPECT_RATIOS" :key="ar.value" :value="ar.value">{{ ar.label }}</option>
-           </select>
+    <PromptInputSection
+      label="Text Prompt"
+      type="text"
+      v-model="textPrompt"
+      :provider="textProvider"
+      :providers="TEXT_PROVIDERS"
+      :options="textOptions"
+      @update:provider="val => textProvider = val"
+      @update:options="val => textOptions = val"
+    >
+      <template #options="{ options, updateOptions }">
+        <div class="options-row">
+          <div class="field-sm">
+            <label>Temp</label>
+            <select v-model.number="options.temperature" @change="updateOptions({ temperature: options.temperature })">
+              <option v-for="t in TEMPERATURE_PRESETS" :key="t.value" :value="t.value">{{ t.label }}</option>
+            </select>
+          </div>
+          <div class="field-sm">
+            <label>Max Tokens</label>
+            <select v-model.number="options.max_tokens" @change="updateOptions({ max_tokens: options.max_tokens })">
+              <option v-for="l in LENGTH_PRESETS" :key="l.value" :value="l.value">{{ l.label }}</option>
+            </select>
+          </div>
         </div>
-        <div class="field-sm">
-           <label>Quality</label>
-           <select v-model="imageQuality">
-             <option v-for="q in QUALITY_OPTIONS" :key="q.value" :value="q.value">{{ q.label }}</option>
-           </select>
-        </div>
-      </div>
-    </div>
+      </template>
+    </PromptInputSection>
 
-    <div class="section-group">
-      <div class="field">
-        <label>Audio Prompt</label>
-        <textarea v-model="audioPrompt" rows="3"></textarea>
-      </div>
-       <div class="options-row">
-        <div class="field-sm">
-           <label>Voice ID</label>
-           <select v-model="audioVoiceId">
-             <option value="">Default / Random</option>
-             <option v-for="v in availableVoices" :key="v.value" :value="v.value">{{ v.label }}</option>
-           </select>
+    <PromptInputSection
+      label="Image Prompt"
+      type="image"
+      v-model="imagePrompt"
+      :provider="imageProvider"
+      :providers="IMAGE_PROVIDERS"
+      :options="imageOptions"
+      @update:provider="val => imageProvider = val"
+      @update:options="val => imageOptions = val"
+    >
+      <template #options="{ options, updateOptions }">
+        <div class="options-row">
+          <div class="field-sm">
+            <label>Aspect Ratio</label>
+            <select v-model="options.aspect_ratio" @change="updateOptions({ aspect_ratio: options.aspect_ratio })">
+              <option v-for="ar in ASPECT_RATIOS" :key="ar.value" :value="ar.value">{{ ar.label }}</option>
+            </select>
+          </div>
+          <div class="field-sm">
+            <label>Quality</label>
+            <select v-model="options.quality" @change="updateOptions({ quality: options.quality })">
+              <option v-for="q in QUALITY_OPTIONS" :key="q.value" :value="q.value">{{ q.label }}</option>
+            </select>
+          </div>
         </div>
-        <div class="field-sm">
-           <label>Stability</label>
-           <select v-model.number="audioStability">
-             <option v-for="s in STABILITY_PRESETS" :key="s.value" :value="s.value">{{ s.label }}</option>
-           </select>
-        </div>
-      </div>
-    </div>
+      </template>
+    </PromptInputSection>
 
-    <h3>Provider Overrides (optional)</h3>
-    <div class="row">
-      <div class="field">
-        <label>Code Provider</label>
-        <select v-model="codeProvider">
-           <option value="">Default (Global Pref)</option>
-           <option v-for="p in TEXT_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Text Provider</label>
-        <select v-model="textProvider">
-           <option value="">Default (Global Pref)</option>
-           <option v-for="p in TEXT_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Image Provider</label>
-        <select v-model="imageProvider">
-           <option value="">Default (Global Pref)</option>
-           <option v-for="p in IMAGE_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Audio Provider</label>
-        <select v-model="audioProvider">
-           <option value="">Default (Global Pref)</option>
-           <option v-for="p in AUDIO_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
-        </select>
-      </div>
-    </div>
+    <PromptInputSection
+      label="Audio Prompt"
+      type="audio"
+      v-model="audioPrompt"
+      :provider="audioProvider"
+      :providers="AUDIO_PROVIDERS"
+      :options="audioOptions"
+      @update:provider="val => audioProvider = val"
+      @update:options="val => audioOptions = val"
+    >
+      <template #options="{ options, updateOptions }">
+        <div class="options-row">
+          <div class="field-sm">
+            <label>Voice ID</label>
+            <select v-model="options.voice_id" @change="updateOptions({ voice_id: options.voice_id })">
+              <option value="">Default / Random</option>
+              <option v-for="v in availableVoices" :key="v.value" :value="v.value">{{ v.label }}</option>
+            </select>
+          </div>
+          <div class="field-sm">
+            <label>Stability</label>
+            <select v-model.number="options.stability" @change="updateOptions({ stability: options.stability })">
+              <option v-for="s in STABILITY_PRESETS" :key="s.value" :value="s.value">{{ s.label }}</option>
+            </select>
+          </div>
+        </div>
+      </template>
+    </PromptInputSection>
+
 
     <button class="primary" @click="run">Generate Project</button>
     <button class="secondary" @click="openOutputFolder">Open Output Folder</button>

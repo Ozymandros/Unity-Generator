@@ -368,6 +368,9 @@ def zip_project(project_path: Path, output_path: Optional[Path] = None) -> Path:
 # High-level finalize orchestration
 # ---------------------------------------------------------------------------
 
+from typing import Callable, Optional, Dict, List
+from pathlib import Path
+
 def run_finalize_job(
     project_path: Path,
     unity_path: Path,
@@ -379,8 +382,9 @@ def run_finalize_job(
     packages: Optional[List[str]] = None,
     scene_name: str = "MainScene",
     timeout: int = 300,
-    on_progress=None,
+    on_progress: Optional[Callable[[str, int, str], None]] = None,
 ) -> FinalizeResult:
+
     """
     Run the full finalize workflow on an existing scaffolded Unity project.
 
