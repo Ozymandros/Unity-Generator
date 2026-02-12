@@ -1,12 +1,13 @@
-from typing import Any, Dict, Optional, Union
-from services.audio_provider import generate_audio
+from typing import Any
+
 from backend.app.schemas import AgentResult, AudioOptions
+from services.audio_provider import generate_audio
 
 
 def run(
     prompt: str,
-    provider: Optional[str],
-    options: AudioOptions | Dict[str, Any],
-    api_keys: Dict[str, str],
+    provider: str | None,
+    options: AudioOptions | dict[str, Any],
+    api_keys: dict[str, str],
 ) -> AgentResult:
     return generate_audio(prompt, provider, options, api_keys)

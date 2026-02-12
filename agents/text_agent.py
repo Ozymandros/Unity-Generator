@@ -1,12 +1,13 @@
-from typing import Any, Dict, Optional, Union
-from services.llm_provider import generate_text
+from typing import Any
+
 from backend.app.schemas import AgentResult, TextOptions
+from services.llm_provider import generate_text
 
 
 def run(
     prompt: str,
-    provider: Optional[str],
-    options: TextOptions | Dict[str, Any],
-    api_keys: Dict[str, str],
+    provider: str | None,
+    options: TextOptions | dict[str, Any],
+    api_keys: dict[str, str],
 ) -> AgentResult:
     return generate_text(prompt, provider, options, api_keys)

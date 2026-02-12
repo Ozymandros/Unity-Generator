@@ -1,8 +1,9 @@
-from typing import Any, Dict, Optional, List
+from typing import Any
+
 import requests
-from .provider_select import select_provider
 from app.schemas import AgentResult, ImageOptions
 
+from .provider_select import select_provider
 
 IMAGE_KEY_MAP = {
     "stability": "stability_api_key",
@@ -16,15 +17,15 @@ IMAGE_PRIORITY = ["stability", "openai", "google", "flux"]
 
 def generate_image(
     prompt: str,
-    provider: Optional[str],
-    options: ImageOptions | Dict[str, Any],
-    api_keys: Dict[str, str],
+    provider: str | None,
+    options: ImageOptions | dict[str, Any],
+    api_keys: dict[str, str],
 ) -> AgentResult:
     selected = select_provider(provider, api_keys, IMAGE_PRIORITY, IMAGE_KEY_MAP)
-    
+
     # Ensure options is a model
     opts = options if isinstance(options, ImageOptions) else ImageOptions(**options)
-    
+
     if selected == "openai":
         return _call_openai_image(prompt, opts, api_keys[IMAGE_KEY_MAP[selected]])
     if selected == "google":
@@ -46,15 +47,13 @@ def _call_google_image(prompt: str, options: ImageOptions, api_key: str) -> Agen
     return AgentResult(image="base64_google_stub", provider="google", model="imagen-3")
 
 
-def _call_stability(
-    prompt: str, options: ImageOptions, api_key: str
-) -> AgentResult:
+def _call_stability(prompt: str, options: ImageOptions, api_key: str) -> AgentResult:
     url = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
-    
+
     # Map quality to model: standard -> sd3-turbo, hd -> sd3
     quality = options.quality
     model = "sd3-turbo" if quality == "standard" else "sd3"
-    
+
     payload = {
         "prompt": prompt,
         "aspect_ratio": options.aspect_ratio,
@@ -78,11 +77,13 @@ def _call_stability(
 
 def _call_flux(prompt: str, options: ImageOptions, api_key: str) -> AgentResult:
     url = "https://api.replicate.com/v1/predictions"
-    
+
     # Map quality to version: standard -> flux-schnell, hd -> flux-dev
     quality = options.quality
     default_version = "flux-schnell" if quality == "standard" else "flux-dev"
-    version = getattr(options, "version", default_version) # Use getattr if version might be in Dict but not in Model yet
+    version = getattr(
+        options, "version", default_version
+    )  # Use getattr if version might be in Dict but not in Model yet
 
     payload = {
         "version": version,
@@ -101,4 +102,3 @@ def _call_flux(prompt: str, options: ImageOptions, api_key: str) -> AgentResult:
         raw=data,
         model=version,
     )
-

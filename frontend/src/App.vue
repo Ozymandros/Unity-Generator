@@ -5,9 +5,9 @@ import CodePanel from "./components/CodePanel.vue";
 import TextPanel from "./components/TextPanel.vue";
 import ImagePanel from "./components/ImagePanel.vue";
 import AudioPanel from "./components/AudioPanel.vue";
-import UnityProjectPanel from "./components/UnityProjectPanel.vue";
 import { healthCheck } from "./api/client";
 import SpritesPanel from "./components/SpritesPanel.vue";
+import UnityProjectPanel from "./components/UnityProjectPanel.vue";
 
 const tabs = [
   "Settings",

@@ -1,9 +1,9 @@
 import logging
-import sys
 import os
+import sys
 import threading
 from pathlib import Path
-from typing import Dict, Any, Optional, Union, cast
+from typing import Any, cast
 
 # Add project root to sys.path to allow importing services
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
@@ -16,30 +16,31 @@ from .agent_manager import AgentManager
 from .config import (
     get_logs_dir,
     get_templates_dir,
-    save_api_keys,
     load_api_keys,
     resolve_unity_editor_path,
+    save_api_keys,
 )
-from .db import init_db, get_pref, set_pref
+from .db import get_pref, init_db, set_pref
 from .finalize_store import JobStatus, finalize_store
 from .logging_config import setup_logging
 from .schemas import (
-    GenerationRequest,
-    GenerationResponse,
-    CodeOptions,
-    TextOptions,
-    ImageOptions,
-    AudioOptions,
     ApiKeysRequest,
-    PrefRequest,
-    UnityProjectRequest,
-    SpritesRequest,
+    AudioOptions,
+    CodeOptions,
+    FinalizeJobStatusResponse,
     FinalizeProjectRequest,
     FinalizeProjectResponse,
-    FinalizeJobStatusResponse,
-    ok_response,
+    GenerationRequest,
+    GenerationResponse,
+    ImageOptions,
+    PrefRequest,
+    SpritesRequest,
+    TextOptions,
+    UnityProjectRequest,
     error_response,
+    ok_response,
 )
+
 try:
     from .unity_project import create_unity_project, get_latest_project_path
 except ImportError:
@@ -63,7 +64,7 @@ init_db()
 
 
 @app.get("/health")
-def health() -> Dict[str, Any]:
+def health() -> dict[str, Any]:
     return {"status": "ok"}
 
 
@@ -75,15 +76,16 @@ def generate_code(request: GenerationRequest) -> GenerationResponse:
         options = request.options
         if isinstance(options, dict):
             options = CodeOptions(**options)
-        
+
         data = agent_manager.run_code(
-            request.prompt, provider, cast(Union[CodeOptions, Dict[str, Any]], options), request.api_key
+            request.prompt,
+            provider,
+            cast(CodeOptions | dict[str, Any], options),
+            request.api_key,
         )
         return ok_response(data)
     except Exception as exc:
-        logging.getLogger("failed_requests").warning(
-            "Code generation failed: %s", exc
-        )
+        logging.getLogger("failed_requests").warning("Code generation failed: %s", exc)
         return error_response(str(exc))
 
 
@@ -96,13 +98,14 @@ def generate_text(request: GenerationRequest) -> GenerationResponse:
             options = TextOptions(**options)
 
         data = agent_manager.run_text(
-            request.prompt, provider, cast(Union[TextOptions, Dict[str, Any]], options), request.api_key
+            request.prompt,
+            provider,
+            cast(TextOptions | dict[str, Any], options),
+            request.api_key,
         )
         return ok_response(data)
     except Exception as exc:
-        logging.getLogger("failed_requests").warning(
-            "Text generation failed: %s", exc
-        )
+        logging.getLogger("failed_requests").warning("Text generation failed: %s", exc)
         return error_response(str(exc))
 
 
@@ -115,13 +118,14 @@ def generate_image(request: GenerationRequest) -> GenerationResponse:
             options = ImageOptions(**options)
 
         data = agent_manager.run_image(
-            request.prompt, provider, cast(Union[ImageOptions, Dict[str, Any]], options), request.api_key
+            request.prompt,
+            provider,
+            cast(ImageOptions | dict[str, Any], options),
+            request.api_key,
         )
         return ok_response(data)
     except Exception as exc:
-        logging.getLogger("failed_requests").warning(
-            "Image generation failed: %s", exc
-        )
+        logging.getLogger("failed_requests").warning("Image generation failed: %s", exc)
         return error_response(str(exc))
 
 
@@ -134,13 +138,14 @@ def generate_audio(request: GenerationRequest) -> GenerationResponse:
             options = AudioOptions(**options)
 
         data = agent_manager.run_audio(
-            request.prompt, provider, cast(Union[AudioOptions, Dict[str, Any]], options), request.api_key
+            request.prompt,
+            provider,
+            cast(AudioOptions | dict[str, Any], options),
+            request.api_key,
         )
         return ok_response(data)
     except Exception as exc:
-        logging.getLogger("failed_requests").warning(
-            "Audio generation failed: %s", exc
-        )
+        logging.getLogger("failed_requests").warning("Audio generation failed: %s", exc)
         return error_response(str(exc))
 
 
@@ -148,13 +153,14 @@ def generate_audio(request: GenerationRequest) -> GenerationResponse:
 def generate_sprites(request: SpritesRequest) -> GenerationResponse:
     try:
         from services.sprite_service import generate_sprite
+
         provider = request.provider or get_pref("preferred_image_provider")
         data = generate_sprite(
-            request.prompt, 
-            provider, 
-            request.api_key, 
+            request.prompt,
+            provider,
+            request.api_key,
             request.resolution,
-            request.options
+            request.options,
         )
         return ok_response(data)
     except Exception as exc:
@@ -187,7 +193,6 @@ def read_pref(key: str) -> GenerationResponse:
 def write_pref(request: PrefRequest) -> GenerationResponse:
     set_pref(request.key, request.value)
     return ok_response({"key": request.key})
-
 
 
 @app.post("/generate/unity-project", response_model=GenerationResponse)
@@ -239,7 +244,9 @@ def generate_unity_project(request: UnityProjectRequest) -> GenerationResponse:
                 request.options.get("audio", {}),
             )
             # Pass the result as a dict for legacy create_unity_project
-            audio_output = {"audio_url": audio_result.audio} if audio_result.audio else None
+            audio_output = (
+                {"audio_url": audio_result.audio} if audio_result.audio else None
+            )
 
         data = create_unity_project(
             request.project_name,
@@ -262,7 +269,6 @@ def output_latest() -> GenerationResponse:
     if not path:
         return error_response("No output projects found.")
     return ok_response({"path": path})
-
 
 
 # ---------------------------------------------------------------------------
@@ -302,7 +308,12 @@ def _run_finalize_in_background(job_id: str, request: FinalizeProjectRequest) ->
     # Determine project path: use explicit path or scaffold a new project
     project_path_str = request.project_path
     if not project_path_str:
-        store.update_job(job_id, step="scaffolding", progress=10, log_line="Scaffolding Unity project...")
+        store.update_job(
+            job_id,
+            step="scaffolding",
+            progress=10,
+            log_line="Scaffolding Unity project...",
+        )
         try:
             code_provider = request.provider_overrides.get(
                 "code", get_pref("preferred_llm_provider")
@@ -341,7 +352,7 @@ def _run_finalize_in_background(job_id: str, request: FinalizeProjectRequest) ->
                     request.image_prompt,
                     image_provider,
                     request.options.get("image", {}),
-                                ).image
+                ).image
 
             if request.audio_prompt:
                 audio_output = agent_manager.run_audio(
@@ -355,7 +366,9 @@ def _run_finalize_in_background(job_id: str, request: FinalizeProjectRequest) ->
                 code_output,
                 text_output,
                 image_output,
-                {"audio_url": audio_output.audio} if audio_output and audio_output.audio else None,
+                {"audio_url": audio_output.audio}
+                if audio_output and audio_output.audio
+                else None,
             )
             project_path_str = scaffold_result["project_path"]
             store.update_job(
@@ -468,7 +481,7 @@ def finalize_job_status(job_id: str) -> FinalizeJobStatusResponse:
 
 
 @app.get("/api/v1/project/finalize/{job_id}/download", response_model=None)
-def finalize_job_download(job_id: str) -> Union[FileResponse, GenerationResponse]:
+def finalize_job_download(job_id: str) -> FileResponse | GenerationResponse:
     """
     Download the zipped project artifact for a completed finalize job.
     """

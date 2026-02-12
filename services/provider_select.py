@@ -1,11 +1,11 @@
-from typing import Dict, Iterable, Optional
+from collections.abc import Iterable
 
 
 def select_provider(
-    preferred: Optional[str],
-    api_keys: Dict[str, str],
+    preferred: str | None,
+    api_keys: dict[str, str],
     priority: Iterable[str],
-    key_map: Dict[str, str],
+    key_map: dict[str, str],
 ) -> str:
     if preferred:
         if preferred not in key_map:

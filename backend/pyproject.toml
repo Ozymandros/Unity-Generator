@@ -1,0 +1,30 @@
+[tool.ruff]
+# Target Python version
+target-version = "py310"
+
+# Files to include/exclude
+extend-exclude = ["__pycache__", ".venv"]
+
+[tool.ruff.lint]
+# Enable specific rules
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = []
+
+# Allow fix for all enabled rules (when `--fix`)
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+# Configure formatter
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

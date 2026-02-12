@@ -1,11 +1,12 @@
-from typing import Any, Dict, Optional, Union
-import requests
-from .provider_select import select_provider
+from typing import Any
 
-# Use TYPE_CHECKING to avoid circular imports if necessary, 
+import requests
+
+# Use TYPE_CHECKING to avoid circular imports if necessary,
 # though here it's likely just about mypy path.
 from app.schemas import AgentResult, AudioOptions
 
+from .provider_select import select_provider
 
 AUDIO_KEY_MAP = {
     "elevenlabs": "elevenlabs_api_key",
@@ -19,14 +20,14 @@ AUDIO_PRIORITY = ["elevenlabs", "openai", "google", "playht"]
 
 def generate_audio(
     prompt: str,
-    provider: Optional[str],
-    options: AudioOptions | Dict[str, Any],
-    api_keys: Dict[str, str],
+    provider: str | None,
+    options: AudioOptions | dict[str, Any],
+    api_keys: dict[str, str],
 ) -> AgentResult:
     selected = select_provider(provider, api_keys, AUDIO_PRIORITY, AUDIO_KEY_MAP)
-    
+
     opts = options if isinstance(options, AudioOptions) else AudioOptions(**options)
-    
+
     if selected == "openai":
         return _call_openai_audio(prompt, opts, api_keys[AUDIO_KEY_MAP[selected]])
     if selected == "google":
@@ -48,11 +49,9 @@ def _call_google_audio(text: str, options: AudioOptions, api_key: str) -> AgentR
     return AgentResult(audio="google_audio_stub", provider="google")
 
 
-def _call_elevenlabs(
-    text: str, options: AudioOptions, api_key: str
-) -> AgentResult:
+def _call_elevenlabs(text: str, options: AudioOptions, api_key: str) -> AgentResult:
     # Use getattr or check __dict__ if needed, but AudioOptions has specific fields
-    voice_id = getattr(options, "voice_id", "Rachel")
+    voice_id = getattr(options, "voice", "Rachel")
     model_id = getattr(options, "model_id", "eleven_multilingual_v2")
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
     payload = {
@@ -73,13 +72,12 @@ def _call_elevenlabs(
     # Note: Returning content as string placeholder or actual bytes if handled elsewhere
     # AgentResult expects Optional[str] for audio, might need base64
     import base64
+
     audio_data = base64.b64encode(response.content).decode("utf-8")
     return AgentResult(audio=audio_data, provider="elevenlabs")
 
 
-def _call_playht(
-    text: str, options: AudioOptions, api_key: str
-) -> AgentResult:
+def _call_playht(text: str, options: AudioOptions, api_key: str) -> AgentResult:
     url = "https://api.play.ht/api/v2/tts"
     payload = {
         "text": text,
@@ -94,4 +92,3 @@ def _call_playht(
     response.raise_for_status()
     data = response.json()
     return AgentResult(audio=data.get("url"), provider="playht", raw=data)
-

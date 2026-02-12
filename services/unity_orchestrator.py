@@ -12,12 +12,11 @@ import re
 import shutil
 import subprocess
 import zipfile
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional
 
 from jinja2 import Environment, FileSystemLoader
-
 
 LOGGER = logging.getLogger(__name__)
 
@@ -25,6 +24,7 @@ LOGGER = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Data structures
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class UnityRunResult:
@@ -35,8 +35,8 @@ class UnityRunResult:
     stdout: str = ""
     stderr: str = ""
     editor_log: str = ""
-    errors: List[str] = field(default_factory=list)
-    warnings: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -46,8 +46,8 @@ class FinalizeResult:
     success: bool
     project_path: str = ""
     zip_path: str = ""
-    errors: List[str] = field(default_factory=list)
-    logs: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    logs: list[str] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -72,7 +72,8 @@ _WARNING_PATTERNS = [
 # Editor.log location helpers
 # ---------------------------------------------------------------------------
 
-def _find_editor_log() -> Optional[Path]:
+
+def _find_editor_log() -> Path | None:
     """
     Return the default Unity Editor.log path for the current platform.
 
@@ -97,7 +98,7 @@ def _find_editor_log() -> Optional[Path]:
     return None
 
 
-def _read_editor_log(log_path: Optional[Path] = None) -> str:
+def _read_editor_log(log_path: Path | None = None) -> str:
     """
     Read the Unity Editor.log content.
 
@@ -120,7 +121,8 @@ def _read_editor_log(log_path: Optional[Path] = None) -> str:
 # Log parsing
 # ---------------------------------------------------------------------------
 
-def parse_editor_log(log_content: str) -> Dict[str, List[str]]:
+
+def parse_editor_log(log_content: str) -> dict[str, list[str]]:
     """
     Parse Unity Editor.log content for errors and warnings.
 
@@ -135,8 +137,8 @@ def parse_editor_log(log_content: str) -> Dict[str, List[str]]:
         >>> len(result["errors"]) > 0
         True
     """
-    errors: List[str] = []
-    warnings: List[str] = []
+    errors: list[str] = []
+    warnings: list[str] = []
 
     for line in log_content.splitlines():
         stripped = line.strip()
@@ -158,10 +160,11 @@ def parse_editor_log(log_content: str) -> Dict[str, List[str]]:
 # Template rendering
 # ---------------------------------------------------------------------------
 
+
 def render_template(
     template_name: str,
-    context: Dict,
-    templates_dir: Optional[Path] = None,
+    context: dict,
+    templates_dir: Path | None = None,
 ) -> str:
     """
     Render a Jinja2 C# template.
@@ -176,7 +179,9 @@ def render_template(
     """
     if templates_dir is None:
         # Default: backend/templates/unity
-        templates_dir = Path(__file__).resolve().parent.parent / "backend" / "templates" / "unity"
+        templates_dir = (
+            Path(__file__).resolve().parent.parent / "backend" / "templates" / "unity"
+        )
 
     env = Environment(
         loader=FileSystemLoader(str(templates_dir)),
@@ -192,9 +197,10 @@ def render_template(
 # Script injection / cleanup
 # ---------------------------------------------------------------------------
 
+
 def inject_editor_scripts(
     project_path: Path,
-    scripts: Dict[str, str],
+    scripts: dict[str, str],
 ) -> Path:
     """
     Inject temporary C# Editor scripts into a Unity project.
@@ -246,13 +252,14 @@ def cleanup_injected_scripts(inject_dir: Path) -> None:
 # Unity batch-mode runner
 # ---------------------------------------------------------------------------
 
+
 def run_unity_batch(
     unity_path: Path,
     project_path: Path,
     execute_method: str = "ProjectInitializer.Setup",
-    extra_args: Optional[List[str]] = None,
+    extra_args: list[str] | None = None,
     timeout: int = 300,
-    log_path: Optional[Path] = None,
+    log_path: Path | None = None,
 ) -> UnityRunResult:
     """
     Launch Unity in headless batch mode and capture the result.
@@ -281,8 +288,10 @@ def run_unity_batch(
         "-batchmode",
         "-nographics",
         "-quit",
-        "-projectPath", str(project_path),
-        "-executeMethod", execute_method,
+        "-projectPath",
+        str(project_path),
+        "-executeMethod",
+        execute_method,
     ]
     if extra_args:
         cmd.extend(extra_args)
@@ -338,7 +347,8 @@ def run_unity_batch(
 # Project zipping
 # ---------------------------------------------------------------------------
 
-def zip_project(project_path: Path, output_path: Optional[Path] = None) -> Path:
+
+def zip_project(project_path: Path, output_path: Path | None = None) -> Path:
     """
     Create a zip archive of a Unity project directory.
 
@@ -368,8 +378,8 @@ def zip_project(project_path: Path, output_path: Optional[Path] = None) -> Path:
 # High-level finalize orchestration
 # ---------------------------------------------------------------------------
 
-from typing import Callable, Optional, Dict, List
-from pathlib import Path
+
+
 
 def run_finalize_job(
     project_path: Path,
@@ -379,12 +389,11 @@ def run_finalize_job(
     install_packages: bool = False,
     generate_scene: bool = False,
     setup_urp: bool = False,
-    packages: Optional[List[str]] = None,
+    packages: list[str] | None = None,
     scene_name: str = "MainScene",
     timeout: int = 300,
-    on_progress: Optional[Callable[[str, int, str], None]] = None,
+    on_progress: Callable[[str, int, str], None] | None = None,
 ) -> FinalizeResult:
-
     """
     Run the full finalize workflow on an existing scaffolded Unity project.
 
@@ -410,20 +419,20 @@ def run_finalize_job(
     Returns:
         FinalizeResult with paths and any errors.
     """
-    logs: List[str] = []
-    errors: List[str] = []
+    logs: list[str] = []
+    errors: list[str] = []
 
     def _progress(step: str, pct: int, msg: str) -> None:
         logs.append(f"[{step}] {msg}")
         if on_progress:
             on_progress(step, pct, msg)
 
-    inject_dir: Optional[Path] = None
+    inject_dir: Path | None = None
 
     try:
         # Step 1: Render templates
         _progress("render", 10, "Rendering Editor automation scripts...")
-        scripts: Dict[str, str] = {}
+        scripts: dict[str, str] = {}
 
         template_context = {
             "install_packages": install_packages,

@@ -1,19 +1,17 @@
 """Tests for schemas module."""
+
 from datetime import datetime
-
-import pytest
-
 from typing import cast
 
 from app.schemas import (
+    ApiKeysRequest,
+    CodeOptions,
     GenerationRequest,
     GenerationResponse,
-    ApiKeysRequest,
     PrefRequest,
     UnityProjectRequest,
-    ok_response,
     error_response,
-    CodeOptions,
+    ok_response,
 )
 
 
@@ -28,9 +26,7 @@ def test_generation_request_minimal() -> None:
 def test_generation_request_full() -> None:
     """Test GenerationRequest with all fields."""
     req = GenerationRequest(
-        prompt="test",
-        provider="openai",
-        options={"model": "gpt-4o"}
+        prompt="test", provider="openai", options={"model": "gpt-4o"}
     )
     assert req.prompt == "test"
     assert req.provider == "openai"
@@ -69,7 +65,7 @@ def test_unity_project_request_full() -> None:
         image_prompt="Hero portrait",
         audio_prompt="Battle cry",
         provider_overrides={"code": "openai"},
-        options={"code": {"model": "gpt-4o"}}
+        options={"code": {"model": "gpt-4o"}},
     )
     assert req.project_name == "MyProject"
     assert req.code_prompt == "Create player"
@@ -78,9 +74,10 @@ def test_unity_project_request_full() -> None:
 def test_ok_response_structure() -> None:
     """Test ok_response returns correct structure."""
     from app.schemas import AgentResult
+
     result = AgentResult(content="test", provider="test")
     response = ok_response(result)
-    
+
     assert response.success is True
     assert response.error is None
     assert response.data == result
@@ -92,7 +89,7 @@ def test_ok_response_structure() -> None:
 def test_error_response_structure() -> None:
     """Test error_response returns correct structure."""
     response = error_response("Something went wrong")
-    
+
     assert response.success is False
     assert response.error == "Something went wrong"
     assert response.data is None
@@ -102,12 +99,10 @@ def test_error_response_structure() -> None:
 def test_generation_response_model() -> None:
     """Test GenerationResponse can be instantiated."""
     from app.schemas import AgentResult
+
     result = AgentResult(content="test", provider="test")
     response = GenerationResponse(
-        success=True,
-        date="2024-01-01T00:00:00Z",
-        error=None,
-        data=result
+        success=True, date="2024-01-01T00:00:00Z", error=None, data=result
     )
     assert response.success is True
     assert response.data == result

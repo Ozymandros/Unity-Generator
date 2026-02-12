@@ -1,6 +1,5 @@
 import sqlite3
 from pathlib import Path
-from typing import Optional
 
 from .config import get_db_dir
 
@@ -46,7 +45,7 @@ def set_pref(key: str, value: str) -> None:
         conn.close()
 
 
-def get_pref(key: str) -> Optional[str]:
+def get_pref(key: str) -> str | None:
     conn = sqlite3.connect(get_db_path())
     try:
         cursor = conn.cursor()

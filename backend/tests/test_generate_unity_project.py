@@ -1,19 +1,20 @@
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app as fastapi_app
-from app.schemas import AgentResult
 
-def test_generate_unity_project_schema(monkeypatch: pytest.MonkeyPatch) -> None:
-    # Mock download to avoid network requests
-    monkeypatch.setattr("app.unity_project._download", lambda *args: b"fake content")
+def test_generate_unity_project_schema(monkeypatch):
     # Patch AgentManager methods to return dummy data
     from app.main import agent_manager
+    from app.schemas import AgentResult
     monkeypatch.setattr(agent_manager, "run_code", lambda *args, **kwargs: AgentResult(content="dummy code", provider="openai"))
     monkeypatch.setattr(agent_manager, "run_text", lambda *args, **kwargs: AgentResult(content="dummy text", provider="openai"))
     import base64
     valid_image = base64.b64encode(b"dummydata").decode("utf-8")
-    monkeypatch.setattr(agent_manager, "run_image", lambda *args, **kwargs: AgentResult(image=valid_image, provider="openai"))
-    monkeypatch.setattr(agent_manager, "run_audio", lambda *args, **kwargs: AgentResult(audio="https://dummy-url", provider="openai"))
+    monkeypatch.setattr(agent_manager, "run_image", lambda *args, **kwargs: AgentResult(image=valid_image, provider="stable-diffusion"))
+    monkeypatch.setattr(agent_manager, "run_audio", lambda *args, **kwargs: AgentResult(audio="http://example.com/audio.mp3", provider="elevenlabs"))
+    # Mock _download to avoid real HTTP requests for audio
+    import app.unity_project
+    monkeypatch.setattr(app.unity_project, "_download", lambda url: b"dummy audio bytes")
     # Patch API key loading only for this test
     import app.config
     import app.agent_manager
@@ -65,7 +66,7 @@ def test_generate_unity_project_schema(monkeypatch: pytest.MonkeyPatch) -> None:
     ("mobile", "2022.3", "ios"),
     ("vr", "2023.1", "windows")
 ])
-def test_generate_unity_project_variants(template: str, version: str, platform: str) -> None:
+def test_generate_unity_project_variants(template, version, platform):
     client = TestClient(fastapi_app)
     payload = {
         "project_name": f"Test_{template}_{platform}",

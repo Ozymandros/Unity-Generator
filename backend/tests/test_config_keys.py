@@ -1,8 +1,8 @@
-from fastapi.testclient import TestClient
 from pathlib import Path
-import pytest
 
+import pytest
 from app.main import app
+from fastapi.testclient import TestClient
 
 
 def test_get_api_keys(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -28,12 +28,10 @@ def test_get_api_keys(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 
 def test_post_api_keys(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     from app import config
+
     monkeypatch.setattr(config, "get_repo_root", lambda: tmp_path)
-    
+
     client = TestClient(app)
-    response = client.post(
-        "/config/keys",
-        json={"keys": {"test_key": "test_value"}}
-    )
+    response = client.post("/config/keys", json={"keys": {"test_key": "test_value"}})
     assert response.status_code == 200
     assert response.json()["success"] is True

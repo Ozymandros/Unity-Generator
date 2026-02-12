@@ -1,25 +1,30 @@
 {
+  "dependencies": {
+    "pnpm": "^latest"
+  },
+  "description": "Desktop app to generate Unity assets using AI (Tauri + FastAPI)",
   "name": "unity-generator",
   "private": true,
-  "description": "Desktop app to generate Unity assets using AI (Tauri + FastAPI)",
   "scripts": {
-    "setup": "pnpm install && pnpm --dir frontend install && pip install -r backend/requirements.txt",
-    "dev": "pnpm --dir frontend dev:tauri",
+    "build:backend": "powershell -ExecutionPolicy Bypass -File scripts/build_backend.ps1",
+    "build:frontend": "pnpm --dir frontend build",
     "clean": "pnpm run clean:backend && pnpm run clean:frontend",
     "clean:backend": "powershell -Command \"Remove-Item -Recycle -Force backend/dist, backend/build, frontend/src-tauri/binaries/backend-* -ErrorAction SilentlyContinue\"",
     "clean:frontend": "pnpm --dir frontend run clean",
-    "build:backend": "powershell -ExecutionPolicy Bypass -File scripts/build_backend.ps1",
-    "build:frontend": "pnpm --dir frontend build",
-    "tauri": "pnpm --dir frontend tauri",
+    "dev": "pnpm --dir frontend dev:tauri",
+    "lint:backend": "pnpm --dir backend lint",
+    "lint:backend:fix": "pnpm --dir backend lint:fix",
+    "lint:frontend": "pnpm --dir backend lint && pnpm --dir frontend lint",
+    "lint:frontend:fix": "pnpm --dir backend lint:fix && pnpm --dir frontend lint",
     "package": "pnpm run clean && pnpm run build:backend && pnpm run tauri:build",
+    "setup": "pnpm install && pnpm --dir frontend install && pip install -r backend/requirements.txt",
+    "tauri": "pnpm --dir frontend tauri",
     "tauri:build": "pnpm --dir frontend tauri build",
     "test:all": "pnpm run test:backend && pnpm run test:frontend",
-    "test:backend": "pytest -c backend/pytest.ini",
+    "test:backend": "pnpm --dir backend test",
     "test:frontend": "pnpm --dir frontend test",
-    "lint": "pnpm --dir frontend lint",
-    "typecheck": "pnpm --dir frontend typecheck"
-  },
-  "dependencies": {
-    "pnpm": "^latest"
+    "typecheck:backend": "pnpm --dir backend typecheck",
+    "typecheck:frontend": "pnpm --dir backend typecheck && pnpm --dir frontend typecheck",
+    "typecheck:all": "pnpm run typecheck:backend && pnpm run typecheck:frontend"
   }
 }

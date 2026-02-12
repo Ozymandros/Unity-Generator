@@ -2,10 +2,8 @@ import json
 import logging
 import os
 import platform
-import shutil
 from pathlib import Path
-from typing import Any, Dict, Optional, cast
-
+from typing import Any, cast
 
 LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +33,7 @@ def get_templates_dir() -> Path:
     return Path(__file__).resolve().parent.parent / "templates" / "unity"
 
 
-def load_api_keys() -> Dict[str, Any]:
+def load_api_keys() -> dict[str, Any]:
     config_dir = get_config_dir()
     config_dir.mkdir(parents=True, exist_ok=True)
     config_path = config_dir / "api_keys.json"
@@ -43,13 +41,13 @@ def load_api_keys() -> Dict[str, Any]:
         LOGGER.warning("API key file not found at %s", config_path)
         return {}
     try:
-        return cast(Dict[str, Any], json.loads(config_path.read_text(encoding="utf-8")))
+        return cast(dict[str, Any], json.loads(config_path.read_text(encoding="utf-8")))
     except json.JSONDecodeError:
         LOGGER.exception("API key file is not valid JSON.")
         return {}
 
 
-def save_api_keys(keys: Dict[str, Any]) -> None:
+def save_api_keys(keys: dict[str, Any]) -> None:
     config_dir = get_config_dir()
     config_dir.mkdir(parents=True, exist_ok=True)
     config_path = config_dir / "api_keys.json"
@@ -60,7 +58,7 @@ def save_api_keys(keys: Dict[str, Any]) -> None:
 # Unity Editor path resolution
 # ---------------------------------------------------------------------------
 
-_DEFAULT_UNITY_PATHS: Dict[str, list] = {
+_DEFAULT_UNITY_PATHS: dict[str, list] = {
     "Windows": [
         r"C:\Program Files\Unity\Hub\Editor\*\Editor\Unity.exe",
         r"C:\Program Files\Unity Hub\Editor\*\Editor\Unity.exe",
@@ -75,7 +73,7 @@ _DEFAULT_UNITY_PATHS: Dict[str, list] = {
 }
 
 
-def _find_unity_on_disk() -> Optional[Path]:
+def _find_unity_on_disk() -> Path | None:
     """Attempt to discover a Unity Editor binary from well-known locations."""
     system = platform.system()
     import glob as _glob
@@ -89,7 +87,7 @@ def _find_unity_on_disk() -> Optional[Path]:
     return None
 
 
-def resolve_unity_editor_path(override: Optional[str] = None) -> Path:
+def resolve_unity_editor_path(override: str | None = None) -> Path:
     """
     Resolve the Unity Editor executable path.
 
@@ -132,7 +130,9 @@ def resolve_unity_editor_path(override: Optional[str] = None) -> Path:
             path = Path(pref_path)
             if path.exists():
                 return path
-            LOGGER.warning("Stored unity_editor_path preference not found: %s", pref_path)
+            LOGGER.warning(
+                "Stored unity_editor_path preference not found: %s", pref_path
+            )
     except Exception:
         pass
 

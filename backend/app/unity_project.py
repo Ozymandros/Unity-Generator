@@ -4,7 +4,7 @@ import re
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import requests
 
@@ -34,7 +34,7 @@ def _download(url: str) -> bytes:
     return response.content
 
 
-def _write_meta(path: Path, guid: Optional[str] = None, is_folder: bool = False) -> str:
+def _write_meta(path: Path, guid: str | None = None, is_folder: bool = False) -> str:
     meta_path = path.with_suffix(path.suffix + ".meta")
     guid_value = guid or uuid.uuid4().hex
     if is_folder:
@@ -60,7 +60,7 @@ DefaultImporter:
     return str(meta_path)
 
 
-def _write_script_meta(path: Path, guid: Optional[str] = None) -> str:
+def _write_script_meta(path: Path, guid: str | None = None) -> str:
     meta_path = path.with_suffix(path.suffix + ".meta")
     guid_value = guid or uuid.uuid4().hex
     content = f"""fileFormatVersion: 2
@@ -79,7 +79,7 @@ MonoImporter:
     return str(meta_path)
 
 
-def _write_texture_meta(path: Path, guid: Optional[str] = None) -> str:
+def _write_texture_meta(path: Path, guid: str | None = None) -> str:
     meta_path = path.with_suffix(path.suffix + ".meta")
     guid_value = guid or uuid.uuid4().hex
     content = f"""fileFormatVersion: 2
@@ -116,7 +116,7 @@ TextureImporter:
     return str(meta_path)
 
 
-def _write_audio_meta(path: Path, guid: Optional[str] = None) -> str:
+def _write_audio_meta(path: Path, guid: str | None = None) -> str:
     meta_path = path.with_suffix(path.suffix + ".meta")
     guid_value = guid or uuid.uuid4().hex
     content = f"""fileFormatVersion: 2
@@ -140,14 +140,14 @@ AudioImporter:
     return str(meta_path)
 
 
-def _ensure_folder(path: Path, written_files: List[str]) -> None:
+def _ensure_folder(path: Path, written_files: list[str]) -> None:
     path.mkdir(parents=True, exist_ok=True)
     written_files.append(str(path))
     written_files.append(_write_meta(path, is_folder=True))
 
 
-def _save_image(output_dir: Path, data: Any) -> List[str]:
-    files: List[str] = []
+def _save_image(output_dir: Path, data: Any) -> list[str]:
+    files: list[str] = []
     if isinstance(data, str):
         if data.startswith("http"):
             content = _download(data)
@@ -169,8 +169,8 @@ def _save_image(output_dir: Path, data: Any) -> List[str]:
     return files
 
 
-def _save_audio(output_dir: Path, data: Dict[str, Any]) -> List[str]:
-    files: List[str] = []
+def _save_audio(output_dir: Path, data: dict[str, Any]) -> list[str]:
+    files: list[str] = []
     if "audio_bytes" in data and data["audio_bytes"]:
         file_path = output_dir / "audio_1.mp3"
         _write_bytes(file_path, data["audio_bytes"])
@@ -185,19 +185,20 @@ def _save_audio(output_dir: Path, data: Dict[str, Any]) -> List[str]:
     return files
 
 
-def _write_project_settings(project_dir: Path, written_files: List[str]) -> None:
+def _write_project_settings(project_dir: Path, written_files: list[str]) -> None:
     settings_dir = project_dir / "ProjectSettings"
     _ensure_folder(settings_dir, written_files)
     version_file = settings_dir / "ProjectVersion.txt"
     _write_text(
         version_file,
-        "m_EditorVersion: 2022.3.0f1\nm_EditorVersionWithRevision: 2022.3.0f1 (placeholder)\n",
+        "m_EditorVersion: 2022.3.0f1\n"
+        "m_EditorVersionWithRevision: 2022.3.0f1 (placeholder)\n",
     )
     written_files.append(str(version_file))
     written_files.append(_write_meta(version_file))
 
 
-def _write_readme(project_dir: Path, written_files: List[str]) -> None:
+def _write_readme(project_dir: Path, written_files: list[str]) -> None:
     readme = project_dir / "README.txt"
     _write_text(
         readme,
@@ -211,18 +212,18 @@ def _write_readme(project_dir: Path, written_files: List[str]) -> None:
 
 def create_unity_project(
     project_name: str,
-    code: Optional[str],
-    text: Optional[str],
-    image_data: Optional[Any],
-    audio_data: Optional[Dict[str, Any]],
-) -> Dict[str, Any]:
+    code: str | None,
+    text: str | None,
+    image_data: Any | None,
+    audio_data: dict[str, Any] | None,
+) -> dict[str, Any]:
     root = get_repo_root()
     output_root = root / "output"
     output_root.mkdir(parents=True, exist_ok=True)
 
     folder_name = f"{_safe_name(project_name)}_{_timestamp()}"
     project_dir = output_root / folder_name
-    written_files: List[str] = []
+    written_files: list[str] = []
     assets_dir = project_dir / "Assets"
     scripts_dir = assets_dir / "Scripts"
     text_dir = assets_dir / "Text"
@@ -262,7 +263,7 @@ def create_unity_project(
     }
 
 
-def get_latest_project_path() -> Optional[str]:
+def get_latest_project_path() -> str | None:
     root = get_repo_root()
     output_root = root / "output"
     if not output_root.exists():

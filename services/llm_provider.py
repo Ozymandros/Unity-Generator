@@ -1,8 +1,9 @@
-from typing import Any, Dict, Optional, Union
-import requests
-from .provider_select import select_provider
-from app.schemas import AgentResult, TextOptions, CodeOptions
+from typing import Any
 
+import requests
+from app.schemas import AgentResult, CodeOptions, TextOptions
+
+from .provider_select import select_provider
 
 LLM_KEY_MAP = {
     "google": "google_api_key",
@@ -18,15 +19,15 @@ LLM_PRIORITY = ["google", "anthropic", "deepseek", "openrouter", "openai", "groq
 
 def generate_text(
     prompt: str,
-    provider: Optional[str],
-    options: Union[TextOptions, CodeOptions, Dict[str, Any]],
-    api_keys: Dict[str, str],
+    provider: str | None,
+    options: TextOptions | CodeOptions | dict[str, Any],
+    api_keys: dict[str, str],
 ) -> AgentResult:
     selected = select_provider(provider, api_keys, LLM_PRIORITY, LLM_KEY_MAP)
-    
+
     # Core logic: if options is a model, we can still treat it like a model.
     # If it's a dict, we might want to coerce, but for LLMs generic temperature/max_tokens are common.
-    
+
     if selected == "google":
         return _call_google(prompt, options, api_keys[LLM_KEY_MAP[selected]])
     if selected == "anthropic":
@@ -42,9 +43,11 @@ def generate_text(
     raise RuntimeError(f"Unsupported LLM provider: {selected}")
 
 
-def _call_openai(prompt: str, options: Union[TextOptions, CodeOptions, Dict[str, Any]], api_key: str) -> AgentResult:
+def _call_openai(
+    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
+) -> AgentResult:
     url = "https://api.openai.com/v1/chat/completions"
-    
+
     # Safer access for both models and dicts
     def get_opt(key: str, default: Any) -> Any:
         if isinstance(options, dict):
@@ -66,10 +69,10 @@ def _call_openai(prompt: str, options: Union[TextOptions, CodeOptions, Dict[str,
 
 
 def _call_deepseek(
-    prompt: str, options: Union[TextOptions, CodeOptions, Dict[str, Any]], api_key: str
+    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
 ) -> AgentResult:
     url = "https://api.deepseek.com/v1/chat/completions"
-    
+
     def get_opt(key: str, default: Any) -> Any:
         if isinstance(options, dict):
             return options.get(key, default)
@@ -90,10 +93,10 @@ def _call_deepseek(
 
 
 def _call_openrouter(
-    prompt: str, options: Union[TextOptions, CodeOptions, Dict[str, Any]], api_key: str
+    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
 ) -> AgentResult:
     url = "https://openrouter.ai/api/v1/chat/completions"
-    
+
     def get_opt(key: str, default: Any) -> Any:
         if isinstance(options, dict):
             return options.get(key, default)
@@ -113,29 +116,43 @@ def _call_openrouter(
     return AgentResult(content=content, provider="openrouter", model=model)
 
 
-def _call_google(prompt: str, options: Union[TextOptions, CodeOptions, Dict[str, Any]], api_key: str) -> AgentResult:
+def _call_google(
+    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
+) -> AgentResult:
     def get_opt(key: str, default: Any) -> Any:
         if isinstance(options, dict):
             return options.get(key, default)
         return getattr(options, key, default)
 
     model = get_opt("model", "gemini-1.5-flash")
-    return AgentResult(content=f"[Google {model} stub] Prompt: {prompt}", provider="google", model=model)
+    return AgentResult(
+        content=f"[Google {model} stub] Prompt: {prompt}",
+        provider="google",
+        model=model,
+    )
 
 
-def _call_anthropic(prompt: str, options: Union[TextOptions, CodeOptions, Dict[str, Any]], api_key: str) -> AgentResult:
+def _call_anthropic(
+    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
+) -> AgentResult:
     def get_opt(key: str, default: Any) -> Any:
         if isinstance(options, dict):
             return options.get(key, default)
         return getattr(options, key, default)
 
     model = get_opt("model", "claude-3-5-sonnet-20240620")
-    return AgentResult(content=f"[Anthropic {model} stub] Prompt: {prompt}", provider="anthropic", model=model)
+    return AgentResult(
+        content=f"[Anthropic {model} stub] Prompt: {prompt}",
+        provider="anthropic",
+        model=model,
+    )
 
 
-def _call_groq(prompt: str, options: Union[TextOptions, CodeOptions, Dict[str, Any]], api_key: str) -> AgentResult:
+def _call_groq(
+    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
+) -> AgentResult:
     url = "https://api.groq.com/openai/v1/chat/completions"
-    
+
     def get_opt(key: str, default: Any) -> Any:
         if isinstance(options, dict):
             return options.get(key, default)
@@ -153,4 +170,3 @@ def _call_groq(prompt: str, options: Union[TextOptions, CodeOptions, Dict[str, A
     response.raise_for_status()
     content = response.json()["choices"][0]["message"]["content"]
     return AgentResult(content=content, provider="groq", model=model)
-

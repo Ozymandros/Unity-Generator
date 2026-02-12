@@ -4,9 +4,10 @@ Tests for Unity Semantic Kernel skills.
 These tests verify that Unity skills work correctly and follow security best practices.
 """
 
-import pytest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+
+import pytest
 
 from agents.unity_skills import UnityCodeSkill, UnityProjectSkill
 
@@ -24,7 +25,7 @@ class TestUnityCodeSkill:
         """Test prompt generation includes Unity context."""
         skill = UnityCodeSkill("2022.3")
         prompt = skill.generate_csharp("Create a player script")
-        
+
         assert "Unity" in prompt
         assert "MonoBehaviour" in prompt
         assert "Create a player script" in prompt
@@ -38,40 +39,51 @@ class TestUnityCodeSkill:
     def test_validate_syntax_valid_code(self) -> None:
         """Test syntax validation with valid code."""
         skill = UnityCodeSkill()
-        valid_code = """
+        valid_codes = [
+            """
 using UnityEngine;
-
 public class TestScript : MonoBehaviour
 {
-    void Start()
-    {
-        Debug.Log("Hello");
-    }
+    void Start() { Debug.Log("Hello"); }
 }
-"""
-        assert skill.validate_syntax(valid_code) is True
+""",
+            # Escaped quotes
+            'public class T { void S() { string s = "He said \\"Hello\\""; } }',
+            # Comments with quotes
+            'public class T { // "quote in comment"\n void S() {} }',
+            # Nested braces and parens
+            'public class T { void S() { if (true) { Debug.Log((1 + 1).ToString()); } } }'
+        ]
+        for code in valid_codes:
+            assert skill.validate_syntax(code) is True
 
     def test_validate_syntax_invalid_code(self) -> None:
         """Test syntax validation detects errors."""
         skill = UnityCodeSkill()
-        
+
         # Missing closing brace
-        invalid_code = "public class Test {"
-        assert skill.validate_syntax(invalid_code) is False
-        
+        assert skill.validate_syntax("public class Test {") is False
+
+        # Unbalanced parentheses
+        assert skill.validate_syntax("public class T { void S() { Debug.Log(; } }") is False
+
+        # Missing class keyword
+        assert skill.validate_syntax("public T { }") is False
+
         # Empty code
         assert skill.validate_syntax("") is False
+        assert skill.validate_syntax("   ") is False
 
     def test_extract_csharp_from_markdown(self) -> None:
         """Test extracting C# code from markdown."""
         skill = UnityCodeSkill()
-        
+
         markdown = """Here's the code:
 ```csharp
 public class Test {}
 ```
 That's it."""
-        
+
         extracted = skill.extract_csharp_code(markdown)
         assert "public class Test {}" in extracted
         assert "```" not in extracted
@@ -103,9 +115,9 @@ class TestUnityProjectSkill:
         """Test writing asset with safe relative path."""
         with TemporaryDirectory() as tmpdir:
             skill = UnityProjectSkill(output_root=Path(tmpdir))
-            
+
             path = skill.write_asset("Scripts/Test.cs", "public class Test {}")
-            
+
             assert Path(path).exists()
             assert "Scripts" in path
             assert Path(path).read_text() == "public class Test {}"
@@ -114,9 +126,9 @@ class TestUnityProjectSkill:
         """Test that parent directories are created automatically."""
         with TemporaryDirectory() as tmpdir:
             skill = UnityProjectSkill(output_root=Path(tmpdir))
-            
+
             path = skill.write_asset("Scripts/UI/Button.cs", "public class Button {}")
-            
+
             assert Path(path).exists()
             assert Path(path).parent.exists()
 
@@ -124,7 +136,7 @@ class TestUnityProjectSkill:
         """Test that path traversal attacks are prevented."""
         with TemporaryDirectory() as tmpdir:
             skill = UnityProjectSkill(output_root=Path(tmpdir))
-            
+
             # Attempt to escape output directory
             with pytest.raises(ValueError, match="would escape"):
                 skill.write_asset("../../../etc/passwd", "malicious")
@@ -133,9 +145,9 @@ class TestUnityProjectSkill:
         """Test folder creation."""
         with TemporaryDirectory() as tmpdir:
             skill = UnityProjectSkill(output_root=Path(tmpdir))
-            
+
             path = skill.create_folder("Scripts/UI")
-            
+
             assert Path(path).exists()
             assert Path(path).is_dir()
 
@@ -144,5 +156,5 @@ class TestUnityProjectSkill:
         with TemporaryDirectory() as tmpdir:
             skill = UnityProjectSkill(output_root=Path(tmpdir))
             output_path = skill.get_output_path()
-            
+
             assert output_path == str(Path(tmpdir).resolve())

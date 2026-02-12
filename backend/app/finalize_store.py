@@ -10,8 +10,6 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Dict, List, Optional
-
 
 LOGGER = logging.getLogger(__name__)
 
@@ -31,19 +29,19 @@ class FinalizeJob:
     status: JobStatus = JobStatus.PENDING
     step: str = "queued"
     progress: int = 0
-    logs: List[str] = field(default_factory=list)
-    started_at: Optional[str] = None
-    finished_at: Optional[str] = None
-    error: Optional[str] = None
-    project_path: Optional[str] = None
-    zip_path: Optional[str] = None
+    logs: list[str] = field(default_factory=list)
+    started_at: str | None = None
+    finished_at: str | None = None
+    error: str | None = None
+    project_path: str | None = None
+    zip_path: str | None = None
 
 
 class FinalizeStore:
     """Thread-safe in-memory store for finalize jobs."""
 
     def __init__(self) -> None:
-        self._jobs: Dict[str, FinalizeJob] = {}
+        self._jobs: dict[str, FinalizeJob] = {}
         self._lock = threading.Lock()
 
     def create_job(self) -> FinalizeJob:
@@ -66,7 +64,7 @@ class FinalizeStore:
         LOGGER.debug("Created finalize job %s", job_id)
         return job
 
-    def get_job(self, job_id: str) -> Optional[FinalizeJob]:
+    def get_job(self, job_id: str) -> FinalizeJob | None:
         """
         Retrieve a job by ID.
 
@@ -83,13 +81,13 @@ class FinalizeStore:
         self,
         job_id: str,
         *,
-        status: Optional[JobStatus] = None,
-        step: Optional[str] = None,
-        progress: Optional[int] = None,
-        log_line: Optional[str] = None,
-        error: Optional[str] = None,
-        project_path: Optional[str] = None,
-        zip_path: Optional[str] = None,
+        status: JobStatus | None = None,
+        step: str | None = None,
+        progress: int | None = None,
+        log_line: str | None = None,
+        error: str | None = None,
+        project_path: str | None = None,
+        zip_path: str | None = None,
     ) -> None:
         """
         Update fields on an existing job (thread-safe).
@@ -126,7 +124,10 @@ class FinalizeStore:
                 job.zip_path = zip_path
             if status == JobStatus.RUNNING and not job.started_at:
                 job.started_at = datetime.now(timezone.utc).isoformat()
-            if status in (JobStatus.COMPLETED, JobStatus.FAILED) and not job.finished_at:
+            if (
+                status in (JobStatus.COMPLETED, JobStatus.FAILED)
+                and not job.finished_at
+            ):
                 job.finished_at = datetime.now(timezone.utc).isoformat()
 
 

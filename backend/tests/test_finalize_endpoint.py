@@ -1,17 +1,14 @@
 """Tests for the finalize workflow API endpoints."""
 
 import time
-import subprocess
-from typing import Any, Dict, List, Union
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from fastapi.testclient import TestClient
-
 from app.finalize_store import JobStatus, finalize_store
 from app.main import app
-
+from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
@@ -66,7 +63,9 @@ class TestFinalizeEndpoint:
         assert data["status"] == "not_found"
         assert data["errors"] == ["Job not found"]
 
-    def test_finalize_project_success(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_finalize_project_success(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test the full lifecycle: create -> running -> completed/failed (terminal)."""
         from app import unity_project
 
@@ -115,7 +114,9 @@ class TestFinalizeEndpoint:
         status = _wait_for_job(job_id, timeout=10)
         assert status["status"] in ("completed", "failed")
 
-    def test_finalize_job_with_unity_error(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_finalize_job_with_unity_error(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that Unity failures produce proper error diagnostics."""
         from app import unity_project
 
@@ -154,7 +155,9 @@ class TestFinalizeDownload:
 
         resp = client.get(f"/api/v1/project/finalize/{job.id}/download")
         data = resp.json()
-        assert data.get("success") is False or "not completed" in (data.get("error") or "")
+        assert data.get("success") is False or "not completed" in (
+            data.get("error") or ""
+        )
 
     def test_download_completed_job(self, tmp_path: Path) -> None:
         import zipfile

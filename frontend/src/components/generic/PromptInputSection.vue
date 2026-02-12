@@ -24,7 +24,7 @@ const props = defineProps<{
   modelValue: string;
   provider: string;
   providers?: Array<{ label: string; value: string }>;
-  options?: Record<string, any>;
+  options?: Record<string, unknown>;
 }>();
 const emit = defineEmits(["update:modelValue", "update:provider", "update:options"]);
 
@@ -37,19 +37,10 @@ watch(modelValue, v => (localPrompt.value = v));
 watch(localPrompt, v => emit("update:modelValue", v));
 watch(provider, v => (localProvider.value = v));
 watch(localProvider, v => emit("update:provider", v));
-watch(options, v => {
-  const next = { ...(v || {}) };
-  if (JSON.stringify(next) !== JSON.stringify(localOptions.value)) {
-    localOptions.value = next;
-  }
-});
-watch(localOptions, v => {
-  if (JSON.stringify(v) !== JSON.stringify(options.value)) {
-    emit("update:options", v);
-  }
-}, { deep: true });
+watch(options, v => (localOptions.value = { ...(v || {}) }));
+watch(localOptions, v => emit("update:options", v));
 
-function updateOptions(newOpts: Record<string, any>) {
+function updateOptions(newOpts: Record<string, unknown>) {
   localOptions.value = { ...localOptions.value, ...newOpts };
 }
 </script>
