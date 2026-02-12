@@ -1,0 +1,114 @@
+.panel {
+  max-width: 100%;
+}
+.header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.badge {
+    background: #e0f2fe;
+    color: #0369a1;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+.content-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 24px;
+    margin-top: 16px;
+}
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.preview-area {
+    background: #1e293b;
+    border-radius: 8px;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    color: #94a3b8;
+}
+.canvas-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+.meta {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #cbd5e1;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 5px;
+}
+.field-group {
+    background: #fff;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.toggle-group {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.toggle-group button {
+    padding: 4px 8px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+.toggle-group button.active {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+.checkbox {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+}
+label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: #475569;
+}
+textarea,
+input[type="password"],
+select {
+  padding: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+.primary {
+  padding: 12px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.primary:hover {
+    background: #1d4ed8;
+}

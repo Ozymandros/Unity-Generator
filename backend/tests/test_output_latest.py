@@ -1,11 +1,11 @@
 from pathlib import Path
 
+import pytest
+from app.main import app
 from fastapi.testclient import TestClient
 
-from app.main import app
 
-
-def test_output_latest(tmp_path: Path, monkeypatch) -> None:
+def test_get_latest_output(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     from app import unity_project
 
     def fake_root() -> Path:
@@ -16,6 +16,7 @@ def test_output_latest(tmp_path: Path, monkeypatch) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "ProjectA").mkdir()
 
+    client = TestClient(app)
     client = TestClient(app)
     response = client.get("/output/latest")
     assert response.status_code == 200

@@ -1,9 +1,12 @@
-from typing import Any, Dict, Optional
+from typing import Any
 
 import requests
 
-from .provider_select import select_provider
+# Use TYPE_CHECKING to avoid circular imports if necessary,
+# though here it's likely just about mypy path.
+from app.schemas import AgentResult, AudioOptions
 
+from .provider_select import select_provider
 
 AUDIO_KEY_MAP = {
     "elevenlabs": "elevenlabs_api_key",
@@ -17,44 +20,46 @@ AUDIO_PRIORITY = ["elevenlabs", "openai", "google", "playht"]
 
 def generate_audio(
     prompt: str,
-    provider: Optional[str],
-    options: Dict[str, Any],
-    api_keys: Dict[str, str],
-) -> Dict[str, Any]:
+    provider: str | None,
+    options: AudioOptions | dict[str, Any],
+    api_keys: dict[str, str],
+) -> AgentResult:
     selected = select_provider(provider, api_keys, AUDIO_PRIORITY, AUDIO_KEY_MAP)
+
+    opts = options if isinstance(options, AudioOptions) else AudioOptions(**options)
+
     if selected == "openai":
-        return _call_openai_audio(prompt, options, api_keys[AUDIO_KEY_MAP[selected]])
+        return _call_openai_audio(prompt, opts, api_keys[AUDIO_KEY_MAP[selected]])
     if selected == "google":
-        return _call_google_audio(prompt, options, api_keys[AUDIO_KEY_MAP[selected]])
+        return _call_google_audio(prompt, opts, api_keys[AUDIO_KEY_MAP[selected]])
     if selected == "elevenlabs":
-        return _call_elevenlabs(prompt, options, api_keys[AUDIO_KEY_MAP[selected]])
+        return _call_elevenlabs(prompt, opts, api_keys[AUDIO_KEY_MAP[selected]])
     if selected == "playht":
-        return _call_playht(prompt, options, api_keys[AUDIO_KEY_MAP[selected]])
+        return _call_playht(prompt, opts, api_keys[AUDIO_KEY_MAP[selected]])
     raise RuntimeError(f"Unsupported audio provider: {selected}")
 
 
-def _call_openai_audio(text: str, options: Dict[str, Any], api_key: str) -> Dict[str, Any]:
+def _call_openai_audio(text: str, options: AudioOptions, api_key: str) -> AgentResult:
     # Placeholder for OpenAI TTS API integration
-    return {"audio_bytes": b"openai_audio_stub", "provider": "openai"}
+    return AgentResult(audio="openai_audio_stub", provider="openai")
 
 
-def _call_google_audio(text: str, options: Dict[str, Any], api_key: str) -> Dict[str, Any]:
+def _call_google_audio(text: str, options: AudioOptions, api_key: str) -> AgentResult:
     # Placeholder for Google Cloud TTS API integration
-    return {"audio_bytes": b"google_audio_stub", "provider": "google"}
+    return AgentResult(audio="google_audio_stub", provider="google")
 
 
-def _call_elevenlabs(
-    text: str, options: Dict[str, Any], api_key: str
-) -> Dict[str, Any]:
-    voice_id = options.get("voice_id", "Rachel")
-    model_id = options.get("model_id", "eleven_multilingual_v2")
+def _call_elevenlabs(text: str, options: AudioOptions, api_key: str) -> AgentResult:
+    # Use getattr or check __dict__ if needed, but AudioOptions has specific fields
+    voice_id = getattr(options, "voice", "Rachel")
+    model_id = getattr(options, "model_id", "eleven_multilingual_v2")
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
     payload = {
         "text": text,
         "model_id": model_id,
         "voice_settings": {
-            "stability": options.get("stability", 0.5),
-            "similarity_boost": options.get("similarity_boost", 0.75),
+            "stability": getattr(options, "stability", 0.5),
+            "similarity_boost": getattr(options, "similarity_boost", 0.75),
         },
     }
     headers = {
@@ -64,17 +69,20 @@ def _call_elevenlabs(
     }
     response = requests.post(url, json=payload, headers=headers, timeout=120)
     response.raise_for_status()
-    return {"audio_bytes": response.content, "provider": "elevenlabs"}
+    # Note: Returning content as string placeholder or actual bytes if handled elsewhere
+    # AgentResult expects Optional[str] for audio, might need base64
+    import base64
+
+    audio_data = base64.b64encode(response.content).decode("utf-8")
+    return AgentResult(audio=audio_data, provider="elevenlabs")
 
 
-def _call_playht(
-    text: str, options: Dict[str, Any], api_key: str
-) -> Dict[str, Any]:
+def _call_playht(text: str, options: AudioOptions, api_key: str) -> AgentResult:
     url = "https://api.play.ht/api/v2/tts"
     payload = {
         "text": text,
-        "voice": options.get("voice", "s3://voice-cloning-zero-shot/unknown"),
-        "output_format": options.get("output_format", "mp3"),
+        "voice": options.voice,
+        "output_format": options.format,
     }
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -83,4 +91,4 @@ def _call_playht(
     response = requests.post(url, json=payload, headers=headers, timeout=120)
     response.raise_for_status()
     data = response.json()
-    return {"audio_url": data.get("url"), "provider": "playht", "raw": data}
+    return AgentResult(audio=data.get("url"), provider="playht", raw=data)

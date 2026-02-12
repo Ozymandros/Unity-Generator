@@ -1,0 +1,60 @@
+{
+  "include": [
+    "backend/app",
+    "backend/tests",
+    "services",
+    "agents"
+  ],
+  "exclude": [
+    "**/__pycache__",
+    "**/node_modules",
+    ".venv",
+    "frontend"
+  ],
+  "venvPath": "backend",
+  "venv": ".venv",
+  "pythonVersion": "3.13",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "executionEnvironments": [
+    {
+      "root": "backend/app",
+      "extraPaths": [
+        ".",
+        "backend",
+        "services",
+        "agents",
+        "c:/Projects/Unity-Generator/backend/.venv/Lib/site-packages"
+      ]
+    },
+    {
+      "root": "backend/tests",
+      "extraPaths": [
+        ".",
+        "backend",
+        "services",
+        "agents",
+        "c:/Projects/Unity-Generator/backend/.venv/Lib/site-packages"
+      ]
+    },
+    {
+      "root": "services",
+      "extraPaths": [
+        ".",
+        "backend",
+        "services",
+        "agents",
+        "c:/Projects/Unity-Generator/backend/.venv/Lib/site-packages"
+      ]
+    },
+    {
+      "root": "agents",
+      "extraPaths": [
+        ".",
+        "c:/Projects/Unity-Generator/backend/.venv/Lib/site-packages"
+      ]
+    }
+  ],
+  "stubPath": "typings"
+}

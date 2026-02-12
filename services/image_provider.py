@@ -1,9 +1,9 @@
-from typing import Any, Dict, Optional
+from typing import Any
 
 import requests
+from app.schemas import AgentResult, ImageOptions
 
 from .provider_select import select_provider
-
 
 IMAGE_KEY_MAP = {
     "stability": "stability_api_key",
@@ -17,45 +17,47 @@ IMAGE_PRIORITY = ["stability", "openai", "google", "flux"]
 
 def generate_image(
     prompt: str,
-    provider: Optional[str],
-    options: Dict[str, Any],
-    api_keys: Dict[str, str],
-) -> Dict[str, Any]:
+    provider: str | None,
+    options: ImageOptions | dict[str, Any],
+    api_keys: dict[str, str],
+) -> AgentResult:
     selected = select_provider(provider, api_keys, IMAGE_PRIORITY, IMAGE_KEY_MAP)
+
+    # Ensure options is a model
+    opts = options if isinstance(options, ImageOptions) else ImageOptions(**options)
+
     if selected == "openai":
-        return _call_openai_image(prompt, options, api_keys[IMAGE_KEY_MAP[selected]])
+        return _call_openai_image(prompt, opts, api_keys[IMAGE_KEY_MAP[selected]])
     if selected == "google":
-        return _call_google_image(prompt, options, api_keys[IMAGE_KEY_MAP[selected]])
+        return _call_google_image(prompt, opts, api_keys[IMAGE_KEY_MAP[selected]])
     if selected == "stability":
-        return _call_stability(prompt, options, api_keys[IMAGE_KEY_MAP[selected]])
+        return _call_stability(prompt, opts, api_keys[IMAGE_KEY_MAP[selected]])
     if selected == "flux":
-        return _call_flux(prompt, options, api_keys[IMAGE_KEY_MAP[selected]])
+        return _call_flux(prompt, opts, api_keys[IMAGE_KEY_MAP[selected]])
     raise RuntimeError(f"Unsupported image provider: {selected}")
 
 
-def _call_openai_image(prompt: str, options: Dict[str, Any], api_key: str) -> Dict[str, Any]:
+def _call_openai_image(prompt: str, options: ImageOptions, api_key: str) -> AgentResult:
     # Placeholder for OpenAI DALL-E 3 API integration
-    return {"image": "base64_openai_stub", "provider": "openai", "model": "dall-e-3"}
+    return AgentResult(image="base64_openai_stub", provider="openai", model="dall-e-3")
 
 
-def _call_google_image(prompt: str, options: Dict[str, Any], api_key: str) -> Dict[str, Any]:
+def _call_google_image(prompt: str, options: ImageOptions, api_key: str) -> AgentResult:
     # Placeholder for Google Imagen API integration
-    return {"image": "base64_google_stub", "provider": "google", "model": "imagen-3"}
+    return AgentResult(image="base64_google_stub", provider="google", model="imagen-3")
 
 
-def _call_stability(
-    prompt: str, options: Dict[str, Any], api_key: str
-) -> Dict[str, Any]:
+def _call_stability(prompt: str, options: ImageOptions, api_key: str) -> AgentResult:
     url = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
-    
+
     # Map quality to model: standard -> sd3-turbo, hd -> sd3
-    quality = options.get("quality", "standard")
+    quality = options.quality
     model = "sd3-turbo" if quality == "standard" else "sd3"
-    
+
     payload = {
         "prompt": prompt,
-        "aspect_ratio": options.get("aspect_ratio", "1:1"),
-        "output_format": options.get("output_format", "png"),
+        "aspect_ratio": options.aspect_ratio,
+        "output_format": options.output_format,
         "model": model,
     }
     headers = {
@@ -65,26 +67,23 @@ def _call_stability(
     response = requests.post(url, data=payload, headers=headers, timeout=120)
     response.raise_for_status()
     data = response.json()
-    return {
-        "image": data.get("image"),
-        "provider": "stability",
-        "raw": data,
-        "model": model,
-    }
+    return AgentResult(
+        image=data.get("image"),
+        provider="stability",
+        raw=data,
+        model=model,
+    )
 
 
-def _call_flux(prompt: str, options: Dict[str, Any], api_key: str) -> Dict[str, Any]:
+def _call_flux(prompt: str, options: ImageOptions, api_key: str) -> AgentResult:
     url = "https://api.replicate.com/v1/predictions"
-    
+
     # Map quality to version: standard -> flux-schnell, hd -> flux-dev
-    # Note: These version strings might need to be exact Replicate model IDs or aliases.
-    # Assuming the provider handles "flux-schnell" and "flux-dev" aliases or we use default.
-    # For now, preserving existing default "flux-dev" if not generic.
-    # Actually, let's just use the options.get("version") override if present, else map quality.
-    
-    quality = options.get("quality", "standard")
+    quality = options.quality
     default_version = "flux-schnell" if quality == "standard" else "flux-dev"
-    version = options.get("version", default_version)
+    version = getattr(
+        options, "version", default_version
+    )  # Use getattr if version might be in Dict but not in Model yet
 
     payload = {
         "version": version,
@@ -97,9 +96,9 @@ def _call_flux(prompt: str, options: Dict[str, Any], api_key: str) -> Dict[str, 
     response = requests.post(url, json=payload, headers=headers, timeout=120)
     response.raise_for_status()
     data = response.json()
-    return {
-        "image": data.get("output"),
-        "provider": "flux",
-        "raw": data,
-        "version": version,
-    }
+    return AgentResult(
+        image=data.get("output"),
+        provider="flux",
+        raw=data,
+        model=version,
+    )

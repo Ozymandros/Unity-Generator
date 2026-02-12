@@ -6,10 +6,10 @@ This module contains both Native Plugins (Python logic) and Semantic Functions (
 
 # Export Native Plugins
 try:
-    from .native.unity_project_plugin import UnityProjectPlugin
-    from .native.provider_orchestrator_plugin import ProviderOrchestratorPlugin
     from .native.memory_prefs_plugin import MemoryPrefsPlugin
-    
+    from .native.provider_orchestrator_plugin import ProviderOrchestratorPlugin
+    from .native.unity_project_plugin import UnityProjectPlugin
+
     __all__ = [
         "UnityProjectPlugin",
         "ProviderOrchestratorPlugin",

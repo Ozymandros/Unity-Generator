@@ -1,9 +1,9 @@
-from typing import Any, Dict, Optional
+from typing import Any
 
 import requests
+from app.schemas import AgentResult, CodeOptions, TextOptions
 
 from .provider_select import select_provider
-
 
 LLM_KEY_MAP = {
     "google": "google_api_key",
@@ -19,11 +19,15 @@ LLM_PRIORITY = ["google", "anthropic", "deepseek", "openrouter", "openai", "groq
 
 def generate_text(
     prompt: str,
-    provider: Optional[str],
-    options: Dict[str, Any],
-    api_keys: Dict[str, str],
-) -> Dict[str, Any]:
+    provider: str | None,
+    options: TextOptions | CodeOptions | dict[str, Any],
+    api_keys: dict[str, str],
+) -> AgentResult:
     selected = select_provider(provider, api_keys, LLM_PRIORITY, LLM_KEY_MAP)
+
+    # Core logic: if options is a model, we can still treat it like a model.
+    # If it's a dict, we might want to coerce, but for LLMs generic temperature/max_tokens are common.
+
     if selected == "google":
         return _call_google(prompt, options, api_keys[LLM_KEY_MAP[selected]])
     if selected == "anthropic":
@@ -39,82 +43,130 @@ def generate_text(
     raise RuntimeError(f"Unsupported LLM provider: {selected}")
 
 
-def _call_openai(prompt: str, options: Dict[str, Any], api_key: str) -> Dict[str, Any]:
+def _call_openai(
+    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
+) -> AgentResult:
     url = "https://api.openai.com/v1/chat/completions"
-    model = options.get("model", "gpt-4o-mini")
+
+    # Safer access for both models and dicts
+    def get_opt(key: str, default: Any) -> Any:
+        if isinstance(options, dict):
+            return options.get(key, default)
+        return getattr(options, key, default)
+
+    model = get_opt("model", "gpt-4o-mini")
     payload = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": options.get("temperature", 0.7),
-        "max_tokens": options.get("max_tokens", 2048),
+        "temperature": get_opt("temperature", 0.7),
+        "max_tokens": get_opt("max_tokens", 2048),
     }
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.post(url, json=payload, headers=headers, timeout=60)
     response.raise_for_status()
     content = response.json()["choices"][0]["message"]["content"]
-    return {"content": content, "provider": "openai", "model": model}
+    return AgentResult(content=content, provider="openai", model=model)
 
 
 def _call_deepseek(
-    prompt: str, options: Dict[str, Any], api_key: str
-) -> Dict[str, Any]:
+    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
+) -> AgentResult:
     url = "https://api.deepseek.com/v1/chat/completions"
-    model = options.get("model", "deepseek-chat")
+
+    def get_opt(key: str, default: Any) -> Any:
+        if isinstance(options, dict):
+            return options.get(key, default)
+        return getattr(options, key, default)
+
+    model = get_opt("model", "deepseek-chat")
     payload = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": options.get("temperature", 0.7),
-        "max_tokens": options.get("max_tokens", 2048),
+        "temperature": get_opt("temperature", 0.7),
+        "max_tokens": get_opt("max_tokens", 2048),
     }
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.post(url, json=payload, headers=headers, timeout=60)
     response.raise_for_status()
     content = response.json()["choices"][0]["message"]["content"]
-    return {"content": content, "provider": "deepseek", "model": model}
+    return AgentResult(content=content, provider="deepseek", model=model)
 
 
 def _call_openrouter(
-    prompt: str, options: Dict[str, Any], api_key: str
-) -> Dict[str, Any]:
+    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
+) -> AgentResult:
     url = "https://openrouter.ai/api/v1/chat/completions"
-    model = options.get("model", "openrouter/auto")
+
+    def get_opt(key: str, default: Any) -> Any:
+        if isinstance(options, dict):
+            return options.get(key, default)
+        return getattr(options, key, default)
+
+    model = get_opt("model", "openrouter/auto")
     payload = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": options.get("temperature", 0.7),
-        "max_tokens": options.get("max_tokens", 2048),
+        "temperature": get_opt("temperature", 0.7),
+        "max_tokens": get_opt("max_tokens", 2048),
     }
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.post(url, json=payload, headers=headers, timeout=60)
     response.raise_for_status()
     content = response.json()["choices"][0]["message"]["content"]
-    return {"content": content, "provider": "openrouter", "model": model}
+    return AgentResult(content=content, provider="openrouter", model=model)
 
 
-def _call_google(prompt: str, options: Dict[str, Any], api_key: str) -> Dict[str, Any]:
-    # Placeholder for Google Gemini API integration
-    # url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-    model = options.get("model", "gemini-1.5-flash")
-    return {"content": f"[Google {model} stub] Prompt: {prompt}", "provider": "google", "model": model}
+def _call_google(
+    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
+) -> AgentResult:
+    def get_opt(key: str, default: Any) -> Any:
+        if isinstance(options, dict):
+            return options.get(key, default)
+        return getattr(options, key, default)
+
+    model = get_opt("model", "gemini-1.5-flash")
+    return AgentResult(
+        content=f"[Google {model} stub] Prompt: {prompt}",
+        provider="google",
+        model=model,
+    )
 
 
-def _call_anthropic(prompt: str, options: Dict[str, Any], api_key: str) -> Dict[str, Any]:
-    # Placeholder for Anthropic API integration
-    model = options.get("model", "claude-3-5-sonnet-20240620")
-    return {"content": f"[Anthropic {model} stub] Prompt: {prompt}", "provider": "anthropic", "model": model}
+def _call_anthropic(
+    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
+) -> AgentResult:
+    def get_opt(key: str, default: Any) -> Any:
+        if isinstance(options, dict):
+            return options.get(key, default)
+        return getattr(options, key, default)
+
+    model = get_opt("model", "claude-3-5-sonnet-20240620")
+    return AgentResult(
+        content=f"[Anthropic {model} stub] Prompt: {prompt}",
+        provider="anthropic",
+        model=model,
+    )
 
 
-def _call_groq(prompt: str, options: Dict[str, Any], api_key: str) -> Dict[str, Any]:
+def _call_groq(
+    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
+) -> AgentResult:
     url = "https://api.groq.com/openai/v1/chat/completions"
-    model = options.get("model", "llama-3.1-8b-instant")
+
+    def get_opt(key: str, default: Any) -> Any:
+        if isinstance(options, dict):
+            return options.get(key, default)
+        return getattr(options, key, default)
+
+    model = get_opt("model", "llama-3.1-8b-instant")
     payload = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": options.get("temperature", 0.7),
-        "max_tokens": options.get("max_tokens", 2048),
+        "temperature": get_opt("temperature", 0.7),
+        "max_tokens": get_opt("max_tokens", 2048),
     }
     headers = {"Authorization": f"Bearer {api_key}"}
     response = requests.post(url, json=payload, headers=headers, timeout=60)
     response.raise_for_status()
     content = response.json()["choices"][0]["message"]["content"]
-    return {"content": content, "provider": "groq", "model": model}
+    return AgentResult(content=content, provider="groq", model=model)

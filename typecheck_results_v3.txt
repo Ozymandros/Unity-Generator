@@ -1,0 +1,14 @@
+
+> unity-generator@ typecheck:backend C:\Projects\Unity-Generator
+> pnpm --dir backend typecheck
+
+
+> unity-generator-backend@ typecheck C:\Projects\Unity-Generator\backend
+> pyright --project ..
+
+c:\Projects\Unity-Generator\backend\app\kernel.py
+  c:\Projects\Unity-Generator\backend\app\kernel.py:27:49 - error: Variable not allowed in type expression (reportInvalidTypeForm)
+1 error, 0 warnings, 0 informations
+ÔÇëELIFECYCLEÔÇë Command failed with exit code 1.
+ÔÇëWARNÔÇë  Local package.json exists, but node_modules missing, did you mean to install?
+ÔÇëELIFECYCLEÔÇë Command failed with exit code 1.

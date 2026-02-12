@@ -28,7 +28,7 @@ export default defineConfig({
       "@tauri-apps/api/shell": resolve(__dirname, "./src/__mocks__/tauri-shell.ts"),
     },
     coverage: {
-      provider: "v8",
+      provider: "istanbul",
       reporter: ["text", "html", "lcov"],
       include: ["src/**/*.{ts,vue}"],
       exclude: ["src/**/*.d.ts", "src/main.ts"],

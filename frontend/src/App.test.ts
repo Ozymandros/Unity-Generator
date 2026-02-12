@@ -75,8 +75,8 @@ describe("App", () => {
       "Code",
       "Text",
       "Image",
-      "Audio",
       "Sprites",
+      "Audio",
       "Unity Project",
     ]);
   });

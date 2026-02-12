@@ -16,6 +16,43 @@ Always adhere to these fundamental principles:
 - **Intuitive Design**: Code should be self-documenting and easy to understand
 - **Scalability**: Design for growth and change without major refactoring
 
+## Available Skills (Semantic Kernel)
+
+- **UnityCodeSkill**: Provides Unity-aware code generation (`generate_unity_csharp`), syntax validation (`validate_unity_syntax`), and code extraction (`extract_csharp_code`).
+- **UnityProjectSkill**: Secure file operations restricted to the output directory (`write_unity_asset`, `create_unity_folder`).
+- **TextSkill**: Basic text manipulation like `trim_text`, `uppercase_text`, and `lowercase_text`.
+- **TimeSkill**: Date and time operations including `get_current_time` and `format_date`.
+- **MathSkill**: Basic mathematical operations like `add_numbers` and `multiply_numbers`.
+
+### Frontend Technical Skills (Vue/TypeScript)
+
+- **apiClient**: Unified API wrapper in `src/api/client.ts` for all backend communication (generation, prefs, jobs).
+- **SmartField**: Versatile UI component in `src/components/generic/SmartField.vue` for consistent form inputs.
+- **StatusBanner**: Standardized status and error reporting component in `src/components/StatusBanner.vue`.
+- **TauriShell**: OS-level integration for opening files and folders via `@tauri-apps/api/shell`.
+
+## Code Organization Guidelines
+
+Keep HTML, CSS, and TypeScript code strictly separated, avoiding inline styles or logic whenever possible.
+
+Split code into independent, focused files, ensuring each file has a single clear responsibility.
+
+Maintain a clean, hierarchical, and intuitive folder structure, grouping related components, utilities, and assets together.
+
+Ensure that components remain modular, reusable, and easy to navigate.
+
+Prefer cohesive naming conventions and consistent file organization across the entire project.
+
+When refactoring or creating new components, always prioritize:
+- **Clarity**: Code should be easy to read and understand.
+- **Maintainability**: Changes should be easy to implement without side effects.
+- **Testability**: Code should be structured to allow easy unit testing.
+- **Minimal Coupling**: Minimize dependencies between modules/components.
+
+Use project instructions and rules files as definitive guidelines.
+
+Use these skills when appropriate according to the task context. Be smart, mutatis mutandis.
+
 ## Function Writing Standards
 
 When writing functions, **always** follow these requirements:
