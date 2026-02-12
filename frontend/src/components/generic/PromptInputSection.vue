@@ -1,22 +1,31 @@
 <template>
   <div class="prompt-section">
-    <div class="field">
-      <label :for="`${type}-prompt`">{{ label }}</label>
-      <textarea :id="`${type}-prompt`" v-model="localPrompt" rows="3" />
-    </div>
-    <div class="field" v-if="providers && providers.length">
-      <label :for="`${type}-provider`">Provider</label>
-      <select :id="`${type}-provider`" v-model="localProvider">
-        <option value="">Default</option>
-        <option v-for="p in providers" :key="p.value" :value="p.value">{{ p.label }}</option>
-      </select>
-    </div>
+    <SmartField 
+      :label="label" 
+      :id="`${type}-prompt`"
+      type="textarea" 
+      :model-value="localPrompt"
+      @update:model-value="val => { localPrompt = String(val); emit('update:modelValue', String(val)); }"
+      :rows="3" 
+    />
+    
+    <SmartField 
+      v-if="providers && providers.length"
+      label="Provider"
+      type="select"
+      :model-value="localProvider"
+      @update:model-value="val => { localProvider = String(val); emit('update:provider', String(val)); }"
+      :options="providers"
+      placeholder="Default"
+    />
+
     <slot name="options" :options="localOptions" :updateOptions="updateOptions" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, toRefs } from "vue";
+import SmartField from "./SmartField.vue";
 
 const props = defineProps<{
   label: string;
@@ -24,7 +33,7 @@ const props = defineProps<{
   modelValue: string;
   provider: string;
   providers?: Array<{ label: string; value: string }>;
-  options?: Record<string, unknown>;
+  options?: Record<string, any>;
 }>();
 const emit = defineEmits(["update:modelValue", "update:provider", "update:options"]);
 
@@ -40,7 +49,7 @@ watch(localProvider, v => emit("update:provider", v));
 watch(options, v => (localOptions.value = { ...(v || {}) }));
 watch(localOptions, v => emit("update:options", v));
 
-function updateOptions(newOpts: Record<string, unknown>) {
+function updateOptions(newOpts: Record<string, any>) {
   localOptions.value = { ...localOptions.value, ...newOpts };
 }
 </script>

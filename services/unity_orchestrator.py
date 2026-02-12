@@ -18,6 +18,8 @@ from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader
 
+from backend.app.constants import DEFAULT_TIMEOUT
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -258,7 +260,7 @@ def run_unity_batch(
     project_path: Path,
     execute_method: str = "ProjectInitializer.Setup",
     extra_args: list[str] | None = None,
-    timeout: int = 300,
+    timeout: int = DEFAULT_TIMEOUT,
     log_path: Path | None = None,
 ) -> UnityRunResult:
     """
@@ -391,7 +393,7 @@ def run_finalize_job(
     setup_urp: bool = False,
     packages: list[str] | None = None,
     scene_name: str = "MainScene",
-    timeout: int = 300,
+    timeout: int = DEFAULT_TIMEOUT,
     on_progress: Callable[[str, int, str], None] | None = None,
 ) -> FinalizeResult:
     """

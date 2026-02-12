@@ -20,9 +20,19 @@ from .config import (
     resolve_unity_editor_path,
     save_api_keys,
 )
+from .constants import (
+    PROVIDER_OPENAI, PROVIDER_ANTHROPIC, PROVIDER_GOOGLE, PROVIDER_OLLAMA,
+    PROVIDER_DEEPSEEK, PROVIDER_OPENROUTER, PROVIDER_GROQ,
+    PROVIDER_STABILITY, PROVIDER_FLUX,
+    PROVIDER_ELEVENLABS, PROVIDER_PLAYHT,
+    MODEL_GPT4O, MODEL_CLAUDE_3_5_SONNET, MODEL_GEMINI_1_5_FLASH,
+    UNITY_PLATFORM_WINDOWS, UNITY_PLATFORM_MAC, UNITY_PLATFORM_LINUX,
+    UNITY_PLATFORM_ANDROID, UNITY_PLATFORM_IOS
+)
 from .db import get_pref, init_db, set_pref
 from .finalize_store import JobStatus, finalize_store
 from .logging_config import setup_logging
+from .kernel import create_kernel, Kernel
 from .schemas import (
     ApiKeysRequest,
     AudioOptions,

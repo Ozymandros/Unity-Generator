@@ -1,0 +1,56 @@
+"""
+Shared constants for the Unity Generator backend.
+"""
+
+# Providers
+PROVIDER_OPENAI = "openai"
+PROVIDER_ANTHROPIC = "anthropic"
+PROVIDER_GOOGLE = "google"
+PROVIDER_VERTEX = "vertex_ai"
+PROVIDER_OLLAMA = "ollama"
+PROVIDER_DEEPSEEK = "deepseek"
+PROVIDER_OPENROUTER = "openrouter"
+PROVIDER_GROQ = "groq"
+PROVIDER_STABILITY = "stability"
+PROVIDER_FLUX = "flux"
+PROVIDER_ELEVENLABS = "elevenlabs"
+PROVIDER_PLAYHT = "playht"
+
+# Models
+MODEL_GPT4O = "gpt-4o"
+MODEL_CLAUDE_3_5_SONNET = "claude-3-5-sonnet-20240620"
+MODEL_GEMINI_1_5_PRO = "gemini-1.5-pro-001"
+MODEL_GEMINI_1_5_FLASH = "gemini-1.5-flash-001"
+MODEL_LLAMA_3_70B = "llama3-70b-8192"
+MODEL_DEEPSEEK_CODER = "deepseek-coder"
+MODEL_DEEPSEEK_CHAT = "deepseek-chat"
+
+# Unity
+UNITY_PLATFORM_WINDOWS = "windows"
+UNITY_PLATFORM_MAC = "mac"
+UNITY_PLATFORM_LINUX = "linux"
+UNITY_PLATFORM_ANDROID = "android"
+UNITY_PLATFORM_IOS = "ios"
+
+UNITY_VERSION_2022_3 = "2022.3"
+UNITY_VERSION_2021_3 = "2021.3"
+UNITY_VERSION_2023_1 = "2023.1"
+
+UNITY_TEMPLATE_2D = "2d"
+UNITY_TEMPLATE_3D = "3d"
+UNITY_TEMPLATE_URP = "urp"
+UNITY_TEMPLATE_HDRP = "hdrp"
+UNITY_TEMPLATE_MOBILE = "mobile"
+UNITY_TEMPLATE_VR = "vr"
+
+# Paths & Directories
+LOGS_DIR_NAME = "logs"
+TEMPLATES_DIR_NAME = "templates"
+OUTPUT_DIR_NAME = "output"
+ASSETS_DIR_NAME = "Assets"
+SCRIPTS_DIR_NAME = "Scripts"
+
+# Defaults
+DEFAULT_TEMPERATURE = 0.7
+DEFAULT_MAX_TOKENS = 2048
+DEFAULT_TIMEOUT = 300

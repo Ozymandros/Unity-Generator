@@ -7,6 +7,7 @@ import { ref, computed } from "vue";
 import StatusBanner from "./StatusBanner.vue";
 import { generateText } from "../api/client";
 import { TEXT_PROVIDERS, TEMPERATURE_PRESETS, LENGTH_PRESETS } from "../constants/providers";
+import SmartField from "./generic/SmartField.vue";
 
 const prompt = ref("");
 const provider = ref("");
@@ -55,56 +56,52 @@ async function run() {
   <div class="panel">
     <h2>Text Generation</h2>
     <StatusBanner :status="status" :tone="tone" />
-    <div class="field">
-      <label>Prompt</label>
-      <textarea v-model="prompt" rows="6"></textarea>
-    </div>
+    <SmartField label="Prompt" type="textarea" v-model="prompt" :rows="6" />
     
     <div class="field-group">
       <div class="row">
-        <div class="field">
-          <label>Provider</label>
-          <select v-model="provider">
-             <option value="" disabled>Select Provider</option>
-             <option v-for="p in TEXT_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Model</label>
-          <select v-model="model">
-             <option value="" disabled>Select Model</option>
-             <option v-for="m in providerModels" :key="m.value" :value="m.value">{{ m.label }}</option>
-          </select>
-        </div>
+        <SmartField 
+          label="Provider" 
+          type="select" 
+          v-model="provider" 
+          :options="TEXT_PROVIDERS" 
+          placeholder="Select Provider" 
+        />
+        <SmartField 
+          label="Model" 
+          type="select" 
+          v-model="model" 
+          :options="providerModels" 
+          placeholder="Select Model" 
+        />
       </div>
       <div class="row" style="margin-bottom: 12px;">
-         <div class="field">
-            <label>API Key (Optional)</label>
-            <input v-model="apiKey" type="password" placeholder="Override key..." />
-         </div>
+         <SmartField 
+            label="API Key (Optional)" 
+            type="password" 
+            v-model="apiKey" 
+            placeholder="Override key..." 
+         />
       </div>
       <div class="row">
-        <div class="field">
-           <label>Temperature</label>
-           <select v-model.number="temperature">
-             <option v-for="t in TEMPERATURE_PRESETS" :key="t.value" :value="t.value">{{ t.label }} ({{ t.value }})</option>
-           </select>
-        </div>
-        <div class="field">
-           <label>Length</label>
-           <select v-model.number="maxTokens">
-             <option v-for="l in LENGTH_PRESETS" :key="l.value" :value="l.value">{{ l.label }} ({{ l.value }})</option>
-           </select>
-        </div>
+        <SmartField
+           label="Temperature"
+           type="select"
+           v-model.number="temperature"
+           :options="TEMPERATURE_PRESETS"
+        />
+        <SmartField
+           label="Length"
+           type="select"
+           v-model.number="maxTokens"
+           :options="LENGTH_PRESETS"
+        />
       </div>
     </div>
 
     <button class="primary" @click="run">Generate</button>
 
-    <div class="field">
-      <label>Result</label>
-      <textarea v-model="result" rows="10" readonly></textarea>
-    </div>
+    <SmartField label="Result" type="textarea" v-model="result" :rows="10" disabled />
   </div>
 </template>
 

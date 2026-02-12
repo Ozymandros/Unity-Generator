@@ -7,6 +7,7 @@ import { ref, computed } from "vue";
 import StatusBanner from "./StatusBanner.vue";
 import { generateAudio } from "../api/client";
 import { AUDIO_PROVIDERS } from "../constants/providers";
+import SmartField from "./generic/SmartField.vue";
 
 const prompt = ref("");
 const provider = ref("");
@@ -53,46 +54,46 @@ async function run() {
   <div class="panel">
     <h2>Audio Generation</h2>
     <StatusBanner :status="status" :tone="tone" />
-    <div class="field">
-      <label>Prompt</label>
-      <textarea v-model="prompt" rows="6"></textarea>
-    </div>
+    <SmartField label="Prompt" type="textarea" v-model="prompt" :rows="6" />
     
     <div class="field-group">
       <div class="row">
-        <div class="field">
-          <label>Provider</label>
-          <select v-model="provider">
-            <option value="" disabled>Select Provider</option>
-            <option v-for="p in AUDIO_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>API Key (Optional)</label>
-          <input v-model="apiKey" type="password" placeholder="Override key..." />
-        </div>
+        <SmartField 
+          label="Provider" 
+          type="select" 
+          v-model="provider" 
+          :options="AUDIO_PROVIDERS" 
+          placeholder="Select Provider" 
+        />
+        <SmartField 
+          label="API Key (Optional)" 
+          type="password" 
+          v-model="apiKey" 
+          placeholder="Override key..." 
+        />
       </div>
       <div class="row">
-        <div class="field">
-          <label>Voice (optional)</label>
-          <select v-model="voiceId">
-            <option value="" disabled>Select Voice</option>
-            <option v-for="v in availableVoices" :key="v.value" :value="v.value">{{ v.label }}</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Stability</label>
-          <input type="number" v-model.number="stability" step="0.1" min="0" max="1" />
-        </div>
+        <SmartField 
+          label="Voice (optional)" 
+          type="select" 
+          v-model="voiceId" 
+          :options="availableVoices" 
+          placeholder="Select Voice" 
+        />
+        <SmartField
+          label="Stability"
+          type="number"
+          v-model.number="stability"
+          step="0.1"
+          min="0"
+          max="1"
+        />
       </div>
     </div>
 
     <button class="primary" @click="run">Generate</button>
 
-    <div class="field">
-      <label>Result (JSON)</label>
-      <textarea v-model="result" rows="10" readonly></textarea>
-    </div>
+    <SmartField label="Result (JSON)" type="textarea" v-model="result" :rows="10" disabled />
   </div>
 </template>
 

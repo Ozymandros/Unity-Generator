@@ -7,6 +7,7 @@ import { computed, ref, watch } from "vue";
 import StatusBanner from "./StatusBanner.vue";
 import { generateCode } from "../api/client";
 import { TEXT_PROVIDERS, TEMPERATURE_PRESETS, LENGTH_PRESETS } from "../constants/providers";
+import SmartField from "./generic/SmartField.vue";
 
 const prompt = ref("");
 const provider = ref("");
@@ -61,54 +62,57 @@ async function run() {
   <div class="panel">
     <h2>Unity C# Code</h2>
     <StatusBanner :status="status" :tone="tone" />
-    <div class="field">
-      <label>Prompt</label>
-      <textarea v-model="prompt" rows="6"></textarea>
-    </div>
+    <SmartField label="Prompt" type="textarea" v-model="prompt" :rows="6" />
     
     <div class="field-group">
       <div class="options-row">
-        <div class="field">
-          <label>Provider</label>
-          <select v-model="provider">
-            <option value="" disabled>Select Provider</option>
-            <option v-for="p in TEXT_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Model</label>
-          <select v-model="model" :disabled="!provider">
-            <option value="" disabled>Select Model</option>
-            <option v-for="m in availableModels" :key="m.value" :value="m.value">{{ m.label }}</option>
-          </select>
-        </div>
+        <SmartField 
+          label="Provider" 
+          type="select" 
+          v-model="provider" 
+          :options="TEXT_PROVIDERS" 
+          placeholder="Select Provider"
+          class="field-item"
+        />
+        <SmartField 
+          label="Model" 
+          type="select" 
+          v-model="model" 
+          :options="availableModels" 
+          placeholder="Select Model" 
+          :disabled="!provider"
+          class="field-item"
+        />
       </div>
       <div class="options-row">
-        <div class="field">
-           <label>Temperature</label>
-           <select v-model.number="temperature">
-             <option v-for="t in TEMPERATURE_PRESETS" :key="t.value" :value="t.value">{{ t.label }} ({{ t.value }})</option>
-           </select>
-        </div>
-        <div class="field">
-           <label>Max Tokens</label>
-           <select v-model.number="maxTokens">
-             <option v-for="l in LENGTH_PRESETS" :key="l.value" :value="l.value">{{ l.label }} ({{ l.value }})</option>
-           </select>
-        </div>
+        <SmartField
+           label="Temperature"
+           type="select"
+           v-model.number="temperature"
+           :options="TEMPERATURE_PRESETS"
+           class="field-item"
+        />
+        <SmartField
+           label="Max Tokens"
+           type="select"
+           v-model.number="maxTokens"
+           :options="LENGTH_PRESETS"
+           class="field-item"
+        />
       </div>
-      <div class="field" style="margin-top: 8px;">
-          <label>API Key (Optional Override)</label>
-          <input v-model="apiKey" type="password" placeholder="Leave empty to use global key" />
+      <div style="margin-top: 8px;">
+          <SmartField 
+            label="API Key (Optional Override)" 
+            type="password" 
+            v-model="apiKey" 
+            placeholder="Leave empty to use global key" 
+          />
       </div>
     </div>
 
     <button class="primary" @click="run">Generate</button>
 
-    <div class="field">
-      <label>Result</label>
-      <textarea v-model="result" rows="10" readonly></textarea>
-    </div>
+    <SmartField label="Result" type="textarea" v-model="result" :rows="10" disabled />
   </div>
 </template>
 
@@ -129,7 +133,7 @@ async function run() {
   gap: 12px;
   margin-bottom: 10px;
 }
-.options-row .field {
+.options-row .field-item {
   flex: 1;
 }
 textarea,

@@ -7,6 +7,7 @@ import { onMounted, ref } from "vue";
 import StatusBanner from "./StatusBanner.vue";
 import { getPref, saveApiKeys, setPref } from "../api/client";
 import { TEXT_PROVIDERS, IMAGE_PROVIDERS, AUDIO_PROVIDERS } from "../constants/providers";
+import SmartField from "./generic/SmartField.vue";
 
 const backendUrl = ref(localStorage.getItem("backendUrl") || "http://127.0.0.1:8000");
 const googleKey = ref("");
@@ -67,45 +68,44 @@ async function save() {
     <StatusBanner :status="status" tone="ok" />
 
     <div class="field">
-      <label>Backend URL</label>
-      <input v-model="backendUrl" />
+      <SmartField label="Backend URL" v-model="backendUrl" />
     </div>
 
     <h3>LLM Keys</h3>
-    <div class="field"><label>Google (Gemini)</label><input v-model="googleKey" type="password" /></div>
-    <div class="field"><label>Anthropic</label><input v-model="anthropicKey" type="password" /></div>
-    <div class="field"><label>OpenAI</label><input v-model="openaiKey" type="password" /></div>
-    <div class="field"><label>DeepSeek</label><input v-model="deepseekKey" type="password" /></div>
-    <div class="field"><label>OpenRouter</label><input v-model="openrouterKey" type="password" /></div>
-    <div class="field"><label>Groq</label><input v-model="groqKey" type="password" /></div>
+    <SmartField label="Google (Gemini)" type="password" v-model="googleKey" />
+    <SmartField label="Anthropic" type="password" v-model="anthropicKey" />
+    <SmartField label="OpenAI" type="password" v-model="openaiKey" />
+    <SmartField label="DeepSeek" type="password" v-model="deepseekKey" />
+    <SmartField label="OpenRouter" type="password" v-model="openrouterKey" />
+    <SmartField label="Groq" type="password" v-model="groqKey" />
 
     <h3>Image Keys</h3>
-    <div class="field"><label>Stability</label><input v-model="stabilityKey" type="password" /></div>
-    <div class="field"><label>Flux</label><input v-model="fluxKey" type="password" /></div>
+    <SmartField label="Stability" type="password" v-model="stabilityKey" />
+    <SmartField label="Flux" type="password" v-model="fluxKey" />
 
     <h3>Audio Keys</h3>
-    <div class="field"><label>ElevenLabs</label><input v-model="elevenlabsKey" type="password" /></div>
-    <div class="field"><label>PlayHT</label><input v-model="playhtKey" type="password" /></div>
+    <SmartField label="ElevenLabs" type="password" v-model="elevenlabsKey" />
+    <SmartField label="PlayHT" type="password" v-model="playhtKey" />
 
     <h3>Preferred Providers</h3>
-    <div class="field">
-      <label>LLM</label>
-      <select v-model="preferredLlm">
-        <option v-for="p in TEXT_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>Image</label>
-      <select v-model="preferredImage">
-        <option v-for="p in IMAGE_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>Audio</label>
-      <select v-model="preferredAudio">
-        <option v-for="p in AUDIO_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
-      </select>
-    </div>
+    <SmartField 
+      label="LLM" 
+      type="select" 
+      v-model="preferredLlm" 
+      :options="TEXT_PROVIDERS" 
+    />
+    <SmartField 
+      label="Image" 
+      type="select" 
+      v-model="preferredImage" 
+      :options="IMAGE_PROVIDERS" 
+    />
+    <SmartField 
+      label="Audio" 
+      type="select" 
+      v-model="preferredAudio" 
+      :options="AUDIO_PROVIDERS" 
+    />
 
     <button class="primary" @click="save">Save</button>
   </div>

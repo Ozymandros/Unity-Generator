@@ -7,6 +7,7 @@ import { ref } from "vue";
 import StatusBanner from "./StatusBanner.vue";
 import { generateImage } from "../api/client";
 import { IMAGE_PROVIDERS, ASPECT_RATIOS, QUALITY_OPTIONS } from "../constants/providers";
+import SmartField from "./generic/SmartField.vue";
 
 const prompt = ref("");
 const provider = ref("");
@@ -48,47 +49,43 @@ async function run() {
   <div class="panel">
     <h2>Image Generation</h2>
     <StatusBanner :status="status" :tone="tone" />
-    <div class="field">
-      <label>Prompt</label>
-      <textarea v-model="prompt" rows="6"></textarea>
-    </div>
+    <SmartField label="Prompt" type="textarea" v-model="prompt" :rows="6" />
     
     <div class="field-group">
       <div class="row">
-        <div class="field">
-          <label>Provider</label>
-          <select v-model="provider">
-            <option value="" disabled>Select Provider</option>
-            <option v-for="p in IMAGE_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>API Key (Optional)</label>
-          <input v-model="apiKey" type="password" placeholder="Override key..." />
-        </div>
+        <SmartField 
+          label="Provider" 
+          type="select" 
+          v-model="provider" 
+          :options="IMAGE_PROVIDERS" 
+          placeholder="Select Provider" 
+        />
+        <SmartField 
+          label="API Key (Optional)" 
+          type="password" 
+          v-model="apiKey" 
+          placeholder="Override key..." 
+        />
       </div>
       <div class="row">
-        <div class="field">
-           <label>Aspect Ratio</label>
-           <select v-model="aspectRatio">
-             <option v-for="ar in ASPECT_RATIOS" :key="ar.value" :value="ar.value">{{ ar.label }}</option>
-           </select>
-        </div>
-        <div class="field">
-           <label>Quality</label>
-           <select v-model="quality">
-             <option v-for="q in QUALITY_OPTIONS" :key="q.value" :value="q.value">{{ q.label }}</option>
-           </select>
-        </div>
+        <SmartField
+           label="Aspect Ratio"
+           type="select"
+           v-model="aspectRatio"
+           :options="ASPECT_RATIOS"
+        />
+        <SmartField
+           label="Quality"
+           type="select"
+           v-model="quality"
+           :options="QUALITY_OPTIONS"
+        />
       </div>
     </div>
 
     <button class="primary" @click="run">Generate</button>
 
-    <div class="field">
-      <label>Result (JSON)</label>
-      <textarea v-model="result" rows="10" readonly></textarea>
-    </div>
+    <SmartField label="Result (JSON)" type="textarea" v-model="result" :rows="10" disabled />
   </div>
 </template>
 

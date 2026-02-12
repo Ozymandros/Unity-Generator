@@ -3,6 +3,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from .constants import DEFAULT_TIMEOUT
+
 
 class CodeOptions(BaseModel):
     model: str | None = None
@@ -112,7 +114,7 @@ class UnityEngineSettings(BaseModel):
     packages: list[str] = Field(default_factory=list)
     scene_name: str = "MainScene"
     unity_editor_path: str | None = None
-    timeout: int = Field(default=300, ge=30, le=1800)
+    timeout: int = Field(default=DEFAULT_TIMEOUT, ge=30, le=1800)
 
 
 class FinalizeProjectRequest(BaseModel):

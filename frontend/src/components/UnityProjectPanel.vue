@@ -21,6 +21,7 @@ import {
   LENGTH_PRESETS,
   STABILITY_PRESETS 
 } from "../constants/providers";
+import SmartField from "./generic/SmartField.vue";
 
 const projectName = ref("UnityProject");
 // Code
@@ -332,30 +333,42 @@ onUnmounted(() => {
     <StatusBanner :status="status" :tone="tone" />
 
     <div class="field">
-      <label>Project Name <span style="color:#dc2626">*</span></label>
-      <input v-model="projectName" required />
+      <SmartField 
+        label="Project Name" 
+        v-model="projectName" 
+        required 
+      />
     </div>
     <div class="field">
-      <label>Unity Template <span style="color:#dc2626">*</span></label>
-      <select v-model="unityTemplate" required>
-        <option value="">Select template...</option>
-        <option v-for="tpl in UNITY_TEMPLATES" :key="tpl.value" :value="tpl.value">{{ tpl.label }}</option>
-      </select>
+      <SmartField 
+        label="Unity Template" 
+        type="select" 
+        v-model="unityTemplate" 
+        :options="UNITY_TEMPLATES" 
+        placeholder="Select template..."
+        required 
+      />
     </div>
     <div class="options-row">
       <div class="field-sm">
-        <label>Unity Version <span style="color:#dc2626">*</span></label>
-        <select v-model="unityVersion" required>
-          <option value="">Select version...</option>
-          <option v-for="ver in UNITY_VERSIONS" :key="ver.value" :value="ver.value">{{ ver.label }}</option>
-        </select>
+        <SmartField 
+          label="Unity Version" 
+          type="select" 
+          v-model="unityVersion" 
+          :options="UNITY_VERSIONS" 
+          placeholder="Select version..."
+          required 
+        />
       </div>
       <div class="field-sm">
-        <label>Target Platform <span style="color:#dc2626">*</span></label>
-        <select v-model="unityPlatform" required>
-          <option value="">Select platform...</option>
-          <option v-for="plat in UNITY_PLATFORMS" :key="plat.value" :value="plat.value">{{ plat.label }}</option>
-        </select>
+        <SmartField 
+          label="Target Platform" 
+          type="select" 
+          v-model="unityPlatform" 
+          :options="UNITY_PLATFORMS" 
+          placeholder="Select platform..."
+          required 
+        />
       </div>
     </div>
 
@@ -373,16 +386,22 @@ onUnmounted(() => {
       <template #options="{ options, updateOptions }">
         <div class="options-row">
           <div class="field-sm">
-            <label>Temp</label>
-            <select v-model.number="options.temperature" @change="updateOptions({ temperature: options.temperature })">
-              <option v-for="t in TEMPERATURE_PRESETS" :key="t.value" :value="t.value">{{ t.label }}</option>
-            </select>
+            <SmartField 
+              label="Temp" 
+              type="select" 
+              :model-value="options.temperature" 
+              @update:model-value="val => updateOptions({ temperature: Number(val) })"
+              :options="TEMPERATURE_PRESETS" 
+            />
           </div>
           <div class="field-sm">
-            <label>Max Tokens</label>
-            <select v-model.number="options.max_tokens" @change="updateOptions({ max_tokens: options.max_tokens })">
-              <option v-for="l in LENGTH_PRESETS" :key="l.value" :value="l.value">{{ l.label }}</option>
-            </select>
+            <SmartField 
+              label="Max Tokens" 
+              type="select" 
+              :model-value="options.max_tokens" 
+              @update:model-value="val => updateOptions({ max_tokens: Number(val) })"
+              :options="LENGTH_PRESETS" 
+            />
           </div>
         </div>
       </template>
@@ -401,16 +420,22 @@ onUnmounted(() => {
       <template #options="{ options, updateOptions }">
         <div class="options-row">
           <div class="field-sm">
-            <label>Temp</label>
-            <select v-model.number="options.temperature" @change="updateOptions({ temperature: options.temperature })">
-              <option v-for="t in TEMPERATURE_PRESETS" :key="t.value" :value="t.value">{{ t.label }}</option>
-            </select>
+            <SmartField 
+              label="Temp" 
+              type="select" 
+              :model-value="options.temperature" 
+              @update:model-value="val => updateOptions({ temperature: Number(val) })"
+              :options="TEMPERATURE_PRESETS" 
+            />
           </div>
           <div class="field-sm">
-            <label>Max Tokens</label>
-            <select v-model.number="options.max_tokens" @change="updateOptions({ max_tokens: options.max_tokens })">
-              <option v-for="l in LENGTH_PRESETS" :key="l.value" :value="l.value">{{ l.label }}</option>
-            </select>
+            <SmartField 
+              label="Max Tokens" 
+              type="select" 
+              :model-value="options.max_tokens" 
+              @update:model-value="val => updateOptions({ max_tokens: Number(val) })"
+              :options="LENGTH_PRESETS" 
+            />
           </div>
         </div>
       </template>
@@ -429,16 +454,22 @@ onUnmounted(() => {
       <template #options="{ options, updateOptions }">
         <div class="options-row">
           <div class="field-sm">
-            <label>Aspect Ratio</label>
-            <select v-model="options.aspect_ratio" @change="updateOptions({ aspect_ratio: options.aspect_ratio })">
-              <option v-for="ar in ASPECT_RATIOS" :key="ar.value" :value="ar.value">{{ ar.label }}</option>
-            </select>
+            <SmartField 
+              label="Aspect Ratio" 
+              type="select" 
+              :model-value="options.aspect_ratio" 
+              @update:model-value="val => updateOptions({ aspect_ratio: String(val) })"
+              :options="ASPECT_RATIOS" 
+            />
           </div>
           <div class="field-sm">
-            <label>Quality</label>
-            <select v-model="options.quality" @change="updateOptions({ quality: options.quality })">
-              <option v-for="q in QUALITY_OPTIONS" :key="q.value" :value="q.value">{{ q.label }}</option>
-            </select>
+            <SmartField 
+              label="Quality" 
+              type="select" 
+              :model-value="options.quality" 
+              @update:model-value="val => updateOptions({ quality: String(val) })"
+              :options="QUALITY_OPTIONS" 
+            />
           </div>
         </div>
       </template>
@@ -457,17 +488,22 @@ onUnmounted(() => {
       <template #options="{ options, updateOptions }">
         <div class="options-row">
           <div class="field-sm">
-            <label>Voice ID</label>
-            <select v-model="options.voice_id" @change="updateOptions({ voice_id: options.voice_id })">
-              <option value="">Default / Random</option>
-              <option v-for="v in availableVoices" :key="v.value" :value="v.value">{{ v.label }}</option>
-            </select>
+            <SmartField 
+              label="Voice ID" 
+              type="select" 
+              :model-value="options.voice_id" 
+              @update:model-value="val => updateOptions({ voice_id: String(val) })"
+              :options="[{ label: 'Default / Random', value: '' }, ...availableVoices]" 
+            />
           </div>
           <div class="field-sm">
-            <label>Stability</label>
-            <select v-model.number="options.stability" @change="updateOptions({ stability: options.stability })">
-              <option v-for="s in STABILITY_PRESETS" :key="s.value" :value="s.value">{{ s.label }}</option>
-            </select>
+            <SmartField 
+              label="Stability" 
+              type="select" 
+              :model-value="options.stability" 
+              @update:model-value="val => updateOptions({ stability: Number(val) })"
+              :options="STABILITY_PRESETS" 
+            />
           </div>
         </div>
       </template>
@@ -478,48 +514,52 @@ onUnmounted(() => {
     <button class="secondary" @click="openOutputFolder">Open Output Folder</button>
 
     <div class="field">
-      <label>Result (JSON)</label>
-      <textarea v-model="result" rows="10" readonly></textarea>
+      <SmartField label="Result (JSON)" type="textarea" v-model="result" :rows="10" disabled />
     </div>
 
     <!-- Unity Engine Settings -->
     <h3>Unity Engine Settings</h3>
     <div class="section-group">
-      <div class="toggle-row">
-        <label class="toggle-label">
-          <input type="checkbox" v-model="unityGenerateScene" />
-          Generate Default Scene
-        </label>
-        <label class="toggle-label">
-          <input type="checkbox" v-model="unityInstallPackages" />
-          Auto-Install UPM Packages
-        </label>
-        <label class="toggle-label">
-          <input type="checkbox" v-model="unitySetupUrp" />
-          Setup URP
-        </label>
-      </div>
-
-      <div v-if="unityInstallPackages" class="field">
-        <label>UPM Packages (comma-separated)</label>
-        <input v-model="unityPackages" placeholder="com.unity.textmeshpro, com.unity.render-pipelines.universal" />
-      </div>
-
-      <div v-if="unityGenerateScene" class="field">
-        <label>Scene Name</label>
-        <input v-model="unitySceneName" placeholder="MainScene" />
-      </div>
-
-      <div class="options-row">
-        <div class="field-sm">
-          <label>Unity Editor Path (optional)</label>
-          <input v-model="unityEditorPath" placeholder="Auto-detect or UNITY_EDITOR_PATH env var" />
-        </div>
-        <div class="field-sm">
-          <label>Timeout (seconds)</label>
-          <input type="number" v-model.number="unityTimeout" min="30" max="1800" />
-        </div>
-      </div>
+       <div class="toggle-row">
+         <SmartField type="checkbox" label="Generate Default Scene" v-model="unityGenerateScene" />
+         <SmartField type="checkbox" label="Auto-Install UPM Packages" v-model="unityInstallPackages" />
+         <SmartField type="checkbox" label="Setup URP" v-model="unitySetupUrp" />
+       </div>
+ 
+       <div v-if="unityInstallPackages" class="field">
+         <SmartField 
+           label="UPM Packages (comma-separated)" 
+           v-model="unityPackages" 
+           placeholder="com.unity.textmeshpro, com.unity.render-pipelines.universal" 
+         />
+       </div>
+ 
+       <div v-if="unityGenerateScene" class="field">
+         <SmartField 
+           label="Scene Name" 
+           v-model="unitySceneName" 
+           placeholder="MainScene" 
+         />
+       </div>
+ 
+       <div class="options-row">
+         <div class="field-sm">
+           <SmartField 
+             label="Unity Editor Path (optional)" 
+             v-model="unityEditorPath" 
+             placeholder="Auto-detect or UNITY_EDITOR_PATH env var" 
+           />
+         </div>
+         <div class="field-sm">
+           <SmartField 
+             label="Timeout (seconds)" 
+             type="number" 
+             v-model="unityTimeout" 
+             :min="30" 
+             :max="1800" 
+           />
+         </div>
+       </div>
     </div>
 
     <button
