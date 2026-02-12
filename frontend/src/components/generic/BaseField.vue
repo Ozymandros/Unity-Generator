@@ -13,6 +13,8 @@
 </template>
 
 <script setup lang="ts">
+import { useBaseField } from "./BaseField";
+
 defineProps<{
   label?: string;
   id?: string;
@@ -20,38 +22,8 @@ defineProps<{
   help?: string;
   required?: boolean;
 }>();
+
+useBaseField();
 </script>
 
-<style scoped>
-.field-wrapper {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 1rem;
-}
-
-.field-label {
-  font-weight: 600;
-  margin-bottom: 0.35rem;
-  color: #374151;
-  font-size: 0.95rem;
-}
-
-.required {
-  color: #dc2626;
-  margin-left: 0.25rem;
-}
-
-.field-error {
-  color: #dc2626;
-  font-size: 0.875rem;
-  margin-top: 0.35rem;
-  margin-bottom: 0;
-}
-
-.field-help {
-  color: #6b7280;
-  font-size: 0.85rem;
-  margin-top: 0.35rem;
-  margin-bottom: 0;
-}
-</style>
+<style scoped src="./BaseField.css"></style>

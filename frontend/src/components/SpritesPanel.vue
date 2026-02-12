@@ -1,79 +1,24 @@
-<script lang="ts">
-export default {};
-</script>
-
 <script setup lang="ts">
-import { computed, ref, type CSSProperties } from "vue";
 import StatusBanner from "./StatusBanner.vue";
-import { generateSprites } from "../api/client";
-import { IMAGE_PROVIDERS } from "../constants/providers";
+import { useSpritesPanel } from "./SpritesPanel";
 
-const prompt = ref("");
-const provider = ref("");
-const apiKey = ref("");
-const resolution = ref(64);
-const paletteSize = ref(32);
-const autoCrop = ref(false);
-
-const status = ref<string | null>(null);
-const tone = ref<"ok" | "error">("ok");
-const resultImage = ref("");
-const resultMeta = ref<Record<string, unknown> | null>(null);
-
-const RESOLUTIONS = [16, 32, 64, 128, 256];
-const PALETTE_SIZES = [8, 16, 32, 64, 256];
-
-async function run() {
-  if (!prompt.value) {
-    tone.value = "error";
-    status.value = "Please enter a prompt.";
-    return;
-  }
-
-  status.value = "Generating sprite...";
-  tone.value = "ok";
-  resultImage.value = "";
-  
-  try {
-    const response = await generateSprites({
-      prompt: prompt.value,
-      provider: provider.value || undefined,
-      api_key: apiKey.value || undefined,
-      resolution: resolution.value,
-      options: {
-        palette_size: paletteSize.value,
-        auto_crop: autoCrop.value
-      },
-    });
-
-    if (!response.success) {
-      tone.value = "error";
-      status.value = response.error || "Failed to generate sprite.";
-      return;
-    }
-
-    status.value = "Sprite generated.";
-    if (response.data && typeof response.data.image === 'string') {
-        resultImage.value = `data:image/png;base64,${response.data.image}`;
-        resultMeta.value = response.data;
-    }
-  } catch (error) {
-    tone.value = "error";
-    status.value = String(error);
-  }
-}
-
-// Canvas Preview Logic (Basic for now)
-const canvasStyle = computed((): CSSProperties => {
-    // Zoom in for pixel art preview
-    return {
-        imageRendering: 'pixelated' as "auto", // Cast to one of the accepted union types to satisfy TS while keeping runtime value
-        width: `${resolution.value * 4}px`, // 4x Zoom
-        height: 'auto',
-        border: '1px solid #ccc',
-        background: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><rect width="8" height="8" fill="%23f0f0f0"/><rect x="8" y="8" width="8" height="8" fill="%23f0f0f0"/></svg>')`
-    };
-});
+const {
+  prompt,
+  provider,
+  apiKey,
+  resolution,
+  paletteSize,
+  autoCrop,
+  status,
+  tone,
+  resultImage,
+  resultMeta,
+  RESOLUTIONS,
+  PALETTE_SIZES,
+  run,
+  canvasStyle,
+  IMAGE_PROVIDERS
+} = useSpritesPanel();
 </script>
 
 <template>
@@ -154,119 +99,4 @@ const canvasStyle = computed((): CSSProperties => {
   </div>
 </template>
 
-<style scoped>
-.panel {
-  max-width: 100%;
-}
-.header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-.badge {
-    background: #e0f2fe;
-    color: #0369a1;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-}
-.content-grid {
-    display: grid;
-    grid-template-columns: 300px 1fr;
-    gap: 24px;
-    margin-top: 16px;
-}
-.sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-.preview-area {
-    background: #1e293b;
-    border-radius: 8px;
-    min-height: 400px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    color: #94a3b8;
-}
-.canvas-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-}
-.meta {
-    text-align: center;
-    font-size: 0.8rem;
-    color: #cbd5e1;
-}
-.field {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 5px;
-}
-.field-group {
-    background: #fff;
-    padding: 12px;
-    border-radius: 6px;
-    border: 1px solid #e2e8f0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-.toggle-group {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-}
-.toggle-group button {
-    padding: 4px 8px;
-    border: 1px solid #cbd5e1;
-    background: #f8fafc;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.8rem;
-}
-.toggle-group button.active {
-    background: #2563eb;
-    color: white;
-    border-color: #2563eb;
-}
-.checkbox {
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-}
-label {
-    font-size: 0.9rem;
-    font-weight: 500;
-    margin-bottom: 4px;
-    color: #475569;
-}
-textarea,
-input[type="password"],
-select {
-  padding: 8px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  width: 100%;
-  box-sizing: border-box;
-  font-family: inherit;
-}
-.primary {
-  padding: 12px 14px;
-  border: none;
-  border-radius: 6px;
-  background: #2563eb;
-  color: white;
-  cursor: pointer;
-  font-weight: 600;
-  transition: background 0.2s;
-}
-.primary:hover {
-    background: #1d4ed8;
-}
-</style>
+<style scoped src="./SpritesPanel.css"></style>

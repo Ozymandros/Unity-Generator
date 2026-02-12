@@ -1,0 +1,27 @@
+.panel {
+  max-width: 720px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+label {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+input,
+select {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+.primary {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}

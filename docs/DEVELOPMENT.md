@@ -61,6 +61,34 @@ All code modifications must adhere to the following principles defined in our co
 - **KISS (Keep It Simple, Stupid)**: Avoid over-engineering; favor readable code over clever solutions.
 - **Clean Architecture**: Maintain clear boundaries between services, agents, and the API layer.
 
+## Code Organization
+
+To maintain long-term maintainability and clarity, follow these organization rules:
+
+### Separation of Concerns
+
+- **HTML/CSS/TS**: Strictly separate template structure, styling, and business logic.
+- **Frontend Components**: Extract complex logic into composables and keep `<script setup>` sections focused.
+- **Styles**: Use scoped CSS for component-specific styling or extract to independent CSS files for shared styles.
+
+### File Responsibility (Single Responsibility Principle)
+
+- Each file must have a single clear responsibility.
+- Large components should be split into smaller, modular sub-components.
+- Utilities should be grouped logically (e.g., `src/utils/validation.ts`, `src/utils/formatting.ts`).
+
+### Hierarchical Folder Structure
+
+- Group related items together in intuitive hierarchies.
+- Use subdirectories for complex features or component families.
+- Maintain consistent naming conventions (camelCase for TS/JS, PascalCase for Vue components).
+
+### Modularity and Coupling
+
+- Design components to be reusable and independent.
+- Minimize coupling between modules by using clear interfaces and dependency injection where appropriate.
+- Prioritize testability by keeping logic decoupled from the UI/DOM where possible.
+
 ## AI Agent Skills (Semantic Kernel)
 
 The following Semantic Kernel skills are available for automated development tasks:

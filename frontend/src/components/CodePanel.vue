@@ -1,61 +1,24 @@
-<script lang="ts">
-export default {};
-</script>
-
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
 import StatusBanner from "./StatusBanner.vue";
-import { generateCode } from "../api/client";
-import { TEXT_PROVIDERS, TEMPERATURE_PRESETS, LENGTH_PRESETS } from "../constants/providers";
 import SmartField from "./generic/SmartField.vue";
+import { useCodePanel } from "./CodePanel";
 
-const prompt = ref("");
-const provider = ref("");
-const model = ref("");
-const temperature = ref(0.2); // Default for code
-const maxTokens = ref(2048);
-const apiKey = ref("");
-
-const availableModels = computed(() => {
-  const p = TEXT_PROVIDERS.find((x) => x.value === provider.value);
-  return p ? p.models || [] : [];
-});
-
-watch(provider, () => {
-    model.value = "";
-    // Fetch key if possible? For now, user enters key in Settings or here?
-    // Other panels added API key input. I should add it here too.
-});
-const status = ref<string | null>(null);
-const tone = ref<"ok" | "error">("ok");
-const result = ref("");
-
-async function run() {
-  status.value = "Generating code...";
-  tone.value = "ok";
-  try {
-    const response = await generateCode({
-      prompt: prompt.value,
-      provider: provider.value || undefined,
-      api_key: apiKey.value || undefined,
-      options: {
-        model: model.value || undefined,
-        temperature: temperature.value,
-        max_tokens: maxTokens.value,
-      },
-    });
-    if (!response.success) {
-      tone.value = "error";
-      status.value = response.error || "Failed to generate code.";
-      return;
-    }
-    status.value = "Code generated.";
-    result.value = String(response.data?.content || "");
-  } catch (error) {
-    tone.value = "error";
-    status.value = String(error);
-  }
-}
+const {
+  prompt,
+  provider,
+  model,
+  temperature,
+  maxTokens,
+  apiKey,
+  availableModels,
+  status,
+  tone,
+  result,
+  run,
+  TEXT_PROVIDERS,
+  TEMPERATURE_PRESETS,
+  LENGTH_PRESETS
+} = useCodePanel();
 </script>
 
 <template>
@@ -116,42 +79,4 @@ async function run() {
   </div>
 </template>
 
-<style scoped>
-.panel {
-  max-width: 820px;
-}
-.field {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 10px;
-}
-.field-group {
-  margin-bottom: 12px;
-}
-.options-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-.options-row .field-item {
-  flex: 1;
-}
-textarea,
-input,
-select {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  width: 100%;
-  box-sizing: border-box;
-}
-.primary {
-  margin: 8px 0 14px;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 6px;
-  background: #2563eb;
-  color: white;
-  cursor: pointer;
-}
-</style>
+<style scoped src="./CodePanel.css"></style>

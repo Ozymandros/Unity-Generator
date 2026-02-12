@@ -1,3 +1,9 @@
+"""
+Main FastAPI application for the Unity Generator backend.
+
+This module defines the API endpoints for generation, configuration,
+preferences, and project finalization jobs.
+"""
 import logging
 import os
 import sys
@@ -80,6 +86,9 @@ def health() -> dict[str, Any]:
 
 @app.post("/generate/code", response_model=GenerationResponse)
 def generate_code(request: GenerationRequest) -> GenerationResponse:
+    """
+    Generate Unity C# code using the AI code agent.
+    """
     try:
         provider = request.provider or get_pref("preferred_llm_provider")
         # Ensure we pass the right option type if it was parsed as a dict
@@ -101,6 +110,9 @@ def generate_code(request: GenerationRequest) -> GenerationResponse:
 
 @app.post("/generate/text", response_model=GenerationResponse)
 def generate_text(request: GenerationRequest) -> GenerationResponse:
+    """
+    Generate game narrative or text content using the AI text agent.
+    """
     try:
         provider = request.provider or get_pref("preferred_llm_provider")
         options = request.options
@@ -121,6 +133,9 @@ def generate_text(request: GenerationRequest) -> GenerationResponse:
 
 @app.post("/generate/image", response_model=GenerationResponse)
 def generate_image(request: GenerationRequest) -> GenerationResponse:
+    """
+    Generate textures or concept art using the AI image agent.
+    """
     try:
         provider = request.provider or get_pref("preferred_image_provider")
         options = request.options
@@ -141,6 +156,9 @@ def generate_image(request: GenerationRequest) -> GenerationResponse:
 
 @app.post("/generate/audio", response_model=GenerationResponse)
 def generate_audio(request: GenerationRequest) -> GenerationResponse:
+    """
+    Generate SFX or music using the AI audio agent.
+    """
     try:
         provider = request.provider or get_pref("preferred_audio_provider")
         options = request.options
@@ -161,6 +179,9 @@ def generate_audio(request: GenerationRequest) -> GenerationResponse:
 
 @app.post("/generate/sprites", response_model=GenerationResponse)
 def generate_sprites(request: SpritesRequest) -> GenerationResponse:
+    """
+    Generate 2D sprite sheets using the AI sprite agent.
+    """
     try:
         from services.sprite_service import generate_sprite
 
@@ -194,19 +215,28 @@ def save_keys(request: ApiKeysRequest) -> GenerationResponse:
 
 
 @app.get("/prefs/{key}", response_model=GenerationResponse)
-def read_pref(key: str) -> GenerationResponse:
+def get_pref_endpoint(key: str) -> GenerationResponse:
+    """
+    Get a user preference by key.
+    """
     value = get_pref(key)
     return ok_response({"key": key, "value": value})
 
 
 @app.post("/prefs", response_model=GenerationResponse)
-def write_pref(request: PrefRequest) -> GenerationResponse:
+def set_pref_endpoint(request: PrefRequest) -> GenerationResponse:
+    """
+    Set a user preference.
+    """
     set_pref(request.key, request.value)
     return ok_response({"key": request.key})
 
 
 @app.post("/generate/unity-project", response_model=GenerationResponse)
-def generate_unity_project(request: UnityProjectRequest) -> GenerationResponse:
+def generate_project(request: UnityProjectRequest) -> GenerationResponse:
+    """
+    Generate a full Unity project structure with multiple assets.
+    """
     try:
         code_provider = request.provider_overrides.get(
             "code", get_pref("preferred_llm_provider")
@@ -274,7 +304,10 @@ def generate_unity_project(request: UnityProjectRequest) -> GenerationResponse:
 
 
 @app.get("/output/latest", response_model=GenerationResponse)
-def output_latest() -> GenerationResponse:
+def get_latest_output() -> GenerationResponse:
+    """
+    Get the path to the most recently generated project.
+    """
     path = get_latest_project_path()
     if not path:
         return error_response("No output projects found.")
@@ -436,7 +469,7 @@ def _run_finalize_in_background(job_id: str, request: FinalizeProjectRequest) ->
 @app.post("/api/v1/project/finalize", response_model=FinalizeProjectResponse)
 def finalize_project(request: FinalizeProjectRequest) -> FinalizeProjectResponse:
     """
-    Create an async finalize job.
+    Start an asynchronous project finalization job (Unity batch mode execution).
 
     Returns a job_id immediately. Poll ``GET /api/v1/project/finalize/{job_id}``
     for progress and results.

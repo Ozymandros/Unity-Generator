@@ -31,6 +31,26 @@ Always adhere to these fundamental principles:
 - **StatusBanner**: Standardized status and error reporting component in `src/components/StatusBanner.vue`.
 - **TauriShell**: OS-level integration for opening files and folders via `@tauri-apps/api/shell`.
 
+## Code Organization Guidelines
+
+Keep HTML, CSS, and TypeScript code strictly separated, avoiding inline styles or logic whenever possible.
+
+Split code into independent, focused files, ensuring each file has a single clear responsibility.
+
+Maintain a clean, hierarchical, and intuitive folder structure, grouping related components, utilities, and assets together.
+
+Ensure that components remain modular, reusable, and easy to navigate.
+
+Prefer cohesive naming conventions and consistent file organization across the entire project.
+
+When refactoring or creating new components, always prioritize:
+- **Clarity**: Code should be easy to read and understand.
+- **Maintainability**: Changes should be easy to implement without side effects.
+- **Testability**: Code should be structured to allow easy unit testing.
+- **Minimal Coupling**: Minimize dependencies between modules/components.
+
+Use project instructions and rules files as definitive guidelines.
+
 Use these skills when appropriate according to the task context. Be smart, mutatis mutandis.
 
 ## Function Writing Standards

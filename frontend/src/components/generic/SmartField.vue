@@ -67,8 +67,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import BaseField from './BaseField.vue';
+import { useSmartField } from './SmartField';
 
 const props = withDefaults(defineProps<{
   modelValue: string | number | boolean | null | undefined;
@@ -92,67 +92,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits(['update:modelValue']);
 
-const fieldId = computed(() => props.id || `field-${Math.random().toString(36).substr(2, 9)}`);
-
-function updateValue(event: Event) {
-  const target = event.target as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
-  let val: string | number | null = target.value;
-  if (props.type === 'number') {
-    val = val === '' ? null : Number(val);
-  }
-  emit('update:modelValue', val);
-}
-
-function updateChecked(event: Event) {
-  const target = event.target as HTMLInputElement;
-  emit('update:modelValue', target.checked);
-}
+const { fieldId, updateValue, updateChecked } = useSmartField(props, emit);
 </script>
 
-<style scoped>
-.smart-input {
-  width: 100%;
-  padding: 0.6rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-family: inherit;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  background-color: #fff;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-  box-sizing: border-box;
-}
-
-.smart-input:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
-
-.smart-input:disabled {
-  background-color: #f3f4f6;
-  cursor: not-allowed;
-  color: #9ca3af;
-}
-
-.checkbox-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0;
-}
-
-.smart-checkbox {
-  width: 1.1rem;
-  height: 1.1rem;
-  border-radius: 0.25rem;
-  cursor: pointer;
-}
-
-.checkbox-label {
-  font-weight: normal;
-  margin: 0;
-  cursor: pointer;
-  user-select: none;
-}
-</style>
+<style scoped src="./SmartField.css"></style>

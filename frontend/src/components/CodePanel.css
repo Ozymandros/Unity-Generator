@@ -1,0 +1,37 @@
+.panel {
+  max-width: 820px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+.field-group {
+  margin-bottom: 12px;
+}
+.options-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.options-row .field-item {
+  flex: 1;
+}
+textarea,
+input,
+select {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.primary {
+  margin: 8px 0 14px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+}

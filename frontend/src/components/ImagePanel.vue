@@ -1,48 +1,22 @@
-<script lang="ts">
-export default {};
-</script>
-
 <script setup lang="ts">
-import { ref } from "vue";
 import StatusBanner from "./StatusBanner.vue";
-import { generateImage } from "../api/client";
-import { IMAGE_PROVIDERS, ASPECT_RATIOS, QUALITY_OPTIONS } from "../constants/providers";
 import SmartField from "./generic/SmartField.vue";
+import { useImagePanel } from "./ImagePanel";
 
-const prompt = ref("");
-const provider = ref("");
-const apiKey = ref("");
-const aspectRatio = ref("1:1");
-const quality = ref("standard");
-const status = ref<string | null>(null);
-const tone = ref<"ok" | "error">("ok");
-const result = ref("");
-
-async function run() {
-  status.value = "Generating image...";
-  tone.value = "ok";
-  try {
-    const response = await generateImage({
-      prompt: prompt.value,
-      provider: provider.value || undefined,
-      options: { 
-        aspect_ratio: aspectRatio.value,
-        quality: quality.value,
-        api_key: apiKey.value || undefined,
-      },
-    });
-    if (!response.success) {
-      tone.value = "error";
-      status.value = response.error || "Failed to generate image.";
-      return;
-    }
-    status.value = "Image request complete.";
-    result.value = JSON.stringify(response.data || {}, null, 2);
-  } catch (error) {
-    tone.value = "error";
-    status.value = String(error);
-  }
-}
+const {
+  prompt,
+  provider,
+  apiKey,
+  aspectRatio,
+  quality,
+  status,
+  tone,
+  result,
+  run,
+  IMAGE_PROVIDERS,
+  ASPECT_RATIOS,
+  QUALITY_OPTIONS
+} = useImagePanel();
 </script>
 
 <template>
@@ -89,39 +63,4 @@ async function run() {
   </div>
 </template>
 
-<style scoped>
-.panel {
-  max-width: 820px;
-}
-.field {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 10px;
-}
-.field-group {
-  margin-bottom: 12px;
-}
-.row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-textarea,
-input,
-select {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  width: 100%;
-  box-sizing: border-box;
-}
-.primary {
-  margin: 8px 0 14px;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 6px;
-  background: #2563eb;
-  color: white;
-  cursor: pointer;
-}
-</style>
+<style scoped src="./ImagePanel.css"></style>

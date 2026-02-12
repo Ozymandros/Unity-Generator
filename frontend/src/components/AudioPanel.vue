@@ -1,53 +1,21 @@
-<script lang="ts">
-export default {};
-</script>
-
 <script setup lang="ts">
-import { ref, computed } from "vue";
 import StatusBanner from "./StatusBanner.vue";
-import { generateAudio } from "../api/client";
-import { AUDIO_PROVIDERS } from "../constants/providers";
 import SmartField from "./generic/SmartField.vue";
+import { useAudioPanel } from "./AudioPanel";
 
-const prompt = ref("");
-const provider = ref("");
-const apiKey = ref("");
-const voiceId = ref("");
-const stability = ref(0.5);
-const status = ref<string | null>(null);
-const tone = ref<"ok" | "error">("ok");
-const result = ref("");
-
-const availableVoices = computed(() => {
-  const p = AUDIO_PROVIDERS.find((x) => x.value === provider.value);
-  return p ? p.models || [] : [];
-});
-
-async function run() {
-  status.value = "Generating audio...";
-  tone.value = "ok";
-  try {
-    const response = await generateAudio({
-      prompt: prompt.value,
-      provider: provider.value || undefined,
-      options: { 
-        voice_id: voiceId.value || undefined,
-        stability: stability.value,
-        api_key: apiKey.value || undefined,
-      },
-    });
-    if (!response.success) {
-      tone.value = "error";
-      status.value = response.error || "Failed to generate audio.";
-      return;
-    }
-    status.value = "Audio request complete.";
-    result.value = JSON.stringify(response.data || {}, null, 2);
-  } catch (error) {
-    tone.value = "error";
-    status.value = String(error);
-  }
-}
+const {
+  prompt,
+  provider,
+  apiKey,
+  voiceId,
+  stability,
+  status,
+  tone,
+  result,
+  availableVoices,
+  run,
+  AUDIO_PROVIDERS
+} = useAudioPanel();
 </script>
 
 <template>
@@ -97,39 +65,4 @@ async function run() {
   </div>
 </template>
 
-<style scoped>
-.panel {
-  max-width: 820px;
-}
-.field {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 10px;
-}
-.field-group {
-  margin-bottom: 12px;
-}
-.row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-textarea,
-input,
-select {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  width: 100%;
-  box-sizing: border-box;
-}
-.primary {
-  margin: 8px 0 14px;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 6px;
-  background: #2563eb;
-  color: white;
-  cursor: pointer;
-}
-</style>
+<style scoped src="./AudioPanel.css"></style>
