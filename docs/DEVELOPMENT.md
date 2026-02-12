@@ -61,6 +61,27 @@ All code modifications must adhere to the following principles defined in our co
 - **KISS (Keep It Simple, Stupid)**: Avoid over-engineering; favor readable code over clever solutions.
 - **Clean Architecture**: Maintain clear boundaries between services, agents, and the API layer.
 
+## AI Agent Skills (Semantic Kernel)
+
+The following Semantic Kernel skills are available for automated development tasks:
+
+- **UnityCodeSkill**: Provides Unity-aware code generation (`generate_unity_csharp`), syntax validation (`validate_unity_syntax`), and code extraction (`extract_csharp_code`).
+- **UnityProjectSkill**: Secure file operations restricted to the output directory (`write_unity_asset`, `create_unity_folder`).
+- **TextSkill**: Basic text manipulation like `trim_text`, `uppercase_text`, and `lowercase_text`.
+- **TimeSkill**: Date and time operations including `get_current_time` and `format_date`.
+- **MathSkill**: Basic mathematical operations like `add_numbers` and `multiply_numbers`.
+
+### Frontend Technical Skills (Vue/TypeScript)
+
+The following frontend modules provide standardized capabilities:
+
+- **apiClient**: Unified API wrapper in `src/api/client.ts` for generation, preferences, and finalization jobs.
+- **SmartField**: A versatile UI component (`src/components/generic/SmartField.vue`) that handles various input types and validation.
+- **StatusBanner**: Consistent UI for status updates and error reporting.
+- **TauriShell**: Secure OS integration via Tauri's shell API for file system interaction.
+
+Use these skills when appropriate according to the task context. Be smart, mutatis mutandis. See [agents/SKILLS_USAGE.md](../agents/SKILLS_USAGE.md) for detailed implementation.
+
 ## Project setup
 
 To install all dependencies for both frontend and backend:

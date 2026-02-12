@@ -16,6 +16,23 @@ Always adhere to these fundamental principles:
 - **Intuitive Design**: Code should be self-documenting and easy to understand
 - **Scalability**: Design for growth and change without major refactoring
 
+## Available Skills (Semantic Kernel)
+
+- **UnityCodeSkill**: Provides Unity-aware code generation (`generate_unity_csharp`), syntax validation (`validate_unity_syntax`), and code extraction (`extract_csharp_code`).
+- **UnityProjectSkill**: Secure file operations restricted to the output directory (`write_unity_asset`, `create_unity_folder`).
+- **TextSkill**: Basic text manipulation like `trim_text`, `uppercase_text`, and `lowercase_text`.
+- **TimeSkill**: Date and time operations including `get_current_time` and `format_date`.
+- **MathSkill**: Basic mathematical operations like `add_numbers` and `multiply_numbers`.
+
+### Frontend Technical Skills (Vue/TypeScript)
+
+- **apiClient**: Unified API wrapper in `src/api/client.ts` for all backend communication (generation, prefs, jobs).
+- **SmartField**: Versatile UI component in `src/components/generic/SmartField.vue` for consistent form inputs.
+- **StatusBanner**: Standardized status and error reporting component in `src/components/StatusBanner.vue`.
+- **TauriShell**: OS-level integration for opening files and folders via `@tauri-apps/api/shell`.
+
+Use these skills when appropriate according to the task context. Be smart, mutatis mutandis.
+
 ## Function Writing Standards
 
 When writing functions, **always** follow these requirements:
