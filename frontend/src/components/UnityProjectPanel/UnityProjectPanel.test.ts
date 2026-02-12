@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
-import UnityProjectPanel from "./UnityProjectPanel.vue";
-import * as client from "../../api/client";
+import { UnityProjectPanel } from "@/components/UnityProjectPanel";
+import * as client from "@/api/client";
 
 vi.mock("../../api/client");
 

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
-import CodePanel from "./CodePanel.vue";
-import * as client from "../../api/client";
+import { CodePanel } from "@/components/CodePanel";
+import * as client from "@/api/client";
 
 vi.mock("../../api/client");
 

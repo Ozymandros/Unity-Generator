@@ -1,6 +1,6 @@
 import { ref, computed } from "vue";
-import { generateAudio } from "../../api/client";
-import { AUDIO_PROVIDERS } from "../../constants/providers";
+import { generateAudio } from "@/api/client";
+import { AUDIO_PROVIDERS } from "@/constants/providers";
 
 export function useAudioPanel() {
   const prompt = ref("");

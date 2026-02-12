@@ -5,8 +5,8 @@ import {
   finalizeProject,
   getFinalizeJobStatus,
   downloadFinalizedProject,
-} from "../../api/client";
-import type { FinalizeJobStatusResponse } from "../../api/client";
+} from "@/api/client";
+import type { FinalizeJobStatusResponse } from "@/api/client";
 import { 
   TEXT_PROVIDERS, 
   IMAGE_PROVIDERS, 
@@ -16,13 +16,13 @@ import {
   TEMPERATURE_PRESETS, 
   LENGTH_PRESETS,
   STABILITY_PRESETS 
-} from "../../constants/providers";
-import { FINALIZE_STATUS, UI_TONE } from "../../constants/finalize";
+} from "@/constants/providers";
+import { FINALIZE_STATUS, UI_TONE } from "@/constants/finalize";
 import { 
   UNITY_TEMPLATES, 
   UNITY_VERSIONS, 
   UNITY_PLATFORMS 
-} from "../../constants/unity";
+} from "@/constants/unity";
 
 export function useUnityProjectPanel() {
   const projectName = ref("UnityProject");

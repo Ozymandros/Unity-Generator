@@ -1,6 +1,6 @@
 import { onMounted, ref } from "vue";
-import { getPref, saveApiKeys, setPref } from "../../api/client";
-import { TEXT_PROVIDERS, IMAGE_PROVIDERS, AUDIO_PROVIDERS } from "../../constants/providers";
+import { getPref, saveApiKeys, setPref } from "@/api/client";
+import { TEXT_PROVIDERS, IMAGE_PROVIDERS, AUDIO_PROVIDERS } from "@/constants/providers";
 
 export function useSettingsPanel() {
   const backendUrl = ref(localStorage.getItem("backendUrl") || "http://127.0.0.1:8000");

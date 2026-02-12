@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
-import SpritesPanel from "./SpritesPanel.vue";
-import * as client from "../../api/client";
+import { SpritesPanel } from "@/components/SpritesPanel";
+import * as client from "@/api/client";
 
 vi.mock("../../api/client");
 

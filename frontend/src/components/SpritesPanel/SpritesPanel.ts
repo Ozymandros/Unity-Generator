@@ -1,6 +1,6 @@
 import { computed, ref, type CSSProperties } from "vue";
-import { generateSprites } from "../../api/client";
-import { IMAGE_PROVIDERS } from "../../constants/providers";
+import { generateSprites } from "@/api/client";
+import { IMAGE_PROVIDERS } from "@/constants/providers";
 
 export function useSpritesPanel() {
   const prompt = ref("");

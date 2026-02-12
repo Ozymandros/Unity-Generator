@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
-import AudioPanel from "./AudioPanel.vue";
-import * as client from "../../api/client";
+import { AudioPanel } from "@/components/AudioPanel";
+import * as client from "@/api/client";
 
 vi.mock("../../api/client");
 

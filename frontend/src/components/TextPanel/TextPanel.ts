@@ -1,6 +1,6 @@
 import { ref, computed } from "vue";
-import { generateText } from "../../api/client";
-import { TEXT_PROVIDERS, TEMPERATURE_PRESETS, LENGTH_PRESETS } from "../../constants/providers";
+import { generateText } from "@/api/client";
+import { TEXT_PROVIDERS, TEMPERATURE_PRESETS, LENGTH_PRESETS } from "@/constants/providers";
 
 export function useTextPanel() {
   const prompt = ref("");

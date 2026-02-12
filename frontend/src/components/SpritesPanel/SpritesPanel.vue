@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import StatusBanner from "../StatusBanner/StatusBanner.vue";
+import { StatusBanner } from "@/components/StatusBanner";
 import { useSpritesPanel } from "./SpritesPanel";
 
 const {

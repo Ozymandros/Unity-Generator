@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import SmartField from "../SmartField/SmartField.vue";
+import { SmartField } from "@/components/generic/SmartField";
 import { usePromptInputSection, type PromptInputSectionProps } from "./PromptInputSection";
 
 const props = defineProps<PromptInputSectionProps>();

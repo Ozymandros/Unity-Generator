@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import SettingsPanel from "./components/SettingsPanel/SettingsPanel.vue";
-import CodePanel from "./components/CodePanel/CodePanel.vue";
-import TextPanel from "./components/TextPanel/TextPanel.vue";
-import ImagePanel from "./components/ImagePanel/ImagePanel.vue";
-import AudioPanel from "./components/AudioPanel/AudioPanel.vue";
-import SpritesPanel from "./components/SpritesPanel/SpritesPanel.vue";
-import UnityProjectPanel from "./components/UnityProjectPanel/UnityProjectPanel.vue";
-import { useApp } from "./App";
+import { SettingsPanel } from "@/components/SettingsPanel";
+import { CodePanel } from "@/components/CodePanel";
+import { TextPanel } from "@/components/TextPanel";
+import { ImagePanel } from "@/components/ImagePanel";
+import { AudioPanel } from "@/components/AudioPanel";
+import { SpritesPanel } from "@/components/SpritesPanel";
+import { UnityProjectPanel } from "@/components/UnityProjectPanel";
+import { useApp } from "@/App";
 
 const { tabs, active, backendStatus, setActive } = useApp();
 </script>

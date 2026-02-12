@@ -1,5 +1,5 @@
 import { onMounted, ref } from "vue";
-import { healthCheck } from "./api/client";
+import { healthCheck } from "@/api/client";
 
 export function useApp() {
   const tabs = [

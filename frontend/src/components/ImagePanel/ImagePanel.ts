@@ -1,6 +1,6 @@
 import { ref } from "vue";
-import { generateImage } from "../../api/client";
-import { IMAGE_PROVIDERS, ASPECT_RATIOS, QUALITY_OPTIONS } from "../../constants/providers";
+import { generateImage } from "@/api/client";
+import { IMAGE_PROVIDERS, ASPECT_RATIOS, QUALITY_OPTIONS } from "@/constants/providers";
 
 export function useImagePanel() {
   const prompt = ref("");

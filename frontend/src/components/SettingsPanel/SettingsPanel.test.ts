@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
-import SettingsPanel from "./SettingsPanel.vue";
-import * as client from "../../api/client";
+import { SettingsPanel } from "@/components/SettingsPanel";
+import * as client from "@/api/client";
 
 vi.mock("../../api/client");
 

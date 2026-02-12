@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import StatusBanner from "../StatusBanner/StatusBanner.vue";
-import PromptInputSection from "../generic/PromptInputSection/PromptInputSection.vue";
-import SmartField from "../generic/SmartField/SmartField.vue";
+import { StatusBanner } from "@/components/StatusBanner";
+import { PromptInputSection } from "@/components/generic/PromptInputSection";
+import { SmartField } from "@/components/generic/SmartField";
 import { useUnityProjectPanel } from "./UnityProjectPanel";
 
 const {

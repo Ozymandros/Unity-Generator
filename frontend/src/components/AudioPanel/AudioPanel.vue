@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import StatusBanner from "../StatusBanner/StatusBanner.vue";
-import SmartField from "../generic/SmartField/SmartField.vue";
+import { StatusBanner } from "@/components/StatusBanner";
+import { SmartField } from "@/components/generic/SmartField";
 import { useAudioPanel } from "./AudioPanel";
 
 const {

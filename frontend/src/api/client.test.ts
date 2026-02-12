@@ -14,7 +14,7 @@ import {
   finalizeProject,
   getFinalizeJobStatus,
   downloadFinalizedProject,
-} from "./client";
+} from "@/api/client";
 
 const mockFetch = vi.fn();
 

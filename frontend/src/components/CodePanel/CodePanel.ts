@@ -1,6 +1,6 @@
 import { computed, ref, watch } from "vue";
-import { generateCode } from "../../api/client";
-import { TEXT_PROVIDERS, TEMPERATURE_PRESETS, LENGTH_PRESETS } from "../../constants/providers";
+import { generateCode } from "@/api/client";
+import { TEXT_PROVIDERS, TEMPERATURE_PRESETS, LENGTH_PRESETS } from "@/constants/providers";
 
 export function useCodePanel() {
   const prompt = ref("");

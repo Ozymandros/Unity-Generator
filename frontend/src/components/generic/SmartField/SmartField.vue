@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import BaseField from '../BaseField/BaseField.vue';
+import { BaseField } from "@/components/generic/BaseField";
 import { useSmartField, type SmartFieldProps, type SmartFieldValue } from './SmartField';
 
 const props = withDefaults(defineProps<SmartFieldProps>(), {
