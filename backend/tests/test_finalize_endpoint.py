@@ -6,9 +6,10 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+from fastapi.testclient import TestClient
+
 from app.finalize_store import JobStatus, finalize_store
 from app.main import app
-from fastapi.testclient import TestClient
 
 client = TestClient(app)
 

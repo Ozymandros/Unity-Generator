@@ -1,11 +1,10 @@
-import json
 from unittest.mock import MagicMock, patch
 
-import pytest
-from app.schemas import AudioOptions, CodeOptions, ImageOptions, TextOptions
 from services.audio_provider import generate_audio
 from services.image_provider import generate_image
 from services.llm_provider import generate_text
+
+from app.schemas import AudioOptions, ImageOptions, TextOptions
 
 
 class TestLLMProviders:
@@ -115,7 +114,7 @@ class TestAudioProviders:
 
         assert result.provider == "elevenlabs"
         assert result.audio is not None  # Should be base64 encoded
-        
+
         # Verify request
         args, kwargs = mock_post.call_args
         assert "Adam" in args[0]
@@ -128,7 +127,9 @@ class TestAudioProviders:
         mock_post.return_value.json.return_value = {"url": "playht_url"}
 
         api_keys = {"playht_api_key": "p-test"}
-        result = generate_audio("Voice test", "playht", {"voice": "standard_voice"}, api_keys)
+        result = generate_audio(
+            "Voice test", "playht", {"voice": "standard_voice"}, api_keys
+        )
 
         assert result.audio == "playht_url"
         assert result.provider == "playht"

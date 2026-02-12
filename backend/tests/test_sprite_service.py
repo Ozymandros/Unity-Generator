@@ -2,10 +2,10 @@ import base64
 import io
 from unittest.mock import MagicMock, patch
 
-from app.schemas import AgentResult
 from PIL import Image
-
 from services.sprite_service import generate_sprite, process_pixel_art
+
+from app.schemas import AgentResult
 
 
 def test_process_pixel_art_resizing() -> None:

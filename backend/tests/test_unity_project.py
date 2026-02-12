@@ -2,9 +2,10 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
+from fastapi.testclient import TestClient
+
 from app.main import app
 from app.schemas import AgentResult
-from fastapi.testclient import TestClient
 
 
 def test_unity_project_generation(

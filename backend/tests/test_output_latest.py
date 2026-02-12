@@ -1,8 +1,9 @@
 from pathlib import Path
 
 import pytest
-from app.main import app
 from fastapi.testclient import TestClient
+
+from app.main import app
 
 
 def test_get_latest_output(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

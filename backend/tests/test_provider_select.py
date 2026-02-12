@@ -1,5 +1,4 @@
 import pytest
-
 from services.provider_select import select_provider
 
 

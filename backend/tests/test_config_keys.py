@@ -1,8 +1,9 @@
 from pathlib import Path
 
 import pytest
-from app.main import app
 from fastapi.testclient import TestClient
+
+from app.main import app
 
 
 def test_get_api_keys(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

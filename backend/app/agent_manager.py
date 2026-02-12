@@ -2,6 +2,10 @@ import logging
 import sys
 from typing import Any
 
+from services.audio_provider import AUDIO_KEY_MAP
+from services.image_provider import IMAGE_KEY_MAP
+from services.llm_provider import LLM_KEY_MAP
+
 from app.schemas import (
     AgentResult,
     AudioOptions,
@@ -9,9 +13,6 @@ from app.schemas import (
     ImageOptions,
     TextOptions,
 )
-from services.audio_provider import AUDIO_KEY_MAP
-from services.image_provider import IMAGE_KEY_MAP
-from services.llm_provider import LLM_KEY_MAP
 
 from .config import get_repo_root, load_api_keys
 

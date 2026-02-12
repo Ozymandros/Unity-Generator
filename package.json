@@ -7,25 +7,36 @@
   "name": "unity-generator",
   "private": true,
   "scripts": {
+    "// --- Build & Distribution ---": "",
     "build:backend": "powershell -ExecutionPolicy Bypass -File scripts/build_backend.ps1",
     "build:frontend": "pnpm --dir frontend build",
-    "clean": "pnpm run clean:backend && pnpm run clean:frontend",
-    "clean:backend": "powershell -Command \"Remove-Item -Recycle -Force backend/dist, backend/build, frontend/src-tauri/binaries/backend-* -ErrorAction SilentlyContinue\"",
-    "clean:frontend": "pnpm --dir frontend run clean",
-    "dev": "pnpm --dir frontend dev:tauri",
-    "lint:backend": "pnpm --dir backend lint",
-    "lint:backend:fix": "pnpm --dir backend lint:fix",
-    "lint:frontend": "pnpm --dir backend lint && pnpm --dir frontend lint",
-    "lint:frontend:fix": "pnpm --dir backend lint:fix && pnpm --dir frontend lint",
     "package": "pnpm run clean && pnpm run build:backend && pnpm run tauri:build",
-    "setup": "pnpm install && pnpm --dir frontend install && pip install -r backend/requirements.txt",
+
+    "// --- Development ---": "",
+    "dev": "pnpm --dir frontend dev:tauri",
     "tauri": "pnpm --dir frontend tauri",
     "tauri:build": "pnpm --dir frontend tauri build",
+
+    "// --- Quality Control: Unified ---": "",
+    "check:all": "pnpm run lint:all && pnpm run typecheck:all && pnpm run test:all",
+    "lint:all": "pnpm --dir backend lint && pnpm --dir frontend lint",
     "test:all": "pnpm run test:backend && pnpm run test:frontend",
+    "typecheck:all": "pnpm run typecheck:backend && pnpm run typecheck:frontend",
+
+    "// --- Quality Control: Frontend & Backend ---": "",
+    "lint:backend": "pnpm --dir backend lint",
+    "lint:backend:fix": "pnpm --dir backend lint:fix",
+    "lint:frontend": "pnpm --dir frontend lint",
+    "lint:frontend:fix": "pnpm --dir frontend lint",
     "test:backend": "pnpm --dir backend test",
     "test:frontend": "pnpm --dir frontend test",
     "typecheck:backend": "pnpm --dir backend typecheck",
     "typecheck:frontend": "pnpm --dir backend typecheck && pnpm --dir frontend typecheck",
-    "typecheck:all": "pnpm run typecheck:backend && pnpm run typecheck:frontend"
+
+    "// --- Project Lifecycle & Utilities ---": "",
+    "setup": "pnpm install && pnpm --dir frontend install && pip install -r backend/requirements.txt",
+    "clean": "pnpm run clean:backend && pnpm run clean:frontend",
+    "clean:backend": "powershell -Command \"Remove-Item -Recycle -Force backend/dist, backend/build, frontend/src-tauri/binaries/backend-* -ErrorAction SilentlyContinue\"",
+    "clean:frontend": "pnpm --dir frontend run clean"
   }
 }

@@ -8,7 +8,6 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
-
 from agents.unity_skills import UnityCodeSkill, UnityProjectSkill
 
 
@@ -52,7 +51,7 @@ public class TestScript : MonoBehaviour
             # Comments with quotes
             'public class T { // "quote in comment"\n void S() {} }',
             # Nested braces and parens
-            'public class T { void S() { if (true) { Debug.Log((1 + 1).ToString()); } } }'
+            "public class T { void S() { if (true) { Debug.Log((1 + 1).ToString()); } } }",
         ]
         for code in valid_codes:
             assert skill.validate_syntax(code) is True
@@ -65,7 +64,10 @@ public class TestScript : MonoBehaviour
         assert skill.validate_syntax("public class Test {") is False
 
         # Unbalanced parentheses
-        assert skill.validate_syntax("public class T { void S() { Debug.Log(; } }") is False
+        assert (
+            skill.validate_syntax("public class T { void S() { Debug.Log(; } }")
+            is False
+        )
 
         # Missing class keyword
         assert skill.validate_syntax("public T { }") is False

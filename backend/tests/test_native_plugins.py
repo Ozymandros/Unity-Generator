@@ -3,7 +3,6 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 import pytest
-
 from agents.plugins.native.memory_prefs_plugin import MemoryPrefsPlugin
 from agents.plugins.native.unity_project_plugin import UnityProjectPlugin
 

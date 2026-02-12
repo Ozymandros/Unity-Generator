@@ -1,7 +1,8 @@
 from __future__ import annotations
+
 import logging
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from semantic_kernel import Kernel
@@ -13,6 +14,7 @@ try:
         TextPlugin,
         TimePlugin,
     )
+
     Kernel = RealKernel
 except Exception:  # pragma: no cover - optional dependency at runtime
     Kernel = None  # type: ignore

@@ -380,7 +380,10 @@ class TestRunFinalizeJob:
         assert "Compile Error" in result.errors
         mock_cleanup.assert_called_once()
 
-    @patch("services.unity_orchestrator.render_template", side_effect=Exception("Render error"))
+    @patch(
+        "services.unity_orchestrator.render_template",
+        side_effect=Exception("Render error"),
+    )
     @patch("services.unity_orchestrator.cleanup_injected_scripts")
     def test_run_finalize_job_exception_cleanup(
         self,

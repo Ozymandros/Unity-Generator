@@ -1,6 +1,7 @@
 [tool.ruff]
 # Target Python version
 target-version = "py310"
+line-length = 120
 
 # Files to include/exclude
 extend-exclude = ["__pycache__", ".venv"]
