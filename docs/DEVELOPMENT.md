@@ -53,10 +53,21 @@ It is critical to distinguish between the development environment and the final 
 - **Docker**: Used primarily for testing, CI, and isolated debugging sessions.
 - **Tauri Sidecar**: The final distributed application uses the **Tauri Sidecar pattern**. The Python backend is compiled into a standalone binary via `scripts/build_backend.ps1` and bundled into the native installer. **The production app does NOT require Docker.**
 
+### Unified Quality Control
+
+The project uses a global `package.json` to manage quality across the monorepo. **Always run the following command before completing any task:**
+
+```bash
+pnpm check:all
+```
+
+This command sequentially runs `pnpm lint:all`, `pnpm typecheck:all`, and `pnpm test:all`.
+
 ## Project Standards
 
 All code modifications must adhere to the following principles defined in our core guidelines:
 
+- **Mandatory Validation**: Every agent action MUST be validated with `pnpm check:all & pnpm test:all` before finishing.
 - **SRP (Single Responsibility Principle)**: Each module or class should have one reason to change.
 - **KISS (Keep It Simple, Stupid)**: Avoid over-engineering; favor readable code over clever solutions.
 - **Clean Architecture**: Maintain clear boundaries between services, agents, and the API layer.

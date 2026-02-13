@@ -83,9 +83,11 @@ def test_agent_manager_run_code(
     manager = AgentManager()
     manager.code_agent = mock_agent
 
+    monkeypatch.setattr("app.agent_manager.get_pref", lambda k: None)
+
     result = manager.run_code("test prompt", "openai", {"model": "gpt-4o"})
 
     mock_agent.run.assert_called_once_with(
-        "test prompt", "openai", {"model": "gpt-4o"}, {"openai_api_key": "sk-test"}
+        "test prompt", "openai", {"model": "gpt-4o"}, {"openai_api_key": "sk-test"}, None
     )
     assert result.content == "test"

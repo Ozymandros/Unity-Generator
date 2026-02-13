@@ -8,7 +8,7 @@
       @update:model-value="val => { localPrompt = String(val); emit('update:modelValue', String(val)); }"
       :rows="3" 
     />
-    
+
     <SmartField 
       v-if="providers && providers.length"
       label="Provider"

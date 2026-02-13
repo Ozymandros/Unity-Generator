@@ -10,13 +10,13 @@ flowchart TD
   API --> SK[Semantic Kernel]
   SK --> NP[Native Plugins]
   SK --> SF[Semantic Functions]
-  
+
   NP -->|Unity Ops| UPP[UnityProjectPlugin]
   NP -->|Prefs| MPP[MemoryPrefsPlugin]
   NP -->|Orchestration| POP[ProviderOrchestratorPlugin]
-  
+
   SF -->|Prompts| UCE[UnityCodeExpert]
-  
+
   POP --> LLM[LLM Providers]
   POP --> IMG[Image Providers]
   POP --> AUD[Audio Providers]

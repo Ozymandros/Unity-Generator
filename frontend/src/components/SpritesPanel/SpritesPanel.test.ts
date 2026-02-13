@@ -8,6 +8,12 @@ vi.mock("../../api/client");
 describe("SpritesPanel", () => {
     beforeEach(() => {
         vi.resetAllMocks();
+        vi.mocked(client.getPref).mockResolvedValue({
+            success: true,
+            date: new Date().toISOString(),
+            error: null,
+            data: { key: "test", value: null },
+        });
     });
 
     it("renders initial state correctly", () => {
@@ -33,11 +39,11 @@ describe("SpritesPanel", () => {
 
         const wrapper = mount(SpritesPanel);
         await wrapper.find("textarea").setValue("A cool shield");
-        
+
         // Select resolution (64 is default, let's change to 32)
         const buttons = wrapper.findAll(".toggle-group button");
         await buttons[1].trigger("click"); // 32x button
-        
+
         await wrapper.find("button.primary").trigger("click");
         await flushPromises();
 
@@ -77,16 +83,16 @@ describe("SpritesPanel", () => {
 
         const wrapper = mount(SpritesPanel);
         await wrapper.find("textarea").setValue("Test options");
-        
+
         // Set palette size to 16
         await wrapper.find("select").setValue(16); // paletteSize select is the second select in the field-group? 
         // Wait, template has: 1. Provider select, 2. Palette select.
         const selects = wrapper.findAll("select");
         await selects[1].setValue(16);
-        
+
         // Toggle auto-crop
         await wrapper.find("input[type='checkbox']").setValue(true);
-        
+
         await wrapper.find("button.primary").trigger("click");
         await flushPromises();
 

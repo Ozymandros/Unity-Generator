@@ -44,6 +44,11 @@ class AgentResult(BaseModel):
 
 class GenerationRequest(BaseModel):
     prompt: str
+    system_prompt: str | None = Field(
+        default=None,
+        description="Optional local system prompt override",
+        max_length=4000,
+    )
     provider: str | None = None
     api_key: str | None = None
     options: (
@@ -81,6 +86,10 @@ class UnityProjectRequest(BaseModel):
     text_prompt: str | None = None
     image_prompt: str | None = None
     audio_prompt: str | None = None
+    code_system_prompt: str | None = Field(default=None, max_length=4000)
+    text_system_prompt: str | None = Field(default=None, max_length=4000)
+    image_system_prompt: str | None = Field(default=None, max_length=4000)
+    audio_system_prompt: str | None = Field(default=None, max_length=4000)
     provider_overrides: dict[str, str | None] = Field(default_factory=dict)
     options: dict[str, Any] = Field(default_factory=dict)
     unity_template: str = Field(
@@ -97,6 +106,7 @@ class SpritesRequest(BaseModel):
     provider: str | None = None
     api_key: str | None = None
     resolution: int = 64
+    system_prompt: str | None = None
     options: ImageOptions = Field(default_factory=ImageOptions)
 
 
@@ -133,6 +143,10 @@ class FinalizeProjectRequest(BaseModel):
     text_prompt: str | None = None
     image_prompt: str | None = None
     audio_prompt: str | None = None
+    code_system_prompt: str | None = None
+    text_system_prompt: str | None = None
+    image_system_prompt: str | None = None
+    audio_system_prompt: str | None = None
     provider_overrides: dict[str, str | None] = Field(default_factory=dict)
     options: dict[str, Any] = Field(default_factory=dict)
 

@@ -95,6 +95,15 @@ const {
       @update:options="val => code.options = val as any"
     >
       <template #options="{ options, updateOptions }">
+        <div class="field" style="margin-bottom: 8px;">
+           <SmartField 
+             label="System Prompt" 
+             type="textarea" 
+             v-model="code.systemPrompt" 
+             placeholder="Default: You are a senior Unity engineer..."
+             :rows="2"
+           />
+        </div>
         <div class="options-row">
           <div class="field-sm">
             <SmartField 
@@ -129,6 +138,15 @@ const {
       @update:options="val => text.options = val as any"
     >
       <template #options="{ options, updateOptions }">
+        <div class="field" style="margin-bottom: 8px;">
+           <SmartField 
+             label="System Prompt" 
+             type="textarea" 
+             v-model="text.systemPrompt" 
+             placeholder="Default: You are a creative writer..."
+             :rows="2"
+           />
+        </div>
         <div class="options-row">
           <div class="field-sm">
             <SmartField 
@@ -163,6 +181,15 @@ const {
       @update:options="val => image.options = val as any"
     >
       <template #options="{ options, updateOptions }">
+        <div class="field" style="margin-bottom: 8px;">
+           <SmartField 
+             label="System Prompt" 
+             type="textarea" 
+             v-model="image.systemPrompt" 
+             placeholder="Default: Professional concept art..."
+             :rows="2"
+           />
+        </div>
         <div class="options-row">
           <div class="field-sm">
             <SmartField 
@@ -197,6 +224,15 @@ const {
       @update:options="val => audio.options = val as any"
     >
       <template #options="{ options, updateOptions }">
+        <div class="field" style="margin-bottom: 8px;">
+           <SmartField 
+             label="System Prompt" 
+             type="textarea" 
+             v-model="audio.systemPrompt" 
+             placeholder="Default: High quality sound effect..."
+             :rows="2"
+           />
+        </div>
         <div class="options-row">
           <div class="field-sm">
             <SmartField 
@@ -236,7 +272,7 @@ const {
          <SmartField type="checkbox" label="Auto-Install UPM Packages" v-model="settings.installPackages" />
          <SmartField type="checkbox" label="Setup URP" v-model="settings.setupUrp" />
        </div>
- 
+
        <div v-if="settings.installPackages" class="field">
          <SmartField 
            label="UPM Packages (comma-separated)" 
@@ -244,7 +280,7 @@ const {
            placeholder="com.unity.textmeshpro, com.unity.render-pipelines.universal" 
          />
        </div>
- 
+
        <div v-if="settings.generateScene" class="field">
          <SmartField 
            label="Scene Name" 
@@ -252,7 +288,7 @@ const {
            placeholder="MainScene" 
          />
        </div>
- 
+
        <div class="options-row">
          <div class="field-sm">
            <SmartField 

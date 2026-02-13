@@ -1,5 +1,5 @@
-import { computed, ref, type CSSProperties } from "vue";
-import { generateSprites } from "@/api/client";
+import { computed, ref, onMounted, type CSSProperties } from "vue";
+import { generateSprites, getPref } from "@/api/client";
 import { IMAGE_PROVIDERS } from "@/constants/providers";
 
 export function useSpritesPanel() {
@@ -14,6 +14,16 @@ export function useSpritesPanel() {
   const tone = ref<"ok" | "error">("ok");
   const resultImage = ref("");
   const resultMeta = ref<Record<string, unknown> | null>(null);
+  const systemPrompt = ref("");
+  const defaultSystemPrompt = ref("Default: Pixel art style...");
+
+  onMounted(async () => {
+    const pref = await getPref("default_sprite_system_prompt");
+    if (pref.success && pref.data?.value) {
+      const val = String(pref.data.value);
+      defaultSystemPrompt.value = val ? `Default: ${val.substring(0, 50)}...` : defaultSystemPrompt.value;
+    }
+  });
 
   const RESOLUTIONS = [16, 32, 64, 128, 256];
   const PALETTE_SIZES = [8, 16, 32, 64, 256];
@@ -28,10 +38,11 @@ export function useSpritesPanel() {
     status.value = "Generating sprite...";
     tone.value = "ok";
     resultImage.value = "";
-    
+
     try {
       const response = await generateSprites({
         prompt: prompt.value,
+        system_prompt: systemPrompt.value || undefined,
         provider: provider.value || undefined,
         api_key: apiKey.value || undefined,
         resolution: resolution.value,
@@ -81,6 +92,8 @@ export function useSpritesPanel() {
     tone,
     resultImage,
     resultMeta,
+    systemPrompt,
+    defaultSystemPrompt,
     RESOLUTIONS,
     PALETTE_SIZES,
     run,

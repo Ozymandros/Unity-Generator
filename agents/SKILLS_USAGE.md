@@ -54,16 +54,16 @@ def run(
 ) -> Dict[str, Any]:
     """
     Generate Unity C# code using Semantic Kernel skills.
-    
+
     Args:
         prompt: User's code generation request.
         provider: Optional LLM provider override.
         options: Provider-specific options (e.g., model, temperature).
         api_keys: Dictionary of API keys for providers.
-    
+
     Returns:
         Dictionary with generated code and metadata.
-    
+
     Example:
         >>> result = run("Create a player movement script", None, {}, {})
         >>> "content" in result
@@ -73,27 +73,27 @@ def run(
     kernel = create_kernel({
         "unity_version": options.get("unity_version", "2022.3")
     })
-    
+
     # Get Unity code skill
     unity_skill = kernel.get_plugin("unity_code")
-    
+
     # Enhance prompt with Unity context
     enhanced_prompt = unity_skill.generate_csharp(prompt)
-    
+
     # Generate code using LLM provider
     result = generate_text(enhanced_prompt, provider, options, api_keys)
-    
+
     # Extract and validate code
     if result.get("content"):
         code = unity_skill.extract_csharp_code(result["content"])
-        
+
         # Validate syntax before returning
         if unity_skill.validate_syntax(code):
             result["content"] = code
             result["validated"] = True
         else:
             result["validation_warning"] = "Code syntax validation failed"
-    
+
     return result
 ```
 
@@ -105,25 +105,25 @@ from agents.unity_skills import UnityProjectSkill
 def write_unity_script(script_name: str, code: str) -> str:
     """
     Write a Unity C# script to the output directory.
-    
+
     Args:
         script_name: Name of the script file (e.g., "PlayerMovement.cs").
         code: C# code content.
-    
+
     Returns:
         Path to the written file.
-    
+
     Example:
         >>> path = write_unity_script("Player.cs", "public class Player {}")
         >>> "Player.cs" in path
         True
     """
     project_skill = UnityProjectSkill()
-    
+
     # Write to Assets/Scripts/ directory
     relative_path = f"Scripts/{script_name}"
     file_path = project_skill.write_asset(relative_path, code)
-    
+
     return file_path
 ```
 

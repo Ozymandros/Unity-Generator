@@ -17,12 +17,6 @@
     "tauri": "pnpm --dir frontend tauri",
     "tauri:build": "pnpm --dir frontend tauri build",
 
-    "// --- Quality Control: Unified ---": "",
-    "check:all": "pnpm lint:all && pnpm typecheck:all && pnpm test:all && pnpm --dir frontend test:e2e",
-    "lint:all": "pnpm lint:backend && pnpm lint:frontend",
-    "test:all": "pnpm test:backend && pnpm test:frontend",
-    "typecheck:all": "pnpm typecheck:backend && pnpm typecheck:frontend",
-
     "// --- Quality Control: Frontend & Backend ---": "",
     "lint:backend": "pnpm --dir backend lint",
     "lint:backend:fix": "pnpm --dir backend lint:fix",
@@ -32,6 +26,13 @@
     "test:frontend": "pnpm --dir frontend test",
     "typecheck:backend": "pnpm --dir backend typecheck",
     "typecheck:frontend": "pnpm --dir backend typecheck && pnpm --dir frontend typecheck",
+
+    "// --- Quality Control: Unified ---": "",
+    "check:all": "pnpm lint:all && pnpm typecheck:all && pnpm test:all",
+    "check:all:e2e": "pnpm lint:all && pnpm typecheck:all && pnpm test:all && pnpm --dir frontend test:e2e",
+    "lint:all": "pnpm lint:backend && pnpm lint:frontend",
+    "test:all": "pnpm test:backend && pnpm test:frontend",
+    "typecheck:all": "pnpm typecheck:backend && pnpm typecheck:frontend",
 
     "// --- Project Lifecycle & Utilities ---": "",
     "setup": "pnpm install && pnpm --dir frontend install && pip install -r backend/requirements.txt",

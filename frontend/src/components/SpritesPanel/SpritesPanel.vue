@@ -13,6 +13,8 @@ const {
   tone,
   resultImage,
   resultMeta,
+  systemPrompt,
+  defaultSystemPrompt,
   RESOLUTIONS,
   PALETTE_SIZES,
   run,
@@ -27,7 +29,7 @@ const {
         <h2>2D Sprites</h2>
         <div class="badge">Pixel Art Optimized</div>
     </div>
-    
+
     <StatusBanner :status="status" :tone="tone" />
 
     <div class="content-grid">
@@ -46,7 +48,7 @@ const {
                         <option v-for="p in IMAGE_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
                     </select>
                 </div>
-                
+
                 <div class="field">
                     <label>Resolution</label>
                     <div class="toggle-group">
@@ -72,10 +74,15 @@ const {
                     <input type="checkbox" id="crop" v-model="autoCrop">
                     <label for="crop">Auto-Crop Transparent Edges</label>
                 </div>
-                
+
                 <div class="field" style="margin-top: 8px;">
                     <label>API Key (Optional)</label>
                     <input v-model="apiKey" type="password" placeholder="Key override" />
+                </div>
+
+                <div class="field">
+                    <label>System Prompt Override</label>
+                    <textarea v-model="systemPrompt" :placeholder="defaultSystemPrompt" rows="2"></textarea>
                 </div>
             </div>
 

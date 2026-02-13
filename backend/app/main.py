@@ -92,6 +92,7 @@ def generate_code(request: GenerationRequest) -> GenerationResponse:
             provider,
             cast(CodeOptions | dict[str, Any], options),
             request.api_key,
+            request.system_prompt,
         )
         return ok_response(data)
     except Exception as exc:
@@ -115,6 +116,7 @@ def generate_text(request: GenerationRequest) -> GenerationResponse:
             provider,
             cast(TextOptions | dict[str, Any], options),
             request.api_key,
+            request.system_prompt,
         )
         return ok_response(data)
     except Exception as exc:
@@ -138,6 +140,7 @@ def generate_image(request: GenerationRequest) -> GenerationResponse:
             provider,
             cast(ImageOptions | dict[str, Any], options),
             request.api_key,
+            request.system_prompt,
         )
         return ok_response(data)
     except Exception as exc:
@@ -161,6 +164,7 @@ def generate_audio(request: GenerationRequest) -> GenerationResponse:
             provider,
             cast(AudioOptions | dict[str, Any], options),
             request.api_key,
+            request.system_prompt,
         )
         return ok_response(data)
     except Exception as exc:
@@ -183,6 +187,7 @@ def generate_sprites(request: SpritesRequest) -> GenerationResponse:
             request.api_key,
             request.resolution,
             request.options,
+            system_prompt=request.system_prompt,
         )
         return ok_response(data)
     except Exception as exc:
@@ -252,6 +257,7 @@ def generate_project(request: UnityProjectRequest) -> GenerationResponse:
                 request.code_prompt,
                 code_provider,
                 request.options.get("code", {}),
+                system_prompt=request.code_system_prompt,
             ).content
 
         if request.text_prompt:
@@ -259,6 +265,7 @@ def generate_project(request: UnityProjectRequest) -> GenerationResponse:
                 request.text_prompt,
                 text_provider,
                 request.options.get("text", {}),
+                system_prompt=request.text_system_prompt,
             ).content
 
         if request.image_prompt:
@@ -266,6 +273,7 @@ def generate_project(request: UnityProjectRequest) -> GenerationResponse:
                 request.image_prompt,
                 image_provider,
                 request.options.get("image", {}),
+                system_prompt=request.image_system_prompt,
             ).image
 
         if request.audio_prompt:
@@ -273,6 +281,7 @@ def generate_project(request: UnityProjectRequest) -> GenerationResponse:
                 request.audio_prompt,
                 audio_provider,
                 request.options.get("audio", {}),
+                system_prompt=request.audio_system_prompt,
             )
             # Pass the result as a dict for legacy create_unity_project
             audio_output = (
@@ -372,6 +381,7 @@ def _run_finalize_in_background(job_id: str, request: FinalizeProjectRequest) ->
                     request.code_prompt,
                     code_provider,
                     request.options.get("code", {}),
+                    system_prompt=request.code_system_prompt,
                 ).content
 
             if request.text_prompt:
@@ -379,6 +389,7 @@ def _run_finalize_in_background(job_id: str, request: FinalizeProjectRequest) ->
                     request.text_prompt,
                     text_provider,
                     request.options.get("text", {}),
+                    system_prompt=request.text_system_prompt,
                 ).content
 
             if request.image_prompt:
@@ -386,6 +397,7 @@ def _run_finalize_in_background(job_id: str, request: FinalizeProjectRequest) ->
                     request.image_prompt,
                     image_provider,
                     request.options.get("image", {}),
+                    system_prompt=request.image_system_prompt,
                 ).image
 
             if request.audio_prompt:
@@ -393,6 +405,7 @@ def _run_finalize_in_background(job_id: str, request: FinalizeProjectRequest) ->
                     request.audio_prompt,
                     audio_provider,
                     request.options.get("audio", {}),
+                    system_prompt=request.audio_system_prompt,
                 )
 
             scaffold_result = create_unity_project(

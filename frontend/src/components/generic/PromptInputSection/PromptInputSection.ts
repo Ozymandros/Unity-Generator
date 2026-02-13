@@ -21,10 +21,10 @@ export function usePromptInputSection(props: PromptInputSectionProps, emit: {
 
   watch(() => props.modelValue, v => (localPrompt.value = v));
   watch(localPrompt, v => emit("update:modelValue", v));
-  
+
   watch(() => props.provider, v => (localProvider.value = v));
   watch(localProvider, v => emit("update:provider", v));
-  
+
   watch(() => props.options, v => (localOptions.value = { ...(v || {}) }));
   watch(localOptions, v => emit("update:options", v));
 

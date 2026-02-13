@@ -15,6 +15,7 @@ def generate_sprite(
     api_key: str | None,
     resolution: int,
     options: ImageOptions | dict[str, Any],
+    system_prompt: str | None = None,
 ) -> AgentResult:
     """
     Generates a sprite using the specified provider and applies pixel-art processing.
@@ -38,7 +39,7 @@ def generate_sprite(
     if provider and api_key and provider in IMAGE_KEY_MAP:
         keys[IMAGE_KEY_MAP[provider]] = api_key
 
-    response = generate_image(enhanced_prompt, provider, gen_options, keys)
+    response = generate_image(enhanced_prompt, provider, gen_options, keys, system_prompt)
 
     # 4. Process Image (Downscale -> Quantize -> Crop)
     image_data = response.image

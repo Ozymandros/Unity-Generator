@@ -23,19 +23,25 @@ def generate_audio(
     provider: str | None,
     options: AudioOptions | dict[str, Any],
     api_keys: dict[str, str],
+    system_prompt: str | None = None,
 ) -> AgentResult:
     selected = select_provider(provider, api_keys, AUDIO_PRIORITY, AUDIO_KEY_MAP)
+
+    # Prepend system prompt if provided
+    effective_text = prompt
+    if system_prompt:
+        effective_text = f"{system_prompt}\n\n{prompt}"
 
     opts = options if isinstance(options, AudioOptions) else AudioOptions(**options)
 
     if selected == "openai":
-        return _call_openai_audio(prompt, opts, api_keys[AUDIO_KEY_MAP[selected]])
+        return _call_openai_audio(effective_text, opts, api_keys[AUDIO_KEY_MAP[selected]])
     if selected == "google":
-        return _call_google_audio(prompt, opts, api_keys[AUDIO_KEY_MAP[selected]])
+        return _call_google_audio(effective_text, opts, api_keys[AUDIO_KEY_MAP[selected]])
     if selected == "elevenlabs":
-        return _call_elevenlabs(prompt, opts, api_keys[AUDIO_KEY_MAP[selected]])
+        return _call_elevenlabs(effective_text, opts, api_keys[AUDIO_KEY_MAP[selected]])
     if selected == "playht":
-        return _call_playht(prompt, opts, api_keys[AUDIO_KEY_MAP[selected]])
+        return _call_playht(effective_text, opts, api_keys[AUDIO_KEY_MAP[selected]])
     raise RuntimeError(f"Unsupported audio provider: {selected}")
 
 

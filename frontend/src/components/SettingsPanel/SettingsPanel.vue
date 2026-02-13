@@ -18,6 +18,11 @@ const {
   preferredLlm,
   preferredImage,
   preferredAudio,
+  defaultCodeSystemPrompt,
+  defaultTextSystemPrompt,
+  defaultImageSystemPrompt,
+  defaultAudioSystemPrompt,
+  defaultSpriteSystemPrompt,
   status,
   save,
   TEXT_PROVIDERS,
@@ -50,6 +55,43 @@ const {
     <h3>Audio Keys</h3>
     <SmartField label="ElevenLabs" type="password" v-model="elevenlabsKey" />
     <SmartField label="PlayHT" type="password" v-model="playhtKey" />
+
+    <h3>Default System Prompts (Global)</h3>
+    <SmartField 
+      label="Code Generation" 
+      type="textarea" 
+      v-model="defaultCodeSystemPrompt" 
+      placeholder="Default: You are a senior Unity engineer..." 
+      :rows="2"
+    />
+    <SmartField 
+      label="Text Generation" 
+      type="textarea" 
+      v-model="defaultTextSystemPrompt" 
+      placeholder="Default: You are a creative writer..." 
+      :rows="2"
+    />
+    <SmartField 
+      label="Image Generation" 
+      type="textarea" 
+      v-model="defaultImageSystemPrompt" 
+      placeholder="Default: Professional concept art..." 
+      :rows="2"
+    />
+    <SmartField 
+      label="Audio Generation" 
+      type="textarea" 
+      v-model="defaultAudioSystemPrompt" 
+      placeholder="Default: High quality sound effect..." 
+      :rows="2"
+    />
+    <SmartField 
+      label="Sprite Generation" 
+      type="textarea" 
+      v-model="defaultSpriteSystemPrompt" 
+      placeholder="Default: Pixel art style..." 
+      :rows="2"
+    />
 
     <h3>Preferred Providers</h3>
     <SmartField 

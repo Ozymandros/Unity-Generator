@@ -22,6 +22,7 @@ def generate_text(
     provider: str | None,
     options: TextOptions | CodeOptions | dict[str, Any],
     api_keys: dict[str, str],
+    system_prompt: str | None = None,
 ) -> AgentResult:
     selected = select_provider(provider, api_keys, LLM_PRIORITY, LLM_KEY_MAP)
 
@@ -29,22 +30,25 @@ def generate_text(
     # If it's a dict, we might want to coerce, but for LLMs generic temperature/max_tokens are common.
 
     if selected == "google":
-        return _call_google(prompt, options, api_keys[LLM_KEY_MAP[selected]])
+        return _call_google(prompt, options, api_keys[LLM_KEY_MAP[selected]], system_prompt)
     if selected == "anthropic":
-        return _call_anthropic(prompt, options, api_keys[LLM_KEY_MAP[selected]])
+        return _call_anthropic(prompt, options, api_keys[LLM_KEY_MAP[selected]], system_prompt)
     if selected == "openai":
-        return _call_openai(prompt, options, api_keys[LLM_KEY_MAP[selected]])
+        return _call_openai(prompt, options, api_keys[LLM_KEY_MAP[selected]], system_prompt)
     if selected == "deepseek":
-        return _call_deepseek(prompt, options, api_keys[LLM_KEY_MAP[selected]])
+        return _call_deepseek(prompt, options, api_keys[LLM_KEY_MAP[selected]], system_prompt)
     if selected == "openrouter":
-        return _call_openrouter(prompt, options, api_keys[LLM_KEY_MAP[selected]])
+        return _call_openrouter(prompt, options, api_keys[LLM_KEY_MAP[selected]], system_prompt)
     if selected == "groq":
-        return _call_groq(prompt, options, api_keys[LLM_KEY_MAP[selected]])
+        return _call_groq(prompt, options, api_keys[LLM_KEY_MAP[selected]], system_prompt)
     raise RuntimeError(f"Unsupported LLM provider: {selected}")
 
 
 def _call_openai(
-    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
+    prompt: str,
+    options: TextOptions | CodeOptions | dict[str, Any],
+    api_key: str,
+    system_prompt: str | None = None,
 ) -> AgentResult:
     url = "https://api.openai.com/v1/chat/completions"
 
@@ -55,9 +59,14 @@ def _call_openai(
         return getattr(options, key, default)
 
     model = get_opt("model", "gpt-4o-mini")
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
+
     payload = {
         "model": model,
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": messages,
         "temperature": get_opt("temperature", 0.7),
         "max_tokens": get_opt("max_tokens", 2048),
     }
@@ -69,7 +78,10 @@ def _call_openai(
 
 
 def _call_deepseek(
-    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
+    prompt: str,
+    options: TextOptions | CodeOptions | dict[str, Any],
+    api_key: str,
+    system_prompt: str | None = None,
 ) -> AgentResult:
     url = "https://api.deepseek.com/v1/chat/completions"
 
@@ -79,9 +91,14 @@ def _call_deepseek(
         return getattr(options, key, default)
 
     model = get_opt("model", "deepseek-chat")
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
+
     payload = {
         "model": model,
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": messages,
         "temperature": get_opt("temperature", 0.7),
         "max_tokens": get_opt("max_tokens", 2048),
     }
@@ -93,7 +110,10 @@ def _call_deepseek(
 
 
 def _call_openrouter(
-    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
+    prompt: str,
+    options: TextOptions | CodeOptions | dict[str, Any],
+    api_key: str,
+    system_prompt: str | None = None,
 ) -> AgentResult:
     url = "https://openrouter.ai/api/v1/chat/completions"
 
@@ -103,9 +123,14 @@ def _call_openrouter(
         return getattr(options, key, default)
 
     model = get_opt("model", "openrouter/auto")
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
+
     payload = {
         "model": model,
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": messages,
         "temperature": get_opt("temperature", 0.7),
         "max_tokens": get_opt("max_tokens", 2048),
     }
@@ -117,7 +142,10 @@ def _call_openrouter(
 
 
 def _call_google(
-    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
+    prompt: str,
+    options: TextOptions | CodeOptions | dict[str, Any],
+    api_key: str,
+    system_prompt: str | None = None,
 ) -> AgentResult:
     def get_opt(key: str, default: Any) -> Any:
         if isinstance(options, dict):
@@ -133,7 +161,10 @@ def _call_google(
 
 
 def _call_anthropic(
-    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
+    prompt: str,
+    options: TextOptions | CodeOptions | dict[str, Any],
+    api_key: str,
+    system_prompt: str | None = None,
 ) -> AgentResult:
     def get_opt(key: str, default: Any) -> Any:
         if isinstance(options, dict):
@@ -149,7 +180,10 @@ def _call_anthropic(
 
 
 def _call_groq(
-    prompt: str, options: TextOptions | CodeOptions | dict[str, Any], api_key: str
+    prompt: str,
+    options: TextOptions | CodeOptions | dict[str, Any],
+    api_key: str,
+    system_prompt: str | None = None,
 ) -> AgentResult:
     url = "https://api.groq.com/openai/v1/chat/completions"
 
@@ -159,9 +193,14 @@ def _call_groq(
         return getattr(options, key, default)
 
     model = get_opt("model", "llama-3.1-8b-instant")
+    messages = []
+    if system_prompt:
+        messages.append({"role": "system", "content": system_prompt})
+    messages.append({"role": "user", "content": prompt})
+
     payload = {
         "model": model,
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": messages,
         "temperature": get_opt("temperature", 0.7),
         "max_tokens": get_opt("max_tokens", 2048),
     }

@@ -6,6 +6,7 @@ from services.audio_provider import AUDIO_KEY_MAP
 from services.image_provider import IMAGE_KEY_MAP
 from services.llm_provider import LLM_KEY_MAP
 
+from app.db import get_pref
 from app.schemas import (
     AgentResult,
     AudioOptions,
@@ -56,6 +57,7 @@ class AgentManager:
         provider: str | None,
         options: CodeOptions | dict[str, Any],
         api_key: str | None = None,
+        system_prompt: str | None = None,
     ) -> AgentResult:
         api_keys = load_api_keys()
         if provider and api_key:
@@ -68,7 +70,13 @@ class AgentManager:
 
         # Ensure options is a dict for the agent call
         opts = options.dict() if isinstance(options, CodeOptions) else options
-        result = self.code_agent.run(prompt, provider, opts, api_keys)
+
+        # Fallback to global preference if no system prompt provided
+        effective_system_prompt = system_prompt
+        if effective_system_prompt is None:
+            effective_system_prompt = get_pref("default_code_system_prompt")
+
+        result = self.code_agent.run(prompt, provider, opts, api_keys, effective_system_prompt)
         return AgentResult(**result) if isinstance(result, dict) else result
 
     def run_text(
@@ -77,6 +85,7 @@ class AgentManager:
         provider: str | None,
         options: TextOptions | dict[str, Any],
         api_key: str | None = None,
+        system_prompt: str | None = None,
     ) -> AgentResult:
         api_keys = load_api_keys()
         if provider and api_key:
@@ -88,7 +97,13 @@ class AgentManager:
             raise RuntimeError("TextAgent is not available.")
 
         opts = options.dict() if isinstance(options, TextOptions) else options
-        result = self.text_agent.run(prompt, provider, opts, api_keys)
+
+        # Fallback logic for text
+        effective_system_prompt = system_prompt
+        if effective_system_prompt is None:
+            effective_system_prompt = get_pref("default_text_system_prompt")
+
+        result = self.text_agent.run(prompt, provider, opts, api_keys, effective_system_prompt)
         return AgentResult(**result) if isinstance(result, dict) else result
 
     def run_image(
@@ -97,6 +112,7 @@ class AgentManager:
         provider: str | None,
         options: ImageOptions | dict[str, Any],
         api_key: str | None = None,
+        system_prompt: str | None = None,
     ) -> AgentResult:
         api_keys = load_api_keys()
         if provider and api_key:
@@ -108,7 +124,13 @@ class AgentManager:
             raise RuntimeError("ImageAgent is not available.")
 
         opts = options.dict() if isinstance(options, ImageOptions) else options
-        result = self.image_agent.run(prompt, provider, opts, api_keys)
+
+        # Fallback logic for image
+        effective_system_prompt = system_prompt
+        if effective_system_prompt is None:
+            effective_system_prompt = get_pref("default_image_system_prompt")
+
+        result = self.image_agent.run(prompt, provider, opts, api_keys, effective_system_prompt)
         return AgentResult(**result) if isinstance(result, dict) else result
 
     def run_audio(
@@ -117,6 +139,7 @@ class AgentManager:
         provider: str | None,
         options: AudioOptions | dict[str, Any],
         api_key: str | None = None,
+        system_prompt: str | None = None,
     ) -> AgentResult:
         api_keys = load_api_keys()
         if provider and api_key:
@@ -128,5 +151,11 @@ class AgentManager:
             raise RuntimeError("AudioAgent is not available.")
 
         opts = options.dict() if isinstance(options, AudioOptions) else options
-        result = self.audio_agent.run(prompt, provider, opts, api_keys)
+
+        # Fallback logic for audio
+        effective_system_prompt = system_prompt
+        if effective_system_prompt is None:
+            effective_system_prompt = get_pref("default_audio_system_prompt")
+
+        result = self.audio_agent.run(prompt, provider, opts, api_keys, effective_system_prompt)
         return AgentResult(**result) if isinstance(result, dict) else result

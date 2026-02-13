@@ -1,5 +1,5 @@
-import { ref, computed } from "vue";
-import { generateAudio } from "@/api/client";
+import { ref, computed, onMounted } from "vue";
+import { generateAudio, getPref } from "@/api/client";
 import { AUDIO_PROVIDERS } from "@/constants/providers";
 
 export function useAudioPanel() {
@@ -11,6 +11,16 @@ export function useAudioPanel() {
   const status = ref<string | null>(null);
   const tone = ref<"ok" | "error">("ok");
   const result = ref("");
+  const systemPrompt = ref("");
+  const defaultSystemPrompt = ref("Default: High quality sound effect...");
+
+  onMounted(async () => {
+    const pref = await getPref("default_audio_system_prompt");
+    if (pref.success && pref.data?.value) {
+      const val = String(pref.data.value);
+      defaultSystemPrompt.value = val ? `Default: ${val.substring(0, 50)}...` : defaultSystemPrompt.value;
+    }
+  });
 
   const availableVoices = computed(() => {
     const p = AUDIO_PROVIDERS.find((x) => x.value === provider.value);
@@ -23,6 +33,7 @@ export function useAudioPanel() {
     try {
       const response = await generateAudio({
         prompt: prompt.value,
+        system_prompt: systemPrompt.value || undefined,
         provider: provider.value || undefined,
         options: { 
           voice_id: voiceId.value || undefined,
@@ -52,6 +63,8 @@ export function useAudioPanel() {
     status,
     tone,
     result,
+    systemPrompt,
+    defaultSystemPrompt,
     availableVoices,
     run,
     AUDIO_PROVIDERS

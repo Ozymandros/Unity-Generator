@@ -94,11 +94,11 @@ test("shows backend status and generates code", async ({ page }) => {
   await page.getByRole("button", { name: "Code" }).click();
   // Use first textarea for prompt input
   await page.locator("textarea").first().fill("Create a player controller");
-  
+
   // Click generate and wait for the status message to update
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByText("Code generated.")).toBeVisible();
-  
+
   // Check that result textarea contains the generated code
   await expect(page.locator("textarea").last()).toHaveValue(/PlayerController/);
 });
@@ -107,11 +107,11 @@ test("generates text", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Text" }).click();
   await page.locator("textarea").first().fill("Write a greeting");
-  
+
   // Click generate and wait for the status message to update
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByText("Text generated.")).toBeVisible();
-  
+
   await expect(page.locator("textarea").last()).toHaveValue(/Welcome/);
 });
 
@@ -119,11 +119,11 @@ test("generates image", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Image" }).click();
   await page.locator("textarea").first().fill("A hero portrait");
-  
+
   // Click generate and wait for the status message to update
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByText("Image request complete.")).toBeVisible();
-  
+
   // ImagePanel displays the full JSON response
   await expect(page.locator("textarea").last()).toHaveValue(/fake-image-base64/);
 });
@@ -132,11 +132,11 @@ test("generates audio", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Audio" }).click();
   await page.locator("textarea").first().fill("A battle cry");
-  
+
   // Click generate and wait for the status message to update
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByText("Audio request complete.")).toBeVisible();
-  
+
   // AudioPanel displays the full JSON response
   await expect(page.locator("textarea").last()).toHaveValue(/audio\.mp3/);
 });
@@ -147,11 +147,11 @@ test("generates unity project", async ({ page }) => {
   // Fill project name input and first textarea (code prompt)
   await page.locator("input").first().fill("TestProject");
   await page.locator("textarea").first().fill("Create player");
-  
+
   // Click generate and wait for the status message to update
   await page.getByRole("button", { name: "Generate Project" }).click();
   await expect(page.getByText("Unity project generated.")).toBeVisible();
-  
+
   // UnityProjectPanel displays the full JSON response
   await expect(page.locator("textarea").last()).toHaveValue(/output/);
 });
@@ -222,13 +222,13 @@ test("generates code with provider and model options", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Code" }).click();
   await page.locator("textarea").first().fill("Create a controller");
-  
+
   // Select provider and model using dropdowns
   // Provider is the first select in the options row
   await page.locator("select").nth(0).selectOption("deepseek");
   // Model is the second select (dependent on provider)
   await page.locator("select").nth(1).selectOption("deepseek-coder");
-  
+
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByText("Code generated.")).toBeVisible();
 
@@ -259,22 +259,22 @@ test("generates code multiple times with different prompts", async ({ page }) =>
 
 test("components reset when navigating between tabs", async ({ page }) => {
   await page.goto("/");
-  
+
   // Fill code panel
   await page.getByRole("button", { name: "Code" }).click();
   await page.locator("textarea").first().fill("Create a player controller");
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByText("Code generated.")).toBeVisible();
-  
+
   // Navigate to text panel
   await page.getByRole("button", { name: "Text" }).click();
-  
+
   // Navigate back to code panel - components are unmounted/remounted so state resets
   await page.getByRole("button", { name: "Code" }).click();
-  
+
   // Input should be empty after navigating away and back
   await expect(page.locator("textarea").first()).toHaveValue("");
-  
+
   // Result should also be empty
   await expect(page.locator("textarea").last()).toHaveValue("");
 });
@@ -288,7 +288,7 @@ test("generates unity project with all prompts filled", async ({ page }) => {
 
   await page.goto("/");
   await page.getByRole("button", { name: "Unity Project" }).click();
-  
+
   // Fill all inputs
   await page.locator("input").first().fill("FullTestProject");
   const textareas = await page.locator("textarea").all();
@@ -296,7 +296,7 @@ test("generates unity project with all prompts filled", async ({ page }) => {
   await textareas[1].fill("Generate NPC dialogue");
   await textareas[2].fill("Generate character sprites");
   await textareas[3].fill("Generate background music");
-  
+
   await page.getByRole("button", { name: "Generate Project" }).click();
   await expect(page.getByText("Unity project generated.")).toBeVisible();
 
@@ -319,10 +319,10 @@ test("generates unity project with provider overrides", async ({ page }) => {
 
   await page.goto("/");
   await page.getByRole("button", { name: "Unity Project" }).click();
-  
+
   await page.locator("input").first().fill("CustomProject");
   await page.locator("textarea").first().fill("Generate code");
-  
+
   // Fill provider overrides - Code Provider is the first select in the overrides section
   // Structure: [Code Prov, Text Prov, Image Prov, Audio Prov]
   // We need to target the correct select. In UnityProjectPanel, there are many selects.
@@ -331,12 +331,12 @@ test("generates unity project with provider overrides", async ({ page }) => {
   // 3. Settings (Image Aspect/Quality) -> 2 selects
   // 4. Settings (Audio Voice/Stability) -> 2 selects
   // 5. Provider Overrides -> 4 selects
-  
+
   // The provider overrides are at the bottom.
   // Let's select by label if possible, or by index. 
   // "Code Provider" label.
   await page.getByLabel("Code Provider").selectOption("deepseek");
-  
+
   await page.getByRole("button", { name: "Generate Project" }).click();
   await expect(page.getByText("Unity project generated.")).toBeVisible();
 
@@ -360,7 +360,7 @@ test("handles network error gracefully", async ({ page }) => {
   await page.getByRole("button", { name: "Code" }).click();
   await page.locator("textarea").first().fill("Test prompt");
   await page.getByRole("button", { name: "Generate" }).click();
-  
+
   // Should show some error indication (the component catches and displays errors)
   await expect(page.getByText(/failed|error/i)).toBeVisible({ timeout: 10000 });
 });
@@ -421,7 +421,7 @@ test("fills and saves API keys in settings", async ({ page }) => {
     savedKeys = route.request().postDataJSON();
     await mockApiSuccess(route, { saved: ["openai", "stability"] });
   });
-  
+
   // Mock the setPref calls for preferred providers
   await page.route(ENDPOINTS.PREFS, async (route) => {
     await mockApiSuccess(route, { key: "test" });
@@ -429,7 +429,7 @@ test("fills and saves API keys in settings", async ({ page }) => {
 
   await page.goto("/");
   await page.getByRole("button", { name: "Settings" }).click();
-  
+
   // Fill API keys by selecting password inputs
   const passwordInputs = await page.locator("input[type='password']").all();
   if (passwordInputs.length >= 2) {
@@ -465,17 +465,17 @@ test("shows generating status during API call", async ({ page }) => {
   await page.getByRole("button", { name: "Code" }).click();
   await page.locator("textarea").first().fill("Test");
   await page.getByRole("button", { name: "Generate" }).click();
-  
+
   // Should show "Generating" status immediately
   await expect(page.getByText("Generating code...")).toBeVisible();
-  
+
   // Eventually shows success
   await expect(page.getByText("Code generated.")).toBeVisible();
 });
 
 test("backend status updates on page load", async ({ page }) => {
   await page.goto("/");
-  
+
   // Should check backend status on mount
   await expect(page.getByText("Backend: online")).toBeVisible();
 });
@@ -490,7 +490,7 @@ test("handles empty response data gracefully", async ({ page }) => {
   await page.locator("textarea").first().fill("Test");
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByText("Code generated.")).toBeVisible();
-  
+
   // Result should be empty but not crash
   await expect(page.locator("textarea").last()).toHaveValue("");
 });
@@ -498,17 +498,17 @@ test("handles empty response data gracefully", async ({ page }) => {
 test("generates and previews 2D sprites", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Sprites" }).click();
-  
+
   await page.locator("textarea").fill("A pixel art health potion");
-  
+
   // Select 32x resolution button
   await page.getByRole("button", { name: "32x" }).click();
-  
+
   // Select palette size
   await page.getByLabel("Palette Size").selectOption("16");
-  
+
   await page.getByRole("button", { name: "Generate Sprite" }).click();
-  
+
   await expect(page.getByText("Sprite generated.")).toBeVisible();
   await expect(page.locator("img")).toBeVisible();
   await expect(page.getByText("32x32px")).toBeVisible();

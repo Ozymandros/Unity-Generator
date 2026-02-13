@@ -9,5 +9,6 @@ def run(
     provider: str | None,
     options: ImageOptions | dict[str, Any],
     api_keys: dict[str, str],
+    system_prompt: str | None = None,
 ) -> AgentResult:
-    return generate_image(prompt, provider, options, api_keys)
+    return generate_image(prompt, provider, options, api_keys, system_prompt)

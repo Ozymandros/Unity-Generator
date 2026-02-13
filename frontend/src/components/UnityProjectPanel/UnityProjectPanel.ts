@@ -26,10 +26,11 @@ import {
 
 export function useUnityProjectPanel() {
   const projectName = ref("UnityProject");
-  
+
   // Generation Parameters
   interface GenerationParams {
     prompt: string;
+    systemPrompt: string;
     provider: string;
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     options: Record<string, any>;
@@ -38,24 +39,28 @@ export function useUnityProjectPanel() {
   // Generation Parameters
   const code = reactive<GenerationParams>({
     prompt: "",
+    systemPrompt: "",
     provider: "",
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     options: { temperature: 0.7, max_tokens: 2048 } as Record<string, any>
   });
   const text = reactive<GenerationParams>({
     prompt: "",
+    systemPrompt: "",
     provider: "",
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     options: { temperature: 0.7, max_tokens: 2048 } as Record<string, any>
   });
   const image = reactive<GenerationParams>({
     prompt: "",
+    systemPrompt: "",
     provider: "",
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     options: { aspect_ratio: "1:1", quality: "standard" } as Record<string, any>
   });
   const audio = reactive<GenerationParams>({
     prompt: "",
+    systemPrompt: "",
     provider: "",
     /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
     options: { voice_id: "", stability: 0.5 } as Record<string, any>
@@ -160,6 +165,10 @@ export function useUnityProjectPanel() {
         text_prompt: text.prompt || undefined,
         image_prompt: image.prompt || undefined,
         audio_prompt: audio.prompt || undefined,
+        code_system_prompt: code.systemPrompt || undefined,
+        text_system_prompt: text.systemPrompt || undefined,
+        image_system_prompt: image.systemPrompt || undefined,
+        audio_system_prompt: audio.systemPrompt || undefined,
         provider_overrides: {
           code: code.provider || undefined,
           text: text.provider || undefined,
@@ -211,6 +220,10 @@ export function useUnityProjectPanel() {
         text_prompt: text.prompt || undefined,
         image_prompt: image.prompt || undefined,
         audio_prompt: audio.prompt || undefined,
+        code_system_prompt: code.systemPrompt || undefined,
+        text_system_prompt: text.systemPrompt || undefined,
+        image_system_prompt: image.systemPrompt || undefined,
+        audio_system_prompt: audio.systemPrompt || undefined,
         provider_overrides: {
           code: code.provider || undefined,
           text: text.provider || undefined,

@@ -1,5 +1,5 @@
-import { computed, ref, watch } from "vue";
-import { generateCode } from "@/api/client";
+import { computed, ref, watch, onMounted } from "vue";
+import { generateCode, getPref } from "@/api/client";
 import { TEXT_PROVIDERS, TEMPERATURE_PRESETS, LENGTH_PRESETS } from "@/constants/providers";
 
 export function useCodePanel() {
@@ -9,6 +9,15 @@ export function useCodePanel() {
   const temperature = ref(0.2); // Default for code
   const maxTokens = ref(2048);
   const apiKey = ref("");
+  const systemPrompt = ref("");
+  const defaultSystemPrompt = ref("Default: You are a senior Unity engineer...");
+
+  onMounted(async () => {
+    const pref = await getPref("default_code_system_prompt");
+    if (pref.success && pref.data?.value) {
+      defaultSystemPrompt.value = `Default: ${String(pref.data.value).substring(0, 50)}...`;
+    }
+  });
 
   const availableModels = computed(() => {
     const p = TEXT_PROVIDERS.find((x) => x.value === provider.value);
@@ -18,7 +27,7 @@ export function useCodePanel() {
   watch(provider, () => {
       model.value = "";
   });
-  
+
   const status = ref<string | null>(null);
   const tone = ref<"ok" | "error">("ok");
   const result = ref("");
@@ -29,6 +38,7 @@ export function useCodePanel() {
     try {
       const response = await generateCode({
         prompt: prompt.value,
+        system_prompt: systemPrompt.value || undefined,
         provider: provider.value || undefined,
         api_key: apiKey.value || undefined,
         options: {
@@ -57,6 +67,8 @@ export function useCodePanel() {
     temperature,
     maxTokens,
     apiKey,
+    systemPrompt,
+    defaultSystemPrompt,
     availableModels,
     status,
     tone,

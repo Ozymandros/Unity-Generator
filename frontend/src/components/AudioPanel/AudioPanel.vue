@@ -12,6 +12,8 @@ const {
   status,
   tone,
   result,
+  systemPrompt,
+  defaultSystemPrompt,
   availableVoices,
   run,
   AUDIO_PROVIDERS
@@ -23,7 +25,7 @@ const {
     <h2>Audio Generation</h2>
     <StatusBanner :status="status" :tone="tone" />
     <SmartField label="Prompt" type="textarea" v-model="prompt" :rows="6" />
-    
+
     <div class="field-group">
       <div class="row">
         <SmartField 
@@ -58,6 +60,19 @@ const {
         />
       </div>
     </div>
+
+    <details class="advanced-opts">
+      <summary>Advanced Options</summary>
+      <div class="opts-content">
+        <SmartField 
+          label="System Prompt Override" 
+          type="textarea" 
+          v-model="systemPrompt" 
+          :placeholder="defaultSystemPrompt" 
+          :rows="3"
+        />
+      </div>
+    </details>
 
     <button class="primary" @click="run">Generate</button>
 

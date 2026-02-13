@@ -8,6 +8,12 @@ vi.mock("../../api/client");
 describe("AudioPanel", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.mocked(client.getPref).mockResolvedValue({
+      success: true,
+      date: new Date().toISOString(),
+      error: null,
+      data: { key: "test", value: null },
+    });
   });
 
   it("renders form fields", () => {
@@ -27,11 +33,11 @@ describe("AudioPanel", () => {
 
     const wrapper = mount(AudioPanel);
     await wrapper.find("textarea").setValue("A battle cry");
-    
+
     // Select provider
     const providerSelect = wrapper.findAll("select")[0];
     await providerSelect.setValue("elevenlabs");
-    
+
     // Select voice (should be available after provider selection)
     const voiceSelect = wrapper.findAll("select")[1];
     await voiceSelect.setValue("Rachel");
@@ -61,7 +67,7 @@ describe("AudioPanel", () => {
     await wrapper.find("button.primary").trigger("click");
     await flushPromises();
 
-    const resultTextarea = wrapper.findAll("textarea")[1];
+    const resultTextarea = wrapper.findAll("textarea")[2];
     expect((resultTextarea.element as HTMLTextAreaElement).value).toContain(
       "output.mp3"
     );

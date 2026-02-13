@@ -29,6 +29,7 @@ and assets without wiring multiple tools together.
 - Generate Unity-ready C# snippets and project scaffolds
 - Create text drafts, image prompts, and audio placeholders
 - Save and reuse provider settings and preferences locally
+- Configure global and per-request system key prompts for tailored generation
 - Keep output structured so Unity can open it right away
 
 ## Workspace Structure
@@ -51,6 +52,7 @@ Scaffolded and functional. See docs for development and packaging details.
 - [Architecture overview](docs/ARCHITECTURE.md)
 - [Development guide](docs/DEVELOPMENT.md)
 - [Packaging and distribution](docs/PACKAGING.md)
+- [System Prompts guide](docs/SYSTEM_PROMPTS.md)
 
 ## Integrated Tooling
 
@@ -194,6 +196,9 @@ Output:
 ## Tests
 
 ```bash
+# Total validation (Lint + Typecheck + Test)
+pnpm check:all
+
 # All tests (Backend & Frontend)
 pnpm run test:all
 

@@ -20,20 +20,26 @@ def generate_image(
     provider: str | None,
     options: ImageOptions | dict[str, Any],
     api_keys: dict[str, str],
+    system_prompt: str | None = None,
 ) -> AgentResult:
     selected = select_provider(provider, api_keys, IMAGE_PRIORITY, IMAGE_KEY_MAP)
+
+    # Prepend system prompt if provided
+    effective_prompt = prompt
+    if system_prompt:
+        effective_prompt = f"{system_prompt}\n\n{prompt}"
 
     # Ensure options is a model
     opts = options if isinstance(options, ImageOptions) else ImageOptions(**options)
 
     if selected == "openai":
-        return _call_openai_image(prompt, opts, api_keys[IMAGE_KEY_MAP[selected]])
+        return _call_openai_image(effective_prompt, opts, api_keys[IMAGE_KEY_MAP[selected]])
     if selected == "google":
-        return _call_google_image(prompt, opts, api_keys[IMAGE_KEY_MAP[selected]])
+        return _call_google_image(effective_prompt, opts, api_keys[IMAGE_KEY_MAP[selected]])
     if selected == "stability":
-        return _call_stability(prompt, opts, api_keys[IMAGE_KEY_MAP[selected]])
+        return _call_stability(effective_prompt, opts, api_keys[IMAGE_KEY_MAP[selected]])
     if selected == "flux":
-        return _call_flux(prompt, opts, api_keys[IMAGE_KEY_MAP[selected]])
+        return _call_flux(effective_prompt, opts, api_keys[IMAGE_KEY_MAP[selected]])
     raise RuntimeError(f"Unsupported image provider: {selected}")
 
 

@@ -42,6 +42,10 @@ describe("SettingsPanel", () => {
     const selects = wrapper.findAll("select");
     expect(selects.length).toBe(3); // LLM, Image, Audio preferences
 
+    // Check for textarea inputs (System Prompts)
+    const textareas = wrapper.findAll("textarea");
+    expect(textareas.length).toBe(5); // Code, Text, Image, Audio, Sprites
+
     expect(wrapper.find("button.primary").text()).toBe("Save");
   });
 
@@ -52,6 +56,11 @@ describe("SettingsPanel", () => {
     expect(client.getPref).toHaveBeenCalledWith("preferred_llm_provider");
     expect(client.getPref).toHaveBeenCalledWith("preferred_image_provider");
     expect(client.getPref).toHaveBeenCalledWith("preferred_audio_provider");
+    expect(client.getPref).toHaveBeenCalledWith("default_code_system_prompt");
+    expect(client.getPref).toHaveBeenCalledWith("default_text_system_prompt");
+    expect(client.getPref).toHaveBeenCalledWith("default_image_system_prompt");
+    expect(client.getPref).toHaveBeenCalledWith("default_audio_system_prompt");
+    expect(client.getPref).toHaveBeenCalledWith("default_sprite_system_prompt");
   });
 
   it("saves keys and preferences on button click", async () => {
@@ -75,7 +84,7 @@ describe("SettingsPanel", () => {
     await flushPromises();
 
     expect(client.saveApiKeys).toHaveBeenCalled();
-    expect(client.setPref).toHaveBeenCalledTimes(3);
+    expect(client.setPref).toHaveBeenCalledTimes(8); // 3 providers + 5 system prompts
     expect(wrapper.text()).toContain("Saved locally");
   });
 
