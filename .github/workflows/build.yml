@@ -33,9 +33,20 @@ jobs:
       - name: Install Dependencies
         run: pnpm run setup
 
+      - name: Get pnpm store path
+        run: echo "::set-output name=storepath::$(pnpm store path)"
+        id: pnpmstore
+
+      - name: Cache pnpm store
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpmstore.outputs.storepath }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
       - name: Build Package (Backend + Frontend)
         run: pnpm run package
-
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
