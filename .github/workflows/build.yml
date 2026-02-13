@@ -34,8 +34,9 @@ jobs:
         run: pnpm run setup
 
       - name: Get pnpm store path
-        run: echo "::set-output name=storepath::$(pnpm store path)"
         id: pnpmstore
+        run: |
+          echo "storepath=$(pnpm store path)" >> $GITHUB_OUTPUT
 
       - name: Cache pnpm store
         uses: actions/cache@v3
