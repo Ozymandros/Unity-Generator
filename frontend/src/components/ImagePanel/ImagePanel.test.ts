@@ -8,6 +8,12 @@ vi.mock("../../api/client");
 describe("ImagePanel", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.mocked(client.getPref).mockResolvedValue({
+      success: true,
+      date: new Date().toISOString(),
+      error: null,
+      data: { key: "test", value: null },
+    });
   });
 
   it("renders form fields", () => {
@@ -27,15 +33,15 @@ describe("ImagePanel", () => {
 
     const wrapper = mount(ImagePanel);
     await wrapper.find("textarea").setValue("A fantasy landscape");
-    
+
     // Select provider
     const providerSelect = wrapper.findAll("select")[0];
     await providerSelect.setValue("stability");
-    
+
     // Select Aspect Ratio (index 1)
     const arSelect = wrapper.findAll("select")[1];
     await arSelect.setValue("16:9");
-    
+
     // Select Quality (index 2)
     const qualitySelect = wrapper.findAll("select")[2];
     await qualitySelect.setValue("hd");
@@ -68,7 +74,7 @@ describe("ImagePanel", () => {
     await wrapper.find("button.primary").trigger("click");
     await flushPromises();
 
-    const resultTextarea = wrapper.findAll("textarea")[1];
+    const resultTextarea = wrapper.findAll("textarea")[2];
     expect((resultTextarea.element as HTMLTextAreaElement).value).toContain(
       "generated-image-base64"
     );

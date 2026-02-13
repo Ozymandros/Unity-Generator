@@ -8,6 +8,12 @@ vi.mock("../../api/client");
 describe("CodePanel", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.mocked(client.getPref).mockResolvedValue({
+      success: true,
+      date: new Date().toISOString(),
+      error: null,
+      data: { key: "default_code_system_prompt", value: "Mock System Prompt" },
+    });
   });
 
   it("renders form fields", () => {
@@ -48,7 +54,7 @@ describe("CodePanel", () => {
     await wrapper.find("button.primary").trigger("click");
     await flushPromises();
 
-    const resultTextarea = wrapper.findAll("textarea")[1];
+    const resultTextarea = wrapper.findAll("textarea")[2];
     expect((resultTextarea.element as HTMLTextAreaElement).value).toContain(
       "PlayerController"
     );

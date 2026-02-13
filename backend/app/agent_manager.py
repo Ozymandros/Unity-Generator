@@ -6,6 +6,7 @@ from services.audio_provider import AUDIO_KEY_MAP
 from services.image_provider import IMAGE_KEY_MAP
 from services.llm_provider import LLM_KEY_MAP
 
+from app.db import get_pref
 from app.schemas import (
     AgentResult,
     AudioOptions,
@@ -14,6 +15,7 @@ from app.schemas import (
     TextOptions,
 )
 
+from .asset_saver import save_asset_to_project
 from .config import get_repo_root, load_api_keys
 
 LOGGER = logging.getLogger(__name__)
@@ -56,6 +58,8 @@ class AgentManager:
         provider: str | None,
         options: CodeOptions | dict[str, Any],
         api_key: str | None = None,
+        system_prompt: str | None = None,
+        project_path: str | None = None,
     ) -> AgentResult:
         api_keys = load_api_keys()
         if provider and api_key:
@@ -68,8 +72,20 @@ class AgentManager:
 
         # Ensure options is a dict for the agent call
         opts = options.dict() if isinstance(options, CodeOptions) else options
-        result = self.code_agent.run(prompt, provider, opts, api_keys)
-        return AgentResult(**result) if isinstance(result, dict) else result
+
+        # Fallback to global preference if no system prompt provided
+        effective_system_prompt = system_prompt
+        if effective_system_prompt is None:
+            effective_system_prompt = get_pref("default_code_system_prompt")
+
+        result = self.code_agent.run(prompt, provider, opts, api_keys, effective_system_prompt)
+        # Wrap result if it's a dict
+        final_result = AgentResult(**result) if isinstance(result, dict) else result
+
+        if project_path:
+            save_asset_to_project(project_path, "code", final_result)
+
+        return final_result
 
     def run_text(
         self,
@@ -77,6 +93,8 @@ class AgentManager:
         provider: str | None,
         options: TextOptions | dict[str, Any],
         api_key: str | None = None,
+        system_prompt: str | None = None,
+        project_path: str | None = None,
     ) -> AgentResult:
         api_keys = load_api_keys()
         if provider and api_key:
@@ -88,8 +106,19 @@ class AgentManager:
             raise RuntimeError("TextAgent is not available.")
 
         opts = options.dict() if isinstance(options, TextOptions) else options
-        result = self.text_agent.run(prompt, provider, opts, api_keys)
-        return AgentResult(**result) if isinstance(result, dict) else result
+
+        # Fallback logic for text
+        effective_system_prompt = system_prompt
+        if effective_system_prompt is None:
+            effective_system_prompt = get_pref("default_text_system_prompt")
+
+        result = self.text_agent.run(prompt, provider, opts, api_keys, effective_system_prompt)
+        final_result = AgentResult(**result) if isinstance(result, dict) else result
+
+        if project_path:
+            save_asset_to_project(project_path, "text", final_result)
+
+        return final_result
 
     def run_image(
         self,
@@ -97,6 +126,8 @@ class AgentManager:
         provider: str | None,
         options: ImageOptions | dict[str, Any],
         api_key: str | None = None,
+        system_prompt: str | None = None,
+        project_path: str | None = None,
     ) -> AgentResult:
         api_keys = load_api_keys()
         if provider and api_key:
@@ -108,8 +139,19 @@ class AgentManager:
             raise RuntimeError("ImageAgent is not available.")
 
         opts = options.dict() if isinstance(options, ImageOptions) else options
-        result = self.image_agent.run(prompt, provider, opts, api_keys)
-        return AgentResult(**result) if isinstance(result, dict) else result
+
+        # Fallback logic for image
+        effective_system_prompt = system_prompt
+        if effective_system_prompt is None:
+            effective_system_prompt = get_pref("default_image_system_prompt")
+
+        result = self.image_agent.run(prompt, provider, opts, api_keys, effective_system_prompt)
+        final_result = AgentResult(**result) if isinstance(result, dict) else result
+
+        if project_path:
+            save_asset_to_project(project_path, "image", final_result)
+
+        return final_result
 
     def run_audio(
         self,
@@ -117,6 +159,8 @@ class AgentManager:
         provider: str | None,
         options: AudioOptions | dict[str, Any],
         api_key: str | None = None,
+        system_prompt: str | None = None,
+        project_path: str | None = None,
     ) -> AgentResult:
         api_keys = load_api_keys()
         if provider and api_key:
@@ -128,5 +172,16 @@ class AgentManager:
             raise RuntimeError("AudioAgent is not available.")
 
         opts = options.dict() if isinstance(options, AudioOptions) else options
-        result = self.audio_agent.run(prompt, provider, opts, api_keys)
-        return AgentResult(**result) if isinstance(result, dict) else result
+
+        # Fallback logic for audio
+        effective_system_prompt = system_prompt
+        if effective_system_prompt is None:
+            effective_system_prompt = get_pref("default_audio_system_prompt")
+
+        result = self.audio_agent.run(prompt, provider, opts, api_keys, effective_system_prompt)
+        final_result = AgentResult(**result) if isinstance(result, dict) else result
+
+        if project_path:
+            save_asset_to_project(project_path, "audio", final_result)
+
+        return final_result

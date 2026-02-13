@@ -28,7 +28,10 @@ and assets without wiring multiple tools together.
 
 - Generate Unity-ready C# snippets and project scaffolds
 - Create text drafts, image prompts, and audio placeholders
+- **Incremental Asset Generation**: Save assets directly into an active Unity project
+- **Pixel-Art Sprites**: Generate and process 2D sprite sheets with automatic cropping
 - Save and reuse provider settings and preferences locally
+- Configure global and per-request system key prompts for tailored generation
 - Keep output structured so Unity can open it right away
 
 ## Workspace Structure
@@ -51,6 +54,7 @@ Scaffolded and functional. See docs for development and packaging details.
 - [Architecture overview](docs/ARCHITECTURE.md)
 - [Development guide](docs/DEVELOPMENT.md)
 - [Packaging and distribution](docs/PACKAGING.md)
+- [System Prompts guide](docs/SYSTEM_PROMPTS.md)
 
 ## Integrated Tooling
 
@@ -84,6 +88,7 @@ All contributions must follow the **SRP**, **KISS**, and **Clean Architecture** 
 3. Agents call provider wrappers (LLM, image, audio) using your keys.
 4. Responses are normalized and returned to the UI.
 5. Unity project requests are written to `output/` with Unity metadata.
+6. **Active Projects**: Individual assets can be auto-saved to any active Unity project workspace.
 
 ## Configuration
 
@@ -136,6 +141,7 @@ Generation:
 - `POST /generate/text`
 - `POST /generate/image`
 - `POST /generate/audio`
+- `POST /generate/sprites`
 
 Request body:
 
@@ -143,7 +149,8 @@ Request body:
 {
   "prompt": "Generate a Unity player controller",
   "provider": "openai",
-  "options": {"model": "gpt-4o-mini", "temperature": 0.2, "max_tokens": 2048}
+  "project_path": "C:/Projects/MyUnityGame",
+  "options": {"model": "gpt-4o-mini", "temperature": 0.2}
 }
 ```
 
@@ -184,16 +191,20 @@ Output:
 
 ## Outputs
 
-- Generated assets and Unity projects land in `output/`.
-- The Unity project output includes minimal `ProjectSettings` and `.meta` files.
-- Scripts are written to `Assets/Scripts/GeneratedScript.cs`.
-- Text is written to `Assets/Text/generated_text.txt`.
-- Images are written to `Assets/Textures/`.
-- Audio is written to `Assets/Audio/`.
+- Generated assets and Unity projects land in `output/` by default.
+- When an active project is set, files are saved directly to its `Assets/` subfolders:
+  - Scripts: `Assets/Scripts/`
+  - Text: `Assets/Text/`
+  - Images/Sprites: `Assets/Sprites/`
+  - Audio: `Assets/Audio/`
+- Every saved asset includes an automatically generated `.meta` file.
 
 ## Tests
 
 ```bash
+# Total validation (Lint + Typecheck + Test)
+pnpm check:all
+
 # All tests (Backend & Frontend)
 pnpm run test:all
 

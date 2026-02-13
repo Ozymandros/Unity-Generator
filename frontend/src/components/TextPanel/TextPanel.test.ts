@@ -8,6 +8,12 @@ vi.mock("../../api/client");
 describe("TextPanel", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.mocked(client.getPref).mockResolvedValue({
+      success: true,
+      date: new Date().toISOString(),
+      error: null,
+      data: { key: "test", value: null },
+    });
   });
 
   it("renders form fields", () => {
@@ -27,11 +33,11 @@ describe("TextPanel", () => {
 
     const wrapper = mount(TextPanel);
     await wrapper.find("textarea").setValue("Write a greeting");
-    
+
     // Select provider (index 0)
     const providerSelect = wrapper.findAll("select")[0];
     await providerSelect.setValue("openai");
-    
+
     // Select model (index 1) - dependent on provider
     const modelSelect = wrapper.findAll("select")[1];
     await modelSelect.setValue("gpt-4o-mini");
@@ -73,7 +79,7 @@ describe("TextPanel", () => {
     await wrapper.find("button.primary").trigger("click");
     await flushPromises();
 
-    const resultTextarea = wrapper.findAll("textarea")[1];
+    const resultTextarea = wrapper.findAll("textarea")[2];
     expect((resultTextarea.element as HTMLTextAreaElement).value).toContain(
       "Hello, adventurer!"
     );

@@ -10,13 +10,13 @@ flowchart TD
   API --> SK[Semantic Kernel]
   SK --> NP[Native Plugins]
   SK --> SF[Semantic Functions]
-  
+
   NP -->|Unity Ops| UPP[UnityProjectPlugin]
   NP -->|Prefs| MPP[MemoryPrefsPlugin]
   NP -->|Orchestration| POP[ProviderOrchestratorPlugin]
-  
+
   SF -->|Prompts| UCE[UnityCodeExpert]
-  
+
   POP --> LLM[LLM Providers]
   POP --> IMG[Image Providers]
   POP --> AUD[Audio Providers]
@@ -36,6 +36,7 @@ flowchart TD
 - Semantic Functions: AI-driven content generation prompts (UnityCodeExpert).
 - Storage: Local JSON for API keys and SQLite for user preferences.
 - Output: Unity-ready project folders with metadata files.
+- Incremental Saving: Assets can be saved directly into an active Unity project workspace via `asset_saver.py`.
 
 ## Request flow
 
@@ -73,6 +74,7 @@ flowchart TD
 - `app/db.py`: SQLite preferences DB (`user_prefs.db`).
 - `app/config.py`: Repo-local paths, API key load/save, Unity Editor path
   resolution.
+- `app/asset_saver.py`: Utility for saving individual assets (Code, Text, Image, Audio) and generating `.meta` files for Unity compatibility.
 
 ## Provider selection
 
@@ -97,10 +99,10 @@ API keys in `config/api_keys.json`.
 
 The Unity project scaffold includes:
 
-- `Assets/Scripts/GeneratedScript.cs`
-- `Assets/Text/generated_text.txt`
-- `Assets/Textures/image_*.png`
-- `Assets/Audio/audio_1.mp3`
+- `Assets/Scripts/*.cs`
+- `Assets/Text/*.txt`
+- `Assets/Sprites/*.png`
+- `Assets/Audio/*.mp3`
 - `ProjectSettings/ProjectVersion.txt`
 - Unity `.meta` files for all assets and folders
 
@@ -112,6 +114,7 @@ setup.
 - Each endpoint wraps generation calls and returns a consistent response shape.
 - Failures are logged to a dedicated logger for failed requests.
 - Backend logs are written under `logs/`.
+- **Quality Control**: The system enforces `pnpm check:all` (Linting, Typechecking, Testing) across the entire stack.
 
 ## Security model
 

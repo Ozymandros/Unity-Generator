@@ -17,6 +17,11 @@ export function useSettingsPanel() {
   const preferredLlm = ref("deepseek");
   const preferredImage = ref("stability");
   const preferredAudio = ref("elevenlabs");
+  const defaultCodeSystemPrompt = ref("");
+  const defaultTextSystemPrompt = ref("");
+  const defaultImageSystemPrompt = ref("");
+  const defaultAudioSystemPrompt = ref("");
+  const defaultSpriteSystemPrompt = ref("");
 
   const status = ref<string | null>(null);
 
@@ -24,10 +29,20 @@ export function useSettingsPanel() {
     const llmPref = await getPref("preferred_llm_provider");
     const imagePref = await getPref("preferred_image_provider");
     const audioPref = await getPref("preferred_audio_provider");
+    const codePromptPref = await getPref("default_code_system_prompt");
+    const textPromptPref = await getPref("default_text_system_prompt");
+    const imagePromptPref = await getPref("default_image_system_prompt");
+    const audioPromptPref = await getPref("default_audio_system_prompt");
+    const spritePromptPref = await getPref("default_sprite_system_prompt");
 
     preferredLlm.value = String(llmPref.data?.value || preferredLlm.value);
     preferredImage.value = String(imagePref.data?.value || preferredImage.value);
     preferredAudio.value = String(audioPref.data?.value || preferredAudio.value);
+    defaultCodeSystemPrompt.value = String(codePromptPref.data?.value || "");
+    defaultTextSystemPrompt.value = String(textPromptPref.data?.value || "");
+    defaultImageSystemPrompt.value = String(imagePromptPref.data?.value || "");
+    defaultAudioSystemPrompt.value = String(audioPromptPref.data?.value || "");
+    defaultSpriteSystemPrompt.value = String(spritePromptPref.data?.value || "");
   });
 
   async function save() {
@@ -47,6 +62,11 @@ export function useSettingsPanel() {
     await setPref("preferred_llm_provider", preferredLlm.value);
     await setPref("preferred_image_provider", preferredImage.value);
     await setPref("preferred_audio_provider", preferredAudio.value);
+    await setPref("default_code_system_prompt", defaultCodeSystemPrompt.value);
+    await setPref("default_text_system_prompt", defaultTextSystemPrompt.value);
+    await setPref("default_image_system_prompt", defaultImageSystemPrompt.value);
+    await setPref("default_audio_system_prompt", defaultAudioSystemPrompt.value);
+    await setPref("default_sprite_system_prompt", defaultSpriteSystemPrompt.value);
 
     if (!response.success) {
       status.value = response.error || "Failed to save keys.";
@@ -70,6 +90,11 @@ export function useSettingsPanel() {
     preferredLlm,
     preferredImage,
     preferredAudio,
+    defaultCodeSystemPrompt,
+    defaultTextSystemPrompt,
+    defaultImageSystemPrompt,
+    defaultAudioSystemPrompt,
+    defaultSpriteSystemPrompt,
     status,
     save,
     TEXT_PROVIDERS,

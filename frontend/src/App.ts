@@ -11,7 +11,7 @@ export function useApp() {
     "Audio",
     "Unity Project",
   ] as const;
-  
+
   const active = ref<(typeof tabs)[number]>("Settings");
   const backendStatus = ref<"online" | "offline">("offline");
 

@@ -10,6 +10,10 @@ const {
   temperature,
   maxTokens,
   apiKey,
+  systemPrompt,
+  defaultSystemPrompt,
+  autoSaveToProject,
+  activeProjectName,
   availableModels,
   status,
   tone,
@@ -23,10 +27,19 @@ const {
 
 <template>
   <div class="panel">
+    <div v-if="activeProjectName" class="project-banner">
+      <span class="banner-icon">📁</span>
+      <span class="banner-text">Active Project: <strong>{{ activeProjectName }}</strong></span>
+      <label class="auto-save">
+        <input type="checkbox" v-model="autoSaveToProject" />
+        Auto-save to project
+      </label>
+    </div>
+
     <h2>Unity C# Code</h2>
     <StatusBanner :status="status" :tone="tone" />
     <SmartField label="Prompt" type="textarea" v-model="prompt" :rows="6" />
-    
+
     <div class="field-group">
       <div class="options-row">
         <SmartField 
@@ -70,6 +83,18 @@ const {
             v-model="apiKey" 
             placeholder="Leave empty to use global key" 
           />
+      </div>
+       <div style="margin-top: 8px;">
+        <details>
+          <summary style="cursor: pointer; margin-bottom: 4px; font-size: 0.9em; user-select: none;">Advanced Options</summary>
+          <SmartField 
+            label="System Prompt Override" 
+            type="textarea" 
+            v-model="systemPrompt" 
+            :placeholder="defaultSystemPrompt" 
+            :rows="3"
+          />
+        </details>
       </div>
     </div>
 

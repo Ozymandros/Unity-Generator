@@ -53,10 +53,21 @@ It is critical to distinguish between the development environment and the final 
 - **Docker**: Used primarily for testing, CI, and isolated debugging sessions.
 - **Tauri Sidecar**: The final distributed application uses the **Tauri Sidecar pattern**. The Python backend is compiled into a standalone binary via `scripts/build_backend.ps1` and bundled into the native installer. **The production app does NOT require Docker.**
 
+### Unified Quality Control
+
+The project uses a global `package.json` to manage quality across the monorepo. **Always run the following command before completing any task:**
+
+```bash
+pnpm check:all
+```
+
+This command sequentially runs `pnpm lint:all`, `pnpm typecheck:all`, and `pnpm test:all`.
+
 ## Project Standards
 
 All code modifications must adhere to the following principles defined in our core guidelines:
 
+- **Mandatory Validation**: Every agent action MUST be validated with `pnpm check:all & pnpm test:all` before finishing.
 - **SRP (Single Responsibility Principle)**: Each module or class should have one reason to change.
 - **KISS (Keep It Simple, Stupid)**: Avoid over-engineering; favor readable code over clever solutions.
 - **Clean Architecture**: Maintain clear boundaries between services, agents, and the API layer.
@@ -231,6 +242,33 @@ pnpm run typecheck
 ```powershell
 .\scripts\smoke_test.ps1
 ```
+
+## Incremental Project Generation Workflow
+
+The Unity Generator supports an incremental workflow where you can generate assets (Code, Text, Images, Audio, Sprites) and save them directly into an active Unity project workspace.
+
+### Active Project Store
+
+The application uses a reactive `projectStore` to keep track of the currently active project name and its file system path.
+
+1.  **Selection/Activation**: When you generate a base project structure in the **Unity Project** tab, it is automatically set as the active project.
+2.  **Persistence**: The active project is persisted in the browser's local storage.
+3.  **Visual Indicator**: Every asset panel shows a banner indicating the active project if one is set.
+
+### Individual Asset Saving
+
+When a project is active, asset panels provide an **"Auto-save to project"** toggle. If enabled:
+
+-   **Code**: Generated `.cs` files are saved to `Assets/Scripts/`.
+-   **Text**: Generated `.txt` files are saved to `Assets/Text/`.
+-   **Images/Sprites**: Generated `.png` files are saved to `Assets/Sprites/`.
+-   **Audio**: Generated `.mp3` (or other formats) are saved to `Assets/Audio/`.
+
+Meta files (`.meta`) are automatically generated for all saved assets to ensure compatibility with the Unity Editor.
+
+### Finalization
+
+Once you have added individual assets to your project, use the **Finalize with Unity Engine** button in the **Unity Project** tab to perform batch processing (UPM installation, scene setup, etc.).
 
 ## Unity Engine Integration (local development)
 

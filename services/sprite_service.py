@@ -15,30 +15,49 @@ def generate_sprite(
     api_key: str | None,
     resolution: int,
     options: ImageOptions | dict[str, Any],
+    system_prompt: str | None = None,
+    project_path: str | None = None,
 ) -> AgentResult:
     """
     Generates a sprite using the specified provider and applies pixel-art processing.
+    
+    Args:
+        prompt: Description of the sprite to generate
+        provider: Image provider to use (stability, openai, google, flux)
+        api_key: API key for the provider
+        resolution: Target resolution for the sprite (e.g., 64 for 64x64)
+        options: Generation options (ImageOptions or dict)
+        system_prompt: Optional system prompt to guide generation style
+        project_path: Optional path to Unity project root to save sprite directly
+    
+    Returns:
+        AgentResult with the generated sprite image data
     """
 
     # 1. Enhance prompt for pixel art if not already present
     enhanced_prompt = prompt
-    if "pixel" not in prompt.lower():
+    
+    # Apply system_prompt if provided to enhance the generation
+    if system_prompt:
+        enhanced_prompt = f"{system_prompt}\n\n{prompt}"
+    
+    if "pixel" not in enhanced_prompt.lower():
         enhanced_prompt = (
-            f"{prompt}, pixel art style, flat color, isolated on transparent background"
+            f"{enhanced_prompt}, pixel art style, flat color, isolated on transparent background"
         )
 
     # 2. Determine base generation size
     opts = options if isinstance(options, ImageOptions) else ImageOptions(**options)
     gen_options = opts.copy(update={"aspect_ratio": "1:1"})
 
-    # 3. Call Image Provider
+    # 3. Call Image Provider with system_prompt
     keys = load_api_keys()
     from services.image_provider import IMAGE_KEY_MAP
 
     if provider and api_key and provider in IMAGE_KEY_MAP:
         keys[IMAGE_KEY_MAP[provider]] = api_key
 
-    response = generate_image(enhanced_prompt, provider, gen_options, keys)
+    response = generate_image(enhanced_prompt, provider, gen_options, keys, system_prompt=system_prompt)
 
     # 4. Process Image (Downscale -> Quantize -> Crop)
     image_data = response.image
@@ -69,15 +88,41 @@ def generate_sprite(
     processed_img.save(buffered, format="PNG")
     img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
+    # 5. Optionally save to project_path if provided
+    saved_path = None
+    if project_path:
+        from pathlib import Path
+        import time
+        
+        project_root = Path(project_path)
+        sprites_dir = project_root / "Assets" / "Sprites"
+        
+        if sprites_dir.exists() or (project_root / "Assets").exists():
+            sprites_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Generate filename
+            timestamp = int(time.time())
+            filename = f"sprite_{resolution}x{resolution}_{timestamp}.png"
+            sprite_path = sprites_dir / filename
+            
+            # Save the sprite
+            processed_img.save(sprite_path, format="PNG")
+            saved_path = str(sprite_path.relative_to(project_root))
+
+    result_raw = {
+        "original_prompt": prompt,
+        "enhanced_prompt": enhanced_prompt,
+        "resolution": resolution,
+    }
+    
+    if saved_path:
+        result_raw["saved_path"] = saved_path
+
     return AgentResult(
         image=img_str,
         provider=response.provider,
         model=response.model,
-        raw={
-            "original_prompt": prompt,
-            "enhanced_prompt": enhanced_prompt,
-            "resolution": resolution,
-        },
+        raw=result_raw,
     )
 
 

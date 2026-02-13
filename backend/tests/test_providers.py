@@ -100,6 +100,80 @@ class TestImageProviders:
         assert result.image == "flux_url"
         assert result.provider == "flux"
 
+    @patch("services.image_provider.requests.post")
+    def test_call_openai_image(self, mock_post: MagicMock) -> None:
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json.return_value = {
+            "data": [
+                {
+                    "b64_json": "base64_dalle_image",
+                    "revised_prompt": "Enhanced prompt by DALL-E"
+                }
+            ]
+        }
+
+        api_keys = {"openai_api_key": "sk-test"}
+        options = ImageOptions(aspect_ratio="16:9", quality="hd")
+
+        result = generate_image("Futuristic city", "openai", options, api_keys)
+
+        assert result.image == "base64_dalle_image"
+        assert result.provider == "openai"
+        assert result.model == "dall-e-3"
+        assert result.raw is not None
+        assert result.raw["revised_prompt"] == "Enhanced prompt by DALL-E"
+
+        # Verify request
+        args, kwargs = mock_post.call_args
+        assert args[0] == "https://api.openai.com/v1/images/generations"
+        assert kwargs["json"]["model"] == "dall-e-3"
+        assert kwargs["json"]["size"] == "1792x1024"  # 16:9 aspect ratio
+        assert kwargs["json"]["quality"] == "hd"
+        assert kwargs["json"]["response_format"] == "b64_json"
+        assert kwargs["headers"]["Authorization"] == "Bearer sk-test"
+
+    def test_call_google_image(self) -> None:
+        """Test Google Imagen with mocked google-genai library."""
+        import base64
+        from unittest.mock import MagicMock, patch
+
+        # Mock the google-genai library
+        mock_genai = MagicMock()
+        mock_types = MagicMock()
+
+        # Create mock response
+        mock_image = MagicMock()
+        mock_image.image.image_bytes = base64.b64decode("dGVzdF9pbWFnZV9kYXRh")  # "test_image_data" in base64
+
+        mock_response = MagicMock()
+        mock_response.generated_images = [mock_image]
+
+        mock_client = MagicMock()
+        mock_client.models.generate_images.return_value = mock_response
+        mock_genai.Client.return_value = mock_client
+
+        mock_modules = {
+            "google": MagicMock(genai=mock_genai),
+            "google.genai": mock_genai,
+            "google.genai.types": mock_types,
+        }
+        with patch.dict("sys.modules", mock_modules):
+            api_keys = {"google_api_key": "goog-test"}
+            options = ImageOptions(aspect_ratio="9:16", quality="hd")
+
+            result = generate_image("Robot portrait", "google", options, api_keys)
+
+            assert result.provider == "google"
+            assert result.model == "imagen-3.0-generate-001"
+            assert result.image is not None  # Should be base64 encoded
+            assert result.raw is not None
+            assert result.raw["aspect_ratio"] == "9:16"
+            assert result.raw["image_size"] == "2K"  # hd quality maps to 2K
+
+            # Verify client was called correctly
+            mock_genai.Client.assert_called_once_with(api_key="goog-test")
+            mock_client.models.generate_images.assert_called_once()
+
 
 class TestAudioProviders:
     @patch("services.audio_provider.requests.post")

@@ -15,6 +15,7 @@ Always adhere to these fundamental principles:
 - **DRY (Don't Repeat Yourself)**: Avoid code duplication; extract common functionality
 - **Intuitive Design**: Code should be self-documenting and easy to understand
 - **Scalability**: Design for growth and change without major refactoring
+- **Mandatory Validation**: Every agent action (creation, modification, etc.) MUST be validated with `pnpm check:all & pnpm test:all` before completion.
 
 ## Available Skills (Semantic Kernel)
 
@@ -91,31 +92,31 @@ When writing functions, **always** follow these requirements:
 def process_user_data(user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Process user data and return normalized result.
-    
+
     Args:
         user_id: Unique identifier for the user. Must be non-empty string.
         data: Dictionary containing user data fields. Must contain 'name' and 'email' keys.
-    
+
     Returns:
         Dictionary with processed user data including normalized fields.
-    
+
     Raises:
         ValueError: If user_id is empty or data is missing required fields.
         TypeError: If user_id is not a string or data is not a dictionary.
-    
+
     Example:
         >>> process_user_data("user123", {"name": "John", "email": "john@example.com"})
         {'id': 'user123', 'name': 'John', 'email': 'john@example.com', 'normalized': True}
     """
     if not isinstance(user_id, str) or not user_id:
         raise ValueError("user_id must be a non-empty string")
-    
+
     if not isinstance(data, dict):
         raise TypeError("data must be a dictionary")
-    
+
     if "name" not in data or "email" not in data:
         raise ValueError("data must contain 'name' and 'email' keys")
-    
+
     # Process data...
     return {"id": user_id, **data, "normalized": True}
 ```
@@ -218,13 +219,13 @@ class GenerateRequest(BaseModel):
 async def generate_code_endpoint(request: GenerateRequest) -> GenerationResponse:
     """
     Generate code using the specified agent.
-    
+
     Args:
         request: Validated generation request containing prompt and options.
-    
+
     Returns:
         GenerationResponse with success status and generated content or error.
-    
+
     Example:
         POST /generate/code
         {
@@ -235,7 +236,7 @@ async def generate_code_endpoint(request: GenerateRequest) -> GenerationResponse
     """
     if not request.prompt or len(request.prompt.strip()) == 0:
         return error_response("Prompt cannot be empty")
-    
+
     try:
         result = agent_manager.run_code(
             prompt=request.prompt,
@@ -424,6 +425,16 @@ onMounted(() => {
 - **Frontend Tests**: Use Vitest for unit tests; Playwright for E2E tests
 - **Test Naming**: Use descriptive test names that explain what is being tested
 - **Test Structure**: Follow Arrange-Act-Assert pattern
+- **Validation**: Always run `pnpm check:all & pnpm test:all` to verify changes across the entire monorepo.
+
+## Unified Quality Control (Global package.json)
+
+The project root contains a global `package.json` that provides unified scripts for maintaining quality across both frontend and backend. Always prefer these commands for validation:
+
+- `pnpm check:all`: Runs linting, typechecking, and tests for both stacks.
+- `pnpm test:all`: Runs all backend and frontend tests.
+- `pnpm lint:all`: Runs linting for both stacks.
+- `pnpm typecheck:all`: Runs typechecking for both stacks.
 
 ## Code Review Checklist
 
@@ -440,6 +451,7 @@ When generating code, ensure:
 - [ ] No code duplication (DRY principle)
 - [ ] Code is simple and intuitive (KISS principle)
 - [ ] Architecture layers are respected (separation of concerns)
+- [ ] Changes are validated with `pnpm check:all & pnpm test:all`
 - [ ] Backend uses Pydantic models for validation
 - [ ] Frontend uses TypeScript types for type safety
 - [ ] Logging is appropriate (backend) or error messages are user-friendly (frontend)

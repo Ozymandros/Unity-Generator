@@ -41,7 +41,9 @@ def test_generate_code_uses_preference_fallback(
 ) -> None:
     """Test that provider falls back to preference when not specified."""
     mock_agent_manager = MagicMock()
-    mock_agent_manager.run_code.return_value = {"content": "code"}
+    mock_agent_manager.run_code.return_value = AgentResult(
+        content="code", provider="deepseek"
+    )
 
     monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
     monkeypatch.setattr("app.main.get_pref", lambda key: "deepseek")
@@ -76,7 +78,9 @@ def test_generate_code_with_options(
 ) -> None:
     """Test that options are passed through to agent."""
     mock_agent_manager = MagicMock()
-    mock_agent_manager.run_code.return_value = {"content": "code"}
+    mock_agent_manager.run_code.return_value = AgentResult(
+        content="code", provider="openai"
+    )
 
     monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
 
@@ -87,4 +91,4 @@ def test_generate_code_with_options(
 
     assert response.status_code == 200
     call_args = mock_agent_manager.run_code.call_args
-    assert call_args[0][2].dict()["model"] == "gpt-4o"
+    assert call_args[0][2].model == "gpt-4o"

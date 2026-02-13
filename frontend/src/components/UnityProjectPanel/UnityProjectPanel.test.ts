@@ -17,7 +17,7 @@ describe("UnityProjectPanel", () => {
     expect(wrapper.findAll("textarea").length).toBeGreaterThan(0);
     expect(wrapper.findAll("select").length).toBeGreaterThan(0);
     // First primary button is Generate Project
-    expect(wrapper.findAll("button.primary")[0].text()).toBe("Generate Project");
+    expect(wrapper.findAll("button.primary")[0].text()).toBe("Generate Base Project Structure");
   });
 
   it("calls generateUnityProject API on button click", async () => {
@@ -35,28 +35,11 @@ describe("UnityProjectPanel", () => {
     await selects[0].setValue('3d'); // Unity Template
     await selects[1].setValue('2022.3'); // Unity Version
     await selects[2].setValue('windows'); // Unity Platform
-    await wrapper.find('#code-prompt').setValue("Create player controller");
     await wrapper.find("button.primary").trigger("click");
     await flushPromises();
 
     expect(client.generateUnityProject).toHaveBeenCalledWith({
       project_name: "TestProject",
-      code_prompt: "Create player controller",
-      text_prompt: undefined,
-      image_prompt: undefined,
-      audio_prompt: undefined,
-      provider_overrides: {
-        audio: undefined,
-        code: undefined,
-        image: undefined,
-        text: undefined,
-      },
-      options: {
-        code: expect.anything(),
-        text: expect.anything(),
-        image: expect.anything(),
-        audio: expect.anything(),
-      },
       unity_template: "3d",
       unity_version: "2022.3",
       unity_platform: "windows",
@@ -106,58 +89,10 @@ describe("UnityProjectPanel", () => {
     expect(wrapper.text()).toContain("Project generation failed");
   });
 
-  it("passes structured options to API", async () => {
-    vi.mocked(client.generateUnityProject).mockResolvedValue({
-      success: true,
-      date: new Date().toISOString(),
-      error: null,
-      data: { project_path: "C:/output/TestProject" },
-    });
-
-
+  it("renders with default settings", () => {
     const wrapper = mount(UnityProjectPanel);
-    await wrapper.find('input').setValue('TestProject');
-    await wrapper.findAll('select')[0].setValue('3d');
-    await wrapper.findAll('select')[1].setValue('2022.3');
-    await wrapper.findAll('select')[2].setValue('windows');
-    await flushPromises();
-
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    (wrapper.vm as any).code.prompt = "Test code prompt";
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    (wrapper.vm as any).code.options.temperature = 1.0;
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    (wrapper.vm as any).code.options.max_tokens = 4096;
-    await wrapper.vm.$nextTick();
-    // Force input event to trigger reactivity if needed
-    wrapper.find('input').element.dispatchEvent(new Event('input'));
-    await wrapper.vm.$nextTick();
-
-    await wrapper.find("button.primary").trigger("click");
-    await flushPromises();
-
-    expect(client.generateUnityProject).toHaveBeenCalledWith({
-      project_name: "TestProject",
-      code_prompt: "Test code prompt",
-      text_prompt: undefined,
-      image_prompt: undefined,
-      audio_prompt: undefined,
-      provider_overrides: {
-        audio: undefined,
-        code: undefined,
-        image: undefined,
-        text: undefined,
-      },
-      options: {
-        code: expect.objectContaining({ temperature: 1.0, max_tokens: 4096 }),
-        text: expect.anything(),
-        image: expect.anything(),
-        audio: expect.anything(),
-      },
-      unity_template: "3d",
-      unity_version: "2022.3",
-      unity_platform: "windows",
-    });
+    expect((wrapper.vm as any).projectName).toBe("UnityProject");
+    expect((wrapper.vm as any).settings.installPackages).toBe(false);
   });
 
   it("opens the output folder with Tauri when available", async () => {
