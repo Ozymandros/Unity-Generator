@@ -30,8 +30,8 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install Dependencies
-        run: pnpm run setup
+      - name: Install dependencies
+        run: pnpm install
 
       - name: Get pnpm store path
         id: pnpmstore

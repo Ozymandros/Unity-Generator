@@ -35,7 +35,7 @@
     "// --- Project Lifecycle & Utilities ---": "",
     "setup": "pnpm install && pnpm --dir frontend install && pip install -r backend/requirements.txt",
     "clean": "pnpm run clean:backend && pnpm run clean:frontend",
-    "clean:backend": "powershell -Command \"Remove-Item -Recycle -Force backend/dist, backend/build, frontend/src-tauri/binaries/backend-* -ErrorAction SilentlyContinue\"",
+    "clean:backend": "powershell -Command \"Remove-Item -Force backend/dist, backend/build, frontend/src-tauri/binaries/backend-* -ErrorAction SilentlyContinue\"",
     "clean:frontend": "pnpm --dir frontend run clean"
   }
 }
