@@ -12,6 +12,8 @@ const {
   apiKey,
   systemPrompt,
   defaultSystemPrompt,
+  autoSaveToProject,
+  activeProjectName,
   availableModels,
   status,
   tone,
@@ -25,6 +27,15 @@ const {
 
 <template>
   <div class="panel">
+    <div v-if="activeProjectName" class="project-banner">
+      <span class="banner-icon">📁</span>
+      <span class="banner-text">Active Project: <strong>{{ activeProjectName }}</strong></span>
+      <label class="auto-save">
+        <input type="checkbox" v-model="autoSaveToProject" />
+        Auto-save to project
+      </label>
+    </div>
+
     <h2>Unity C# Code</h2>
     <StatusBanner :status="status" :tone="tone" />
     <SmartField label="Prompt" type="textarea" v-model="prompt" :rows="6" />

@@ -11,6 +11,7 @@ export type GenerationRequest = {
   provider?: string;
   api_key?: string;
   options?: Record<string, unknown>;
+  project_path?: string;
 };
 
 function getBackendUrl(): string {
@@ -52,6 +53,7 @@ export type SpritesRequest = {
   resolution: number;
   system_prompt?: string;
   options?: Record<string, unknown>;
+  project_path?: string;
 };
 
 export function generateSprites(body: SpritesRequest) {

@@ -1,6 +1,7 @@
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { generateImage, getPref } from "@/api/client";
 import { IMAGE_PROVIDERS, ASPECT_RATIOS, QUALITY_OPTIONS } from "@/constants/providers";
+import { projectStore } from "@/store/projectStore";
 
 export function useImagePanel() {
   const prompt = ref("");
@@ -13,6 +14,9 @@ export function useImagePanel() {
   const result = ref("");
   const systemPrompt = ref("");
   const defaultSystemPrompt = ref("Default: Professional concept art...");
+  const autoSaveToProject = ref(true);
+
+  const activeProjectName = computed(() => projectStore.activeProjectName);
 
   onMounted(async () => {
     const pref = await getPref("default_image_system_prompt");
@@ -35,6 +39,7 @@ export function useImagePanel() {
           quality: quality.value,
           api_key: apiKey.value || undefined,
         },
+        project_path: (autoSaveToProject.value && projectStore.activeProjectPath) || undefined
       });
       if (!response.success) {
         tone.value = "error";
@@ -60,6 +65,8 @@ export function useImagePanel() {
     result,
     systemPrompt,
     defaultSystemPrompt,
+    autoSaveToProject,
+    activeProjectName,
     run,
     IMAGE_PROVIDERS,
     ASPECT_RATIOS,

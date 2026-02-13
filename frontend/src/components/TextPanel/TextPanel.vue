@@ -15,6 +15,8 @@ const {
   result,
   systemPrompt,
   defaultSystemPrompt,
+  autoSaveToProject,
+  activeProjectName,
   providerModels,
   run,
   TEXT_PROVIDERS,
@@ -25,6 +27,14 @@ const {
 
 <template>
   <div class="panel">
+    <div v-if="activeProjectName" class="project-banner">
+      <span class="banner-icon">📁</span>
+      <span class="banner-text">Active Project: <strong>{{ activeProjectName }}</strong></span>
+      <label class="auto-save">
+        <input type="checkbox" v-model="autoSaveToProject" />
+        Auto-save to project
+      </label>
+    </div>
     <h2>Text Generation</h2>
     <StatusBanner :status="status" :tone="tone" />
     <SmartField label="Prompt" type="textarea" v-model="prompt" :rows="6" />

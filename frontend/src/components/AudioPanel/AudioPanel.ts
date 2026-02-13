@@ -1,6 +1,7 @@
 import { ref, computed, onMounted } from "vue";
 import { generateAudio, getPref } from "@/api/client";
 import { AUDIO_PROVIDERS } from "@/constants/providers";
+import { projectStore } from "@/store/projectStore";
 
 export function useAudioPanel() {
   const prompt = ref("");
@@ -13,6 +14,9 @@ export function useAudioPanel() {
   const result = ref("");
   const systemPrompt = ref("");
   const defaultSystemPrompt = ref("Default: High quality sound effect...");
+  const autoSaveToProject = ref(true);
+
+  const activeProjectName = computed(() => projectStore.activeProjectName);
 
   onMounted(async () => {
     const pref = await getPref("default_audio_system_prompt");
@@ -40,6 +44,7 @@ export function useAudioPanel() {
           stability: stability.value,
           api_key: apiKey.value || undefined,
         },
+        project_path: (autoSaveToProject.value && projectStore.activeProjectPath) || undefined
       });
       if (!response.success) {
         tone.value = "error";
@@ -65,6 +70,8 @@ export function useAudioPanel() {
     result,
     systemPrompt,
     defaultSystemPrompt,
+    autoSaveToProject,
+    activeProjectName,
     availableVoices,
     run,
     AUDIO_PROVIDERS

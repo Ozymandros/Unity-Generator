@@ -23,48 +23,10 @@ import {
   UNITY_VERSIONS, 
   UNITY_PLATFORMS 
 } from "@/constants/unity";
+import { setActiveProject } from "@/store/projectStore";
 
 export function useUnityProjectPanel() {
   const projectName = ref("UnityProject");
-
-  // Generation Parameters
-  interface GenerationParams {
-    prompt: string;
-    systemPrompt: string;
-    provider: string;
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    options: Record<string, any>;
-  }
-
-  // Generation Parameters
-  const code = reactive<GenerationParams>({
-    prompt: "",
-    systemPrompt: "",
-    provider: "",
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    options: { temperature: 0.7, max_tokens: 2048 } as Record<string, any>
-  });
-  const text = reactive<GenerationParams>({
-    prompt: "",
-    systemPrompt: "",
-    provider: "",
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    options: { temperature: 0.7, max_tokens: 2048 } as Record<string, any>
-  });
-  const image = reactive<GenerationParams>({
-    prompt: "",
-    systemPrompt: "",
-    provider: "",
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    options: { aspect_ratio: "1:1", quality: "standard" } as Record<string, any>
-  });
-  const audio = reactive<GenerationParams>({
-    prompt: "",
-    systemPrompt: "",
-    provider: "",
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    options: { voice_id: "", stability: 0.5 } as Record<string, any>
-  });
 
   // Unity Engine Settings
   const settings = reactive({
@@ -96,8 +58,7 @@ export function useUnityProjectPanel() {
   const lastProjectPath = ref("");
 
   const availableVoices = computed(() => {
-    const p = AUDIO_PROVIDERS.find((x) => x.value === audio.provider);
-    return p ? p.models || [] : [];
+    return [];
   });
 
   const isFinalizing = computed(() => {
@@ -161,26 +122,6 @@ export function useUnityProjectPanel() {
     try {
       const response = await generateUnityProject({
         project_name: projectName.value,
-        code_prompt: code.prompt || undefined,
-        text_prompt: text.prompt || undefined,
-        image_prompt: image.prompt || undefined,
-        audio_prompt: audio.prompt || undefined,
-        code_system_prompt: code.systemPrompt || undefined,
-        text_system_prompt: text.systemPrompt || undefined,
-        image_system_prompt: image.systemPrompt || undefined,
-        audio_system_prompt: audio.systemPrompt || undefined,
-        provider_overrides: {
-          code: code.provider || undefined,
-          text: text.provider || undefined,
-          image: image.provider || undefined,
-          audio: audio.provider || undefined,
-        },
-        options: {
-          code: { ...code.options },
-          text: { ...text.options },
-          image: { ...image.options },
-          audio: { ...audio.options },
-        },
         unity_template: settings.template,
         unity_version: settings.version,
         unity_platform: settings.platform,
@@ -193,6 +134,9 @@ export function useUnityProjectPanel() {
       status.value = "Unity project generated.";
       result.value = JSON.stringify(response.data || {}, null, 2);
       lastProjectPath.value = String(response.data?.project_path || "");
+      if (lastProjectPath.value) {
+        setActiveProject(projectName.value, lastProjectPath.value);
+    }
     } catch (error) {
       tone.value = UI_TONE.ERROR;
       status.value = String(error);
@@ -216,26 +160,6 @@ export function useUnityProjectPanel() {
       const response = await finalizeProject({
         project_name: projectName.value,
         project_path: lastProjectPath.value || undefined,
-        code_prompt: code.prompt || undefined,
-        text_prompt: text.prompt || undefined,
-        image_prompt: image.prompt || undefined,
-        audio_prompt: audio.prompt || undefined,
-        code_system_prompt: code.systemPrompt || undefined,
-        text_system_prompt: text.systemPrompt || undefined,
-        image_system_prompt: image.systemPrompt || undefined,
-        audio_system_prompt: audio.systemPrompt || undefined,
-        provider_overrides: {
-          code: code.provider || undefined,
-          text: text.provider || undefined,
-          image: image.provider || undefined,
-          audio: audio.provider || undefined,
-        },
-        options: {
-          code: { ...code.options },
-          text: { ...text.options },
-          image: { ...image.options },
-          audio: { ...audio.options },
-        },
         unity_settings: {
           install_packages: settings.installPackages,
           generate_scene: settings.generateScene,
@@ -347,10 +271,6 @@ export function useUnityProjectPanel() {
 
   return {
     projectName,
-    code,
-    text,
-    image,
-    audio,
     settings,
     finalize,
     UNITY_TEMPLATES,

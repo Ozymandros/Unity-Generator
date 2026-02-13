@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "dev:tauri": "tauri dev",
+    "build:tauri": "tauri build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --ignore-pattern dist/** --fix",
     "lint:check": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --ignore-pattern dist/**",
@@ -18,13 +19,13 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@tauri-apps/api": "latest",
+    "@tauri-apps/api": "^1.6.0",
     "vue": "latest"
   },
   "devDependencies": {
     "@eslint/js": "9.39.2",
     "@playwright/test": "latest",
-    "@tauri-apps/cli": "latest",
+    "@tauri-apps/cli": "^1.6.0",
     "@vitejs/plugin-vue": "latest",
     "@vitest/coverage-istanbul": "^4.0.18",
     "@vitest/coverage-v8": "^2.1.9",

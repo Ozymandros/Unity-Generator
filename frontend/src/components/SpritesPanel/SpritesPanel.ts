@@ -1,6 +1,7 @@
 import { computed, ref, onMounted, type CSSProperties } from "vue";
 import { generateSprites, getPref } from "@/api/client";
 import { IMAGE_PROVIDERS } from "@/constants/providers";
+import { projectStore } from "@/store/projectStore";
 
 export function useSpritesPanel() {
   const prompt = ref("");
@@ -16,6 +17,9 @@ export function useSpritesPanel() {
   const resultMeta = ref<Record<string, unknown> | null>(null);
   const systemPrompt = ref("");
   const defaultSystemPrompt = ref("Default: Pixel art style...");
+  const autoSaveToProject = ref(true);
+
+  const activeProjectName = computed(() => projectStore.activeProjectName);
 
   onMounted(async () => {
     const pref = await getPref("default_sprite_system_prompt");
@@ -50,6 +54,7 @@ export function useSpritesPanel() {
           palette_size: paletteSize.value,
           auto_crop: autoCrop.value
         },
+        project_path: (autoSaveToProject.value && projectStore.activeProjectPath) || undefined
       });
 
       if (!response.success) {
@@ -96,6 +101,8 @@ export function useSpritesPanel() {
     defaultSystemPrompt,
     RESOLUTIONS,
     PALETTE_SIZES,
+    autoSaveToProject,
+    activeProjectName,
     run,
     canvasStyle,
     IMAGE_PROVIDERS

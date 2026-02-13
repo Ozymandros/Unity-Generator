@@ -10,7 +10,7 @@ import os
 import sys
 import threading
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 # Add project root to sys.path to allow importing services
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
@@ -83,16 +83,17 @@ def generate_code(request: GenerationRequest) -> GenerationResponse:
     try:
         provider = request.provider or get_pref("preferred_llm_provider")
         # Ensure we pass the right option type if it was parsed as a dict
-        options = request.options
+        options: CodeOptions | dict[str, Any] = request.options
         if isinstance(options, dict):
             options = CodeOptions(**options)
 
         data = agent_manager.run_code(
             request.prompt,
             provider,
-            cast(CodeOptions | dict[str, Any], options),
+            options,
             request.api_key,
             request.system_prompt,
+            request.project_path,
         )
         return ok_response(data)
     except Exception as exc:
@@ -107,16 +108,17 @@ def generate_text(request: GenerationRequest) -> GenerationResponse:
     """
     try:
         provider = request.provider or get_pref("preferred_llm_provider")
-        options = request.options
+        options: TextOptions | dict[str, Any] = request.options
         if isinstance(options, dict):
             options = TextOptions(**options)
 
         data = agent_manager.run_text(
             request.prompt,
             provider,
-            cast(TextOptions | dict[str, Any], options),
+            options,
             request.api_key,
             request.system_prompt,
+            request.project_path,
         )
         return ok_response(data)
     except Exception as exc:
@@ -131,16 +133,17 @@ def generate_image(request: GenerationRequest) -> GenerationResponse:
     """
     try:
         provider = request.provider or get_pref("preferred_image_provider")
-        options = request.options
+        options: ImageOptions | dict[str, Any] = request.options
         if isinstance(options, dict):
             options = ImageOptions(**options)
 
         data = agent_manager.run_image(
             request.prompt,
             provider,
-            cast(ImageOptions | dict[str, Any], options),
+            options,
             request.api_key,
             request.system_prompt,
+            request.project_path,
         )
         return ok_response(data)
     except Exception as exc:
@@ -155,16 +158,17 @@ def generate_audio(request: GenerationRequest) -> GenerationResponse:
     """
     try:
         provider = request.provider or get_pref("preferred_audio_provider")
-        options = request.options
+        options: AudioOptions | dict[str, Any] = request.options
         if isinstance(options, dict):
             options = AudioOptions(**options)
 
         data = agent_manager.run_audio(
             request.prompt,
             provider,
-            cast(AudioOptions | dict[str, Any], options),
+            options,
             request.api_key,
             request.system_prompt,
+            request.project_path,
         )
         return ok_response(data)
     except Exception as exc:
@@ -188,6 +192,7 @@ def generate_sprites(request: SpritesRequest) -> GenerationResponse:
             request.resolution,
             request.options,
             system_prompt=request.system_prompt,
+            project_path=request.project_path,
         )
         return ok_response(data)
     except Exception as exc:

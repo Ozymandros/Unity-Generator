@@ -1,15 +1,10 @@
 <script setup lang="ts">
 import { StatusBanner } from "@/components/StatusBanner";
-import { PromptInputSection } from "@/components/generic/PromptInputSection";
 import { SmartField } from "@/components/generic/SmartField";
 import { useUnityProjectPanel } from "./UnityProjectPanel";
 
 const {
   projectName,
-  code,
-  text,
-  image,
-  audio,
   settings,
   finalize,
   UNITY_TEMPLATES,
@@ -18,7 +13,6 @@ const {
   status,
   tone,
   result,
-  availableVoices,
   isFinalizing,
   finalizeProgress,
   finalizeStep,
@@ -26,14 +20,6 @@ const {
   run,
   runFinalize,
   openOutputFolder,
-  TEXT_PROVIDERS,
-  IMAGE_PROVIDERS,
-  AUDIO_PROVIDERS,
-  ASPECT_RATIOS,
-  QUALITY_OPTIONS,
-  TEMPERATURE_PRESETS,
-  LENGTH_PRESETS,
-  STABILITY_PRESETS,
   FINALIZE_STATUS
 } = useUnityProjectPanel();
 </script>
@@ -84,180 +70,7 @@ const {
     </div>
 
 
-    <PromptInputSection
-      label="Code Prompt"
-      type="code"
-      v-model="code.prompt"
-      :provider="code.provider"
-      :providers="TEXT_PROVIDERS"
-      :options="code.options"
-      @update:provider="val => code.provider = val"
-      @update:options="val => code.options = val as any"
-    >
-      <template #options="{ options, updateOptions }">
-        <div class="field" style="margin-bottom: 8px;">
-           <SmartField 
-             label="System Prompt" 
-             type="textarea" 
-             v-model="code.systemPrompt" 
-             placeholder="Default: You are a senior Unity engineer..."
-             :rows="2"
-           />
-        </div>
-        <div class="options-row">
-          <div class="field-sm">
-            <SmartField 
-              label="Temp" 
-              type="select" 
-              :model-value="options.temperature" 
-              @update:model-value="val => updateOptions({ temperature: Number(val) })"
-              :options="TEMPERATURE_PRESETS" 
-            />
-          </div>
-          <div class="field-sm">
-            <SmartField 
-              label="Max Tokens" 
-              type="select" 
-              :model-value="options.max_tokens" 
-              @update:model-value="val => updateOptions({ max_tokens: Number(val) })"
-              :options="LENGTH_PRESETS" 
-            />
-          </div>
-        </div>
-      </template>
-    </PromptInputSection>
-
-    <PromptInputSection
-      label="Text Prompt"
-      type="text"
-      v-model="text.prompt"
-      :provider="text.provider"
-      :providers="TEXT_PROVIDERS"
-      :options="text.options"
-      @update:provider="val => text.provider = val"
-      @update:options="val => text.options = val as any"
-    >
-      <template #options="{ options, updateOptions }">
-        <div class="field" style="margin-bottom: 8px;">
-           <SmartField 
-             label="System Prompt" 
-             type="textarea" 
-             v-model="text.systemPrompt" 
-             placeholder="Default: You are a creative writer..."
-             :rows="2"
-           />
-        </div>
-        <div class="options-row">
-          <div class="field-sm">
-            <SmartField 
-              label="Temp" 
-              type="select" 
-              :model-value="options.temperature" 
-              @update:model-value="val => updateOptions({ temperature: Number(val) })"
-              :options="TEMPERATURE_PRESETS" 
-            />
-          </div>
-          <div class="field-sm">
-            <SmartField 
-              label="Max Tokens" 
-              type="select" 
-              :model-value="options.max_tokens" 
-              @update:model-value="val => updateOptions({ max_tokens: Number(val) })"
-              :options="LENGTH_PRESETS" 
-            />
-          </div>
-        </div>
-      </template>
-    </PromptInputSection>
-
-    <PromptInputSection
-      label="Image Prompt"
-      type="image"
-      v-model="image.prompt"
-      :provider="image.provider"
-      :providers="IMAGE_PROVIDERS"
-      :options="image.options"
-      @update:provider="val => image.provider = val"
-      @update:options="val => image.options = val as any"
-    >
-      <template #options="{ options, updateOptions }">
-        <div class="field" style="margin-bottom: 8px;">
-           <SmartField 
-             label="System Prompt" 
-             type="textarea" 
-             v-model="image.systemPrompt" 
-             placeholder="Default: Professional concept art..."
-             :rows="2"
-           />
-        </div>
-        <div class="options-row">
-          <div class="field-sm">
-            <SmartField 
-              label="Aspect Ratio" 
-              type="select" 
-              :model-value="options.aspect_ratio" 
-              @update:model-value="val => updateOptions({ aspect_ratio: String(val) })"
-              :options="ASPECT_RATIOS" 
-            />
-          </div>
-          <div class="field-sm">
-            <SmartField 
-              label="Quality" 
-              type="select" 
-              :model-value="options.quality" 
-              @update:model-value="val => updateOptions({ quality: String(val) })"
-              :options="QUALITY_OPTIONS" 
-            />
-          </div>
-        </div>
-      </template>
-    </PromptInputSection>
-
-    <PromptInputSection
-      label="Audio Prompt"
-      type="audio"
-      v-model="audio.prompt"
-      :provider="audio.provider"
-      :providers="AUDIO_PROVIDERS"
-      :options="audio.options"
-      @update:provider="val => audio.provider = val"
-      @update:options="val => audio.options = val as any"
-    >
-      <template #options="{ options, updateOptions }">
-        <div class="field" style="margin-bottom: 8px;">
-           <SmartField 
-             label="System Prompt" 
-             type="textarea" 
-             v-model="audio.systemPrompt" 
-             placeholder="Default: High quality sound effect..."
-             :rows="2"
-           />
-        </div>
-        <div class="options-row">
-          <div class="field-sm">
-            <SmartField 
-              label="Voice ID" 
-              type="select" 
-              :model-value="options.voice_id" 
-              @update:model-value="val => updateOptions({ voice_id: String(val) })"
-              :options="[{ label: 'Default / Random', value: '' }, ...availableVoices]" 
-            />
-          </div>
-          <div class="field-sm">
-            <SmartField 
-              label="Stability" 
-              type="select" 
-              :model-value="options.stability" 
-              @update:model-value="val => updateOptions({ stability: Number(val) })"
-              :options="STABILITY_PRESETS" 
-            />
-          </div>
-        </div>
-      </template>
-    </PromptInputSection>
-
-
-    <button class="primary" @click="run">Generate Project</button>
+    <button class="primary" @click="run">Generate Base Project Structure</button>
     <button class="secondary" @click="openOutputFolder">Open Output Folder</button>
 
     <div class="field">

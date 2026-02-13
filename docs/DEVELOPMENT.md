@@ -243,6 +243,33 @@ pnpm run typecheck
 .\scripts\smoke_test.ps1
 ```
 
+## Incremental Project Generation Workflow
+
+The Unity Generator supports an incremental workflow where you can generate assets (Code, Text, Images, Audio, Sprites) and save them directly into an active Unity project workspace.
+
+### Active Project Store
+
+The application uses a reactive `projectStore` to keep track of the currently active project name and its file system path.
+
+1.  **Selection/Activation**: When you generate a base project structure in the **Unity Project** tab, it is automatically set as the active project.
+2.  **Persistence**: The active project is persisted in the browser's local storage.
+3.  **Visual Indicator**: Every asset panel shows a banner indicating the active project if one is set.
+
+### Individual Asset Saving
+
+When a project is active, asset panels provide an **"Auto-save to project"** toggle. If enabled:
+
+-   **Code**: Generated `.cs` files are saved to `Assets/Scripts/`.
+-   **Text**: Generated `.txt` files are saved to `Assets/Text/`.
+-   **Images/Sprites**: Generated `.png` files are saved to `Assets/Sprites/`.
+-   **Audio**: Generated `.mp3` (or other formats) are saved to `Assets/Audio/`.
+
+Meta files (`.meta`) are automatically generated for all saved assets to ensure compatibility with the Unity Editor.
+
+### Finalization
+
+Once you have added individual assets to your project, use the **Finalize with Unity Engine** button in the **Unity Project** tab to perform batch processing (UPM installation, scene setup, etc.).
+
 ## Unity Engine Integration (local development)
 
 To test the Unity finalize workflow locally you need a Unity Editor installation.

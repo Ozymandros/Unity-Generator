@@ -1,6 +1,7 @@
 import { computed, ref, watch, onMounted } from "vue";
 import { generateCode, getPref } from "@/api/client";
 import { TEXT_PROVIDERS, TEMPERATURE_PRESETS, LENGTH_PRESETS } from "@/constants/providers";
+import { projectStore } from "@/store/projectStore";
 
 export function useCodePanel() {
   const prompt = ref("");
@@ -11,6 +12,10 @@ export function useCodePanel() {
   const apiKey = ref("");
   const systemPrompt = ref("");
   const defaultSystemPrompt = ref("Default: You are a senior Unity engineer...");
+  const autoSaveToProject = ref(true);
+
+  const activeProjectName = computed(() => projectStore.activeProjectName);
+  const activeProjectPath = computed(() => projectStore.activeProjectPath);
 
   onMounted(async () => {
     const pref = await getPref("default_code_system_prompt");
@@ -46,6 +51,7 @@ export function useCodePanel() {
           temperature: temperature.value,
           max_tokens: maxTokens.value,
         },
+        project_path: (autoSaveToProject.value && projectStore.activeProjectPath) || undefined
       });
       if (!response.success) {
         tone.value = "error";
@@ -69,6 +75,9 @@ export function useCodePanel() {
     apiKey,
     systemPrompt,
     defaultSystemPrompt,
+    autoSaveToProject,
+    activeProjectName,
+    activeProjectPath,
     availableModels,
     status,
     tone,

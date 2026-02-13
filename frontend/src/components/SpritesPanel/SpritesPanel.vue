@@ -17,6 +17,8 @@ const {
   defaultSystemPrompt,
   RESOLUTIONS,
   PALETTE_SIZES,
+  autoSaveToProject,
+  activeProjectName,
   run,
   canvasStyle,
   IMAGE_PROVIDERS
@@ -25,6 +27,14 @@ const {
 
 <template>
   <div class="panel">
+    <div v-if="activeProjectName" class="project-banner">
+      <span class="banner-icon">📁</span>
+      <span class="banner-text">Active Project: <strong>{{ activeProjectName }}</strong></span>
+      <label class="auto-save">
+        <input type="checkbox" v-model="autoSaveToProject" />
+        Auto-save to project
+      </label>
+    </div>
     <div class="header">
         <h2>2D Sprites</h2>
         <div class="badge">Pixel Art Optimized</div>

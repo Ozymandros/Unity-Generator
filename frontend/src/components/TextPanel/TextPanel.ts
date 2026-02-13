@@ -1,6 +1,7 @@
 import { ref, computed, onMounted } from "vue";
 import { generateText, getPref } from "@/api/client";
 import { TEXT_PROVIDERS, TEMPERATURE_PRESETS, LENGTH_PRESETS } from "@/constants/providers";
+import { projectStore } from "@/store/projectStore";
 
 export function useTextPanel() {
   const prompt = ref("");
@@ -14,6 +15,9 @@ export function useTextPanel() {
   const result = ref("");
   const systemPrompt = ref("");
   const defaultSystemPrompt = ref("Default: You are a creative writer...");
+  const autoSaveToProject = ref(true);
+
+  const activeProjectName = computed(() => projectStore.activeProjectName);
 
   onMounted(async () => {
     const pref = await getPref("default_text_system_prompt");
@@ -42,6 +46,7 @@ export function useTextPanel() {
           max_tokens: maxTokens.value,
           api_key: apiKey.value || undefined,
         },
+        project_path: (autoSaveToProject.value && projectStore.activeProjectPath) || undefined
       });
       if (!response.success) {
         tone.value = "error";
@@ -68,6 +73,8 @@ export function useTextPanel() {
     result,
     systemPrompt,
     defaultSystemPrompt,
+    autoSaveToProject,
+    activeProjectName,
     providerModels,
     run,
     TEXT_PROVIDERS,

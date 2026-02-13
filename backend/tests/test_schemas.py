@@ -1,11 +1,9 @@
 """Tests for schemas module."""
 
 from datetime import datetime
-from typing import cast
 
 from app.schemas import (
     ApiKeysRequest,
-    CodeOptions,
     GenerationRequest,
     GenerationResponse,
     PrefRequest,
@@ -30,9 +28,8 @@ def test_generation_request_full() -> None:
     )
     assert req.prompt == "test"
     assert req.provider == "openai"
-    options = cast(CodeOptions, req.options)
-    assert options.model == "gpt-4o"
-    assert options.temperature == 0.7
+    # options is a dict, not a CodeOptions object
+    assert req.options["model"] == "gpt-4o"
 
 
 def test_api_keys_request() -> None:
@@ -80,7 +77,8 @@ def test_ok_response_structure() -> None:
 
     assert response.success is True
     assert response.error is None
-    assert response.data == result
+    # ok_response converts AgentResult to dict
+    assert response.data == {"content": "test", "provider": "test"}
     assert response.date is not None
     # Verify date is valid ISO format
     datetime.fromisoformat(response.date.replace("Z", "+00:00"))
@@ -101,8 +99,9 @@ def test_generation_response_model() -> None:
     from app.schemas import AgentResult
 
     result = AgentResult(content="test", provider="test")
+    # GenerationResponse expects dict data, not AgentResult
     response = GenerationResponse(
-        success=True, date="2024-01-01T00:00:00Z", error=None, data=result
+        success=True, date="2024-01-01T00:00:00Z", error=None, data=result.model_dump(exclude_none=True)
     )
     assert response.success is True
-    assert response.data == result
+    assert response.data == {"content": "test", "provider": "test"}

@@ -177,3 +177,19 @@ input[type="checkbox"] {
   color: #dc2626;
   font-size: 0.85rem;
 }
+
+.advanced-opts-mini {
+  margin-top: 8px;
+  border-top: 1px dashed #eee;
+  padding-top: 8px;
+}
+.advanced-opts-mini summary {
+  cursor: pointer;
+  font-size: 0.85em;
+  color: #6366f1;
+  user-select: none;
+  font-weight: 500;
+}
+.advanced-opts-mini summary:hover {
+  color: #4f46e5;
+}

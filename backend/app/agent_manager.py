@@ -15,6 +15,7 @@ from app.schemas import (
     TextOptions,
 )
 
+from .asset_saver import save_asset_to_project
 from .config import get_repo_root, load_api_keys
 
 LOGGER = logging.getLogger(__name__)
@@ -58,6 +59,7 @@ class AgentManager:
         options: CodeOptions | dict[str, Any],
         api_key: str | None = None,
         system_prompt: str | None = None,
+        project_path: str | None = None,
     ) -> AgentResult:
         api_keys = load_api_keys()
         if provider and api_key:
@@ -77,7 +79,13 @@ class AgentManager:
             effective_system_prompt = get_pref("default_code_system_prompt")
 
         result = self.code_agent.run(prompt, provider, opts, api_keys, effective_system_prompt)
-        return AgentResult(**result) if isinstance(result, dict) else result
+        # Wrap result if it's a dict
+        final_result = AgentResult(**result) if isinstance(result, dict) else result
+
+        if project_path:
+            save_asset_to_project(project_path, "code", final_result)
+
+        return final_result
 
     def run_text(
         self,
@@ -86,6 +94,7 @@ class AgentManager:
         options: TextOptions | dict[str, Any],
         api_key: str | None = None,
         system_prompt: str | None = None,
+        project_path: str | None = None,
     ) -> AgentResult:
         api_keys = load_api_keys()
         if provider and api_key:
@@ -104,7 +113,12 @@ class AgentManager:
             effective_system_prompt = get_pref("default_text_system_prompt")
 
         result = self.text_agent.run(prompt, provider, opts, api_keys, effective_system_prompt)
-        return AgentResult(**result) if isinstance(result, dict) else result
+        final_result = AgentResult(**result) if isinstance(result, dict) else result
+
+        if project_path:
+            save_asset_to_project(project_path, "text", final_result)
+
+        return final_result
 
     def run_image(
         self,
@@ -113,6 +127,7 @@ class AgentManager:
         options: ImageOptions | dict[str, Any],
         api_key: str | None = None,
         system_prompt: str | None = None,
+        project_path: str | None = None,
     ) -> AgentResult:
         api_keys = load_api_keys()
         if provider and api_key:
@@ -131,7 +146,12 @@ class AgentManager:
             effective_system_prompt = get_pref("default_image_system_prompt")
 
         result = self.image_agent.run(prompt, provider, opts, api_keys, effective_system_prompt)
-        return AgentResult(**result) if isinstance(result, dict) else result
+        final_result = AgentResult(**result) if isinstance(result, dict) else result
+
+        if project_path:
+            save_asset_to_project(project_path, "image", final_result)
+
+        return final_result
 
     def run_audio(
         self,
@@ -140,6 +160,7 @@ class AgentManager:
         options: AudioOptions | dict[str, Any],
         api_key: str | None = None,
         system_prompt: str | None = None,
+        project_path: str | None = None,
     ) -> AgentResult:
         api_keys = load_api_keys()
         if provider and api_key:
@@ -158,4 +179,9 @@ class AgentManager:
             effective_system_prompt = get_pref("default_audio_system_prompt")
 
         result = self.audio_agent.run(prompt, provider, opts, api_keys, effective_system_prompt)
-        return AgentResult(**result) if isinstance(result, dict) else result
+        final_result = AgentResult(**result) if isinstance(result, dict) else result
+
+        if project_path:
+            save_asset_to_project(project_path, "audio", final_result)
+
+        return final_result
