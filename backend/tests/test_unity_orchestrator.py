@@ -33,18 +33,13 @@ class TestParseEditorLog:
         assert result["warnings"] == []
 
     def test_detects_cs_errors(self) -> None:
-        log = (
-            "Loading...\nAssets/Scripts/Foo.cs(10,5): error CS1002: ; expected\nDone.\n"
-        )
+        log = "Loading...\nAssets/Scripts/Foo.cs(10,5): error CS1002: ; expected\nDone.\n"
         result = parse_editor_log(log)
         assert len(result["errors"]) == 1
         assert "CS1002" in result["errors"][0]
 
     def test_detects_cs_warnings(self) -> None:
-        log = (
-            "Assets/Scripts/Bar.cs(3,1): warning CS0168: "
-            "Variable declared but never used\n"
-        )
+        log = "Assets/Scripts/Bar.cs(3,1): warning CS0168: Variable declared but never used\n"
         result = parse_editor_log(log)
         assert len(result["warnings"]) == 1
         assert "CS0168" in result["warnings"][0]
@@ -92,9 +87,7 @@ class TestScriptInjection:
         assert inject_dir.exists()
         assert (inject_dir / "Setup.cs").exists()
         assert (inject_dir / "Helper.cs").exists()
-        assert (inject_dir / "Setup.cs").read_text(encoding="utf-8") == scripts[
-            "Setup.cs"
-        ]
+        assert (inject_dir / "Setup.cs").read_text(encoding="utf-8") == scripts["Setup.cs"]
 
     def test_inject_directory_structure(self, tmp_path: Path) -> None:
         inject_dir = inject_editor_scripts(tmp_path, {"Test.cs": "content"})
@@ -119,12 +112,8 @@ class TestScriptInjection:
 class TestRunUnityBatch:
     @patch("services.unity_orchestrator.subprocess.run")
     @patch("services.unity_orchestrator._read_editor_log", return_value="")
-    def test_successful_run(
-        self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path
-    ) -> None:
-        mock_run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="OK", stderr=""
-        )
+    def test_successful_run(self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=0, stdout="OK", stderr="")
         unity_path = tmp_path / "Unity.exe"
         unity_path.touch()
 
@@ -140,12 +129,8 @@ class TestRunUnityBatch:
 
     @patch("services.unity_orchestrator.subprocess.run")
     @patch("services.unity_orchestrator._read_editor_log", return_value="")
-    def test_nonzero_exit(
-        self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path
-    ) -> None:
-        mock_run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=1, stdout="", stderr="Error occurred"
-        )
+    def test_nonzero_exit(self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=1, stdout="", stderr="Error occurred")
         unity_path = tmp_path / "Unity.exe"
         unity_path.touch()
 
@@ -159,12 +144,8 @@ class TestRunUnityBatch:
         "services.unity_orchestrator._read_editor_log",
         return_value="Assets/Bad.cs(1,1): error CS0001: fail",
     )
-    def test_log_errors_detected(
-        self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path
-    ) -> None:
-        mock_run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="", stderr=""
-        )
+    def test_log_errors_detected(self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
         unity_path = tmp_path / "Unity.exe"
         unity_path.touch()
 
@@ -179,9 +160,7 @@ class TestRunUnityBatch:
         side_effect=subprocess.TimeoutExpired(cmd="Unity", timeout=10),
     )
     @patch("services.unity_orchestrator._read_editor_log", return_value="")
-    def test_timeout(
-        self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path
-    ) -> None:
+    def test_timeout(self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path) -> None:
         unity_path = tmp_path / "Unity.exe"
         unity_path.touch()
 
@@ -196,9 +175,7 @@ class TestRunUnityBatch:
         side_effect=FileNotFoundError("Not found"),
     )
     @patch("services.unity_orchestrator._read_editor_log", return_value="")
-    def test_unity_not_found(
-        self, mock_run: MagicMock, mock_log: MagicMock, tmp_path: Path
-    ) -> None:
+    def test_unity_not_found(self, mock_run: MagicMock, mock_log: MagicMock, tmp_path: Path) -> None:
         result = run_unity_batch(Path("/nonexistent/Unity"), tmp_path)
 
         assert result.success is False
@@ -207,18 +184,12 @@ class TestRunUnityBatch:
 
     @patch("services.unity_orchestrator.subprocess.run")
     @patch("services.unity_orchestrator._read_editor_log", return_value="")
-    def test_custom_execute_method(
-        self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path
-    ) -> None:
-        mock_run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="", stderr=""
-        )
+    def test_custom_execute_method(self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
         unity_path = tmp_path / "Unity.exe"
         unity_path.touch()
 
-        run_unity_batch(
-            unity_path, tmp_path, execute_method="MyNamespace.MyClass.MyMethod"
-        )
+        run_unity_batch(unity_path, tmp_path, execute_method="MyNamespace.MyClass.MyMethod")
 
         cmd_args = mock_run.call_args[0][0]
         assert "-executeMethod" in cmd_args
@@ -331,9 +302,7 @@ class TestRunFinalizeJob:
     ) -> None:
         from services.unity_orchestrator import UnityRunResult
 
-        mock_run.return_value = UnityRunResult(
-            success=True, exit_code=0, stdout="OK", errors=[], warnings=[]
-        )
+        mock_run.return_value = UnityRunResult(success=True, exit_code=0, stdout="OK", errors=[], warnings=[])
         mock_inject.return_value = tmp_path / "Assets" / "Editor" / "AutoGenerated"
         mock_zip.return_value = tmp_path / "Project.zip"
 
@@ -365,9 +334,7 @@ class TestRunFinalizeJob:
     ) -> None:
         from services.unity_orchestrator import UnityRunResult
 
-        mock_run.return_value = UnityRunResult(
-            success=False, exit_code=1, errors=["Compile Error"], warnings=[]
-        )
+        mock_run.return_value = UnityRunResult(success=False, exit_code=1, errors=["Compile Error"], warnings=[])
         mock_inject.return_value = tmp_path / "Assets" / "Editor" / "AutoGenerated"
 
         result = run_finalize_job(

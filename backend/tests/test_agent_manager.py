@@ -64,9 +64,7 @@ def mock_agent_manager() -> MagicMock:
     return MagicMock(spec=AgentManager)
 
 
-def test_agent_manager_run_code(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_agent_manager_run_code(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Test run_code calls agent.run with correct parameters."""
     from app import config
 

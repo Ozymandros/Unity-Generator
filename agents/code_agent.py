@@ -13,6 +13,4 @@ def run(
     system_prompt: str | None = None,
 ) -> AgentResult:
     effective_system_prompt = system_prompt or DEFAULT_CODE_SYSTEM_PROMPT
-    return generate_text(
-        prompt, provider, options, api_keys, system_prompt=effective_system_prompt
-    )
+    return generate_text(prompt, provider, options, api_keys, system_prompt=effective_system_prompt)

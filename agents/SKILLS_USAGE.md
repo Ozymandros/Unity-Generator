@@ -26,6 +26,21 @@ Provides secure file operations for Unity projects:
 - `create_unity_folder(relative_path)` - Creates folder structures in `output/Assets/`
 - `get_output_path()` - Returns the output directory path
 
+#### UnityMCPPlugin (External Package)
+
+Provides real-time integration with a running Unity Editor via the Unity MCP Server.
+
+- Plugin Source: [Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin)
+- Server Source: [Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)
+
+Requires the `unity-mcp-plugin` package installed in the Python environment.
+
+- `ping(message)` - Test connectivity with the Unity MCP Server
+- `create_scene(scene_name, path, setup)` - Create a new Unity scene in the active project
+- `create_gameobject(name, object_type, position_x, position_y, position_z, parent)` - Instantiate a GameObject
+- `get_scene_info(include_hierarchy, include_components)` - Get detailed metadata about the active scene
+- `create_script(script_name, script_type, path, namespace)` - Generate a C# script directly in the project
+
 ### Core Skills (`agents/core_skills.py`)
 
 Fallback implementations of core Semantic Kernel plugins:
@@ -146,6 +161,45 @@ kernel = create_kernel({
 # Skills are now available
 unity_code = kernel.get_plugin("unity_code")
 unity_project = kernel.get_plugin("unity_project")
+unity_mcp = kernel.get_plugin("UnityMCP")
+```
+
+### Example: Using Unity MCP Plugin
+
+The `UnityMCPPlugin` allows agents to interact with a running Unity Editor instance.
+
+```python
+import asyncio
+from backend.app.kernel import create_kernel
+
+async def create_fire_scene():
+    # Initialize kernel (MCP settings defaults to localhost:8765)
+    kernel = create_kernel({})
+    
+    # Get the Unity MCP plugin
+    # Note: Plugin name is "UnityMCP" as registered in kernel.py
+    unity = kernel.get_plugin("UnityMCP")
+    
+    # Call functions (async)
+    # Create a new scene
+    await kernel.invoke(unity["create_scene"], scene_name="FireScene")
+    
+    # Create some game objects
+    await kernel.invoke(unity["create_gameobject"], 
+                        name="Ground", 
+                        object_type="plane")
+                        
+    await kernel.invoke(unity["create_gameobject"], 
+                        name="Bonfire", 
+                        object_type="sphere", 
+                        position_y=1.0)
+    
+    # Get scene info
+    result = await kernel.invoke(unity["get_scene_info"])
+    print(f"Scene info: {result}")
+
+if __name__ == "__main__":
+    asyncio.run(create_fire_scene())
 ```
 
 ## Security Considerations

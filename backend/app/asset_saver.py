@@ -9,8 +9,10 @@ LOGGER = logging.getLogger(__name__)
 # Re-use meta generation logic from unity_project.py or move to shared utils
 # For now, we'll implement a clean version here for incremental use.
 
+
 def _write_meta(path: Path, meta_type: str = "default") -> None:
     import uuid
+
     meta_path = path.with_suffix(path.suffix + ".meta")
     guid = uuid.uuid4().hex
 
@@ -87,6 +89,7 @@ DefaultImporter:
 """
     meta_path.write_text(content, encoding="utf-8")
 
+
 def save_asset_to_project(project_path: str, asset_type: str, result: AgentResult) -> str | None:
     """
     Saves a generated asset into the appropriate subfolder of a Unity project.
@@ -99,19 +102,21 @@ def save_asset_to_project(project_path: str, asset_type: str, result: AgentResul
 
     # Determine subfolder and filename
     import time
+
     ts = int(time.time())
 
     rel_path = ""
     content_bytes = b""
     content_text = ""
     meta_type = "default"
+    file_path: Path | None = None
 
     if asset_type == "code":
         target_dir = base_path / "Assets" / "Scripts"
         target_dir.mkdir(parents=True, exist_ok=True)
         filename = result.raw.get("filename") if result.raw else None
         if not filename:
-             filename = f"GeneratedScript_{ts}.cs"
+            filename = f"GeneratedScript_{ts}.cs"
         file_path = target_dir / filename
         content_text = result.content or ""
         meta_type = "script"
@@ -138,13 +143,14 @@ def save_asset_to_project(project_path: str, asset_type: str, result: AgentResul
         rel_path = f"Assets/Sprites/{filename}"
 
         if result.image:
-             if result.image.startswith("http"):
-                 import requests
-                 resp = requests.get(result.image, timeout=30)
-                 resp.raise_for_status()
-                 content_bytes = resp.content
-             else:
-                 content_bytes = base64.b64decode(result.image)
+            if result.image.startswith("http"):
+                import requests
+
+                resp = requests.get(result.image, timeout=30)
+                resp.raise_for_status()
+                content_bytes = resp.content
+            else:
+                content_bytes = base64.b64decode(result.image)
 
     elif asset_type == "audio":
         target_dir = base_path / "Assets" / "Audio"
@@ -163,14 +169,18 @@ def save_asset_to_project(project_path: str, asset_type: str, result: AgentResul
             content_bytes = result.raw["audio_bytes"]
 
     # Write content
-    if content_text:
-        file_path.write_text(content_text, encoding="utf-8")
-        _write_meta(file_path, meta_type)
-    elif content_bytes:
-        file_path.write_bytes(content_bytes)
-        _write_meta(file_path, meta_type)
+    if file_path:
+        if content_text:
+            file_path.write_text(content_text, encoding="utf-8")
+            _write_meta(file_path, meta_type)
+        elif content_bytes:
+            file_path.write_bytes(content_bytes)
+            _write_meta(file_path, meta_type)
+        else:
+            LOGGER.warning(f"No content found to save for {asset_type} in project.")
+            return None
     else:
-        LOGGER.warning(f"No content found to save for {asset_type} in project.")
+        LOGGER.warning(f"No file path determined for {asset_type} in project.")
         return None
 
     return rel_path

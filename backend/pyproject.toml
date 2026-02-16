@@ -46,4 +46,12 @@ ignore_missing_imports = false
 module = "agents.*"
 ignore_missing_imports = false
 
+[tool.pyright]
+include = ["."]
+extraPaths = [".."]
+reportMissingImports = true
+reportGeneralTypeIssues = false
+pythonVersion = "3.10"
+pythonPlatform = "Windows"
+
 

@@ -181,9 +181,7 @@ def render_template(
     """
     if templates_dir is None:
         # Default: backend/templates/unity
-        templates_dir = (
-            Path(__file__).resolve().parent.parent / "backend" / "templates" / "unity"
-        )
+        templates_dir = Path(__file__).resolve().parent.parent / "backend" / "templates" / "unity"
 
     env = Environment(
         loader=FileSystemLoader(str(templates_dir)),
@@ -381,8 +379,6 @@ def zip_project(project_path: Path, output_path: Path | None = None) -> Path:
 # ---------------------------------------------------------------------------
 
 
-
-
 def run_finalize_job(
     project_path: Path,
     unity_path: Path,
@@ -445,19 +441,13 @@ def run_finalize_job(
         }
 
         # Always include the main setup entrypoint
-        scripts["AutomatedSetup.cs"] = render_template(
-            "AutomatedSetup.cs.j2", template_context, templates_dir
-        )
+        scripts["AutomatedSetup.cs"] = render_template("AutomatedSetup.cs.j2", template_context, templates_dir)
 
         if install_packages and packages:
-            scripts["PackageSetup.cs"] = render_template(
-                "PackageSetup.cs.j2", template_context, templates_dir
-            )
+            scripts["PackageSetup.cs"] = render_template("PackageSetup.cs.j2", template_context, templates_dir)
 
         if generate_scene:
-            scripts["ScenePrefabSetup.cs"] = render_template(
-                "ScenePrefabSetup.cs.j2", template_context, templates_dir
-            )
+            scripts["ScenePrefabSetup.cs"] = render_template("ScenePrefabSetup.cs.j2", template_context, templates_dir)
 
         if setup_urp:
             scripts["ProjectSettingsSetup.cs"] = render_template(
@@ -465,9 +455,7 @@ def run_finalize_job(
             )
 
         # Always include import validation
-        scripts["ImportValidation.cs"] = render_template(
-            "ImportValidation.cs.j2", template_context, templates_dir
-        )
+        scripts["ImportValidation.cs"] = render_template("ImportValidation.cs.j2", template_context, templates_dir)
 
         # Step 2: Inject scripts
         _progress("inject", 20, "Injecting Editor scripts into project...")
@@ -492,9 +480,7 @@ def run_finalize_job(
         if not unity_result.success:
             errors.extend(unity_result.errors)
             if not errors:
-                errors.append(
-                    f"Unity batch failed with exit code {unity_result.exit_code}"
-                )
+                errors.append(f"Unity batch failed with exit code {unity_result.exit_code}")
             _progress("parse", 80, f"Found {len(errors)} error(s)")
             return FinalizeResult(
                 success=False,

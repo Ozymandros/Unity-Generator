@@ -11,9 +11,7 @@ class TestLLMProviders:
     @patch("services.llm_provider.requests.post")
     def test_call_openai(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
-        mock_post.return_value.json.return_value = {
-            "choices": [{"message": {"content": "OpenAI Response"}}]
-        }
+        mock_post.return_value.json.return_value = {"choices": [{"message": {"content": "OpenAI Response"}}]}
 
         api_keys = {"openai_api_key": "sk-test"}
         options = TextOptions(model="gpt-4", temperature=0.5)
@@ -34,9 +32,7 @@ class TestLLMProviders:
     @patch("services.llm_provider.requests.post")
     def test_call_deepseek(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
-        mock_post.return_value.json.return_value = {
-            "choices": [{"message": {"content": "DeepSeek Response"}}]
-        }
+        mock_post.return_value.json.return_value = {"choices": [{"message": {"content": "DeepSeek Response"}}]}
 
         api_keys = {"deepseek_api_key": "ds-test"}
         result = generate_text("Hello", "deepseek", {}, api_keys)
@@ -48,9 +44,7 @@ class TestLLMProviders:
     @patch("services.llm_provider.requests.post")
     def test_call_groq(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
-        mock_post.return_value.json.return_value = {
-            "choices": [{"message": {"content": "Groq Response"}}]
-        }
+        mock_post.return_value.json.return_value = {"choices": [{"message": {"content": "Groq Response"}}]}
 
         api_keys = {"groq_api_key": "g-test"}
         result = generate_text("Hello", "groq", {}, api_keys)
@@ -104,12 +98,7 @@ class TestImageProviders:
     def test_call_openai_image(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {
-            "data": [
-                {
-                    "b64_json": "base64_dalle_image",
-                    "revised_prompt": "Enhanced prompt by DALL-E"
-                }
-            ]
+            "data": [{"b64_json": "base64_dalle_image", "revised_prompt": "Enhanced prompt by DALL-E"}]
         }
 
         api_keys = {"openai_api_key": "sk-test"}
@@ -201,9 +190,7 @@ class TestAudioProviders:
         mock_post.return_value.json.return_value = {"url": "playht_url"}
 
         api_keys = {"playht_api_key": "p-test"}
-        result = generate_audio(
-            "Voice test", "playht", {"voice": "standard_voice"}, api_keys
-        )
+        result = generate_audio("Voice test", "playht", {"voice": "standard_voice"}, api_keys)
 
         assert result.audio == "playht_url"
         assert result.provider == "playht"

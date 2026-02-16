@@ -144,9 +144,7 @@ def test_save_audio_with_url(tmp_path: Path) -> None:
         mock_download.assert_called_once()
 
 
-def test_get_latest_project_path_empty(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_get_latest_project_path_empty(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test get_latest_project_path returns None when no projects."""
     monkeypatch.setattr(unity_project, "get_repo_root", lambda: tmp_path)
 
@@ -154,9 +152,7 @@ def test_get_latest_project_path_empty(
     assert result is None
 
 
-def test_get_latest_project_path_returns_latest(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_get_latest_project_path_returns_latest(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test get_latest_project_path returns most recent project."""
     monkeypatch.setattr(unity_project, "get_repo_root", lambda: tmp_path)
 
@@ -174,9 +170,7 @@ def test_get_latest_project_path_returns_latest(
     assert "ProjectB" in result
 
 
-def test_create_unity_project_structure(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_create_unity_project_structure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test create_unity_project creates expected folder structure."""
     monkeypatch.setattr(unity_project, "get_repo_root", lambda: tmp_path)
 

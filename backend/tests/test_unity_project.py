@@ -8,9 +8,7 @@ from app.main import app
 from app.schemas import AgentResult
 
 
-def test_unity_project_generation(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_unity_project_generation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     from app import unity_project
 
     def fake_root() -> Path:

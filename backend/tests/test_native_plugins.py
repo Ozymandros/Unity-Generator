@@ -61,12 +61,8 @@ class TestMemoryPrefsPlugin:
         def mock_set_pref(key: str, value: Any) -> None:
             prefs[key] = value
 
-        monkeypatch.setattr(
-            "agents.plugins.native.memory_prefs_plugin.get_pref", mock_get_pref
-        )
-        monkeypatch.setattr(
-            "agents.plugins.native.memory_prefs_plugin.set_pref", mock_set_pref
-        )
+        monkeypatch.setattr("agents.plugins.native.memory_prefs_plugin.get_pref", mock_get_pref)
+        monkeypatch.setattr("agents.plugins.native.memory_prefs_plugin.set_pref", mock_set_pref)
         return prefs
 
     def test_get_user_preference(self, mock_db: dict[str, str]) -> None:

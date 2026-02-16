@@ -14,20 +14,14 @@ def client() -> TestClient:
     return TestClient(app)
 
 
-def test_generate_text_success(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_generate_text_success(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test successful text generation."""
     mock_agent_manager = MagicMock()
-    mock_agent_manager.run_text.return_value = AgentResult(
-        content="Hello, world!", provider="openai"
-    )
+    mock_agent_manager.run_text.return_value = AgentResult(content="Hello, world!", provider="openai")
 
     monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
 
-    response = client.post(
-        "/generate/text", json={"prompt": "Say hello", "provider": "openai"}
-    )
+    response = client.post("/generate/text", json={"prompt": "Say hello", "provider": "openai"})
 
     assert response.status_code == 200
     payload = response.json()
@@ -35,14 +29,10 @@ def test_generate_text_success(
     assert payload["data"]["content"] == "Hello, world!"
 
 
-def test_generate_text_uses_preference_fallback(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_generate_text_uses_preference_fallback(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that provider falls back to preference when not specified."""
     mock_agent_manager = MagicMock()
-    mock_agent_manager.run_text.return_value = AgentResult(
-        content="text", provider="groq"
-    )
+    mock_agent_manager.run_text.return_value = AgentResult(content="text", provider="groq")
 
     monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
     monkeypatch.setattr("app.main.get_pref", lambda key: "groq")
@@ -54,9 +44,7 @@ def test_generate_text_uses_preference_fallback(
     assert call_args[0][1] == "groq"
 
 
-def test_generate_text_error_handling(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_generate_text_error_handling(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test error response when generation fails."""
     mock_agent_manager = MagicMock()
     mock_agent_manager.run_text.side_effect = RuntimeError("Text agent unavailable")

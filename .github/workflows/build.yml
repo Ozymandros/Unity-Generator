@@ -54,3 +54,9 @@ jobs:
         with:
           name: Unity-Generator-Installer
           path: '**/*.msi'
+
+      - name: Upload SK Integration Docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: SK-Integration-Docs
+          path: docs/UNITY_MCP_SK_*

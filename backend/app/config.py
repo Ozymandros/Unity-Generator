@@ -130,9 +130,7 @@ def resolve_unity_editor_path(override: str | None = None) -> Path:
             path = Path(pref_path)
             if path.exists():
                 return path
-            LOGGER.warning(
-                "Stored unity_editor_path preference not found: %s", pref_path
-            )
+            LOGGER.warning("Stored unity_editor_path preference not found: %s", pref_path)
     except Exception:
         pass
 
@@ -142,6 +140,4 @@ def resolve_unity_editor_path(override: str | None = None) -> Path:
         LOGGER.info("Auto-discovered Unity Editor at %s", discovered)
         return discovered
 
-    raise FileNotFoundError(
-        "Unity Editor not found. Set UNITY_EDITOR_PATH or configure it in Settings."
-    )
+    raise FileNotFoundError("Unity Editor not found. Set UNITY_EDITOR_PATH or configure it in Settings.")

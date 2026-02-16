@@ -17,9 +17,7 @@ def client() -> TestClient:
 def test_generate_sprites_success(client: TestClient) -> None:
     """Test successful sprite generation endpoint."""
     with patch("services.sprite_service.generate_sprite") as mock_gen:
-        mock_gen.return_value = AgentResult(
-            image="fake-base64", provider="openai", raw={"resolution": 32}
-        )
+        mock_gen.return_value = AgentResult(image="fake-base64", provider="openai", raw={"resolution": 32})
 
         response = client.post(
             "/generate/sprites",

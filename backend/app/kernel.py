@@ -50,9 +50,7 @@ def create_kernel(settings: dict[str, Any]) -> Any:
         >>> # Kernel is ready with all plugins registered
     """
     if Kernel is None:
-        raise RuntimeError(
-            "semantic-kernel is not installed. Install dependencies before running."
-        )
+        raise RuntimeError("semantic-kernel is not installed. Install dependencies before running.")
 
     kernel = Kernel()
 
@@ -97,6 +95,20 @@ def create_kernel(settings: dict[str, Any]) -> Any:
         memory_plugin = MemoryPrefsPlugin()
         kernel.add_plugin(memory_plugin, plugin_name="MemoryPrefs")
         LOGGER.debug("Registered MemoryPrefsPlugin")
+
+        # UnityMCPPlugin (from installed package)
+        try:
+            from unity_mcp_plugin import UnityMCPPlugin
+
+            mcp_host = settings.get("mcp_host", "localhost")
+            mcp_port = settings.get("mcp_port", 8765)
+            unity_mcp_plugin = UnityMCPPlugin(host=mcp_host, port=mcp_port)
+            # We don't initialize here to avoid blocking kernel creation if server is down.
+            # The plugin will auto-initialize on first tool call.
+            kernel.add_plugin(unity_mcp_plugin, plugin_name="UnityMCP")
+            LOGGER.debug("Registered UnityMCPPlugin (External)")
+        except ImportError as e:
+            LOGGER.warning(f"Could not register UnityMCPPlugin (External): {e}")
 
     except ImportError as e:
         LOGGER.warning(f"Could not register native plugins: {e}")

@@ -22,9 +22,7 @@ def test_init_db_creates_table(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
 
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    cursor.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='user_prefs'"
-    )
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='user_prefs'")
     assert cursor.fetchone() is not None
     conn.close()
 
@@ -43,9 +41,7 @@ def test_set_and_get_pref(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
     assert value == "test_value"
 
 
-def test_get_pref_returns_none_for_missing_key(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_get_pref_returns_none_for_missing_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test get_pref returns None when key doesn't exist."""
     from app import config
 
@@ -58,9 +54,7 @@ def test_get_pref_returns_none_for_missing_key(
     assert value is None
 
 
-def test_set_pref_upsert_behavior(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_set_pref_upsert_behavior(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that set_pref overwrites existing values."""
     from app import config
 

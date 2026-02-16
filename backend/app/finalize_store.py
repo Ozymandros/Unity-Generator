@@ -124,10 +124,7 @@ class FinalizeStore:
                 job.zip_path = zip_path
             if status == JobStatus.RUNNING and not job.started_at:
                 job.started_at = datetime.now(timezone.utc).isoformat()
-            if (
-                status in (JobStatus.COMPLETED, JobStatus.FAILED)
-                and not job.finished_at
-            ):
+            if status in (JobStatus.COMPLETED, JobStatus.FAILED) and not job.finished_at:
                 job.finished_at = datetime.now(timezone.utc).isoformat()
 
 

@@ -30,6 +30,7 @@ and assets without wiring multiple tools together.
 - Create text drafts, image prompts, and audio placeholders
 - **Incremental Asset Generation**: Save assets directly into an active Unity project
 - **Pixel-Art Sprites**: Generate and process 2D sprite sheets with automatic cropping
+- **Unity MCP Integration**: Real-time interaction with the Unity Editor using [Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin) and [Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)
 - Save and reuse provider settings and preferences locally
 - Configure global and per-request system key prompts for tailored generation
 - Keep output structured so Unity can open it right away

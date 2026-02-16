@@ -22,6 +22,7 @@ client = TestClient(app)
 def _wait_for_job(job_id: str, timeout: float = 5.0) -> Any:
     """Poll the finalize status endpoint until the job reaches a terminal state."""
     deadline = time.time() + timeout
+    data: dict[str, Any] = {}
     while time.time() < deadline:
         resp = client.get(f"/api/v1/project/finalize/{job_id}")
         data = resp.json()
@@ -64,9 +65,7 @@ class TestFinalizeEndpoint:
         assert data["status"] == "not_found"
         assert data["errors"] == ["Job not found"]
 
-    def test_finalize_project_success(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_finalize_project_success(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test the full lifecycle: create -> running -> completed/failed (terminal)."""
         from app import unity_project
 
@@ -79,9 +78,7 @@ class TestFinalizeEndpoint:
         # Mock resolve_unity_editor_path to return a path
         unity_exe = tmp_path / "Unity.exe"
         unity_exe.touch()
-        monkeypatch.setattr(
-            "app.main.resolve_unity_editor_path", lambda override=None: unity_exe
-        )
+        monkeypatch.setattr("app.main.resolve_unity_editor_path", lambda override=None: unity_exe)
 
         # Mock run_finalize_job at the module level where it gets imported
         from services.unity_orchestrator import FinalizeResult
@@ -100,9 +97,7 @@ class TestFinalizeEndpoint:
                 logs=["Done"],
             )
 
-        monkeypatch.setattr(
-            "services.unity_orchestrator.run_finalize_job", fake_finalize
-        )
+        monkeypatch.setattr("services.unity_orchestrator.run_finalize_job", fake_finalize)
 
         resp = client.post(
             "/api/v1/project/finalize",
@@ -115,9 +110,7 @@ class TestFinalizeEndpoint:
         status = _wait_for_job(job_id, timeout=10)
         assert status["status"] in ("completed", "failed")
 
-    def test_finalize_job_with_unity_error(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_finalize_job_with_unity_error(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that Unity failures produce proper error diagnostics."""
         from app import unity_project
 
@@ -128,9 +121,7 @@ class TestFinalizeEndpoint:
         # Simulate Unity not found
         monkeypatch.setattr(
             "app.main.resolve_unity_editor_path",
-            lambda override=None: (_ for _ in ()).throw(
-                FileNotFoundError("Unity not installed")
-            ),
+            lambda override=None: (_ for _ in ()).throw(FileNotFoundError("Unity not installed")),
         )
 
         resp = client.post(
@@ -156,9 +147,7 @@ class TestFinalizeDownload:
 
         resp = client.get(f"/api/v1/project/finalize/{job.id}/download")
         data = resp.json()
-        assert data.get("success") is False or "not completed" in (
-            data.get("error") or ""
-        )
+        assert data.get("success") is False or "not completed" in (data.get("error") or "")
 
     def test_download_completed_job(self, tmp_path: Path) -> None:
         import zipfile

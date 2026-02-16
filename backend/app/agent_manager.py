@@ -25,7 +25,10 @@ class AgentManager:
     code_agent: Any
     text_agent: Any
     image_agent: Any
+    text_agent: Any
+    image_agent: Any
     audio_agent: Any
+    unity_agent: Any
 
     def __init__(self) -> None:
         repo_root = get_repo_root()
@@ -33,18 +36,20 @@ class AgentManager:
             sys.path.insert(0, str(repo_root))
 
         try:
-            from agents import audio_agent, code_agent, image_agent, text_agent
+            from agents import audio_agent, code_agent, image_agent, text_agent, unity_agent
 
             self.code_agent = code_agent
             self.text_agent = text_agent
             self.image_agent = image_agent
             self.audio_agent = audio_agent
+            self.unity_agent = unity_agent()  # Initialize the class
         except ImportError:
             LOGGER.warning("Agents not yet implemented.")
             self.code_agent = None
             self.text_agent = None
             self.image_agent = None
             self.audio_agent = None
+            self.unity_agent = None
         except Exception as e:
             LOGGER.debug(f"Could not register fallback skills: {e}")
             self.code_agent = None
@@ -185,3 +190,27 @@ class AgentManager:
             save_asset_to_project(project_path, "audio", final_result)
 
         return final_result
+
+    async def run_unity(
+        self,
+        prompt: str,
+        provider: str | None,
+        options: dict[str, Any],
+        api_key: str | None = None,
+        system_prompt: str | None = None,
+    ) -> AgentResult:
+        """
+        Runs the Unity Agent to orchestrate editor actions.
+        """
+        api_keys = load_api_keys()
+        if provider and api_key:
+            key_name = LLM_KEY_MAP.get(provider)
+            if key_name:
+                api_keys[key_name] = api_key
+
+        if not self.unity_agent:
+            raise RuntimeError("UnityAgent is not available.")
+
+        # UnityAgent.run is async and returns a dict
+        result = await self.unity_agent.run(prompt, provider, options, api_keys, system_prompt)
+        return AgentResult(**result)

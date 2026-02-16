@@ -23,9 +23,7 @@ def test_generation_request_minimal() -> None:
 
 def test_generation_request_full() -> None:
     """Test GenerationRequest with all fields."""
-    req = GenerationRequest(
-        prompt="test", provider="openai", options={"model": "gpt-4o"}
-    )
+    req = GenerationRequest(prompt="test", provider="openai", options={"model": "gpt-4o"})
     assert req.prompt == "test"
     assert req.provider == "openai"
     # options is a dict, not a CodeOptions object
