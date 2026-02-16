@@ -1,11 +1,12 @@
 import logging
 from typing import Any
+from typing import Any, Optional
 
 from semantic_kernel import Kernel
 from semantic_kernel.connectors.ai.function_choice_behavior import FunctionChoiceBehavior
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion, OpenAIChatCompletion
 
-from .unity_mcp_plugin import UnityMCPPlugin
+from .unity_mcp_plugin import UnityMCPPluginWrapper
 
 LOGGER = logging.getLogger(__name__)
 
@@ -53,28 +54,22 @@ class UnityAgent:
                 )
             )
 
-        # Import Unity MCP Plugin
-        unity_plugin = UnityMCPPlugin(host="localhost", port=8765)
-
-        # Pre-flight check
+        # Initialize Unity MCP Plugin via MCPSsePlugin
+        unity_plugin_wrapper = UnityMCPPluginWrapper()
         try:
-            await unity_plugin.client.ping()
+            plugin_instance = await unity_plugin_wrapper.initialize()
         except Exception as e:
             LOGGER.error(f"Unity MCP Server not reachable: {e}")
             return {
                 "content": "Unity Editor is not connected. Please ensure the Unity MCP Server is running.",
                 "error": str(e),
             }
-
-        kernel.add_plugin(unity_plugin, plugin_name="UnityMCP")
+        kernel.add_plugin(plugin_instance, plugin_name="UnityMCP")
 
         try:
             # In SK 1.x, we use FunctionChoiceBehavior to enable auto-calling
             kernel.get_service(service_id)
 
-            # Setup the execution settings with auto function calling
-            # We use OpenAIChatPromptExecutionSettings or similar depending on provider,
-            # but usually we can pass it to invoke.
             from semantic_kernel.connectors.ai.open_ai import OpenAIChatPromptExecutionSettings
 
             execution_settings = OpenAIChatPromptExecutionSettings(
@@ -83,8 +78,6 @@ class UnityAgent:
                 max_tokens=options.get("max_tokens", 2000),
             )
 
-            # Use the kernel to invoke the chat completion with tools enabled
-            # We can use a simple prompt or a more elaborate chat history
             system_message = (
                 system_prompt or "You are a Unity Editor assistant. Use your tools to help the user with Unity tasks."
             )
@@ -96,9 +89,11 @@ class UnityAgent:
                 "content": str(result),
                 "files": [],
                 "metadata": {
-                    "steps": []  # Tracking steps is more complex in 1.x invoke, skipping for now
+                    "steps": []
                 },
             }
         except Exception as e:
             LOGGER.error(f"UnityAgent failed: {e}")
             return {"content": f"Failed to execute Unity task: {str(e)}", "error": str(e)}
+        finally:
+            await unity_plugin_wrapper.close()

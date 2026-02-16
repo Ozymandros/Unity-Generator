@@ -13,4 +13,6 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },
+  // Exclude frontend unit tests from Playwright
+  exclude: ["../src/**/*.test.ts", "../src/**/*.spec.ts", "../src/**/*.test.js", "../src/**/*.spec.js"],
 });

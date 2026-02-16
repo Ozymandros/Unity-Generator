@@ -234,3 +234,7 @@ Tauri app.
 - If generation fails, verify your provider keys in `config/api_keys.json`.
 - If a provider request errors, check `logs/` for the failed request log.
 - If a Docker build is slow, ensure `node_modules/` and venvs are ignored.
+
+## Unity MCP Integration
+
+See [docs/UNITY_MCP_INTEGRATION.md](docs/UNITY_MCP_INTEGRATION.md) for details on the Semantic Kernel MCP integration, configuration, and usage.

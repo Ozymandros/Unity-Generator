@@ -1,6 +1,7 @@
+
 fastapi
 uvicorn
-semantic-kernel>=1.15.0
+semantic-kernel[mcp]>=1.15.0
 pydantic
 requests
 pytest
