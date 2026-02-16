@@ -29,7 +29,7 @@
     "@vitejs/plugin-vue": "latest",
     "@vitest/coverage-v8": "^2.1.9",
     "eslint": "^9",
-    "eslint-plugin-vue": "^9",
+    "eslint-plugin-vue": "^10",
     "globals": "^17.3.0",
     "playwright": "latest",
     "typescript": "latest",
