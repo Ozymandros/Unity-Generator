@@ -234,8 +234,9 @@ async def create_scene(request: CreateSceneRequest) -> GenerationResponse:
 @app.get("/config/keys", response_model=GenerationResponse)
 def get_keys() -> GenerationResponse:
     keys = load_api_keys()
-    masked = {key: ("***" if value else "") for key, value in keys.items()}
-    return ok_response({"keys": masked})
+    # For a local app, we return the keys as-is so the frontend can populate them.
+    # We do NOT mask them because that causes the frontend to overwrite them with '***' on save.
+    return ok_response({"keys": keys})
 
 
 @app.post("/config/keys", response_model=GenerationResponse)

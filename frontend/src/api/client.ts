@@ -78,6 +78,13 @@ export async function saveApiKeys(keys: Record<string, string>) {
   return (await response.json()) as GenerationResponse;
 }
 
+export async function getApiKeys() {
+  const response = await fetch(`${getBackendUrl()}/config/keys`, {
+    method: "GET",
+  });
+  return (await response.json()) as GenerationResponse;
+}
+
 export async function setPref(key: string, value: string) {
   const response = await fetch(`${getBackendUrl()}/prefs`, {
     method: "POST",

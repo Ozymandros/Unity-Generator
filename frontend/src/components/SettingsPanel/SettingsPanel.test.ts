@@ -28,6 +28,12 @@ describe("SettingsPanel", () => {
       error: null,
       data: { key: "test", value: null },
     });
+    vi.mocked(client.getApiKeys).mockResolvedValue({
+      success: true,
+      date: new Date().toISOString(),
+      error: null,
+      data: { keys: {} },
+    });
   });
 
   it("renders all API key inputs", async () => {
@@ -61,6 +67,28 @@ describe("SettingsPanel", () => {
     expect(client.getPref).toHaveBeenCalledWith("default_image_system_prompt");
     expect(client.getPref).toHaveBeenCalledWith("default_audio_system_prompt");
     expect(client.getPref).toHaveBeenCalledWith("default_sprite_system_prompt");
+  });
+
+  it("loads api keys on mount", async () => {
+    vi.mocked(client.getApiKeys).mockResolvedValue({
+      success: true,
+      date: new Date().toISOString(),
+      error: null,
+      data: {
+        keys: {
+          google_api_key: "google-key-123",
+          openai_api_key: "openai-key-456",
+        },
+      },
+    });
+
+    const wrapper = mount(SettingsPanel);
+    await flushPromises();
+
+    expect(client.getApiKeys).toHaveBeenCalled();
+    const passwordInputs = wrapper.findAll('input[type="password"]');
+    expect((passwordInputs[0].element as HTMLInputElement).value).toBe("google-key-123");
+    expect((passwordInputs[2].element as HTMLInputElement).value).toBe("openai-key-456");
   });
 
   it("saves keys and preferences on button click", async () => {

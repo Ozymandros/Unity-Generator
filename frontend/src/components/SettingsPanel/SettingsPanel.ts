@@ -1,5 +1,5 @@
 import { onMounted, ref } from "vue";
-import { getPref, saveApiKeys, setPref } from "@/api/client";
+import { getPref, saveApiKeys, setPref, getApiKeys } from "@/api/client";
 import { TEXT_PROVIDERS, IMAGE_PROVIDERS, AUDIO_PROVIDERS } from "@/constants/providers";
 
 export function useSettingsPanel() {
@@ -26,6 +26,21 @@ export function useSettingsPanel() {
   const status = ref<string | null>(null);
 
   onMounted(async () => {
+    const keysResponse = await getApiKeys();
+    if (keysResponse.success && keysResponse.data?.keys) {
+      const keys = keysResponse.data.keys as Record<string, string>;
+      googleKey.value = keys.google_api_key || "";
+      anthropicKey.value = keys.anthropic_api_key || "";
+      openaiKey.value = keys.openai_api_key || "";
+      deepseekKey.value = keys.deepseek_api_key || "";
+      openrouterKey.value = keys.openrouter_api_key || "";
+      groqKey.value = keys.groq_api_key || "";
+      stabilityKey.value = keys.stability_api_key || "";
+      fluxKey.value = keys.flux_api_key || "";
+      elevenlabsKey.value = keys.elevenlabs_api_key || "";
+      playhtKey.value = keys.playht_api_key || "";
+    }
+
     const llmPref = await getPref("preferred_llm_provider");
     const imagePref = await getPref("preferred_image_provider");
     const audioPref = await getPref("preferred_audio_provider");
