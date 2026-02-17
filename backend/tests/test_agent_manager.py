@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.agent_manager import AgentManager
+from app.services.agent_manager import AgentManager
 
 
 def test_agent_manager_init(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -13,7 +13,7 @@ def test_agent_manager_init(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     # Ensure 'agents' is not loadable
     monkeypatch.setattr("sys.path", [])
 
-    with patch.dict(sys.modules, {"agents": None}):
+    with patch.dict(sys.modules, {"app.agents": None}):
         manager = AgentManager()
         assert manager.code_agent is None
         assert manager.text_agent is None
@@ -88,3 +88,4 @@ def test_agent_manager_run_code(monkeypatch: pytest.MonkeyPatch, tmp_path: Path)
         "test prompt", "openai", {"model": "gpt-4o"}, {"openai_api_key": "sk-test"}, None
     )
     assert result.content == "test"
+

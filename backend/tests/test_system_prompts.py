@@ -7,19 +7,20 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from unittest.mock import MagicMock, patch
 
 import pytest
-from agents.code_agent import run as run_code_agent
-from backend.app.agent_manager import AgentManager
-from backend.app.prompts import DEFAULT_CODE_SYSTEM_PROMPT
-from backend.app.schemas import GenerationRequest
+from app.agents.code_agent import run as run_code_agent
+from app.agents.text_agent import run as run_text_agent
+from app.services.agent_manager import AgentManager
+from app.services.prompts import DEFAULT_CODE_SYSTEM_PROMPT
+from app.schemas import GenerationRequest
 from pydantic import ValidationError
-from services.providers.llm_adapters import OpenAILLMAdapter
+from app.services.providers.llm_adapters import OpenAILLMAdapter
 
 
 def test_system_prompt_override():
     # Test that providing a system prompt overrides the default
     mock_generate = MagicMock()
 
-    with patch("agents.code_agent.generate_text", mock_generate):
+    with patch("app.agents.code_agent.generate_text", mock_generate):
         run_code_agent(
             prompt="Create a script",
             provider="openai",
@@ -37,7 +38,7 @@ def test_system_prompt_default():
     # Test that not providing a system prompt uses the default
     mock_generate = MagicMock()
 
-    with patch("agents.code_agent.generate_text", mock_generate):
+    with patch("app.agents.code_agent.generate_text", mock_generate):
         run_code_agent(prompt="Create a script", provider="openai", options={}, api_keys={"openai_api_key": "dummy"})
 
         # Verify generate_text was called with the default system prompt
@@ -53,7 +54,7 @@ def test_system_prompt_from_db():
     manager = AgentManager()
     manager.code_agent = mock_agent
 
-    with patch("backend.app.agent_manager.get_pref") as mock_get_pref:
+    with patch("app.services.agent_manager.get_pref") as mock_get_pref:
         mock_get_pref.return_value = "DB system prompt"
 
         manager.run_code(prompt="test", provider="openai", options={}, api_key=None)
@@ -79,7 +80,7 @@ def test_llm_provider_system_prompt():
     mock_response.json.return_value = {"choices": [{"message": {"content": "response"}}]}
     mock_response.raise_for_status = MagicMock()
 
-    with patch("services.providers.llm_adapters.requests.post", return_value=mock_response) as mock_post:
+    with patch("app.services.providers.llm_adapters.requests.post", return_value=mock_response) as mock_post:
         adapter = OpenAILLMAdapter()
         adapter.invoke(prompt="user prompt", options={}, api_key="dummy", system_prompt="system instruction")
 
@@ -109,3 +110,4 @@ if __name__ == "__main__":
             f.write(f"Test failed: {e}")
         traceback.print_exc()
         print(f"Test failed: {e}")
+

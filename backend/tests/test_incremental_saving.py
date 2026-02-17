@@ -1,7 +1,7 @@
 
 import pytest
 
-from app.asset_saver import save_asset_to_project
+from app.services.asset_saver import save_asset_to_project
 from app.schemas import AgentResult
 
 
@@ -72,3 +72,4 @@ if __name__ == "__main__":
     import pytest
 
     pytest.main([__file__])
+

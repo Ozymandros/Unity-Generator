@@ -8,11 +8,11 @@ response normalisation logic.
 from unittest.mock import patch
 
 import pytest
-from agents.plugins.native.provider_orchestrator_plugin import (
+from app.agents.plugins.native.provider_orchestrator_plugin import (
     _MODALITY_ALIAS,
     ProviderOrchestratorPlugin,
 )
-from services.providers import Modality, ProviderError
+from app.services.providers import Modality, ProviderError, provider_registry
 
 
 class TestGetBestProvider:
@@ -30,7 +30,7 @@ class TestGetBestProvider:
         with pytest.raises(ValueError, match="Invalid provider_type"):
             plugin.get_best_provider("telepathy")
 
-    @patch("agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
+    @patch("app.agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
     def test_selects_provider_with_key(self, mock_keys) -> None:
         """Returns a provider whose API key is available."""
         mock_keys.return_value = {"openai_api_key": "sk-test"}
@@ -38,7 +38,7 @@ class TestGetBestProvider:
         result = plugin.get_best_provider("llm")
         assert result == "openai"
 
-    @patch("agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
+    @patch("app.agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
     def test_respects_preferred(self, mock_keys) -> None:
         """Preferred provider is used when its key exists."""
         mock_keys.return_value = {
@@ -49,7 +49,7 @@ class TestGetBestProvider:
         result = plugin.get_best_provider("llm", preferred_provider="groq")
         assert result == "groq"
 
-    @patch("agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
+    @patch("app.agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
     def test_no_keys_raises_provider_error(self, mock_keys) -> None:
         """Raises ProviderError when no keys are available."""
         mock_keys.return_value = {}
@@ -57,7 +57,7 @@ class TestGetBestProvider:
         with pytest.raises(ProviderError):
             plugin.get_best_provider("llm")
 
-    @patch("agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
+    @patch("app.agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
     def test_image_modality(self, mock_keys) -> None:
         """Image modality resolves correctly."""
         mock_keys.return_value = {"stability_api_key": "st-test"}
@@ -65,7 +65,7 @@ class TestGetBestProvider:
         result = plugin.get_best_provider("image")
         assert result == "stability"
 
-    @patch("agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
+    @patch("app.agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
     def test_audio_modality(self, mock_keys) -> None:
         """Audio modality resolves correctly."""
         mock_keys.return_value = {"elevenlabs_api_key": "el-test"}
@@ -73,7 +73,7 @@ class TestGetBestProvider:
         result = plugin.get_best_provider("audio")
         assert result == "elevenlabs"
 
-    @patch("agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
+    @patch("app.agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
     def test_video_modality(self, mock_keys) -> None:
         """Video modality resolves correctly."""
         mock_keys.return_value = {"runway_api_key": "r-test"}
@@ -81,7 +81,7 @@ class TestGetBestProvider:
         result = plugin.get_best_provider("video")
         assert result == "runway"
 
-    @patch("agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
+    @patch("app.agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
     def test_case_insensitive_type(self, mock_keys) -> None:
         """Provider type matching is case-insensitive."""
         mock_keys.return_value = {"openai_api_key": "sk-test"}

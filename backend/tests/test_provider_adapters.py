@@ -8,36 +8,32 @@ conformance, and every concrete adapter class.
 """
 
 
-
-
-
-
 from unittest.mock import MagicMock, patch
 
 import pytest
-from services.providers.adapters import (
+from app.services.providers.adapters import (
     AudioAdapter,
     BaseProviderAdapter,
     ImageAdapter,
     LLMAdapter,
     VideoAdapter,
 )
-from services.providers.audio_adapters import (
+from app.services.providers.audio_adapters import (
     AUDIO_ADAPTERS,
     ElevenLabsAudioAdapter,
     GoogleAudioAdapter,
     OpenAIAudioAdapter,
     PlayHTAudioAdapter,
 )
-from services.providers.capabilities import Modality
-from services.providers.errors import ProviderError, ProviderTimeoutError
-from services.providers.image_adapters import (
+from app.services.providers.capabilities import Modality
+from app.services.providers.errors import ProviderError, ProviderTimeoutError
+from app.services.providers.image_adapters import (
     IMAGE_ADAPTERS,
     FluxImageAdapter,
     OpenAIImageAdapter,
     StabilityImageAdapter,
 )
-from services.providers.llm_adapters import (
+from app.services.providers.llm_adapters import (
     LLM_ADAPTERS,
     AnthropicLLMAdapter,
     DeepSeekLLMAdapter,
@@ -46,10 +42,11 @@ from services.providers.llm_adapters import (
     OpenAILLMAdapter,
     OpenRouterLLMAdapter,
 )
-from services.providers.video_adapters import VIDEO_ADAPTERS
+from app.services.providers.video_adapters import VIDEO_ADAPTERS
 
 # Strict import order: stdlib, blank, third-party, blank, local
 from app.schemas import AgentResult
+
 
 # ======================================================================
 # Protocol conformance
@@ -93,7 +90,8 @@ class TestGetOptHelper:
     def test_get_opt_from_object(self) -> None:
         class Obj:
             temperature = 0.9
-        assert BaseProviderAdapter.get_opt(Obj().__dict__, "temperature", 0.7) == 0.9
+        # Correct usage: pass the object, not its __dict__
+        assert BaseProviderAdapter.get_opt(Obj(), "temperature", 0.7) == 0.9
 
     def test_get_opt_default_from_object(self) -> None:
         class Obj:
@@ -114,7 +112,7 @@ class TestLLMAdapters:
         expected = {"openai", "deepseek", "openrouter", "groq", "google", "anthropic"}
         assert set(LLM_ADAPTERS.keys()) == expected
 
-    @patch("services.providers.llm_adapters.requests.post")
+    @patch("app.services.providers.llm_adapters.requests.post")
     def test_openai_adapter_invoke(self, mock_post: MagicMock) -> None:
         """OpenAI adapter sends correct payload and parses response."""
         mock_post.return_value.status_code = 200
@@ -140,7 +138,7 @@ class TestLLMAdapters:
         assert payload["messages"][0]["role"] == "system"
         assert payload["messages"][1]["role"] == "user"
 
-    @patch("services.providers.llm_adapters.requests.post")
+    @patch("app.services.providers.llm_adapters.requests.post")
     def test_openai_adapter_without_system_prompt(self, mock_post: MagicMock) -> None:
         """OpenAI adapter omits system message when system_prompt is None."""
         mock_post.return_value.raise_for_status = MagicMock()
@@ -192,7 +190,7 @@ class TestLLMAdapters:
         with pytest.raises(ProviderError, match="API key is required"):
             adapter.invoke("hello", {}, "")
 
-    @patch("services.providers.llm_adapters.requests.post")
+    @patch("app.services.providers.llm_adapters.requests.post")
     def test_deepseek_adapter_endpoint(self, mock_post: MagicMock) -> None:
         """DeepSeek adapter hits the correct endpoint."""
         mock_post.return_value.raise_for_status = MagicMock()
@@ -205,7 +203,7 @@ class TestLLMAdapters:
         url = mock_post.call_args.args[0]
         assert "deepseek" in url
 
-    @patch("services.providers.llm_adapters.requests.post")
+    @patch("app.services.providers.llm_adapters.requests.post")
     def test_openrouter_adapter_endpoint(self, mock_post: MagicMock) -> None:
         """OpenRouter adapter hits the correct endpoint."""
         mock_post.return_value.raise_for_status = MagicMock()
@@ -218,7 +216,7 @@ class TestLLMAdapters:
         url = mock_post.call_args.args[0]
         assert "openrouter" in url
 
-    @patch("services.providers.llm_adapters.requests.post")
+    @patch("app.services.providers.llm_adapters.requests.post")
     def test_groq_adapter_endpoint(self, mock_post: MagicMock) -> None:
         """Groq adapter hits the correct endpoint."""
         mock_post.return_value.raise_for_status = MagicMock()
@@ -244,7 +242,7 @@ class TestImageAdapters:
         expected = {"openai", "google", "stability", "flux"}
         assert set(IMAGE_ADAPTERS.keys()) == expected
 
-    @patch("services.providers.image_adapters.requests.post")
+    @patch("app.services.providers.image_adapters.requests.post")
     def test_stability_adapter_invoke(self, mock_post: MagicMock) -> None:
         mock_post.return_value.raise_for_status = MagicMock()
         mock_post.return_value.json.return_value = {"image": "b64data"}
@@ -260,7 +258,7 @@ class TestImageAdapters:
         assert result.image == "b64data"
         assert result.model == "sd3"
 
-    @patch("services.providers.image_adapters.requests.post")
+    @patch("app.services.providers.image_adapters.requests.post")
     def test_openai_image_adapter_invoke(self, mock_post: MagicMock) -> None:
         """OpenAI DALL-E adapter sends correct payload."""
         mock_post.return_value.raise_for_status = MagicMock()
@@ -276,7 +274,7 @@ class TestImageAdapters:
         assert result.raw is not None
         assert result.raw["revised_prompt"] == "better prompt"
 
-    @patch("services.providers.image_adapters.requests.post")
+    @patch("app.services.providers.image_adapters.requests.post")
     def test_flux_adapter_invoke(self, mock_post: MagicMock) -> None:
         """Flux adapter sends correct payload to Replicate."""
         mock_post.return_value.raise_for_status = MagicMock()
@@ -288,7 +286,7 @@ class TestImageAdapters:
         assert result.image == "flux_url"
         assert result.model == "flux-dev"  # hd maps to flux-dev
 
-    @patch("services.providers.image_adapters.requests.post")
+    @patch("app.services.providers.image_adapters.requests.post")
     def test_stability_standard_uses_turbo(self, mock_post: MagicMock) -> None:
         """Standard quality maps to sd3-turbo model."""
         mock_post.return_value.raise_for_status = MagicMock()
@@ -310,7 +308,7 @@ class TestAudioAdapters:
         expected = {"elevenlabs", "openai", "google", "playht"}
         assert set(AUDIO_ADAPTERS.keys()) == expected
 
-    @patch("services.providers.audio_adapters.requests.post")
+    @patch("app.services.providers.audio_adapters.requests.post")
     def test_elevenlabs_adapter_invoke(self, mock_post: MagicMock) -> None:
         mock_post.return_value.raise_for_status = MagicMock()
         mock_post.return_value.content = b"audiodata"
@@ -326,7 +324,7 @@ class TestAudioAdapters:
         assert result.provider == "elevenlabs"
         assert result.audio is not None
 
-    @patch("services.providers.audio_adapters.requests.post")
+    @patch("app.services.providers.audio_adapters.requests.post")
     def test_playht_adapter_invoke(self, mock_post: MagicMock) -> None:
         """PlayHT adapter sends correct payload and returns audio URL."""
         mock_post.return_value.raise_for_status = MagicMock()
@@ -351,7 +349,7 @@ class TestAudioAdapters:
         assert result.provider == "google"
         assert result.audio == "google_audio_stub"
 
-    @patch("services.providers.audio_adapters.requests.post")
+    @patch("app.services.providers.audio_adapters.requests.post")
     def test_elevenlabs_with_system_prompt(self, mock_post: MagicMock) -> None:
         """ElevenLabs adapter prepends system prompt to text."""
         mock_post.return_value.raise_for_status = MagicMock()
@@ -379,19 +377,19 @@ class TestVideoAdapters:
         assert set(VIDEO_ADAPTERS.keys()) == expected
 
     def test_runway_stub_raises_not_supported(self) -> None:
-        from services.providers.errors import ProviderNotSupportedError
+        from app.services.providers.errors import ProviderNotSupportedError
 
         with pytest.raises(ProviderNotSupportedError, match="not yet implemented"):
             VIDEO_ADAPTERS["runway"].invoke("a sunrise", {}, "key")
 
     def test_pika_stub_raises_not_supported(self) -> None:
-        from services.providers.errors import ProviderNotSupportedError
+        from app.services.providers.errors import ProviderNotSupportedError
 
         with pytest.raises(ProviderNotSupportedError, match="not yet implemented"):
             VIDEO_ADAPTERS["pika"].invoke("a sunset", {}, "key")
 
     def test_luma_stub_raises_not_supported(self) -> None:
-        from services.providers.errors import ProviderNotSupportedError
+        from app.services.providers.errors import ProviderNotSupportedError
 
         with pytest.raises(ProviderNotSupportedError, match="not yet implemented"):
             VIDEO_ADAPTERS["luma"].invoke("a wave", {}, "key")
@@ -438,7 +436,7 @@ class TestBaseProviderAdapterErrorHandling:
 
     def test_provider_error_passes_through(self) -> None:
         """ProviderError subclasses are re-raised without wrapping."""
-        from services.providers.errors import ProviderNotSupportedError
+        from app.services.providers.errors import ProviderNotSupportedError
 
         class DirectErrorAdapter(BaseProviderAdapter):
             def __init__(self) -> None:

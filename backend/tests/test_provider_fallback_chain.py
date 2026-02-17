@@ -9,10 +9,10 @@ no key or fails.
 from unittest.mock import MagicMock, patch
 
 import pytest
-from services.audio_provider import generate_audio
-from services.image_provider import generate_image
-from services.llm_provider import generate_text
-from services.providers import (
+from app.services.audio_provider import generate_audio
+from app.services.image_provider import generate_image
+from app.services.llm_provider import generate_text
+from app.services.providers import (
     Modality,
     ProviderNotAvailableError,
     ProviderNotSupportedError,
@@ -23,7 +23,7 @@ from services.providers import (
 class TestLLMFallbackChain:
     """Test LLM provider fallback via generate_text."""
 
-    @patch("services.providers.llm_adapters.requests.post")
+    @patch("app.services.providers.llm_adapters.requests.post")
     def test_fallback_when_preferred_has_no_key(self, mock_post: MagicMock) -> None:
         """If preferred provider has no key, fall back to next with key."""
         mock_post.return_value.raise_for_status = MagicMock()
@@ -38,7 +38,7 @@ class TestLLMFallbackChain:
         assert result.provider == "openai"
         assert result.content == "fallback answer"
 
-    @patch("services.providers.llm_adapters.requests.post")
+    @patch("app.services.providers.llm_adapters.requests.post")
     def test_first_priority_used_when_no_preference(self, mock_post: MagicMock) -> None:
         """With no preferred provider the highest-priority one with a key wins."""
         mock_post.return_value.raise_for_status = MagicMock()
@@ -61,7 +61,7 @@ class TestLLMFallbackChain:
 class TestImageFallbackChain:
     """Test image provider fallback via generate_image."""
 
-    @patch("services.providers.image_adapters.requests.post")
+    @patch("app.services.providers.image_adapters.requests.post")
     def test_fallback_to_next_image_provider(self, mock_post: MagicMock) -> None:
         """Stability is preferred but missing key; falls back to openai."""
         mock_post.return_value.raise_for_status = MagicMock()

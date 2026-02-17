@@ -38,14 +38,12 @@ def test_generate_unity_project_schema(monkeypatch):
         ),
     )
     # Mock _download to avoid real HTTP requests for audio
-    import app.unity_project
+    import app.services.unity_project as unity_project_mod
+    monkeypatch.setattr(unity_project_mod, "_download", lambda url: b"dummy audio bytes")
 
-    monkeypatch.setattr(
-        app.unity_project, "_download", lambda url: b"dummy audio bytes"
-    )
     # Patch API key loading only for this test
-    import app.agent_manager
-    import app.config
+    import app.services.agent_manager as agent_manager_mod
+    import app.core.config as config_mod
 
     dummy_keys = {
         "openai": "dummy-key",
@@ -56,8 +54,8 @@ def test_generate_unity_project_schema(monkeypatch):
         "elevenlabs": "dummy-key",
         "elevenlabs_api_key": "dummy-key",
     }
-    monkeypatch.setattr(app.config, "load_api_keys", lambda: dummy_keys)
-    monkeypatch.setattr(app.agent_manager, "load_api_keys", lambda: dummy_keys)
+    monkeypatch.setattr(config_mod, "load_api_keys", lambda: dummy_keys)
+    monkeypatch.setattr(agent_manager_mod, "load_api_keys", lambda: dummy_keys)
     client = TestClient(fastapi_app)
     payload = {
         "project_name": "TestProject",

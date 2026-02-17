@@ -1,4 +1,4 @@
-from app.kernel import create_kernel
+from app.services.kernel import create_kernel
 
 
 def test_create_kernel_success() -> None:
@@ -42,3 +42,4 @@ def test_create_kernel_semantic_functions_registered() -> None:
         functions = [f.name for f in plugin.functions.values()]
         assert "BoilerplateGenerator" in functions
         assert "NamespaceFixer" in functions
+

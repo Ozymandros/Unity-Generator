@@ -3,7 +3,7 @@ import io
 from unittest.mock import MagicMock, patch
 
 from PIL import Image
-from services.sprite_service import generate_sprite, process_pixel_art
+from app.services.sprite_service import generate_sprite, process_pixel_art
 
 from app.schemas import AgentResult
 
@@ -49,8 +49,8 @@ def test_process_pixel_art_autocrop() -> None:
     assert processed.size == (10, 10)
 
 
-@patch("services.sprite_service.generate_image")
-@patch("services.sprite_service.load_api_keys")
+@patch("app.services.sprite_service.generate_image")
+@patch("app.services.sprite_service.load_api_keys")
 def test_generate_sprite_workflow(
     mock_load_keys: MagicMock, mock_gen_image: MagicMock
 ) -> None:

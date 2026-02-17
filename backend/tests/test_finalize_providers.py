@@ -8,7 +8,7 @@ respected and that the registry is used for fallback.
 
 
 
-from services.providers import Modality, provider_registry
+from app.services.providers import Modality, provider_registry
 
 from app.schemas import FinalizeProjectRequest, VideoOptions
 

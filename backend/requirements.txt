@@ -1,4 +1,3 @@
-
 fastapi
 uvicorn
 semantic-kernel[mcp]>=1.15.0
@@ -11,3 +10,5 @@ pyright
 Pillow
 numpy
 jinja2
+google-generativeai
+anthropic

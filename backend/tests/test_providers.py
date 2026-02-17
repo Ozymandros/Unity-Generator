@@ -11,17 +11,17 @@ Mock paths target the adapter modules where ``requests`` is imported.
 from unittest.mock import MagicMock, patch
 
 import pytest
-from services.audio_provider import generate_audio
-from services.image_provider import generate_image
-from services.llm_provider import generate_text
-from services.providers.errors import ProviderNotAvailableError, ProviderNotSupportedError
-from services.video_provider import generate_video
+from app.services.audio_provider import generate_audio
+from app.services.image_provider import generate_image
+from app.services.llm_provider import generate_text
+from app.services.providers.errors import ProviderNotAvailableError, ProviderNotSupportedError
+from app.services.video_provider import generate_video
 
 from app.schemas import AudioOptions, ImageOptions, TextOptions, VideoOptions
 
 
 class TestLLMProviders:
-    @patch("services.providers.llm_adapters.requests.post")
+    @patch("app.services.providers.llm_adapters.requests.post")
     def test_call_openai(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {"choices": [{"message": {"content": "OpenAI Response"}}]}
@@ -42,7 +42,7 @@ class TestLLMProviders:
         assert kwargs["json"]["temperature"] == 0.5
         assert kwargs["headers"]["Authorization"] == "Bearer sk-test"
 
-    @patch("services.providers.llm_adapters.requests.post")
+    @patch("app.services.providers.llm_adapters.requests.post")
     def test_call_deepseek(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {"choices": [{"message": {"content": "DeepSeek Response"}}]}
@@ -54,7 +54,7 @@ class TestLLMProviders:
         assert result.provider == "deepseek"
         assert result.model == "deepseek-chat"
 
-    @patch("services.providers.llm_adapters.requests.post")
+    @patch("app.services.providers.llm_adapters.requests.post")
     def test_call_groq(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {"choices": [{"message": {"content": "Groq Response"}}]}
@@ -76,7 +76,7 @@ class TestLLMProviders:
 
 
 class TestImageProviders:
-    @patch("services.providers.image_adapters.requests.post")
+    @patch("app.services.providers.image_adapters.requests.post")
     def test_call_stability(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {"image": "base64_data"}
@@ -96,7 +96,7 @@ class TestImageProviders:
         assert kwargs["data"]["model"] == "sd3"
         assert kwargs["headers"]["Authorization"] == "Bearer st-test"
 
-    @patch("services.providers.image_adapters.requests.post")
+    @patch("app.services.providers.image_adapters.requests.post")
     def test_call_flux(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {"output": "flux_url"}
@@ -107,7 +107,7 @@ class TestImageProviders:
         assert result.image == "flux_url"
         assert result.provider == "flux"
 
-    @patch("services.providers.image_adapters.requests.post")
+    @patch("app.services.providers.image_adapters.requests.post")
     def test_call_openai_image(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {
@@ -178,7 +178,7 @@ class TestImageProviders:
 
 
 class TestAudioProviders:
-    @patch("services.providers.audio_adapters.requests.post")
+    @patch("app.services.providers.audio_adapters.requests.post")
     def test_call_elevenlabs(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
         mock_post.return_value.content = b"audio_bytes"
@@ -197,7 +197,7 @@ class TestAudioProviders:
         assert kwargs["json"]["text"] == "Hello world"
         assert kwargs["headers"]["xi-api-key"] == "el-test"
 
-    @patch("services.providers.audio_adapters.requests.post")
+    @patch("app.services.providers.audio_adapters.requests.post")
     def test_call_playht(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {"url": "playht_url"}
@@ -242,7 +242,7 @@ class TestVideoProviders:
     def test_generate_video_no_adapter_raises(self) -> None:
         """If an adapter is missing for the resolved provider, RuntimeError is raised."""
         # Patch VIDEO_ADAPTERS to remove the adapter but keep registry entry
-        with patch("services.video_provider.VIDEO_ADAPTERS", {}):
+        with patch("app.services.video_provider.VIDEO_ADAPTERS", {}):
             with pytest.raises(RuntimeError, match="No video adapter"):
                 generate_video(
                     "test", "runway", {},

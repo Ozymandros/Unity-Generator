@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.agent_manager import AgentManager
+from app.services.agent_manager import AgentManager
 
 
 @pytest.mark.asyncio
@@ -55,3 +55,4 @@ async def test_run_unity_explicit_system_prompt() -> None:
 
         call_args = manager.unity_agent.run.call_args
         assert call_args[0][4] == "Explicit System Prompt"
+

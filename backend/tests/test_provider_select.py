@@ -1,5 +1,5 @@
 import pytest
-from services.provider_select import select_provider
+from app.services.provider_select import select_provider
 
 
 def test_get_provider_for_request_all_fallbacks() -> None:

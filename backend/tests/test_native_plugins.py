@@ -3,8 +3,8 @@ from tempfile import TemporaryDirectory
 from typing import Any
 
 import pytest
-from agents.plugins.native.memory_prefs_plugin import MemoryPrefsPlugin
-from agents.plugins.native.unity_project_plugin import UnityProjectPlugin
+from app.agents.plugins.native.memory_prefs_plugin import MemoryPrefsPlugin
+from app.agents.plugins.native.unity_project_plugin import UnityProjectPlugin
 
 
 class TestUnityProjectPlugin:
@@ -61,8 +61,8 @@ class TestMemoryPrefsPlugin:
         def mock_set_pref(key: str, value: Any) -> None:
             prefs[key] = value
 
-        monkeypatch.setattr("agents.plugins.native.memory_prefs_plugin.get_pref", mock_get_pref)
-        monkeypatch.setattr("agents.plugins.native.memory_prefs_plugin.set_pref", mock_set_pref)
+        monkeypatch.setattr("app.agents.plugins.native.memory_prefs_plugin.get_pref", mock_get_pref)
+        monkeypatch.setattr("app.agents.plugins.native.memory_prefs_plugin.set_pref", mock_set_pref)
         return prefs
 
     def test_get_user_preference(self, mock_db: dict[str, str]) -> None:

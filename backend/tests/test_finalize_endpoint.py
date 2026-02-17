@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from app.finalize_store import JobStatus, finalize_store
+from app.services.finalize_store import JobStatus, finalize_store
 from app.main import app
 
 client = TestClient(app)
@@ -82,23 +82,24 @@ class TestFinalizeEndpoint:
         monkeypatch.setattr("app.main.resolve_unity_editor_path", lambda override=None: unity_exe)
 
         # Mock run_finalize_job at the module level where it gets imported
-        from services.unity_orchestrator import FinalizeResult
+        from app.services.unity_orchestrator import FinalizeResult
 
         def fake_finalize(*args: Any, **kwargs: Any) -> FinalizeResult:
             on_progress = kwargs.get("on_progress")
             if on_progress:
                 on_progress("test", 50, "Testing...")
                 on_progress("done", 100, "Complete")
-            zip_path = str(tmp_path / "output.zip")
-            (tmp_path / "output.zip").write_bytes(b"PK")
             return FinalizeResult(
                 success=True,
-                project_path=str(tmp_path / "project"),
-                zip_path=zip_path,
+                project_path=tmp_path / "Project",
+                output_path=tmp_path / "Output.unitypackage",
+                exit_code=0,
+                stdout="Success",
+                stderr="",
                 logs=["Done"],
             )
 
-        monkeypatch.setattr("services.unity_orchestrator.run_finalize_job", fake_finalize)
+        monkeypatch.setattr("app.services.unity_orchestrator.run_finalize_job", fake_finalize)
 
         resp = client.post(
             "/api/v1/project/finalize",
@@ -197,3 +198,4 @@ class TestFinalizeSchemas:
         assert req.unity_settings.install_packages is True
         assert req.unity_settings.packages == ["com.unity.textmeshpro"]
         assert req.unity_settings.scene_name == "MyScene"
+

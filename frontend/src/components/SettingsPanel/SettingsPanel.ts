@@ -1,9 +1,15 @@
 import { onMounted, ref } from "vue";
 import { getPref, saveApiKeys, setPref, getApiKeys } from "@/api/client";
-import { TEXT_PROVIDERS, IMAGE_PROVIDERS, AUDIO_PROVIDERS } from "@/constants/providers";
+import {
+  TEXT_PROVIDERS,
+  IMAGE_PROVIDERS,
+  AUDIO_PROVIDERS,
+} from "@/constants/providers";
 
 export function useSettingsPanel() {
-  const backendUrl = ref(localStorage.getItem("backendUrl") || "http://127.0.0.1:8000");
+  const backendUrl = ref(
+    localStorage.getItem("backendUrl") || "http://127.0.0.1:8000",
+  );
   const googleKey = ref("");
   const anthropicKey = ref("");
   const openaiKey = ref("");
@@ -27,7 +33,11 @@ export function useSettingsPanel() {
 
   onMounted(async () => {
     const keysResponse = await getApiKeys();
-    if (keysResponse.success && keysResponse.data?.keys) {
+    if (
+      keysResponse?.success &&
+      keysResponse.success &&
+      keysResponse.data?.keys
+    ) {
       const keys = keysResponse.data.keys as Record<string, string>;
       googleKey.value = keys.google_api_key || "";
       anthropicKey.value = keys.anthropic_api_key || "";
@@ -51,13 +61,19 @@ export function useSettingsPanel() {
     const spritePromptPref = await getPref("default_sprite_system_prompt");
 
     preferredLlm.value = String(llmPref.data?.value || preferredLlm.value);
-    preferredImage.value = String(imagePref.data?.value || preferredImage.value);
-    preferredAudio.value = String(audioPref.data?.value || preferredAudio.value);
+    preferredImage.value = String(
+      imagePref.data?.value || preferredImage.value,
+    );
+    preferredAudio.value = String(
+      audioPref.data?.value || preferredAudio.value,
+    );
     defaultCodeSystemPrompt.value = String(codePromptPref.data?.value || "");
     defaultTextSystemPrompt.value = String(textPromptPref.data?.value || "");
     defaultImageSystemPrompt.value = String(imagePromptPref.data?.value || "");
     defaultAudioSystemPrompt.value = String(audioPromptPref.data?.value || "");
-    defaultSpriteSystemPrompt.value = String(spritePromptPref.data?.value || "");
+    defaultSpriteSystemPrompt.value = String(
+      spritePromptPref.data?.value || "",
+    );
   });
 
   async function save() {
@@ -79,9 +95,18 @@ export function useSettingsPanel() {
     await setPref("preferred_audio_provider", preferredAudio.value);
     await setPref("default_code_system_prompt", defaultCodeSystemPrompt.value);
     await setPref("default_text_system_prompt", defaultTextSystemPrompt.value);
-    await setPref("default_image_system_prompt", defaultImageSystemPrompt.value);
-    await setPref("default_audio_system_prompt", defaultAudioSystemPrompt.value);
-    await setPref("default_sprite_system_prompt", defaultSpriteSystemPrompt.value);
+    await setPref(
+      "default_image_system_prompt",
+      defaultImageSystemPrompt.value,
+    );
+    await setPref(
+      "default_audio_system_prompt",
+      defaultAudioSystemPrompt.value,
+    );
+    await setPref(
+      "default_sprite_system_prompt",
+      defaultSpriteSystemPrompt.value,
+    );
 
     if (!response.success) {
       status.value = response.error || "Failed to save keys.";
@@ -114,6 +139,6 @@ export function useSettingsPanel() {
     save,
     TEXT_PROVIDERS,
     IMAGE_PROVIDERS,
-    AUDIO_PROVIDERS
+    AUDIO_PROVIDERS,
   };
 }
