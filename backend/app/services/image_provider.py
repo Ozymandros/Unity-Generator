@@ -11,7 +11,6 @@ from __future__ import annotations
 from typing import Any
 
 from ..schemas import AgentResult, ImageOptions
-
 from .providers import Modality, provider_registry
 from .providers.image_adapters import IMAGE_ADAPTERS
 

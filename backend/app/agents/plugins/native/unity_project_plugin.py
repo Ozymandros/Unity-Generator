@@ -254,7 +254,7 @@ DefaultImporter:
             return str(meta_path)
         except Exception as e:
             LOGGER.error(f"Failed to write .meta file: {e}")
-            raise OSError(f"Failed to write .meta file: {e}")
+            raise OSError(f"Failed to write .meta file: {e}") from e
 
     @kernel_function(
         name="write_csharp_script",
@@ -315,10 +315,10 @@ DefaultImporter:
         # Security: ensure we're within the project
         try:
             script_path.relative_to(project_dir)
-        except ValueError:
+        except ValueError as e:
             raise ValueError(
                 f"Script path would escape project directory: {script_path}"
-            )
+            ) from e
 
         # Create parent directory if it doesn't exist
         script_path.parent.mkdir(parents=True, exist_ok=True)
@@ -334,5 +334,5 @@ DefaultImporter:
             return str(script_path)
         except Exception as e:
             LOGGER.error(f"Failed to write C# script: {e}")
-            raise OSError(f"Failed to write script: {e}")
+            raise OSError(f"Failed to write script: {e}") from e
 

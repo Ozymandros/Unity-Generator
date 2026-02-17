@@ -11,7 +11,6 @@ from __future__ import annotations
 from typing import Any
 
 from ..schemas import AgentResult, CodeOptions, TextOptions
-
 from .providers import Modality, provider_registry
 from .providers.llm_adapters import LLM_ADAPTERS
 

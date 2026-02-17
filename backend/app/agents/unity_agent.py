@@ -11,13 +11,12 @@ from typing import Any
 
 from openai import AsyncOpenAI
 from semantic_kernel import Kernel
-from semantic_kernel.connectors.ai.function_choice_behavior import FunctionChoiceBehavior
-from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion, OpenAIChatCompletion
-from semantic_kernel.connectors.ai.google import GoogleAIChatCompletion
 from semantic_kernel.connectors.ai.anthropic import AnthropicChatCompletion
+from semantic_kernel.connectors.ai.function_choice_behavior import FunctionChoiceBehavior
+from semantic_kernel.connectors.ai.google import GoogleAIChatCompletion
+from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion, OpenAIChatCompletion
 
-from ..services.providers import Modality, ProviderNotSupportedError, provider_registry
-
+from ..services.providers import provider_registry
 from .unity_mcp_plugin import UnityMCPPluginWrapper
 
 LOGGER = logging.getLogger(__name__)
@@ -76,7 +75,7 @@ def _build_sk_service(
     if provider == "google":
         return GoogleAIChatCompletion(
             service_id=service_id,
-            ai_model_id=options["model"],
+            gemini_model_id=options["model"],
             api_key=api_key,
         )
 

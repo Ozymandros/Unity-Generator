@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+
 from ..core.db import get_pref, set_pref
 from ..schemas import (
     GenerationResponse,

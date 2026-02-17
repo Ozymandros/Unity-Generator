@@ -14,7 +14,6 @@ from __future__ import annotations
 from typing import Any
 
 from ..schemas import AgentResult, VideoOptions
-
 from .providers import Modality, provider_registry
 from .providers.video_adapters import VIDEO_ADAPTERS
 

@@ -2,10 +2,10 @@ import base64
 import io
 from typing import Any
 
-from ..schemas import AgentResult, ImageOptions
 from PIL import Image
 
 from ..core.config import load_api_keys
+from ..schemas import AgentResult, ImageOptions
 from .image_provider import generate_image
 
 
@@ -20,7 +20,7 @@ def generate_sprite(
 ) -> AgentResult:
     """
     Generates a sprite using the specified provider and applies pixel-art processing.
-    
+
     Args:
         prompt: Description of the sprite to generate
         provider: Image provider to use (stability, openai, google, flux)
@@ -29,18 +29,18 @@ def generate_sprite(
         options: Generation options (ImageOptions or dict)
         system_prompt: Optional system prompt to guide generation style
         project_path: Optional path to Unity project root to save sprite directly
-    
+
     Returns:
         AgentResult with the generated sprite image data
     """
 
     # 1. Enhance prompt for pixel art if not already present
     enhanced_prompt = prompt
-    
+
     # Apply system_prompt if provided to enhance the generation
     if system_prompt:
         enhanced_prompt = f"{system_prompt}\n\n{prompt}"
-    
+
     if "pixel" not in enhanced_prompt.lower():
         enhanced_prompt = (
             f"{enhanced_prompt}, pixel art style, flat color, isolated on transparent background"
@@ -98,20 +98,20 @@ def generate_sprite(
     # 5. Optionally save to project_path if provided
     saved_path = None
     if project_path:
-        from pathlib import Path
         import time
-        
+        from pathlib import Path
+
         project_root = Path(project_path)
         sprites_dir = project_root / "Assets" / "Sprites"
-        
+
         if sprites_dir.exists() or (project_root / "Assets").exists():
             sprites_dir.mkdir(parents=True, exist_ok=True)
-            
+
             # Generate filename
             timestamp = int(time.time())
             filename = f"sprite_{resolution}x{resolution}_{timestamp}.png"
             sprite_path = sprites_dir / filename
-            
+
             # Save the sprite
             processed_img.save(sprite_path, format="PNG")
             saved_path = str(sprite_path.relative_to(project_root))
@@ -121,7 +121,7 @@ def generate_sprite(
         "enhanced_prompt": enhanced_prompt,
         "resolution": resolution,
     }
-    
+
     if saved_path:
         result_raw["saved_path"] = saved_path
 

@@ -8,9 +8,8 @@ respected and that the registry is used for fallback.
 
 
 
-from app.services.providers import Modality, provider_registry
-
 from app.schemas import FinalizeProjectRequest, VideoOptions
+from app.services.providers import Modality, provider_registry
 
 
 class TestFinalizeProviderOverrides:

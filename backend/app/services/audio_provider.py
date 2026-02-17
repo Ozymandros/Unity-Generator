@@ -11,7 +11,6 @@ from __future__ import annotations
 from typing import Any
 
 from ..schemas import AgentResult, AudioOptions
-
 from .providers import Modality, provider_registry
 from .providers.audio_adapters import AUDIO_ADAPTERS
 

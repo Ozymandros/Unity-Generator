@@ -2,11 +2,7 @@ import logging
 import sys
 from typing import Any
 
-from .audio_provider import AUDIO_KEY_MAP
-from .image_provider import IMAGE_KEY_MAP
-from .llm_provider import LLM_KEY_MAP
-from .video_provider import VIDEO_KEY_MAP
-
+from ..core.config import get_repo_root, load_api_keys
 from ..core.db import get_pref
 from ..schemas import (
     AgentResult,
@@ -16,9 +12,11 @@ from ..schemas import (
     TextOptions,
     VideoOptions,
 )
-
 from .asset_saver import save_asset_to_project
-from ..core.config import get_repo_root, load_api_keys
+from .audio_provider import AUDIO_KEY_MAP
+from .image_provider import IMAGE_KEY_MAP
+from .llm_provider import LLM_KEY_MAP
+from .video_provider import VIDEO_KEY_MAP
 
 LOGGER = logging.getLogger(__name__)
 
@@ -273,7 +271,13 @@ class AgentManager:
 
         # UnityAgent.run is async and returns a dict
         result = await self.unity_agent.run(prompt, provider, options, api_keys, effective_system_prompt)
-    
+        return AgentResult(
+            content=result.get("content", ""),
+            provider=provider or "unity",
+            raw=result,
+            model=options.get("model")
+        )
+
 # Module-level singleton
 agent_manager = AgentManager()
 

@@ -8,11 +8,12 @@ response normalisation logic.
 from unittest.mock import patch
 
 import pytest
+
 from app.agents.plugins.native.provider_orchestrator_plugin import (
     _MODALITY_ALIAS,
     ProviderOrchestratorPlugin,
 )
-from app.services.providers import Modality, ProviderError, provider_registry
+from app.services.providers import Modality, ProviderError
 
 
 class TestGetBestProvider:

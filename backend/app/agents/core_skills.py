@@ -179,7 +179,7 @@ class MathSkill:
             return float(a) + float(b)
         except (ValueError, TypeError) as e:
             LOGGER.error(f"Failed to add {a} and {b}: {e}")
-            raise ValueError(f"Cannot add {a} and {b}: {e}")
+            raise ValueError(f"Cannot add {a} and {b}: {e}") from e
 
     @kernel_function(
         name="multiply_numbers", description="Multiplies two numbers together."
@@ -204,4 +204,4 @@ class MathSkill:
             return float(a) * float(b)
         except (ValueError, TypeError) as e:
             LOGGER.error(f"Failed to multiply {a} and {b}: {e}")
-            raise ValueError(f"Cannot multiply {a} and {b}: {e}")
+            raise ValueError(f"Cannot multiply {a} and {b}: {e}") from e

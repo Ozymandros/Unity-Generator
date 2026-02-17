@@ -1,6 +1,5 @@
 from typing import Any
 
-from ..services.prompts import DEFAULT_IMAGE_SYSTEM_PROMPT
 from ..schemas import AgentResult, ImageOptions
 from ..services.image_provider import generate_image
 

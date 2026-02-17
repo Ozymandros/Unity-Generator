@@ -1,8 +1,8 @@
 
 import pytest
 
-from app.services.asset_saver import save_asset_to_project
 from app.schemas import AgentResult
+from app.services.asset_saver import save_asset_to_project
 
 
 @pytest.fixture

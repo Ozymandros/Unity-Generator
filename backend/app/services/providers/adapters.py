@@ -10,9 +10,8 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from typing import Any, Protocol, runtime_checkable
-
-from typing import Mapping
 
 from app.schemas import AgentResult
 
@@ -237,10 +236,10 @@ class BaseProviderAdapter(ABC):
     # Helpers available to sub-classes
     # ------------------------------------------------------------------
 
-    from typing import Mapping
+    from collections.abc import Mapping
 
     @staticmethod
-    def get_opt(options: 'Mapping[str, object] | object', key: str, default: object) -> object:
+    def get_opt(options: Mapping[str, object] | object, key: str, default: object) -> object:
         """
         Safely extract an option from a Mapping or object (including Pydantic models).
 

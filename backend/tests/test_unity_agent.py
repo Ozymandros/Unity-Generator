@@ -8,14 +8,12 @@ missing argument validation.
 """
 
 
-import os
-import sys
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.services.providers import Modality, ProviderNotSupportedError, provider_registry
 from app.agents.unity_agent import UnityAgent, _build_sk_service
+from app.services.providers import Modality
 
 ######################################################################
 # _build_sk_service unit tests
@@ -79,7 +77,7 @@ class TestBuildSkService:
     def test_azure_service(self, mock_azure: MagicMock) -> None:
         """Azure provider creates AzureChatCompletion."""
         # Azure is a special registration; patch the registry to recognise it
-        from app.services.providers import Modality, ProviderCapabilities, ProviderRegistry
+        from app.services.providers import ProviderCapabilities, ProviderRegistry
 
         reg = ProviderRegistry()
         reg.register(ProviderCapabilities(
@@ -94,15 +92,25 @@ class TestBuildSkService:
             )
             mock_azure.assert_called_once()
 
-    def test_google_raises_not_implemented(self) -> None:
-        """Google (non-OpenAI-compatible) raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match="not currently supported"):
+    def test_google_service(self) -> None:
+        """Google service is correctly constructed."""
+        with patch("app.agents.unity_agent.GoogleAIChatCompletion") as MockSvc:
             _build_sk_service("google", {"model": "gemini"}, {"google_api_key": "k"})
+            MockSvc.assert_called_once_with(
+                service_id="default",
+                gemini_model_id="gemini",
+                api_key="k"
+            )
 
-    def test_anthropic_raises_not_implemented(self) -> None:
-        """Anthropic (non-OpenAI-compatible) raises NotImplementedError."""
-        with pytest.raises(NotImplementedError, match="not currently supported"):
+    def test_anthropic_service(self) -> None:
+        """Anthropic service is correctly constructed."""
+        with patch("app.agents.unity_agent.AnthropicChatCompletion") as MockSvc:
             _build_sk_service("anthropic", {"model": "claude"}, {"anthropic_api_key": "k"})
+            MockSvc.assert_called_once_with(
+                service_id="default",
+                ai_model_id="claude",
+                api_key="k"
+            )
 
 
 # ======================================================================
@@ -179,14 +187,14 @@ async def test_unity_agent_deepseek():
 
 @pytest.mark.asyncio
 async def test_unity_agent_unsupported_provider():
-    """Non-OpenAI-compatible providers raise NotImplementedError."""
+    """Unsupported providers raise NotImplementedError."""
     agent = UnityAgent()
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(NotImplementedError, match="not currently handled"):
         await agent.run(
             prompt="test",
-            provider="google",
-            options={"model": "gemini"},
+            provider="pika",
+            options={"model": "v1"},
             api_keys={}
         )
 

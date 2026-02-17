@@ -11,6 +11,9 @@ conformance, and every concrete adapter class.
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# Strict import order: stdlib, blank, third-party, blank, local
+from app.schemas import AgentResult
 from app.services.providers.adapters import (
     AudioAdapter,
     BaseProviderAdapter,
@@ -43,10 +46,6 @@ from app.services.providers.llm_adapters import (
     OpenRouterLLMAdapter,
 )
 from app.services.providers.video_adapters import VIDEO_ADAPTERS
-
-# Strict import order: stdlib, blank, third-party, blank, local
-from app.schemas import AgentResult
-
 
 # ======================================================================
 # Protocol conformance
@@ -152,18 +151,34 @@ class TestLLMAdapters:
         assert len(payload["messages"]) == 1
         assert payload["messages"][0]["role"] == "user"
 
-    def test_google_stub_returns_content(self) -> None:
-        """Google stub adapter returns content containing 'stub'."""
+    @patch("requests.post")
+    def test_google_adapter_returns_content(self, mock_post: MagicMock) -> None:
+        """Google adapter returns content from API."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "candidates": [{"content": {"parts": [{"text": "Hello from Google"}]}}]
+        }
+        mock_post.return_value = mock_response
+
         adapter = GoogleLLMAdapter()
         result = adapter.invoke("test prompt", {}, "key")
-        assert result.content is not None
-        assert "stub" in result.content.lower()
+        assert result.content == "Hello from Google"
         assert result.provider == "google"
 
-    def test_google_stub_respects_model_option(self) -> None:
-        """Google stub respects model option."""
+    @patch("requests.post")
+    def test_google_adapter_respects_model_option(self, mock_post: MagicMock) -> None:
+        """Google adapter respects model option."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "candidates": [{"content": {"parts": [{"text": "OK"}]}}]
+        }
+        mock_post.return_value = mock_response
+
         result = GoogleLLMAdapter().invoke("hi", {"model": "gemini-pro"}, "k")
         assert result.model == "gemini-pro"
+        assert "gemini-pro" in mock_post.call_args.args[0]
 
     def test_anthropic_stub_returns_content(self) -> None:
         """Anthropic stub adapter returns content containing 'stub'."""

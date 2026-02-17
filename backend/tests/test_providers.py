@@ -11,13 +11,13 @@ Mock paths target the adapter modules where ``requests`` is imported.
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+from app.schemas import AudioOptions, ImageOptions, TextOptions, VideoOptions
 from app.services.audio_provider import generate_audio
 from app.services.image_provider import generate_image
 from app.services.llm_provider import generate_text
 from app.services.providers.errors import ProviderNotAvailableError, ProviderNotSupportedError
 from app.services.video_provider import generate_video
-
-from app.schemas import AudioOptions, ImageOptions, TextOptions, VideoOptions
 
 
 class TestLLMProviders:
@@ -67,12 +67,16 @@ class TestLLMProviders:
         assert result.model is not None
         assert "llama" in result.model
 
-    def test_call_google_stub(self) -> None:
+    @patch("app.services.providers.llm_adapters.requests.post")
+    def test_call_google(self, mock_post: MagicMock) -> None:
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.json.return_value = {
+            "candidates": [{"content": {"parts": [{"text": "Gemini Response"}]}}]
+        }
         api_keys = {"google_api_key": "goog-test"}
         result = generate_text("Hello", "google", {}, api_keys)
-        assert "google" in result.provider
-        assert result.content is not None
-        assert "stub" in result.content.lower()
+        assert result.provider == "google"
+        assert result.content == "Gemini Response"
 
 
 class TestImageProviders:

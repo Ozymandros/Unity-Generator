@@ -1,16 +1,13 @@
 import logging
-import os
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends
-from ..services import sprite_service
-from ..services.image_provider import IMAGE_KEY_MAP
+from fastapi import APIRouter
+
 from ..core.config import load_api_keys as backend_load_api_keys
 from ..schemas import (
     AudioOptions,
     CodeOptions,
-    CreateSceneRequest,
     GenerationRequest,
     GenerationResponse,
     ImageOptions,
@@ -20,6 +17,8 @@ from ..schemas import (
     error_response,
     ok_response,
 )
+from ..services import sprite_service
+from ..services.image_provider import IMAGE_KEY_MAP
 
 router = APIRouter(prefix="/generate", tags=["generation"])
 

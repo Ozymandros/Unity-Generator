@@ -8,6 +8,7 @@ module-level default singleton.
 """
 
 import pytest
+
 from app.services.providers import (
     Modality,
     ProviderCapabilities,

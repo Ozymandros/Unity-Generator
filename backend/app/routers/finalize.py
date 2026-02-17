@@ -1,17 +1,16 @@
 import logging
 import os
 from threading import Thread
-from typing import Any
 
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
+
 from ..schemas import (
     FinalizeJobStatusResponse,
     FinalizeProjectRequest,
     FinalizeProjectResponse,
     GenerationResponse,
     error_response,
-    ok_response,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -22,10 +21,10 @@ def _run_finalize_in_background(job_id: str, request: FinalizeProjectRequest) ->
     """
     Background thread to run the full Unity project finalization.
     """
-    from ..main import agent_manager, finalize_store, resolve_unity_editor_path, get_repo_root
     from ..core.config import get_templates_dir
-    from ..services.unity_orchestrator import run_finalize_job
+    from ..main import finalize_store, get_repo_root, resolve_unity_editor_path
     from ..services.finalize_store import JobStatus
+    from ..services.unity_orchestrator import run_finalize_job
 
     try:
         finalize_store.update_job(job_id, status=JobStatus.RUNNING, step="initializing")

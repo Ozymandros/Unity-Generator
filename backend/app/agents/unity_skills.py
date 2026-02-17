@@ -342,11 +342,12 @@ class UnityProjectSkill:
         # Security check: ensure the resolved path is within output_root
         try:
             full_path.relative_to(self.output_root)
-        except ValueError:
+        except ValueError as e:
             raise ValueError(
                 f"Path {relative_path} would escape output directory. "
                 f"Only paths within {self.output_root} are allowed."
-            )
+            ) from e
+
 
         # Create parent directories
         full_path.parent.mkdir(parents=True, exist_ok=True)
@@ -358,7 +359,7 @@ class UnityProjectSkill:
             return str(full_path)
         except Exception as e:
             LOGGER.error(f"Failed to write asset to {full_path}: {e}")
-            raise OSError(f"Failed to write file: {e}")
+            raise OSError(f"Failed to write file: {e}") from e
 
     @kernel_function(
         name="create_unity_folder",
@@ -399,11 +400,12 @@ class UnityProjectSkill:
 
         try:
             full_path.relative_to(self.output_root)
-        except ValueError:
+        except ValueError as e:
             raise ValueError(
                 f"Path {relative_path} would escape output directory. "
                 f"Only paths within {self.output_root} are allowed."
-            )
+            ) from e
+
 
         full_path.mkdir(parents=True, exist_ok=True)
         LOGGER.info(f"Created Unity folder: {full_path}")

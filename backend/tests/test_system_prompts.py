@@ -7,12 +7,12 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from unittest.mock import MagicMock, patch
 
 import pytest
+from pydantic import ValidationError
+
 from app.agents.code_agent import run as run_code_agent
-from app.agents.text_agent import run as run_text_agent
+from app.schemas import GenerationRequest
 from app.services.agent_manager import AgentManager
 from app.services.prompts import DEFAULT_CODE_SYSTEM_PROMPT
-from app.schemas import GenerationRequest
-from pydantic import ValidationError
 from app.services.providers.llm_adapters import OpenAILLMAdapter
 
 

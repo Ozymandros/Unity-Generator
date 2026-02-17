@@ -1,6 +1,5 @@
 from typing import Any
 
-from ..services.prompts import DEFAULT_TEXT_SYSTEM_PROMPT
 from ..schemas import AgentResult, TextOptions
 from ..services.llm_provider import generate_text
 

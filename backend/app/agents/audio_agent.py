@@ -1,6 +1,5 @@
 from typing import Any
 
-from ..services.prompts import DEFAULT_AUDIO_SYSTEM_PROMPT
 from ..schemas import AgentResult, AudioOptions
 from ..services.audio_provider import generate_audio
 

@@ -9,8 +9,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from app.services.finalize_store import JobStatus, finalize_store
 from app.main import app
+from app.services.finalize_store import JobStatus, finalize_store
 
 client = TestClient(app)
 
@@ -81,6 +81,12 @@ class TestFinalizeEndpoint:
         unity_exe.touch()
         monkeypatch.setattr("app.main.resolve_unity_editor_path", lambda override=None: unity_exe)
 
+        # Mock create_unity_project to return immediately
+        monkeypatch.setattr(
+            "app.main.create_unity_project",
+            lambda *args, **kwargs: {"project_path": str(tmp_path / "Project")}
+        )
+
         # Mock run_finalize_job at the module level where it gets imported
         from app.services.unity_orchestrator import FinalizeResult
 
@@ -91,11 +97,9 @@ class TestFinalizeEndpoint:
                 on_progress("done", 100, "Complete")
             return FinalizeResult(
                 success=True,
-                project_path=tmp_path / "Project",
-                output_path=tmp_path / "Output.unitypackage",
-                exit_code=0,
-                stdout="Success",
-                stderr="",
+                project_path=str(tmp_path / "Project"),
+                zip_path=str(tmp_path / "Output.zip"),
+                errors=[],
                 logs=["Done"],
             )
 

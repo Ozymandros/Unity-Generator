@@ -9,6 +9,7 @@ no key or fails.
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 from app.services.audio_provider import generate_audio
 from app.services.image_provider import generate_image
 from app.services.llm_provider import generate_text

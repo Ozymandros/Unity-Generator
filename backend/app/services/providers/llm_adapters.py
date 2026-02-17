@@ -13,6 +13,7 @@ import logging
 from typing import Any
 
 import requests
+
 from app.schemas import AgentResult
 
 from .adapters import BaseProviderAdapter
@@ -96,7 +97,11 @@ class OpenAICompatibleLLMAdapter(BaseProviderAdapter):
         )
         response.raise_for_status()
         content = response.json()["choices"][0]["message"]["content"]
-        return AgentResult(content=content, provider=self.provider_name, model=str(model) if model is not None else None)
+        return AgentResult(
+            content=content,
+            provider=self.provider_name,
+            model=str(model) if model is not None else None,
+        )
 
 
 # ------------------------------------------------------------------

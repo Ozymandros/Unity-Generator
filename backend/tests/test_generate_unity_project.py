@@ -42,8 +42,8 @@ def test_generate_unity_project_schema(monkeypatch):
     monkeypatch.setattr(unity_project_mod, "_download", lambda url: b"dummy audio bytes")
 
     # Patch API key loading only for this test
-    import app.services.agent_manager as agent_manager_mod
     import app.core.config as config_mod
+    import app.services.agent_manager as agent_manager_mod
 
     dummy_keys = {
         "openai": "dummy-key",

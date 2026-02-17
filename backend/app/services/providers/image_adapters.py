@@ -12,6 +12,7 @@ import logging
 from typing import Any
 
 import requests
+
 from app.schemas import AgentResult, ImageOptions
 
 from .adapters import BaseProviderAdapter
@@ -237,7 +238,12 @@ class StabilityImageAdapter(BaseProviderAdapter):
         )
         response.raise_for_status()
         data = response.json()
-        return AgentResult(image=data.get("image"), provider="stability", raw=data, model=str(model) if model is not None else None)
+        return AgentResult(
+            image=data.get("image"),
+            provider="stability",
+            raw=data,
+            model=str(model) if model is not None else None,
+        )
 
 
 # ------------------------------------------------------------------
@@ -284,7 +290,12 @@ class FluxImageAdapter(BaseProviderAdapter):
         )
         response.raise_for_status()
         data = response.json()
-        return AgentResult(image=data.get("output"), provider="flux", raw=data, model=str(version) if version is not None else None)
+        return AgentResult(
+            image=data.get("output"),
+            provider="flux",
+            raw=data,
+            model=str(version) if version is not None else None,
+        )
 
 
 # ======================================================================
