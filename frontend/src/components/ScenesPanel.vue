@@ -1,4 +1,5 @@
 <script setup lang="ts">
+
 import { StatusBanner } from "@/components/StatusBanner";
 import { SmartField } from "@/components/generic/SmartField";
 import { useScenesPanel } from "./ScenesPanel";
@@ -32,55 +33,30 @@ const {
 
     <StatusBanner :status="status" :tone="tone" />
 
-    <SmartField label="Scene Description" type="textarea" v-model="prompt" :rows="4" placeholder="e.g., Create a scene with a red cube at (0,0,0)..." />
+    <SmartField label="Scene Description" type="textarea" v-model="prompt" :rows="4"
+      placeholder="e.g., Create a scene with a red cube at (0,0,0)..." />
 
     <div class="field-group">
       <div class="options-row">
-        <SmartField 
-          label="Provider" 
-          type="select" 
-          v-model="provider" 
-          :options="TEXT_PROVIDERS" 
-          placeholder="Select Provider (Optional)"
-          class="field-item"
-        />
-        <SmartField 
-          label="Model" 
-          type="select" 
-          v-model="model" 
-          :options="availableModels" 
-          placeholder="Select Model" 
-          :disabled="!provider"
-          class="field-item"
-        />
+        <SmartField label="Provider" type="select" v-model="provider" :options="TEXT_PROVIDERS"
+          placeholder="Select Provider (Optional)" class="field-item" />
+        <SmartField label="Model" type="select" v-model="model" :options="availableModels" placeholder="Select Model"
+          :disabled="!provider" class="field-item" />
       </div>
       <div class="options-row">
-        <SmartField
-           label="Temperature"
-           type="select"
-           v-model.number="temperature"
-           :options="TEMPERATURE_PRESETS"
-           class="field-item"
-        />
+        <SmartField label="Temperature" type="select" v-model.number="temperature" :options="TEMPERATURE_PRESETS"
+          class="field-item" />
       </div>
       <div style="margin-top: 8px;">
-          <SmartField 
-            label="API Key (Optional Override)" 
-            type="password" 
-            v-model="apiKey" 
-            placeholder="Leave empty to use global key" 
-          />
+        <SmartField label="API Key (Optional Override)" type="password" v-model="apiKey"
+          placeholder="Leave empty to use global key" />
       </div>
-       <div style="margin-top: 8px;">
+      <div style="margin-top: 8px;">
         <details>
-          <summary style="cursor: pointer; margin-bottom: 4px; font-size: 0.9em; user-select: none;">Advanced Options</summary>
-          <SmartField 
-            label="System Prompt Override" 
-            type="textarea" 
-            v-model="systemPrompt" 
-            :placeholder="defaultSystemPrompt" 
-            :rows="3"
-          />
+          <summary style="cursor: pointer; margin-bottom: 4px; font-size: 0.9em; user-select: none;">Advanced Options
+          </summary>
+          <SmartField label="System Prompt Override" type="textarea" v-model="systemPrompt"
+            :placeholder="defaultSystemPrompt" :rows="3" />
         </details>
       </div>
     </div>
@@ -104,14 +80,14 @@ const {
       </div>
 
       <div v-if="result.metadata && result.metadata.steps && result.metadata.steps.length > 0" class="steps-list">
-         <details>
-            <summary>View Steps ({{ result.metadata.steps.length }})</summary>
-            <ul>
-                <li v-for="(step, index) in result.metadata.steps" :key="index">
-                    <strong>Step {{ index + 1 }}:</strong> {{ step }}
-                </li>
-            </ul>
-         </details>
+        <details>
+          <summary>View Steps ({{ result.metadata.steps.length }})</summary>
+          <ul>
+            <li v-for="(step, index) in result.metadata.steps" :key="index">
+              <strong>Step {{ index + 1 }}:</strong> {{ step }}
+            </li>
+          </ul>
+        </details>
       </div>
     </div>
   </div>
@@ -156,7 +132,7 @@ h2 {
 textarea,
 input,
 select {
-  box-sizing: border-box; 
+  box-sizing: border-box;
   width: 100%;
 }
 
@@ -194,7 +170,9 @@ select {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .results {
@@ -222,8 +200,8 @@ select {
 }
 
 summary {
-    cursor: pointer;
-    font-weight: 500;
-    color: #2563eb;
+  cursor: pointer;
+  font-weight: 500;
+  color: #2563eb;
 }
 </style>

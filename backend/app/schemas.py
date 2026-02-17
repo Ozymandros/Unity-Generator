@@ -9,11 +9,28 @@ from pydantic import BaseModel, Field
 
 
 class AgentResult(BaseModel):
-    """Result from an AI agent generation."""
+    """
+    Normalised result from an AI agent generation.
+
+    Attributes:
+        content: Generated text content (LLM / code).
+        image: Base64-encoded image data or image URL.
+        audio: Base64-encoded audio data or audio URL.
+        video: Base64-encoded video data or video URL.
+        provider: Canonical name of the provider that served the request.
+        model: Model identifier used for the generation.
+        raw: Optional raw response payload from the provider.
+
+    Example:
+        >>> result = AgentResult(content="hello", provider="openai", model="gpt-4o-mini")
+        >>> result.provider
+        'openai'
+    """
 
     content: str | None = None
     image: str | None = None
     audio: str | None = None
+    video: str | None = None
     provider: str
     model: str | None = None
     raw: dict[str, Any] | None = None
@@ -53,6 +70,30 @@ class AudioOptions(BaseModel):
     stability: float = 0.5
     similarity_boost: float = 0.75
     format: str = "mp3"
+
+
+class VideoOptions(BaseModel):
+    """
+    Options for video generation.
+
+    Attributes:
+        duration: Clip length in seconds.
+        aspect_ratio: Output aspect ratio (e.g. ``"16:9"``, ``"9:16"``).
+        resolution: Output resolution label (e.g. ``"720p"``, ``"1080p"``).
+        fps: Frames per second.
+        model: Optional model identifier override.
+
+    Example:
+        >>> opts = VideoOptions(duration=10, resolution="1080p")
+        >>> opts.fps
+        24
+    """
+
+    duration: int = 5
+    aspect_ratio: str = "16:9"
+    resolution: str = "720p"
+    fps: int = 24
+    model: str | None = None
 
 
 # ---------------------------------------------------------------------------

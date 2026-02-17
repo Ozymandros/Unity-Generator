@@ -1,5 +1,6 @@
 """Tests for /generate/sprites endpoint."""
 
+
 from unittest.mock import patch
 
 import pytest

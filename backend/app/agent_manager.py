@@ -5,6 +5,7 @@ from typing import Any
 from services.audio_provider import AUDIO_KEY_MAP
 from services.image_provider import IMAGE_KEY_MAP
 from services.llm_provider import LLM_KEY_MAP
+from services.video_provider import VIDEO_KEY_MAP
 
 from app.db import get_pref
 from app.schemas import (
@@ -13,6 +14,7 @@ from app.schemas import (
     CodeOptions,
     ImageOptions,
     TextOptions,
+    VideoOptions,
 )
 
 from .asset_saver import save_asset_to_project
@@ -188,6 +190,59 @@ class AgentManager:
 
         if project_path:
             save_asset_to_project(project_path, "audio", final_result)
+
+        return final_result
+
+    def run_video(
+        self,
+        prompt: str,
+        provider: str | None,
+        options: VideoOptions | dict[str, Any],
+        api_key: str | None = None,
+        system_prompt: str | None = None,
+        project_path: str | None = None,
+    ) -> AgentResult:
+        """
+        Generate a video using the video provider service.
+
+        Args:
+            prompt: Description of the desired video.
+            provider: Optional provider override.
+            options: Video generation options.
+            api_key: Optional per-request API key override.
+            system_prompt: Optional system prompt.
+            project_path: Optional path to save asset into.
+
+        Returns:
+            :class:`AgentResult` with video data.
+
+        Raises:
+            RuntimeError: If no video provider is available.
+
+        Example:
+            >>> manager = AgentManager()
+            >>> result = manager.run_video("A sunrise", "runway", {})
+            ... # doctest: +SKIP
+        """
+        from services.video_provider import generate_video
+
+        api_keys = load_api_keys()
+        if provider and api_key:
+            key_name = VIDEO_KEY_MAP.get(provider)
+            if key_name:
+                api_keys[key_name] = api_key
+
+        opts = options.model_dump() if isinstance(options, VideoOptions) else options
+
+        effective_system_prompt = system_prompt
+        if effective_system_prompt is None:
+            effective_system_prompt = get_pref("default_video_system_prompt")
+
+        result = generate_video(prompt, provider, opts, api_keys, effective_system_prompt)
+        final_result = AgentResult(**result) if isinstance(result, dict) else result
+
+        if project_path:
+            save_asset_to_project(project_path, "video", final_result)
 
         return final_result
 

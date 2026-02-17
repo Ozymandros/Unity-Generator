@@ -45,6 +45,7 @@ from .schemas import (
     SpritesRequest,
     TextOptions,
     UnityProjectRequest,
+    VideoOptions,
     error_response,
     ok_response,
 )
@@ -177,6 +178,34 @@ def generate_audio(request: GenerationRequest) -> GenerationResponse:
         return error_response(str(exc))
 
 
+@app.post("/generate/video", response_model=GenerationResponse)
+def generate_video(request: GenerationRequest) -> GenerationResponse:
+    """
+    Generate a video clip using the AI video agent.
+
+    Currently all video providers are scaffolded stubs.  The endpoint
+    returns a clear error until a real adapter is implemented.
+    """
+    try:
+        provider = request.provider or get_pref("preferred_video_provider")
+        options: VideoOptions | dict[str, Any] = request.options
+        if isinstance(options, dict):
+            options = VideoOptions(**options)
+
+        data = agent_manager.run_video(
+            request.prompt,
+            provider,
+            options,
+            request.api_key,
+            request.system_prompt,
+            request.project_path,
+        )
+        return ok_response(data)
+    except Exception as exc:
+        logging.getLogger("failed_requests").warning("Video generation failed: %s", exc)
+        return error_response(str(exc))
+
+
 @app.post("/generate/sprites", response_model=GenerationResponse)
 def generate_sprites(request: SpritesRequest) -> GenerationResponse:
     """
@@ -212,13 +241,13 @@ async def create_scene(request: CreateSceneRequest) -> GenerationResponse:
         # UnityAgent uses default provider/options if not specified,
         # but the run method expects them. We'll use defaults from prefs.
         provider = request.provider or get_pref("preferred_llm_provider")
-        
-        # Merge default options with request options
-        default_options = {
-            "model": "gpt-4o",  # Default strong model for reasoning
-            "temperature": 0.7
-        }
-        options = {**default_options, **request.options}
+
+        if not provider:
+             return error_response("No provider specified and no preferred provider found in settings.")
+
+        # Options must be provided by the request or inferred by the agent/provider service.
+        # We do NOT inject hardcoded defaults here.
+        options = request.options
 
         # UnityAgent.run is async
         data = await agent_manager.run_unity(

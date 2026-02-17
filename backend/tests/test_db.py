@@ -1,5 +1,6 @@
 """Tests for db module."""
 
+
 import sqlite3
 from pathlib import Path
 

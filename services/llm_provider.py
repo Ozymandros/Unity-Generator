@@ -1,20 +1,34 @@
+"""
+LLM provider service -- public API unchanged.
+
+Internally delegates to the unified provider registry and adapter layer.
+The legacy constants ``LLM_KEY_MAP`` and ``LLM_PRIORITY`` are derived
+from :pydata:`provider_registry` so there is a single source of truth.
+"""
+
+from __future__ import annotations
+
 from typing import Any
 
-import requests
 from app.schemas import AgentResult, CodeOptions, TextOptions
 
-from .provider_select import select_provider
+from .providers import Modality, provider_registry
+from .providers.llm_adapters import LLM_ADAPTERS
 
-LLM_KEY_MAP = {
-    "google": "google_api_key",
-    "anthropic": "anthropic_api_key",
-    "deepseek": "deepseek_api_key",
-    "openrouter": "openrouter_api_key",
-    "openai": "openai_api_key",
-    "groq": "groq_api_key",
-}
+# ---------------------------------------------------------------------------
+# Legacy constants (derived from registry for backward compatibility)
+# ---------------------------------------------------------------------------
 
-LLM_PRIORITY = ["google", "anthropic", "deepseek", "openrouter", "openai", "groq"]
+LLM_KEY_MAP: dict[str, str] = provider_registry.key_map(Modality.LLM)
+"""Mapping ``provider_name -> api_key_name`` for LLM providers."""
+
+LLM_PRIORITY: list[str] = provider_registry.priority_list(Modality.LLM)
+"""Ordered fallback list for LLM providers."""
+
+
+# ---------------------------------------------------------------------------
+# Public function (signature unchanged)
+# ---------------------------------------------------------------------------
 
 
 def generate_text(
@@ -24,188 +38,45 @@ def generate_text(
     api_keys: dict[str, str],
     system_prompt: str | None = None,
 ) -> AgentResult:
-    selected = select_provider(provider, api_keys, LLM_PRIORITY, LLM_KEY_MAP)
+    """
+    Generate text using the best available LLM provider.
 
-    # Core logic: if options is a model, we can still treat it like a model.
-    # If it's a dict, we might want to coerce, but for LLMs generic temperature/max_tokens are common.
+    Resolution is handled by the central :class:`ProviderRegistry`:
+    *provider* is used if available; otherwise the priority list is
+    walked until a provider with a valid API key is found.
 
-    if selected == "google":
-        return _call_google(prompt, options, api_keys[LLM_KEY_MAP[selected]], system_prompt)
-    if selected == "anthropic":
-        return _call_anthropic(prompt, options, api_keys[LLM_KEY_MAP[selected]], system_prompt)
-    if selected == "openai":
-        return _call_openai(prompt, options, api_keys[LLM_KEY_MAP[selected]], system_prompt)
-    if selected == "deepseek":
-        return _call_deepseek(prompt, options, api_keys[LLM_KEY_MAP[selected]], system_prompt)
-    if selected == "openrouter":
-        return _call_openrouter(prompt, options, api_keys[LLM_KEY_MAP[selected]], system_prompt)
-    if selected == "groq":
-        return _call_groq(prompt, options, api_keys[LLM_KEY_MAP[selected]], system_prompt)
-    raise RuntimeError(f"Unsupported LLM provider: {selected}")
+    Args:
+        prompt: User prompt.
+        provider: Optional preferred provider name.
+        options: Generation options (model, temperature, max_tokens ...).
+        api_keys: Currently loaded API keys.
+        system_prompt: Optional system message.
 
+    Returns:
+        :class:`AgentResult` with the generated text in ``content``.
 
-def _call_openai(
-    prompt: str,
-    options: TextOptions | CodeOptions | dict[str, Any],
-    api_key: str,
-    system_prompt: str | None = None,
-) -> AgentResult:
-    url = "https://api.openai.com/v1/chat/completions"
+    Raises:
+        ProviderNotSupportedError: If *provider* is unknown.
+        ProviderNotAvailableError: If no provider has a valid key.
+        RuntimeError: If the selected provider has no adapter.
 
-    # Safer access for both models and dicts
-    def get_opt(key: str, default: Any) -> Any:
-        if isinstance(options, dict):
-            return options.get(key, default)
-        return getattr(options, key, default)
+    Example:
+        >>> # With an explicit provider
+        >>> result = generate_text(
+        ...     "Hello", "openai",
+        ...     {"model": "gpt-4o-mini"},
+        ...     {"openai_api_key": "sk-xxx"},
+        ... )  # doctest: +SKIP
+    """
+    selected = provider_registry.resolve(Modality.LLM, api_keys, preferred=provider)
 
-    model = get_opt("model", "gpt-4o-mini")
-    messages = []
-    if system_prompt:
-        messages.append({"role": "system", "content": system_prompt})
-    messages.append({"role": "user", "content": prompt})
+    opts = options if isinstance(options, dict) else options.model_dump()
 
-    payload = {
-        "model": model,
-        "messages": messages,
-        "temperature": get_opt("temperature", 0.7),
-        "max_tokens": get_opt("max_tokens", 2048),
-    }
-    headers = {"Authorization": f"Bearer {api_key}"}
-    response = requests.post(url, json=payload, headers=headers, timeout=60)
-    response.raise_for_status()
-    content = response.json()["choices"][0]["message"]["content"]
-    return AgentResult(content=content, provider="openai", model=model)
+    adapter = LLM_ADAPTERS.get(selected)
+    if adapter is None:
+        raise RuntimeError(f"No LLM adapter registered for provider: {selected}")
 
+    key_name = provider_registry.get(selected).api_key_name
+    api_key = api_keys.get(key_name, "")
 
-def _call_deepseek(
-    prompt: str,
-    options: TextOptions | CodeOptions | dict[str, Any],
-    api_key: str,
-    system_prompt: str | None = None,
-) -> AgentResult:
-    url = "https://api.deepseek.com/v1/chat/completions"
-
-    def get_opt(key: str, default: Any) -> Any:
-        if isinstance(options, dict):
-            return options.get(key, default)
-        return getattr(options, key, default)
-
-    model = get_opt("model", "deepseek-chat")
-    messages = []
-    if system_prompt:
-        messages.append({"role": "system", "content": system_prompt})
-    messages.append({"role": "user", "content": prompt})
-
-    payload = {
-        "model": model,
-        "messages": messages,
-        "temperature": get_opt("temperature", 0.7),
-        "max_tokens": get_opt("max_tokens", 2048),
-    }
-    headers = {"Authorization": f"Bearer {api_key}"}
-    response = requests.post(url, json=payload, headers=headers, timeout=60)
-    response.raise_for_status()
-    content = response.json()["choices"][0]["message"]["content"]
-    return AgentResult(content=content, provider="deepseek", model=model)
-
-
-def _call_openrouter(
-    prompt: str,
-    options: TextOptions | CodeOptions | dict[str, Any],
-    api_key: str,
-    system_prompt: str | None = None,
-) -> AgentResult:
-    url = "https://openrouter.ai/api/v1/chat/completions"
-
-    def get_opt(key: str, default: Any) -> Any:
-        if isinstance(options, dict):
-            return options.get(key, default)
-        return getattr(options, key, default)
-
-    model = get_opt("model", "openrouter/auto")
-    messages = []
-    if system_prompt:
-        messages.append({"role": "system", "content": system_prompt})
-    messages.append({"role": "user", "content": prompt})
-
-    payload = {
-        "model": model,
-        "messages": messages,
-        "temperature": get_opt("temperature", 0.7),
-        "max_tokens": get_opt("max_tokens", 2048),
-    }
-    headers = {"Authorization": f"Bearer {api_key}"}
-    response = requests.post(url, json=payload, headers=headers, timeout=60)
-    response.raise_for_status()
-    content = response.json()["choices"][0]["message"]["content"]
-    return AgentResult(content=content, provider="openrouter", model=model)
-
-
-def _call_google(
-    prompt: str,
-    options: TextOptions | CodeOptions | dict[str, Any],
-    api_key: str,
-    system_prompt: str | None = None,
-) -> AgentResult:
-    def get_opt(key: str, default: Any) -> Any:
-        if isinstance(options, dict):
-            return options.get(key, default)
-        return getattr(options, key, default)
-
-    model = get_opt("model", "gemini-1.5-flash")
-    return AgentResult(
-        content=f"[Google {model} stub] Prompt: {prompt}",
-        provider="google",
-        model=model,
-    )
-
-
-def _call_anthropic(
-    prompt: str,
-    options: TextOptions | CodeOptions | dict[str, Any],
-    api_key: str,
-    system_prompt: str | None = None,
-) -> AgentResult:
-    def get_opt(key: str, default: Any) -> Any:
-        if isinstance(options, dict):
-            return options.get(key, default)
-        return getattr(options, key, default)
-
-    model = get_opt("model", "claude-3-5-sonnet-20240620")
-    return AgentResult(
-        content=f"[Anthropic {model} stub] Prompt: {prompt}",
-        provider="anthropic",
-        model=model,
-    )
-
-
-def _call_groq(
-    prompt: str,
-    options: TextOptions | CodeOptions | dict[str, Any],
-    api_key: str,
-    system_prompt: str | None = None,
-) -> AgentResult:
-    url = "https://api.groq.com/openai/v1/chat/completions"
-
-    def get_opt(key: str, default: Any) -> Any:
-        if isinstance(options, dict):
-            return options.get(key, default)
-        return getattr(options, key, default)
-
-    model = get_opt("model", "llama-3.1-8b-instant")
-    messages = []
-    if system_prompt:
-        messages.append({"role": "system", "content": system_prompt})
-    messages.append({"role": "user", "content": prompt})
-
-    payload = {
-        "model": model,
-        "messages": messages,
-        "temperature": get_opt("temperature", 0.7),
-        "max_tokens": get_opt("max_tokens", 2048),
-    }
-    headers = {"Authorization": f"Bearer {api_key}"}
-    response = requests.post(url, json=payload, headers=headers, timeout=60)
-    response.raise_for_status()
-    content = response.json()["choices"][0]["message"]["content"]
-    return AgentResult(content=content, provider="groq", model=model)
+    return adapter.invoke(prompt, opts, api_key, system_prompt)

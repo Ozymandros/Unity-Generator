@@ -1,14 +1,27 @@
+"""
+Integration tests for provider services.
+
+These tests verify that the public ``generate_*`` functions correctly
+delegate to the underlying adapter implementations and produce the
+expected :class:`AgentResult` shape.
+
+Mock paths target the adapter modules where ``requests`` is imported.
+"""
+
 from unittest.mock import MagicMock, patch
 
+import pytest
 from services.audio_provider import generate_audio
 from services.image_provider import generate_image
 from services.llm_provider import generate_text
+from services.providers.errors import ProviderNotAvailableError, ProviderNotSupportedError
+from services.video_provider import generate_video
 
-from app.schemas import AudioOptions, ImageOptions, TextOptions
+from app.schemas import AudioOptions, ImageOptions, TextOptions, VideoOptions
 
 
 class TestLLMProviders:
-    @patch("services.llm_provider.requests.post")
+    @patch("services.providers.llm_adapters.requests.post")
     def test_call_openai(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {"choices": [{"message": {"content": "OpenAI Response"}}]}
@@ -29,7 +42,7 @@ class TestLLMProviders:
         assert kwargs["json"]["temperature"] == 0.5
         assert kwargs["headers"]["Authorization"] == "Bearer sk-test"
 
-    @patch("services.llm_provider.requests.post")
+    @patch("services.providers.llm_adapters.requests.post")
     def test_call_deepseek(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {"choices": [{"message": {"content": "DeepSeek Response"}}]}
@@ -41,7 +54,7 @@ class TestLLMProviders:
         assert result.provider == "deepseek"
         assert result.model == "deepseek-chat"
 
-    @patch("services.llm_provider.requests.post")
+    @patch("services.providers.llm_adapters.requests.post")
     def test_call_groq(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {"choices": [{"message": {"content": "Groq Response"}}]}
@@ -63,7 +76,7 @@ class TestLLMProviders:
 
 
 class TestImageProviders:
-    @patch("services.image_provider.requests.post")
+    @patch("services.providers.image_adapters.requests.post")
     def test_call_stability(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {"image": "base64_data"}
@@ -83,7 +96,7 @@ class TestImageProviders:
         assert kwargs["data"]["model"] == "sd3"
         assert kwargs["headers"]["Authorization"] == "Bearer st-test"
 
-    @patch("services.image_provider.requests.post")
+    @patch("services.providers.image_adapters.requests.post")
     def test_call_flux(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {"output": "flux_url"}
@@ -94,7 +107,7 @@ class TestImageProviders:
         assert result.image == "flux_url"
         assert result.provider == "flux"
 
-    @patch("services.image_provider.requests.post")
+    @patch("services.providers.image_adapters.requests.post")
     def test_call_openai_image(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {
@@ -165,7 +178,7 @@ class TestImageProviders:
 
 
 class TestAudioProviders:
-    @patch("services.audio_provider.requests.post")
+    @patch("services.providers.audio_adapters.requests.post")
     def test_call_elevenlabs(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
         mock_post.return_value.content = b"audio_bytes"
@@ -184,7 +197,7 @@ class TestAudioProviders:
         assert kwargs["json"]["text"] == "Hello world"
         assert kwargs["headers"]["xi-api-key"] == "el-test"
 
-    @patch("services.audio_provider.requests.post")
+    @patch("services.providers.audio_adapters.requests.post")
     def test_call_playht(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {"url": "playht_url"}
@@ -194,3 +207,44 @@ class TestAudioProviders:
 
         assert result.audio == "playht_url"
         assert result.provider == "playht"
+
+
+class TestVideoProviders:
+    """Integration tests for the video provider service."""
+
+    def test_generate_video_no_keys_raises(self) -> None:
+        """generate_video raises when no video provider has a key."""
+        with pytest.raises(ProviderNotAvailableError):
+            generate_video("sunrise", None, {}, {})
+
+    def test_generate_video_unknown_provider_raises(self) -> None:
+        """generate_video raises for unknown provider."""
+        with pytest.raises(ProviderNotSupportedError, match="not registered"):
+            generate_video("sunrise", "unknown_provider", {}, {"x": "y"})
+
+    def test_generate_video_stub_raises(self) -> None:
+        """Video stubs raise ProviderNotSupportedError (not yet implemented)."""
+        with pytest.raises(ProviderNotSupportedError, match="not yet implemented"):
+            generate_video(
+                "sunrise", "runway", {},
+                {"runway_api_key": "r-key"},
+            )
+
+    def test_generate_video_with_video_options(self) -> None:
+        """VideoOptions are properly converted when passed as Pydantic model."""
+        opts = VideoOptions(duration=10, resolution="1080p")
+        with pytest.raises(ProviderNotSupportedError, match="not yet implemented"):
+            generate_video(
+                "sunset", "pika", opts,
+                {"pika_api_key": "p-key"},
+            )
+
+    def test_generate_video_no_adapter_raises(self) -> None:
+        """If an adapter is missing for the resolved provider, RuntimeError is raised."""
+        # Patch VIDEO_ADAPTERS to remove the adapter but keep registry entry
+        with patch("services.video_provider.VIDEO_ADAPTERS", {}):
+            with pytest.raises(RuntimeError, match="No video adapter"):
+                generate_video(
+                    "test", "runway", {},
+                    {"runway_api_key": "key"},
+                )

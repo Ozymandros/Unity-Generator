@@ -1,5 +1,6 @@
 """Tests for /generate/text endpoint."""
 
+
 from unittest.mock import MagicMock
 
 import pytest

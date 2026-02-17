@@ -1,5 +1,6 @@
 """Tests for /generate/image endpoint."""
 
+
 from unittest.mock import MagicMock
 
 import pytest

@@ -1,5 +1,6 @@
 """Tests for config module."""
 
+
 import json
 from pathlib import Path
 

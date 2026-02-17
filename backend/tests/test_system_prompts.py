@@ -12,7 +12,7 @@ from backend.app.agent_manager import AgentManager
 from backend.app.prompts import DEFAULT_CODE_SYSTEM_PROMPT
 from backend.app.schemas import GenerationRequest
 from pydantic import ValidationError
-from services.llm_provider import _call_openai
+from services.providers.llm_adapters import OpenAILLMAdapter
 
 
 def test_system_prompt_override():
@@ -74,12 +74,14 @@ def test_system_prompt_validation():
 
 
 def test_llm_provider_system_prompt():
-    # Test that _call_openai includes the system prompt in messages
+    # Test that the OpenAI adapter includes the system prompt in messages
     mock_response = MagicMock()
     mock_response.json.return_value = {"choices": [{"message": {"content": "response"}}]}
+    mock_response.raise_for_status = MagicMock()
 
-    with patch("services.llm_provider.requests.post", return_value=mock_response) as mock_post:
-        _call_openai(prompt="user prompt", options={}, api_key="dummy", system_prompt="system instruction")
+    with patch("services.providers.llm_adapters.requests.post", return_value=mock_response) as mock_post:
+        adapter = OpenAILLMAdapter()
+        adapter.invoke(prompt="user prompt", options={}, api_key="dummy", system_prompt="system instruction")
 
         args, kwargs = mock_post.call_args
         payload = kwargs["json"]

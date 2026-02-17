@@ -1,18 +1,34 @@
+"""
+Image provider service -- public API unchanged.
+
+Internally delegates to the unified provider registry and adapter layer.
+Legacy constants ``IMAGE_KEY_MAP`` and ``IMAGE_PRIORITY`` are derived
+from :pydata:`provider_registry`.
+"""
+
+from __future__ import annotations
+
 from typing import Any
 
-import requests
 from app.schemas import AgentResult, ImageOptions
 
-from .provider_select import select_provider
+from .providers import Modality, provider_registry
+from .providers.image_adapters import IMAGE_ADAPTERS
 
-IMAGE_KEY_MAP = {
-    "stability": "stability_api_key",
-    "openai": "openai_api_key",
-    "google": "google_api_key",
-    "flux": "flux_api_key",
-}
+# ---------------------------------------------------------------------------
+# Legacy constants (derived from registry for backward compatibility)
+# ---------------------------------------------------------------------------
 
-IMAGE_PRIORITY = ["stability", "openai", "google", "flux"]
+IMAGE_KEY_MAP: dict[str, str] = provider_registry.key_map(Modality.IMAGE)
+"""Mapping ``provider_name -> api_key_name`` for image providers."""
+
+IMAGE_PRIORITY: list[str] = provider_registry.priority_list(Modality.IMAGE)
+"""Ordered fallback list for image providers."""
+
+
+# ---------------------------------------------------------------------------
+# Public function (signature unchanged)
+# ---------------------------------------------------------------------------
 
 
 def generate_image(
@@ -22,197 +38,40 @@ def generate_image(
     api_keys: dict[str, str],
     system_prompt: str | None = None,
 ) -> AgentResult:
-    selected = select_provider(provider, api_keys, IMAGE_PRIORITY, IMAGE_KEY_MAP)
-
-    # Prepend system prompt if provided
-    effective_prompt = prompt
-    if system_prompt:
-        effective_prompt = f"{system_prompt}\n\n{prompt}"
-
-    # Ensure options is a model
-    opts = options if isinstance(options, ImageOptions) else ImageOptions(**options)
-
-    if selected == "openai":
-        return _call_openai_image(effective_prompt, opts, api_keys[IMAGE_KEY_MAP[selected]])
-    if selected == "google":
-        return _call_google_image(effective_prompt, opts, api_keys[IMAGE_KEY_MAP[selected]])
-    if selected == "stability":
-        return _call_stability(effective_prompt, opts, api_keys[IMAGE_KEY_MAP[selected]])
-    if selected == "flux":
-        return _call_flux(effective_prompt, opts, api_keys[IMAGE_KEY_MAP[selected]])
-    raise RuntimeError(f"Unsupported image provider: {selected}")
-
-
-def _call_openai_image(prompt: str, options: ImageOptions, api_key: str) -> AgentResult:
     """
-    Generate images using OpenAI DALL-E 3 API.
+    Generate an image using the best available image provider.
 
-    Official docs: https://platform.openai.com/docs/guides/images
+    Args:
+        prompt: Image description.
+        provider: Optional preferred provider name.
+        options: Image generation options (quality, aspect_ratio, ...).
+        api_keys: Currently loaded API keys.
+        system_prompt: Optional system prompt (prepended to the main prompt).
+
+    Returns:
+        :class:`AgentResult` with image data (base64 or URL).
+
+    Raises:
+        ProviderNotSupportedError: If *provider* is unknown.
+        ProviderNotAvailableError: If no provider has a valid key.
+        RuntimeError: If the selected provider has no adapter.
+
+    Example:
+        >>> result = generate_image(
+        ...     "A forest at sunset", "stability",
+        ...     {"quality": "hd"},
+        ...     {"stability_api_key": "sk-xxx"},
+        ... )  # doctest: +SKIP
     """
-    url = "https://api.openai.com/v1/images/generations"
+    selected = provider_registry.resolve(Modality.IMAGE, api_keys, preferred=provider)
 
-    # Map aspect ratio to DALL-E 3 size
-    aspect_ratio = options.aspect_ratio
-    size_map = {
-        "1:1": "1024x1024",
-        "9:16": "1024x1792",
-        "16:9": "1792x1024",
-    }
-    size = size_map.get(aspect_ratio, "1024x1024")
+    opts = options if isinstance(options, dict) else options.model_dump()
 
-    # Map quality (standard or hd)
-    quality = options.quality if options.quality in ["standard", "hd"] else "standard"
+    adapter = IMAGE_ADAPTERS.get(selected)
+    if adapter is None:
+        raise RuntimeError(f"No image adapter registered for provider: {selected}")
 
-    payload = {
-        "model": "dall-e-3",
-        "prompt": prompt,
-        "n": 1,  # DALL-E 3 only supports 1 image
-        "quality": quality,
-        "size": size,
-        "response_format": "b64_json",  # Get base64 directly
-    }
+    key_name = provider_registry.get(selected).api_key_name
+    api_key = api_keys.get(key_name, "")
 
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }
-
-    response = requests.post(url, json=payload, headers=headers, timeout=120)
-    response.raise_for_status()
-    data = response.json()
-
-    # Extract base64 image data
-    image_b64 = data["data"][0]["b64_json"]
-    revised_prompt = data["data"][0].get("revised_prompt", prompt)
-
-    return AgentResult(
-        image=image_b64,
-        provider="openai",
-        model="dall-e-3",
-        raw={
-            "revised_prompt": revised_prompt,
-            "size": size,
-            "quality": quality,
-        },
-    )
-
-
-def _call_google_image(prompt: str, options: ImageOptions, api_key: str) -> AgentResult:
-    """
-    Generate images using Google Imagen 3/4 API via google-genai library.
-
-    Official docs: https://ai.google.dev/gemini-api/docs/imagen
-    Requires: pip install google-genai
-    """
-    try:
-        from google import genai  # type: ignore[import-not-found]
-        from google.genai import types  # type: ignore[import-not-found]
-    except ImportError as e:
-        raise RuntimeError("google-genai library not installed. Install it with: pip install google-genai") from e
-
-    # Initialize client with API key
-    client = genai.Client(api_key=api_key)
-
-    # Map quality to image size (1K or 2K)
-    image_size = "2K" if options.quality == "hd" else "1K"
-
-    # Aspect ratio is directly supported
-    aspect_ratio = options.aspect_ratio
-    # Validate aspect ratio
-    valid_ratios = ["1:1", "3:4", "4:3", "9:16", "16:9"]
-    if aspect_ratio not in valid_ratios:
-        aspect_ratio = "1:1"
-
-    # Use Imagen 3 model (or Imagen 4 if available)
-    model = options.model if options.model else "imagen-3.0-generate-001"
-
-    # Generate image
-    response = client.models.generate_images(
-        model=model,
-        prompt=prompt,
-        config=types.GenerateImagesConfig(
-            number_of_images=1,
-            aspect_ratio=aspect_ratio,
-            image_size=image_size,
-            person_generation="allow_adult",  # Default safe setting
-        ),
-    )
-
-    # Extract base64 image data
-    if not response.generated_images:
-        raise RuntimeError("No images generated by Google Imagen")
-
-    generated_image = response.generated_images[0]
-    image_bytes = generated_image.image.image_bytes
-
-    # Convert bytes to base64 string
-    import base64
-
-    image_b64 = base64.b64encode(image_bytes).decode("utf-8")
-
-    return AgentResult(
-        image=image_b64,
-        provider="google",
-        model=model,
-        raw={
-            "aspect_ratio": aspect_ratio,
-            "image_size": image_size,
-        },
-    )
-
-
-def _call_stability(prompt: str, options: ImageOptions, api_key: str) -> AgentResult:
-    url = "https://api.stability.ai/v2beta/stable-image/generate/sd3"
-
-    # Map quality to model: standard -> sd3-turbo, hd -> sd3
-    quality = options.quality
-    model = "sd3-turbo" if quality == "standard" else "sd3"
-
-    payload = {
-        "prompt": prompt,
-        "aspect_ratio": options.aspect_ratio,
-        "output_format": options.output_format,
-        "model": model,
-    }
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Accept": "application/json",
-    }
-    response = requests.post(url, data=payload, headers=headers, timeout=120)
-    response.raise_for_status()
-    data = response.json()
-    return AgentResult(
-        image=data.get("image"),
-        provider="stability",
-        raw=data,
-        model=model,
-    )
-
-
-def _call_flux(prompt: str, options: ImageOptions, api_key: str) -> AgentResult:
-    url = "https://api.replicate.com/v1/predictions"
-
-    # Map quality to version: standard -> flux-schnell, hd -> flux-dev
-    quality = options.quality
-    default_version = "flux-schnell" if quality == "standard" else "flux-dev"
-    version = getattr(
-        options, "version", default_version
-    )  # Use getattr if version might be in Dict but not in Model yet
-
-    payload = {
-        "version": version,
-        "input": {"prompt": prompt},
-    }
-    headers = {
-        "Authorization": f"Token {api_key}",
-        "Content-Type": "application/json",
-    }
-    response = requests.post(url, json=payload, headers=headers, timeout=120)
-    response.raise_for_status()
-    data = response.json()
-    return AgentResult(
-        image=data.get("output"),
-        provider="flux",
-        raw=data,
-        model=version,
-    )
+    return adapter.invoke(prompt, opts, api_key, system_prompt)
