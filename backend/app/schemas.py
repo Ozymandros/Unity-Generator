@@ -115,6 +115,9 @@ class SpritesRequest(BaseModel):
 
 class CreateSceneRequest(BaseModel):
     prompt: str
+    provider: str | None = None
+    options: dict[str, Any] = Field(default_factory=dict)
+    api_key: str | None = None
     system_prompt: str | None = None
 
 

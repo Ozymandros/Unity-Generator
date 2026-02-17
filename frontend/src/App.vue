@@ -31,8 +31,8 @@ const { tabs, active, backendStatus, setActive } = useApp();
       </nav>
     </aside>
     <main>
-      <ScenesPanel v-if="active === 'Scenes'" />
-      <SettingsPanel v-else-if="active === 'Settings'" />
+      <SettingsPanel v-if="active === 'Settings'" />
+      <ScenesPanel v-else-if="active === 'Scenes'" />
       <CodePanel v-else-if="active === 'Code'" />
       <TextPanel v-else-if="active === 'Text'" />
       <ImagePanel v-else-if="active === 'Image'" />

@@ -211,6 +211,11 @@ class AgentManager:
         if not self.unity_agent:
             raise RuntimeError("UnityAgent is not available.")
 
+        # Fallback logic for unity (default to code prompt since it writes C#)
+        effective_system_prompt = system_prompt
+        if effective_system_prompt is None:
+            effective_system_prompt = get_pref("default_code_system_prompt")
+
         # UnityAgent.run is async and returns a dict
-        result = await self.unity_agent.run(prompt, provider, options, api_keys, system_prompt)
+        result = await self.unity_agent.run(prompt, provider, options, api_keys, effective_system_prompt)
         return AgentResult(**result)

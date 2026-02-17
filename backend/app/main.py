@@ -211,18 +211,21 @@ async def create_scene(request: CreateSceneRequest) -> GenerationResponse:
     try:
         # UnityAgent uses default provider/options if not specified,
         # but the run method expects them. We'll use defaults from prefs.
-        provider = get_pref("preferred_llm_provider")
-        # Agent expects a dict for options.
-        options = {
+        provider = request.provider or get_pref("preferred_llm_provider")
+        
+        # Merge default options with request options
+        default_options = {
             "model": "gpt-4o",  # Default strong model for reasoning
             "temperature": 0.7
         }
+        options = {**default_options, **request.options}
 
         # UnityAgent.run is async
         data = await agent_manager.run_unity(
             prompt=request.prompt,
             provider=provider,
             options=options,
+            api_key=request.api_key,
             system_prompt=request.system_prompt,
         )
         return ok_response(data)

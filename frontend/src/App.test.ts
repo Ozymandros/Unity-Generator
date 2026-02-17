@@ -71,8 +71,8 @@ describe("App", () => {
     const buttons = wrapper.findAll("nav button");
     expect(buttons.length).toBe(8);
     expect(buttons.map((b) => b.text())).toEqual([
-      "Scenes",
       "Settings",
+      "Scenes",
       "Code",
       "Text",
       "Image",

@@ -7,6 +7,9 @@ export type GenerationResponse = {
 
 export type CreateSceneRequest = {
   prompt: string;
+  provider?: string;
+  options?: Record<string, unknown>;
+  api_key?: string;
   system_prompt?: string;
 };
 
