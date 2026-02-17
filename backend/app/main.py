@@ -5,9 +5,8 @@
 Main FastAPI application for the Unity Generator backend.
 
 This module defines the API endpoints for generation, configuration,
-preferences, and project finalization jobs.
+preferences, and project finalization job.
 """
-
 
 
 
@@ -19,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from app.core.config import get_templates_dir, resolve_unity_editor_path, save_api_keys
@@ -58,6 +58,19 @@ init_db()
 # FastAPI app instance must be defined before route decorators
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "tauri://localhost",
+        "http://tauri.localhost",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # /generate/text endpoint (must be present for tests)
 @app.post("/generate/text", response_model=GenerationResponse)
