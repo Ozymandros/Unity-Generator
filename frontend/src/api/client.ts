@@ -5,12 +5,21 @@ export type GenerationResponse = {
   data: Record<string, unknown> | null;
 };
 
-export type GenerationRequest = {
+export type CreateSceneRequest = {
   prompt: string;
   system_prompt?: string;
+};
+
+export function createScene(body: CreateSceneRequest) {
+    return post<GenerationResponse>("/api/scenes/create", body);
+}
+
+export type GenerationRequest = {
+  prompt: string;
   provider?: string;
   api_key?: string;
   options?: Record<string, unknown>;
+  system_prompt?: string;
   project_path?: string;
 };
 
@@ -51,8 +60,8 @@ export type SpritesRequest = {
   provider?: string;
   api_key?: string;
   resolution: number;
-  system_prompt?: string;
   options?: Record<string, unknown>;
+  system_prompt?: string;
   project_path?: string;
 };
 
@@ -91,10 +100,6 @@ export type UnityProjectRequest = {
   text_prompt?: string;
   image_prompt?: string;
   audio_prompt?: string;
-  code_system_prompt?: string;
-  text_system_prompt?: string;
-  image_system_prompt?: string;
-  audio_system_prompt?: string;
   provider_overrides?: Record<string, string | undefined>;
   options?: Record<string, Record<string, unknown>>;
   unity_template?: string;
@@ -146,10 +151,6 @@ export type FinalizeProjectRequest = {
   text_prompt?: string;
   image_prompt?: string;
   audio_prompt?: string;
-  code_system_prompt?: string;
-  text_system_prompt?: string;
-  image_system_prompt?: string;
-  audio_system_prompt?: string;
   provider_overrides?: Record<string, string | undefined>;
   options?: Record<string, Record<string, unknown>>;
   unity_settings?: UnityEngineSettings;

@@ -69,8 +69,9 @@ describe("App", () => {
     await flushPromises();
 
     const buttons = wrapper.findAll("nav button");
-    expect(buttons.length).toBe(7);
+    expect(buttons.length).toBe(8);
     expect(buttons.map((b) => b.text())).toEqual([
+      "Scenes",
       "Settings",
       "Code",
       "Text",
@@ -87,7 +88,7 @@ describe("App", () => {
     const wrapper = mount(App);
     await flushPromises();
 
-    const codeButton = wrapper.findAll("nav button")[1];
+    const codeButton = wrapper.findAll("nav button")[2];
     await codeButton.trigger("click");
 
     expect(codeButton.classes()).toContain("active");

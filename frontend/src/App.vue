@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ScenesPanel from "@/components/ScenesPanel.vue";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import { CodePanel } from "@/components/CodePanel";
 import { TextPanel } from "@/components/TextPanel";
@@ -30,7 +31,8 @@ const { tabs, active, backendStatus, setActive } = useApp();
       </nav>
     </aside>
     <main>
-      <SettingsPanel v-if="active === 'Settings'" />
+      <ScenesPanel v-if="active === 'Scenes'" />
+      <SettingsPanel v-else-if="active === 'Settings'" />
       <CodePanel v-else-if="active === 'Code'" />
       <TextPanel v-else-if="active === 'Text'" />
       <ImagePanel v-else-if="active === 'Image'" />
@@ -42,3 +44,4 @@ const { tabs, active, backendStatus, setActive } = useApp();
 </template>
 
 <style scoped src="./App.css"></style>
+

@@ -102,6 +102,7 @@ class UnityProjectRequest(BaseModel):
     unity_platform: str = Field(default="", description="Target platform (windows, mac, linux, android, ios)")
 
 
+
 class SpritesRequest(BaseModel):
     prompt: str
     provider: str | None = None
@@ -110,6 +111,12 @@ class SpritesRequest(BaseModel):
     options: dict[str, Any] = Field(default_factory=dict)
     system_prompt: str | None = None
     project_path: str | None = None
+
+
+class CreateSceneRequest(BaseModel):
+    prompt: str
+    system_prompt: str | None = None
+
 
 
 # ---------------------------------------------------------------------------

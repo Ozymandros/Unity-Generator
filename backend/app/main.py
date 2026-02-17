@@ -34,6 +34,7 @@ from .schemas import (
     ApiKeysRequest,
     AudioOptions,
     CodeOptions,
+    CreateSceneRequest,
     FinalizeJobStatusResponse,
     FinalizeProjectRequest,
     FinalizeProjectResponse,
@@ -47,9 +48,6 @@ from .schemas import (
     error_response,
     ok_response,
 )
-
-create_unity_project = None
-get_latest_project_path = None
 
 try:
     from .unity_project import create_unity_project, get_latest_project_path
@@ -199,7 +197,37 @@ def generate_sprites(request: SpritesRequest) -> GenerationResponse:
         )
         return ok_response(data)
     except Exception as exc:
-        logging.getLogger("failed_requests").warning("Sprite generation failed: %s", exc)
+        logging.getLogger("failed_requests").warning(
+            "Sprite generation failed: %s", exc
+        )
+        return error_response(str(exc))
+
+
+@app.post("/api/scenes/create", response_model=GenerationResponse)
+async def create_scene(request: CreateSceneRequest) -> GenerationResponse:
+    """
+    Create a Unity scene based on the description using the UnityAgent.
+    """
+    try:
+        # UnityAgent uses default provider/options if not specified,
+        # but the run method expects them. We'll use defaults from prefs.
+        provider = get_pref("preferred_llm_provider")
+        # Agent expects a dict for options.
+        options = {
+            "model": "gpt-4o",  # Default strong model for reasoning
+            "temperature": 0.7
+        }
+
+        # UnityAgent.run is async
+        data = await agent_manager.run_unity(
+            prompt=request.prompt,
+            provider=provider,
+            options=options,
+            system_prompt=request.system_prompt,
+        )
+        return ok_response(data)
+    except Exception as exc:
+        logging.getLogger("failed_requests").warning("Scene creation failed: %s", exc)
         return error_response(str(exc))
 
 
@@ -240,10 +268,18 @@ def generate_project(request: UnityProjectRequest) -> GenerationResponse:
     Generate a full Unity project structure with multiple assets.
     """
     try:
-        code_provider = request.provider_overrides.get("code", get_pref("preferred_llm_provider"))
-        text_provider = request.provider_overrides.get("text", get_pref("preferred_llm_provider"))
-        image_provider = request.provider_overrides.get("image", get_pref("preferred_image_provider"))
-        audio_provider = request.provider_overrides.get("audio", get_pref("preferred_audio_provider"))
+        code_provider = request.provider_overrides.get(
+            "code", get_pref("preferred_llm_provider")
+        )
+        text_provider = request.provider_overrides.get(
+            "text", get_pref("preferred_llm_provider")
+        )
+        image_provider = request.provider_overrides.get(
+            "image", get_pref("preferred_image_provider")
+        )
+        audio_provider = request.provider_overrides.get(
+            "audio", get_pref("preferred_audio_provider")
+        )
 
         code_output = None
         text_output = None
@@ -282,21 +318,22 @@ def generate_project(request: UnityProjectRequest) -> GenerationResponse:
                 system_prompt=request.audio_system_prompt,
             )
             # Pass the result as a dict for legacy create_unity_project
-            audio_output = {"audio_url": audio_result.audio} if audio_result.audio else None
-
-        if create_unity_project:
-            data = create_unity_project(
-                request.project_name,
-                code_output,
-                text_output,
-                image_output,
-                audio_output,
+            audio_output = (
+                {"audio_url": audio_result.audio} if audio_result.audio else None
             )
-            return ok_response(data)
-        else:
-            return error_response("Unity project generation tools not available.")
+
+        data = create_unity_project(
+            request.project_name,
+            code_output,
+            text_output,
+            image_output,
+            audio_output,
+        )
+        return ok_response(data)
     except Exception as exc:
-        logging.getLogger("failed_requests").warning("Unity project generation failed: %s", exc)
+        logging.getLogger("failed_requests").warning(
+            "Unity project generation failed: %s", exc
+        )
         return error_response(str(exc))
 
 
@@ -305,13 +342,10 @@ def get_latest_output() -> GenerationResponse:
     """
     Get the path to the most recently generated project.
     """
-    if get_latest_project_path:
-        path = get_latest_project_path()
-        if not path:
-            return error_response("No output projects found.")
-        return ok_response({"path": path})
-    else:
-        return error_response("Unity project tools not available.")
+    path = get_latest_project_path()
+    if not path:
+        return error_response("No output projects found.")
+    return ok_response({"path": path})
 
 
 # ---------------------------------------------------------------------------
@@ -337,7 +371,9 @@ def _run_finalize_in_background(job_id: str, request: FinalizeProjectRequest) ->
 
     # Resolve Unity Editor path
     try:
-        unity_path = resolve_unity_editor_path(override=request.unity_settings.unity_editor_path)
+        unity_path = resolve_unity_editor_path(
+            override=request.unity_settings.unity_editor_path
+        )
     except FileNotFoundError as exc:
         store.update_job(
             job_id,
@@ -356,10 +392,18 @@ def _run_finalize_in_background(job_id: str, request: FinalizeProjectRequest) ->
             log_line="Scaffolding Unity project...",
         )
         try:
-            code_provider = request.provider_overrides.get("code", get_pref("preferred_llm_provider"))
-            text_provider = request.provider_overrides.get("text", get_pref("preferred_llm_provider"))
-            image_provider = request.provider_overrides.get("image", get_pref("preferred_image_provider"))
-            audio_provider = request.provider_overrides.get("audio", get_pref("preferred_audio_provider"))
+            code_provider = request.provider_overrides.get(
+                "code", get_pref("preferred_llm_provider")
+            )
+            text_provider = request.provider_overrides.get(
+                "text", get_pref("preferred_llm_provider")
+            )
+            image_provider = request.provider_overrides.get(
+                "image", get_pref("preferred_image_provider")
+            )
+            audio_provider = request.provider_overrides.get(
+                "audio", get_pref("preferred_audio_provider")
+            )
 
             code_output = None
             text_output = None
@@ -398,16 +442,14 @@ def _run_finalize_in_background(job_id: str, request: FinalizeProjectRequest) ->
                     system_prompt=request.audio_system_prompt,
                 )
 
-            if not create_unity_project:
-                store.update_job(job_id, status=JobStatus.FAILED, error="Unity project tools not available.")
-                return
-
             scaffold_result = create_unity_project(
                 request.project_name,
                 code_output,
                 text_output,
                 image_output,
-                {"audio_url": audio_output.audio} if audio_output and audio_output.audio else None,
+                {"audio_url": audio_output.audio}
+                if audio_output and audio_output.audio
+                else None,
             )
             project_path_str = scaffold_result["project_path"]
             store.update_job(

@@ -3,6 +3,7 @@ import { healthCheck } from "@/api/client";
 
 export function useApp() {
   const tabs = [
+    "Scenes",
     "Settings",
     "Code",
     "Text",
