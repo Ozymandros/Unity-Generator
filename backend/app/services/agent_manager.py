@@ -289,11 +289,15 @@ class AgentManager:
         result = await self.unity_agent.run(
             prompt, provider, options, api_keys, effective_system_prompt
         )
+        # Ensure result is dict for type safety
+        if not isinstance(result, dict):
+            content = str(result)
+            result = {"content": content}
         return AgentResult(
-            content=result.get("content", ""),
+            content=str(result.get("content", "")),
             provider=provider or "unity",
-            raw=result,
-            model=options.get("model"),
+            raw=result if isinstance(result, dict) else None,
+            model=str(options.get("model", "")),
         )
 
 

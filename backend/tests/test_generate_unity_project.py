@@ -1,6 +1,5 @@
 """Tests for /generate/unity-project endpoint."""
 import pytest
-
 from fastapi.testclient import TestClient
 
 from app.main import app as fastapi_app
@@ -8,8 +7,8 @@ from app.main import app as fastapi_app
 
 def test_generate_unity_project_schema(monkeypatch):
     # Patch AgentManager methods to return dummy data
-    from app.services import agent_manager_instance as agent_manager
     from app.schemas import AgentResult
+    from app.services import agent_manager_instance as agent_manager
 
     monkeypatch.setattr(
         agent_manager,

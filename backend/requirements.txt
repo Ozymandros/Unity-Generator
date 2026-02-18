@@ -11,4 +11,5 @@ Pillow
 numpy
 jinja2
 google-generativeai
+google-genai
 anthropic

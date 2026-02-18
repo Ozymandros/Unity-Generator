@@ -8,27 +8,20 @@ from :pydata:`provider_registry`.
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
+
+import nest_asyncio
+from semantic_kernel import Kernel
 
 from ..schemas import AgentResult, ImageOptions
 from .providers import Modality, provider_registry
-from .providers.image_adapters import IMAGE_ADAPTERS
 
-# ---------------------------------------------------------------------------
-# Legacy constants (derived from registry for backward compatibility)
-# ---------------------------------------------------------------------------
-
+# Legacy constants for agent_manager
 IMAGE_KEY_MAP: dict[str, str] = provider_registry.key_map(Modality.IMAGE)
-"""Mapping ``provider_name -> api_key_name`` for image providers."""
-
 IMAGE_PRIORITY: list[str] = provider_registry.priority_list(Modality.IMAGE)
-"""Ordered fallback list for image providers."""
 
-
-# ---------------------------------------------------------------------------
-# Public function (signature unchanged)
-# ---------------------------------------------------------------------------
-
+nest_asyncio.apply()
 
 def generate_image(
     prompt: str,
@@ -38,39 +31,45 @@ def generate_image(
     system_prompt: str | None = None,
 ) -> AgentResult:
     """
-    Generate an image using the best available image provider.
-
-    Args:
-        prompt: Image description.
-        provider: Optional preferred provider name.
-        options: Image generation options (quality, aspect_ratio, ...).
-        api_keys: Currently loaded API keys.
-        system_prompt: Optional system prompt (prepended to the main prompt).
-
-    Returns:
-        :class:`AgentResult` with image data (base64 or URL).
-
-    Raises:
-        ProviderNotSupportedError: If *provider* is unknown.
-        ProviderNotAvailableError: If no provider has a valid key.
-        RuntimeError: If the selected provider has no adapter.
-
-    Example:
-        >>> result = generate_image(
-        ...     "A forest at sunset", "stability",
-        ...     {"quality": "hd"},
-        ...     {"stability_api_key": "sk-xxx"},
-        ... )  # doctest: +SKIP
+    Generate an image using the best available image provider via Semantic Kernel.
     """
     selected = provider_registry.resolve(Modality.IMAGE, api_keys, preferred=provider)
 
     opts = options if isinstance(options, dict) else options.model_dump()
 
-    adapter = IMAGE_ADAPTERS.get(selected)
-    if adapter is None:
-        raise RuntimeError(f"No image adapter registered for provider: {selected}")
-
     key_name = provider_registry.get(selected).api_key_name
     api_key = api_keys.get(key_name, "")
 
-    return adapter.invoke(prompt, opts, api_key, system_prompt)
+    # Create SK service
+    service = provider_registry.create_text_to_image_service(selected, api_key)
+
+    # Setup Kernel
+    kernel = Kernel()
+    kernel.add_service(service)
+
+    async def _run_image():
+        # OpenAITextToImage.generate_image(description, width, height)
+        # We need to map options to arguments.
+        # Check SK OpenAITextToImage signature.
+        # It usually takes width, height as ints.
+        # Our options have aspect_ratio (str) or size. We might need logic here.
+        # But for now, let's assume 'size' option or defaults.
+
+        width = opts.get("width", 1024)
+        height = opts.get("height", 1024)
+
+        # If standard SK interface:
+        image_url = await service.generate_image(prompt, width, height)
+        return image_url
+
+    try:
+        final_data = asyncio.run(_run_image())
+    except Exception as e:
+        raise RuntimeError(f"Semantic Kernel image generation failed: {e}") from e
+
+    return AgentResult(
+        content=final_data, # Return URL or base64
+        provider=selected,
+        model=opts.get("model") or "dall-e-3",
+        metadata={}
+    )

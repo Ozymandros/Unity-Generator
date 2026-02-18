@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterable
+from typing import Any
 
 from .capabilities import Modality, ProviderCapabilities
 from .errors import ProviderNotAvailableError, ProviderNotSupportedError
@@ -273,6 +274,112 @@ class ProviderRegistry:
             f"No valid API key found for any '{modality.value}' provider.",
             modality=modality.value,
         )
+
+    # ------------------------------------------------------------------
+    # SK Service Factories
+    # ------------------------------------------------------------------
+
+    def create_chat_service(
+        self,
+        provider: str,
+        api_key: str,
+        model_id: str | None = None,
+        **kwargs: Any
+    ) -> Any:
+        """
+        Create a Semantic Kernel ChatCompletion service for the given provider.
+        """
+        from semantic_kernel.connectors.ai.open_ai import OpenAIChatCompletion
+
+        caps = self.get(provider)
+        target_model = model_id or caps.default_models[Modality.LLM]
+
+        if caps.openai_compatible:
+            from openai import AsyncOpenAI
+            client = AsyncOpenAI(api_key=api_key, base_url=caps.base_url)
+            return OpenAIChatCompletion(
+                ai_model_id=target_model,
+                async_client=client,
+            )
+
+        if provider == "openai":
+            return OpenAIChatCompletion(
+                ai_model_id=target_model,
+                api_key=api_key,
+            )
+
+        if provider == "azure":
+            from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
+            return AzureChatCompletion(
+                deployment_name=target_model,
+                api_key=api_key,
+                endpoint=kwargs.get("endpoint"),
+                service_id=kwargs.get("service_id", "default"),
+            )
+
+        if provider == "google":
+            from semantic_kernel.connectors.ai.google import GoogleAIChatCompletion
+            return GoogleAIChatCompletion(
+                gemini_model_id=target_model,
+                api_key=api_key,
+                service_id=kwargs.get("service_id", "default"),
+            )
+
+        if provider == "anthropic":
+            from semantic_kernel.connectors.ai.anthropic import AnthropicChatCompletion
+            return AnthropicChatCompletion(
+                ai_model_id=target_model,
+                api_key=api_key,
+                service_id=kwargs.get("service_id", "default"),
+            )
+
+        raise NotImplementedError(f"SK Chat service for '{provider}' not yet implemented.")
+
+    def create_text_to_image_service(self, provider: str, api_key: str) -> Any:
+        """
+        Create a Semantic Kernel TextToImage service.
+        """
+        caps = self.get(provider)
+
+        if provider == "openai":
+            from semantic_kernel.connectors.ai.open_ai import OpenAITextToImage
+            return OpenAITextToImage(
+                api_key=api_key,
+                ai_model_id=caps.default_models[Modality.IMAGE]
+            )
+
+        if provider == "stability":
+            from .connectors.stability import StabilityTextToImage
+            return StabilityTextToImage(api_key=api_key, model_id=caps.default_models[Modality.IMAGE])
+
+        if provider == "google":
+            from .connectors.google_custom import GoogleTextToImage
+            return GoogleTextToImage(api_key=api_key, model_id=caps.default_models[Modality.IMAGE])
+
+        raise NotImplementedError(f"SK Image service for '{provider}' not yet implemented.")
+
+    def create_text_to_audio_service(self, provider: str, api_key: str) -> Any:
+        """
+        Create a Semantic Kernel TextToAudio service.
+        """
+        caps = self.get(provider)
+
+        if provider == "openai":
+             from semantic_kernel.connectors.ai.open_ai import OpenAITextToAudio
+             return OpenAITextToAudio(
+                api_key=api_key,
+                ai_model_id=caps.default_models[Modality.AUDIO]
+            )
+
+        if provider == "elevenlabs":
+            from .connectors.elevenlabs import ElevenLabsTextToAudio
+            return ElevenLabsTextToAudio(api_key=api_key, model_id=caps.default_models[Modality.AUDIO])
+
+        if provider == "google":
+            from .connectors.google_custom import GoogleTextToAudio
+            return GoogleTextToAudio(api_key=api_key, model_id=caps.default_models[Modality.AUDIO])
+
+        raise NotImplementedError(f"SK Audio service for '{provider}' not yet implemented.")
 
     def all_providers(self) -> Iterable[ProviderCapabilities]:
         """

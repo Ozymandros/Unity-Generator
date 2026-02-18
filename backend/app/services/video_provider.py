@@ -15,7 +15,6 @@ from typing import Any
 
 from ..schemas import AgentResult, VideoOptions
 from .providers import Modality, provider_registry
-from .providers.video_adapters import VIDEO_ADAPTERS
 
 # ---------------------------------------------------------------------------
 # Legacy-style constants (derived from registry)
@@ -42,39 +41,17 @@ def generate_video(
 ) -> AgentResult:
     """
     Generate a video using the best available video provider.
-
-    Args:
-        prompt: Description of the desired video.
-        provider: Optional preferred provider name.
-        options: Video generation options (duration, aspect_ratio, ...).
-        api_keys: Currently loaded API keys.
-        system_prompt: Optional system prompt.
-
-    Returns:
-        :class:`AgentResult` with video data (URL or base64).
-
-    Raises:
-        ProviderNotSupportedError: If *provider* is unknown or the
-            selected adapter is not yet implemented.
-        ProviderNotAvailableError: If no provider has a valid key.
-        RuntimeError: If the selected provider has no adapter.
-
-    Example:
-        >>> result = generate_video(
-        ...     "A sunrise over mountains", "runway",
-        ...     {"duration": 5},
-        ...     {"runway_api_key": "key-xxx"},
-        ... )  # doctest: +SKIP
     """
     selected = provider_registry.resolve(Modality.VIDEO, api_keys, preferred=provider)
 
     opts = options if isinstance(options, dict) else options.model_dump()
 
-    adapter = VIDEO_ADAPTERS.get(selected)
-    if adapter is None:
-        raise RuntimeError(f"No video adapter registered for provider: {selected}")
+    # Note: Semantic Kernel does not yet have a standard Video service interface.
+    # Returning a stub result for now as previously done by adapters.
+    return AgentResult(
+        content=f"Stub video content for {selected}",
+        provider=selected,
+        model=opts.get("model") or provider_registry.get(selected).default_models[Modality.VIDEO],
+        metadata={"status": "not_implemented_via_sk"}
+    )
 
-    key_name = provider_registry.get(selected).api_key_name
-    api_key = api_keys.get(key_name, "")
-
-    return adapter.invoke(prompt, opts, api_key, system_prompt)

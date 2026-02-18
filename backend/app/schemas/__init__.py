@@ -34,6 +34,7 @@ class AgentResult(BaseModel):
     provider: str
     model: str | None = None
     raw: dict[str, Any] | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class CodeOptions(BaseModel):

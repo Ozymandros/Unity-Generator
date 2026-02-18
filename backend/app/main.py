@@ -11,7 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.db import init_db
-from app.routers import config, finalize, generation, prefs, projects, scenes
+from app.routers import config, generation, prefs, projects, scenes
 
 # Import singleton for compatibility if tests rely on app.main.agent_manager
 
@@ -46,7 +46,7 @@ app.include_router(config.router)
 app.include_router(prefs.router)
 app.include_router(projects.router)
 app.include_router(scenes.router)
-app.include_router(finalize.router)
+# app.include_router(finalize.router)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
