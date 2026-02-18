@@ -45,12 +45,6 @@ const {
           :options="AUDIO_PROVIDERS" 
           placeholder="Select Provider" 
         />
-        <SmartField 
-          label="API Key (Optional)" 
-          type="password" 
-          v-model="apiKey" 
-          placeholder="Override key..." 
-        />
       </div>
       <div class="row">
         <SmartField 
@@ -80,6 +74,12 @@ const {
           v-model="systemPrompt" 
           :placeholder="defaultSystemPrompt" 
           :rows="3"
+        />
+        <SmartField 
+          label="API Key (Optional)" 
+          type="password" 
+          v-model="apiKey" 
+          placeholder="Override key..." 
         />
       </div>
     </details>

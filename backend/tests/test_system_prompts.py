@@ -85,7 +85,7 @@ def test_system_prompt_validation():
 def test_llm_provider_system_prompt():
     # Test that the OpenAI adapter includes the system prompt in messages
     mock_response = MagicMock()
-    mock_response.json.return_value = {"choices": [{"message": {"content": "response"}}]}
+    mock_response.json.return_value = {"output": [{"content": "response"}]}
     mock_response.raise_for_status = MagicMock()
 
     with patch(
@@ -101,12 +101,12 @@ def test_llm_provider_system_prompt():
 
         args, kwargs = mock_post.call_args
         payload = kwargs["json"]
-        messages = payload["messages"]
+        input_items = payload["input"]
 
-        assert messages[0]["role"] == "system"
-        assert messages[0]["content"] == "system instruction"
-        assert messages[1]["role"] == "user"
-        assert messages[1]["content"] == "user prompt"
+        assert input_items[0]["role"] == "system"
+        assert input_items[0]["content"] == "system instruction"
+        assert input_items[1]["role"] == "user"
+        assert input_items[1]["content"] == "user prompt"
 
 
 if __name__ == "__main__":

@@ -29,7 +29,7 @@ class TestLLMFallbackChain:
         """If preferred provider has no key, fall back to next with key."""
         mock_post.return_value.raise_for_status = MagicMock()
         mock_post.return_value.json.return_value = {
-            "choices": [{"message": {"content": "fallback answer"}}]
+            "output": [{"content": "fallback answer"}]
         }
 
         # Only openai has a key; deepseek is preferred but missing
@@ -44,7 +44,7 @@ class TestLLMFallbackChain:
         """With no preferred provider the highest-priority one with a key wins."""
         mock_post.return_value.raise_for_status = MagicMock()
         mock_post.return_value.json.return_value = {
-            "choices": [{"message": {"content": "ok"}}]
+            "output": [{"content": "ok"}]
         }
 
         api_keys = {"groq_api_key": "g-test", "openai_api_key": "sk-test"}

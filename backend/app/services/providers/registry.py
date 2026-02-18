@@ -374,7 +374,7 @@ def _build_default_registry() -> ProviderRegistry:
             api_key_name="openai_api_key",
             modalities={Modality.LLM, Modality.IMAGE, Modality.AUDIO},
             default_models={
-                Modality.LLM: "gpt-4o-mini",
+                Modality.LLM: "gpt-4o",
                 Modality.IMAGE: "dall-e-3",
                 Modality.AUDIO: "tts-1",
             },

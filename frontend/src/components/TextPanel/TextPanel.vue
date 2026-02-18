@@ -57,12 +57,6 @@ const {
         />
       </div>
       <div class="row" style="margin-bottom: 12px;">
-         <SmartField 
-            label="API Key (Optional)" 
-            type="password" 
-            v-model="apiKey" 
-            placeholder="Override key..." 
-         />
       </div>
       <div class="row">
         <SmartField
@@ -83,6 +77,12 @@ const {
     <details class="advanced-opts">
       <summary>Advanced Options</summary>
       <div class="opts-content">
+         <SmartField 
+            label="API Key (Optional)" 
+            type="password" 
+            v-model="apiKey" 
+            placeholder="Override key..." 
+         />
         <SmartField 
           label="System Prompt Override" 
           type="textarea" 

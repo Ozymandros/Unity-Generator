@@ -116,7 +116,7 @@ class TestLLMAdapters:
         """OpenAI adapter sends correct payload and parses response."""
         mock_post.return_value.status_code = 200
         mock_post.return_value.json.return_value = {
-            "choices": [{"message": {"content": "test response"}}]
+            "output": [{"content": "test response"}]
         }
         mock_post.return_value.raise_for_status = MagicMock()
 
@@ -134,22 +134,22 @@ class TestLLMAdapters:
         assert result.model == "gpt-4o-mini"
 
         payload = mock_post.call_args.kwargs["json"]
-        assert payload["messages"][0]["role"] == "system"
-        assert payload["messages"][1]["role"] == "user"
+        assert payload["input"][0]["role"] == "system"
+        assert payload["input"][1]["role"] == "user"
 
     @patch("app.services.providers.llm_adapters.requests.post")
     def test_openai_adapter_without_system_prompt(self, mock_post: MagicMock) -> None:
         """OpenAI adapter omits system message when system_prompt is None."""
         mock_post.return_value.raise_for_status = MagicMock()
         mock_post.return_value.json.return_value = {
-            "choices": [{"message": {"content": "ok"}}]
+            "output": [{"content": "ok"}]
         }
 
         OpenAILLMAdapter().invoke("hello", {}, "sk-test")
 
         payload = mock_post.call_args.kwargs["json"]
-        assert len(payload["messages"]) == 1
-        assert payload["messages"][0]["role"] == "user"
+        assert len(payload["input"]) == 1
+        assert payload["input"][0]["role"] == "user"
 
     @patch("requests.post")
     def test_google_adapter_returns_content(self, mock_post: MagicMock) -> None:

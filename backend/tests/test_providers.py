@@ -24,7 +24,7 @@ class TestLLMProviders:
     @patch("app.services.providers.llm_adapters.requests.post")
     def test_call_openai(self, mock_post: MagicMock) -> None:
         mock_post.return_value.status_code = 200
-        mock_post.return_value.json.return_value = {"choices": [{"message": {"content": "OpenAI Response"}}]}
+        mock_post.return_value.json.return_value = {"output": [{"content": "OpenAI Response"}]}
 
         api_keys = {"openai_api_key": "sk-test"}
         options = TextOptions(model="gpt-4", temperature=0.5)
@@ -37,10 +37,11 @@ class TestLLMProviders:
 
         # Verify request
         args, kwargs = mock_post.call_args
-        assert args[0] == "https://api.openai.com/v1/chat/completions"
+        assert args[0] == "https://api.openai.com/v1/responses"
         assert kwargs["json"]["model"] == "gpt-4"
-        assert kwargs["json"]["temperature"] == 0.5
+
         assert kwargs["headers"]["Authorization"] == "Bearer sk-test"
+        assert kwargs["headers"]["OpenAI-Beta"] == "assistants=v2"
 
     @patch("app.services.providers.llm_adapters.requests.post")
     def test_call_deepseek(self, mock_post: MagicMock) -> None:

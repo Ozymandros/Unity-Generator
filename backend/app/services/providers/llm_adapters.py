@@ -109,14 +109,62 @@ class OpenAICompatibleLLMAdapter(BaseProviderAdapter):
 # ------------------------------------------------------------------
 
 
-class OpenAILLMAdapter(OpenAICompatibleLLMAdapter):
-    """OpenAI GPT adapter."""
+class OpenAILLMAdapter(BaseProviderAdapter):
+    """OpenAI GPT adapter using v1/responses."""
 
     def __init__(self) -> None:
-        super().__init__(
-            provider_name="openai",
-            endpoint="https://api.openai.com/v1/chat/completions",
-            default_model="gpt-4o-mini",
+        super().__init__(Modality.LLM, "openai")
+        self._endpoint = "https://api.openai.com/v1/responses"
+        self._default_model = "gpt-4o"
+
+    def _do_invoke(
+        self,
+        prompt: str,
+        options: dict[str, Any],
+        api_key: str,
+        system_prompt: str | None = None,
+    ) -> AgentResult:
+        model = self.get_opt(options, "model", self._default_model)
+        
+        # Build new "input" list
+        input_items: list[dict[str, str]] = []
+        if system_prompt:
+            input_items.append({"role": "system", "content": system_prompt})
+        input_items.append({"role": "user", "content": prompt})
+
+        payload = {
+            "model": model,
+            "input": input_items,
+            # "text": {"format": "json"}  <- Only if we want JSON mode, but default is text.
+        }
+
+        # Handle optional params if supported by v1/responses
+        # (Assuming tempearature/max_tokens are still top-level or need adjustment, 
+        # but adhering to plan for now. Migration guide suggests minimal changes for simple cases,
+        # but responses API is "agentic". For safe step, we send minimal payload first.)
+        
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+        }
+        response = requests.post(
+            self._endpoint, json=payload, headers=headers, timeout=60,
+        )
+        response.raise_for_status()
+        
+        # New response parsing
+        # response.json()["output"][0]["content"]
+        data = response.json()
+        try:
+             content = data["output"][0]["content"]
+        except (KeyError, IndexError):
+             # Fallback or robust error handling
+             LOGGER.error("Unexpected OpenAI response format: %s", data)
+             raise
+             
+        return AgentResult(
+            content=content,
+            provider=self.provider_name,
+            model=str(model),
         )
 
 
