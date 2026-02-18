@@ -21,7 +21,7 @@ def test_unity_project_generation(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     mock_agent_manager.run_code.return_value = AgentResult(
         content="public class PlayerController {}", provider="openai"
     )
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.projects.agent_manager", mock_agent_manager)
 
     client = TestClient(app)
     response = client.post(

@@ -80,7 +80,7 @@ def test_agent_manager_run_code(monkeypatch: pytest.MonkeyPatch, tmp_path: Path)
     manager = AgentManager()
     manager.code_agent = mock_agent
 
-    monkeypatch.setattr("app.agent_manager.get_pref", lambda k: None)
+    monkeypatch.setattr("app.services.agent_manager.get_pref", lambda k: None)
 
     result = manager.run_code("test prompt", "openai", {"model": "gpt-4o"})
 

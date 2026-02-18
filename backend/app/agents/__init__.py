@@ -1,13 +1,13 @@
 """Semantic Kernel agent modules and skills."""
 
-# Export Agents for easy importing
+# Export Agent Classes
 try:
-    from .audio_agent import run as audio_agent
-    from .code_agent import run as code_agent
-    from .image_agent import run as image_agent
-    from .text_agent import run as text_agent
-    from .unity_agent import UnityAgent as unity_agent
+    from .audio_agent import AudioAgent
+    from .code_agent import CodeAgent
+    from .image_agent import ImageAgent
+    from .text_agent import TextAgent
+    from .unity_agent import UnityAgent
 
-    __all__ = ["audio_agent", "code_agent", "image_agent", "text_agent", "unity_agent"]
+    __all__ = ["AudioAgent", "CodeAgent", "ImageAgent", "TextAgent", "UnityAgent"]
 except ImportError:
     __all__ = []

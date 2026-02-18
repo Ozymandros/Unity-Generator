@@ -20,7 +20,7 @@ def test_generate_code_success(client: TestClient, monkeypatch: pytest.MonkeyPat
     mock_agent_manager = MagicMock()
     mock_agent_manager.run_code.return_value = AgentResult(content="public class Test {}", provider="openai")
 
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.generation.agent_manager", mock_agent_manager)
 
     response = client.post("/generate/code", json={"prompt": "Create a test class", "provider": "openai"})
 
@@ -36,8 +36,8 @@ def test_generate_code_uses_preference_fallback(client: TestClient, monkeypatch:
     mock_agent_manager = MagicMock()
     mock_agent_manager.run_code.return_value = AgentResult(content="code", provider="deepseek")
 
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
-    monkeypatch.setattr("app.main.get_pref", lambda key: "deepseek")
+    monkeypatch.setattr("app.routers.generation.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.generation.get_pref", lambda key: "deepseek")
 
     response = client.post("/generate/code", json={"prompt": "Test prompt"})
 
@@ -52,7 +52,7 @@ def test_generate_code_error_handling(client: TestClient, monkeypatch: pytest.Mo
     mock_agent_manager = MagicMock()
     mock_agent_manager.run_code.side_effect = RuntimeError("Agent not available")
 
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.generation.agent_manager", mock_agent_manager)
 
     response = client.post("/generate/code", json={"prompt": "Test prompt"})
 
@@ -67,7 +67,7 @@ def test_generate_code_with_options(client: TestClient, monkeypatch: pytest.Monk
     mock_agent_manager = MagicMock()
     mock_agent_manager.run_code.return_value = AgentResult(content="code", provider="openai")
 
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.generation.agent_manager", mock_agent_manager)
 
     response = client.post(
         "/generate/code",

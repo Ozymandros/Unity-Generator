@@ -2,23 +2,24 @@ import logging
 
 from fastapi import APIRouter
 
+from ..core.db import get_pref
 from ..schemas import (
     GenerationResponse,
     UnityProjectRequest,
     error_response,
     ok_response,
 )
+from ..services import agent_manager_instance as agent_manager
 from ..services import create_unity_project, get_latest_project_path
 
 router = APIRouter(tags=["projects"])
+
 
 @router.post("/generate/unity-project", response_model=GenerationResponse)
 def generate_project(request: UnityProjectRequest) -> GenerationResponse:
     """
     Generate a full Unity project structure with multiple assets.
     """
-    from ..main import agent_manager, get_pref
-
     try:
         code_provider = request.provider_overrides.get(
             "code", get_pref("preferred_llm_provider")

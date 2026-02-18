@@ -53,7 +53,7 @@ def test_generate_sprites_uses_image_provider_preference(client: TestClient) -> 
     """Test that sprites endpoint uses preferred_image_provider if none specified."""
     with patch("app.services.sprite_service.generate_sprite") as mock_gen:
         mock_gen.return_value = AgentResult(image="data", provider="stability")
-        with patch("app.main.get_pref", return_value="stability"):
+        with patch("app.routers.generation.get_pref", return_value="stability"):
             client.post("/generate/sprites", json={"prompt": "test"})
 
             # Check if it was called with "stability"

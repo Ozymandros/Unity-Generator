@@ -22,7 +22,7 @@ def test_generate_audio_success(client: TestClient, monkeypatch: pytest.MonkeyPa
         audio="https://example.com/audio.mp3", provider="elevenlabs"
     )
 
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.generation.agent_manager", mock_agent_manager)
 
     response = client.post("/generate/audio", json={"prompt": "A battle cry", "provider": "elevenlabs"})
 
@@ -37,8 +37,8 @@ def test_generate_audio_uses_audio_provider_preference(client: TestClient, monke
     mock_agent_manager = MagicMock()
     mock_agent_manager.run_audio.return_value = AgentResult(audio="url", provider="elevenlabs")
 
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
-    monkeypatch.setattr("app.main.get_pref", lambda key: "elevenlabs")
+    monkeypatch.setattr("app.routers.generation.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.generation.get_pref", lambda key: "elevenlabs")
 
     response = client.post("/generate/audio", json={"prompt": "Test prompt"})
 
@@ -52,7 +52,7 @@ def test_generate_audio_error_handling(client: TestClient, monkeypatch: pytest.M
     mock_agent_manager = MagicMock()
     mock_agent_manager.run_audio.side_effect = RuntimeError("Audio agent unavailable")
 
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.generation.agent_manager", mock_agent_manager)
 
     response = client.post("/generate/audio", json={"prompt": "Test prompt"})
 

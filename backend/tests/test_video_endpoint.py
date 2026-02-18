@@ -18,7 +18,7 @@ client = TestClient(app)
 class TestVideoEndpoint:
     """Tests for POST /generate/video."""
 
-    @patch("app.main.agent_manager")
+    @patch("app.routers.generation.agent_manager")
     def test_video_endpoint_success(self, mock_manager: MagicMock) -> None:
         """Successful video generation returns ok response."""
         mock_manager.run_video.return_value = AgentResult(
@@ -39,7 +39,7 @@ class TestVideoEndpoint:
         assert body["data"]["video"] == "https://cdn.example.com/video.mp4"
         assert body["data"]["provider"] == "runway"
 
-    @patch("app.main.agent_manager")
+    @patch("app.routers.generation.agent_manager")
     def test_video_endpoint_error(self, mock_manager: MagicMock) -> None:
         """Video generation failure returns error response."""
         mock_manager.run_video.side_effect = RuntimeError("No video adapter")
@@ -53,7 +53,7 @@ class TestVideoEndpoint:
         assert body["success"] is False
         assert "No video adapter" in body["error"]
 
-    @patch("app.main.agent_manager")
+    @patch("app.routers.generation.agent_manager")
     def test_video_endpoint_with_options(self, mock_manager: MagicMock) -> None:
         """Options dict is forwarded to the agent manager."""
         mock_manager.run_video.return_value = AgentResult(
@@ -69,7 +69,7 @@ class TestVideoEndpoint:
         call_args = mock_manager.run_video.call_args
         assert call_args is not None
 
-    @patch("app.main.agent_manager")
+    @patch("app.routers.generation.agent_manager")
     def test_video_endpoint_with_system_prompt(self, mock_manager: MagicMock) -> None:
         """System prompt is passed through to the manager."""
         mock_manager.run_video.return_value = AgentResult(

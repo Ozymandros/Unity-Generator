@@ -20,7 +20,7 @@ def test_generate_text_success(client: TestClient, monkeypatch: pytest.MonkeyPat
     mock_agent_manager = MagicMock()
     mock_agent_manager.run_text.return_value = AgentResult(content="Hello, world!", provider="openai")
 
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.generation.agent_manager", mock_agent_manager)
 
     response = client.post("/generate/text", json={"prompt": "Say hello", "provider": "openai"})
 
@@ -35,8 +35,8 @@ def test_generate_text_uses_preference_fallback(client: TestClient, monkeypatch:
     mock_agent_manager = MagicMock()
     mock_agent_manager.run_text.return_value = AgentResult(content="text", provider="groq")
 
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
-    monkeypatch.setattr("app.main.get_pref", lambda key: "groq")
+    monkeypatch.setattr("app.routers.generation.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.generation.get_pref", lambda key: "groq")
 
     response = client.post("/generate/text", json={"prompt": "Test prompt"})
 
@@ -50,7 +50,7 @@ def test_generate_text_error_handling(client: TestClient, monkeypatch: pytest.Mo
     mock_agent_manager = MagicMock()
     mock_agent_manager.run_text.side_effect = RuntimeError("Text agent unavailable")
 
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.generation.agent_manager", mock_agent_manager)
 
     response = client.post("/generate/text", json={"prompt": "Test prompt"})
 

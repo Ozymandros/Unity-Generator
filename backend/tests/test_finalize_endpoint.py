@@ -74,16 +74,16 @@ class TestFinalizeEndpoint:
 
         # Mock agent_manager
         mock_am = MagicMock()
-        monkeypatch.setattr("app.main.agent_manager", mock_am)
+        monkeypatch.setattr("app.routers.finalize.agent_manager", mock_am)
 
         # Mock resolve_unity_editor_path to return a path
         unity_exe = tmp_path / "Unity.exe"
         unity_exe.touch()
-        monkeypatch.setattr("app.main.resolve_unity_editor_path", lambda override=None: unity_exe)
+        monkeypatch.setattr("app.routers.finalize.resolve_unity_editor_path", lambda override=None: unity_exe)
 
         # Mock create_unity_project to return immediately
         monkeypatch.setattr(
-            "app.main.create_unity_project",
+            "app.routers.finalize.create_unity_project",
             lambda *args, **kwargs: {"project_path": str(tmp_path / "Project")}
         )
 
@@ -122,11 +122,11 @@ class TestFinalizeEndpoint:
 
         monkeypatch.setattr(unity_project, "get_repo_root", lambda: tmp_path)
         mock_am = MagicMock()
-        monkeypatch.setattr("app.main.agent_manager", mock_am)
+        monkeypatch.setattr("app.routers.finalize.agent_manager", mock_am)
 
         # Simulate Unity not found
         monkeypatch.setattr(
-            "app.main.resolve_unity_editor_path",
+            "app.routers.finalize.resolve_unity_editor_path",
             lambda override=None: (_ for _ in ()).throw(FileNotFoundError("Unity not installed")),
         )
 

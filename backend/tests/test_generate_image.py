@@ -20,7 +20,7 @@ def test_generate_image_success(client: TestClient, monkeypatch: pytest.MonkeyPa
     mock_agent_manager = MagicMock()
     mock_agent_manager.run_image.return_value = AgentResult(image="base64-data", provider="openai")
 
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.generation.agent_manager", mock_agent_manager)
 
     response = client.post("/generate/image", json={"prompt": "A hero portrait", "provider": "openai"})
 
@@ -35,8 +35,8 @@ def test_generate_image_uses_image_provider_preference(client: TestClient, monke
     mock_agent_manager = MagicMock()
     mock_agent_manager.run_image.return_value = AgentResult(image="data", provider="dalle")
 
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
-    monkeypatch.setattr("app.main.get_pref", lambda key: "dalle")
+    monkeypatch.setattr("app.routers.generation.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.generation.get_pref", lambda key: "dalle")
 
     response = client.post("/generate/image", json={"prompt": "Test prompt"})
 
@@ -50,7 +50,7 @@ def test_generate_image_error_handling(client: TestClient, monkeypatch: pytest.M
     mock_agent_manager = MagicMock()
     mock_agent_manager.run_image.side_effect = RuntimeError("Image agent unavailable")
 
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.generation.agent_manager", mock_agent_manager)
 
     response = client.post("/generate/image", json={"prompt": "Test prompt"})
 

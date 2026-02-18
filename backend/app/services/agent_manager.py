@@ -2,6 +2,7 @@ import logging
 import sys
 from typing import Any
 
+from ..agents.base import AsyncAgent, SyncAgent
 from ..core.config import get_repo_root, load_api_keys
 from ..core.db import get_pref
 from ..schemas import (
@@ -22,13 +23,11 @@ LOGGER = logging.getLogger(__name__)
 
 
 class AgentManager:
-    code_agent: Any
-    text_agent: Any
-    image_agent: Any
-    text_agent: Any
-    image_agent: Any
-    audio_agent: Any
-    unity_agent: Any
+    code_agent: SyncAgent | None
+    text_agent: SyncAgent | None
+    image_agent: SyncAgent | None
+    audio_agent: SyncAgent | None
+    unity_agent: AsyncAgent | None
 
     def __init__(self) -> None:
         repo_root = get_repo_root()
@@ -36,13 +35,19 @@ class AgentManager:
             sys.path.insert(0, str(repo_root))
 
         try:
-            from ..agents import audio_agent, code_agent, image_agent, text_agent, unity_agent
+            from ..agents import (
+                AudioAgent,
+                CodeAgent,
+                ImageAgent,
+                TextAgent,
+                UnityAgent,
+            )
 
-            self.code_agent = code_agent
-            self.text_agent = text_agent
-            self.image_agent = image_agent
-            self.audio_agent = audio_agent
-            self.unity_agent = unity_agent()  # Initialize the class
+            self.code_agent = CodeAgent()
+            self.text_agent = TextAgent()
+            self.image_agent = ImageAgent()
+            self.audio_agent = AudioAgent()
+            self.unity_agent = UnityAgent()
         except ImportError:
             LOGGER.warning("Agents not yet implemented.")
             self.code_agent = None
@@ -56,6 +61,7 @@ class AgentManager:
             self.text_agent = None
             self.image_agent = None
             self.audio_agent = None
+            self.unity_agent = None
 
     def run_code(
         self,
@@ -83,7 +89,9 @@ class AgentManager:
         if effective_system_prompt is None:
             effective_system_prompt = get_pref("default_code_system_prompt")
 
-        result = self.code_agent.run(prompt, provider, opts, api_keys, effective_system_prompt)
+        result = self.code_agent.run(
+            prompt, provider, opts, api_keys, effective_system_prompt
+        )
         # Wrap result if it's a dict
         final_result = AgentResult(**result) if isinstance(result, dict) else result
 
@@ -117,7 +125,9 @@ class AgentManager:
         if effective_system_prompt is None:
             effective_system_prompt = get_pref("default_text_system_prompt")
 
-        result = self.text_agent.run(prompt, provider, opts, api_keys, effective_system_prompt)
+        result = self.text_agent.run(
+            prompt, provider, opts, api_keys, effective_system_prompt
+        )
         final_result = AgentResult(**result) if isinstance(result, dict) else result
 
         if project_path:
@@ -150,7 +160,9 @@ class AgentManager:
         if effective_system_prompt is None:
             effective_system_prompt = get_pref("default_image_system_prompt")
 
-        result = self.image_agent.run(prompt, provider, opts, api_keys, effective_system_prompt)
+        result = self.image_agent.run(
+            prompt, provider, opts, api_keys, effective_system_prompt
+        )
         final_result = AgentResult(**result) if isinstance(result, dict) else result
 
         if project_path:
@@ -183,7 +195,9 @@ class AgentManager:
         if effective_system_prompt is None:
             effective_system_prompt = get_pref("default_audio_system_prompt")
 
-        result = self.audio_agent.run(prompt, provider, opts, api_keys, effective_system_prompt)
+        result = self.audio_agent.run(
+            prompt, provider, opts, api_keys, effective_system_prompt
+        )
         final_result = AgentResult(**result) if isinstance(result, dict) else result
 
         if project_path:
@@ -236,7 +250,9 @@ class AgentManager:
         if effective_system_prompt is None:
             effective_system_prompt = get_pref("default_video_system_prompt")
 
-        result = generate_video(prompt, provider, opts, api_keys, effective_system_prompt)
+        result = generate_video(
+            prompt, provider, opts, api_keys, effective_system_prompt
+        )
         final_result = AgentResult(**result) if isinstance(result, dict) else result
 
         if project_path:
@@ -270,14 +286,16 @@ class AgentManager:
             effective_system_prompt = get_pref("default_code_system_prompt")
 
         # UnityAgent.run is async and returns a dict
-        result = await self.unity_agent.run(prompt, provider, options, api_keys, effective_system_prompt)
+        result = await self.unity_agent.run(
+            prompt, provider, options, api_keys, effective_system_prompt
+        )
         return AgentResult(
             content=result.get("content", ""),
             provider=provider or "unity",
             raw=result,
-            model=options.get("model")
+            model=options.get("model"),
         )
+
 
 # Module-level singleton
 agent_manager = AgentManager()
-

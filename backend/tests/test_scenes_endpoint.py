@@ -7,8 +7,8 @@ from app.main import app
 client = TestClient(app)
 
 def test_create_scene_success():
-    with patch("app.main.agent_manager") as mock_agent_manager, \
-         patch("app.main.get_pref") as mock_get_pref:
+    with patch("app.routers.scenes.agent_manager") as mock_agent_manager, \
+         patch("app.routers.scenes.get_pref") as mock_get_pref:
 
         # Mock preferences to return a provider
         mock_get_pref.side_effect = lambda key: "openai" if key == "preferred_llm_provider" else None
@@ -44,7 +44,7 @@ def test_create_scene_success():
         assert call_args.kwargs["options"]["model"] == "gpt-4"
 
 def test_create_scene_missing_config():
-    with patch("app.main.get_pref") as mock_get_pref:
+    with patch("app.routers.scenes.get_pref") as mock_get_pref:
         # Simulate no stored preference
         mock_get_pref.return_value = None
 
@@ -60,8 +60,8 @@ def test_create_scene_missing_config():
         assert "No provider specified" in data["error"]
 
 def test_create_scene_with_api_key():
-    with patch("app.main.agent_manager") as mock_agent_manager, \
-         patch("app.main.get_pref") as mock_get_pref:
+    with patch("app.routers.scenes.agent_manager") as mock_agent_manager, \
+         patch("app.routers.scenes.get_pref") as mock_get_pref:
 
         mock_get_pref.return_value = "openai"
         mock_agent_manager.run_unity = MagicMock()
@@ -84,7 +84,7 @@ def test_create_scene_with_api_key():
         assert call_args.kwargs["api_key"] == "sk-12345"
 
 def test_create_scene_with_provider_and_options():
-    with patch("app.main.agent_manager") as mock_agent_manager:
+    with patch("app.routers.scenes.agent_manager") as mock_agent_manager:
         mock_agent_manager.run_unity = MagicMock()
         async def mock_run(*args, **kwargs):
             return {"content": "Success"}
@@ -106,8 +106,8 @@ def test_create_scene_with_provider_and_options():
         assert call_args.kwargs["options"]["model"] == "gpt-4-turbo"
 
 def test_create_scene_failure():
-    with patch("app.main.agent_manager") as mock_agent_manager, \
-         patch("app.main.get_pref") as mock_get_pref:
+    with patch("app.routers.scenes.agent_manager") as mock_agent_manager, \
+         patch("app.routers.scenes.get_pref") as mock_get_pref:
 
         mock_get_pref.return_value = "openai"
         mock_agent_manager.run_unity.side_effect = Exception("Unity error")

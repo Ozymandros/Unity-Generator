@@ -5,6 +5,7 @@ from typing import Any
 from fastapi import APIRouter
 
 from ..core.config import load_api_keys as backend_load_api_keys
+from ..core.db import get_pref
 from ..schemas import (
     AudioOptions,
     CodeOptions,
@@ -17,17 +18,18 @@ from ..schemas import (
     error_response,
     ok_response,
 )
+from ..services import agent_manager_instance as agent_manager
 from ..services import sprite_service
 from ..services.image_provider import IMAGE_KEY_MAP
 
 router = APIRouter(prefix="/generate", tags=["generation"])
+
 
 @router.post("/text", response_model=GenerationResponse)
 def generate_text(request: GenerationRequest) -> GenerationResponse:
     """
     Generate game narrative or text content using the AI text agent.
     """
-    from ..main import agent_manager, get_pref
     try:
         provider = request.provider or get_pref("preferred_llm_provider")
         options: TextOptions | dict[str, Any] = request.options
@@ -53,8 +55,6 @@ def generate_code(request: GenerationRequest) -> GenerationResponse:
     """
     Generate Unity C# code using the AI code agent.
     """
-    from ..main import agent_manager, get_pref
-
     try:
         provider = request.provider or get_pref("preferred_llm_provider")
         options: CodeOptions | dict[str, Any] = request.options
@@ -80,8 +80,6 @@ def generate_image(request: GenerationRequest) -> GenerationResponse:
     """
     Generate textures or concept art using the AI image agent.
     """
-    from ..main import agent_manager, get_pref
-
     try:
         provider = request.provider or get_pref("preferred_image_provider")
         options: ImageOptions | dict[str, Any] = request.options
@@ -107,8 +105,6 @@ def generate_audio(request: GenerationRequest) -> GenerationResponse:
     """
     Generate SFX or music using the AI audio agent.
     """
-    from ..main import agent_manager, get_pref
-
     try:
         provider = request.provider or get_pref("preferred_audio_provider")
         options: AudioOptions | dict[str, Any] = request.options
@@ -134,8 +130,6 @@ def generate_video(request: GenerationRequest) -> GenerationResponse:
     """
     Generate a video clip using the AI video agent.
     """
-    from ..main import agent_manager, get_pref
-
     try:
         provider = request.provider or get_pref("preferred_video_provider")
         options: VideoOptions | dict[str, Any] = request.options
@@ -161,8 +155,6 @@ def generate_sprites(request: SpritesRequest) -> GenerationResponse:
     """
     Generate 2D sprite sheets using the AI sprite agent.
     """
-    from ..main import get_pref
-
     try:
         provider = request.provider or get_pref("preferred_image_provider")
         api_key = request.api_key
