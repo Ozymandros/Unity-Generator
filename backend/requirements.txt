@@ -13,3 +13,5 @@ jinja2
 google-generativeai
 google-genai
 anthropic
+transformers
+torch

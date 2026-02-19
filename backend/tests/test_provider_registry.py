@@ -299,6 +299,7 @@ class TestDefaultRegistry:
         assert "groq" in llm_list
         assert "google" in llm_list
         assert "anthropic" in llm_list
+        assert "huggingface" in llm_list
 
     def test_image_providers_registered(self) -> None:
         img_list = provider_registry.priority_list(Modality.IMAGE)

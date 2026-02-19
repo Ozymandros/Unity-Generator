@@ -19,7 +19,10 @@ export function useSettingsPanel() {
   const stabilityKey = ref("");
   const fluxKey = ref("");
   const elevenlabsKey = ref("");
+
   const playhtKey = ref("");
+  const huggingfaceKey = ref("");
+  const ollamaKey = ref("");
   const preferredLlm = ref("deepseek");
   const preferredImage = ref("stability");
   const preferredAudio = ref("elevenlabs");
@@ -48,7 +51,10 @@ export function useSettingsPanel() {
       stabilityKey.value = keys.stability_api_key || "";
       fluxKey.value = keys.flux_api_key || "";
       elevenlabsKey.value = keys.elevenlabs_api_key || "";
+
       playhtKey.value = keys.playht_api_key || "";
+      huggingfaceKey.value = keys.huggingface_api_key || "";
+      ollamaKey.value = keys.ollama_api_key || "";
     }
 
     const llmPref = await getPref("preferred_llm_provider");
@@ -88,7 +94,10 @@ export function useSettingsPanel() {
       stability_api_key: stabilityKey.value,
       flux_api_key: fluxKey.value,
       elevenlabs_api_key: elevenlabsKey.value,
+
       playht_api_key: playhtKey.value,
+      huggingface_api_key: huggingfaceKey.value,
+      ollama_api_key: ollamaKey.value,
     });
     await setPref("preferred_llm_provider", preferredLlm.value);
     await setPref("preferred_image_provider", preferredImage.value);
@@ -126,7 +135,10 @@ export function useSettingsPanel() {
     stabilityKey,
     fluxKey,
     elevenlabsKey,
+
     playhtKey,
+    huggingfaceKey,
+    ollamaKey,
     preferredLlm,
     preferredImage,
     preferredAudio,

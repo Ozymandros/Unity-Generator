@@ -14,7 +14,10 @@ const {
   stabilityKey,
   fluxKey,
   elevenlabsKey,
+
   playhtKey,
+  huggingfaceKey,
+  ollamaKey,
   preferredLlm,
   preferredImage,
   preferredAudio,
@@ -47,6 +50,8 @@ const {
     <SmartField label="DeepSeek" type="password" v-model="deepseekKey" />
     <SmartField label="OpenRouter" type="password" v-model="openrouterKey" />
     <SmartField label="Groq" type="password" v-model="groqKey" />
+    <SmartField label="Hugging Face" type="password" v-model="huggingfaceKey" />
+    <SmartField label="Ollama" type="password" v-model="ollamaKey" />
 
     <h3>Image Keys</h3>
     <SmartField label="Stability" type="password" v-model="stabilityKey" />

@@ -52,6 +52,26 @@ export const TEXT_PROVIDERS: ProviderOption[] = [
           { value: "llama-3.1-8b-instant", label: "Llama 3.1 8B Instant" },
           { value: "llama3-70b-8192", label: "Llama 3 70B" },
       ]
+  },
+  {
+      value: "huggingface",
+      label: "Hugging Face",
+      models: [
+          { value: "google/gemma-2b", label: "Gemma 2B" },
+          { value: "mistralai/Mistral-7B-Instruct-v0.2", label: "Mistral 7B Instruct v0.2" },
+          { value: "meta-llama/Meta-Llama-3-8B-Instruct", label: "Llama 3 8B Instruct" },
+          { value: "HuggingFaceH4/zephyr-7b-beta", label: "Zephyr 7B Beta" },
+          { value: "tiiuae/falcon-7b-instruct", label: "Falcon 7B Instruct" },
+          { value: "Qwen/Qwen1.5-7B-Chat", label: "Qwen 1.5 7B Chat" },
+          { value: "microsoft/Phi-3-mini-4k-instruct", label: "Phi-3 Mini 4k" }
+      ]
+  },
+  {
+      value: "ollama",
+      label: "Ollama",
+      models: [
+          { value: "gemme3:4b", label: "Gemma 3 4B" }
+      ]
   }
 ];
 

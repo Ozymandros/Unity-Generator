@@ -12,9 +12,13 @@ class GoogleTextToAudio(TextToAudioClientBase):
     """
     Google Cloud TTS (or GenAI TTS) service implementing Semantic Kernel interface.
     """
+    api_key: str
+
     def __init__(self, api_key: str, model_id: str = "google-tts"):
-        super().__init__(ai_model_id=model_id)
-        self.api_key = api_key
+        super().__init__(ai_model_id=model_id, api_key=api_key)  # type: ignore
+        # Self assignment not needed if passed to super for Pydantic model,
+        # but safe to keep or remove. Pydantic handles it.
+        # self.api_key = api_key
 
     async def get_audio_content(self, text: str, settings: Any = None, **kwargs: Any) -> AudioContent:
         # Mocking for now as the user mentioned SK doesn't have it natively
@@ -33,9 +37,10 @@ class GoogleTextToImage(TextToImageClientBase):
     """
     Google Imagen service implementing Semantic Kernel interface.
     """
+    api_key: str
+
     def __init__(self, api_key: str, model_id: str = "imagen-3.0-generate-002"):
-        super().__init__(ai_model_id=model_id)
-        self.api_key = api_key
+        super().__init__(ai_model_id=model_id, api_key=api_key)  # type: ignore
 
     async def generate_image(self, description: str, width: int, height: int, **kwargs: Any) -> str:
         # Wrapped call to Google GenAI SDK (google-genai)
