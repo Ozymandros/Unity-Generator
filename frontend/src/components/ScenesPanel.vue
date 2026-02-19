@@ -48,13 +48,13 @@ const {
           class="field-item" />
       </div>
       <div style="margin-top: 8px;">
-        <SmartField label="API Key (Optional Override)" type="password" v-model="apiKey"
-          placeholder="Leave empty to use global key" />
       </div>
       <div style="margin-top: 8px;">
         <details>
           <summary style="cursor: pointer; margin-bottom: 4px; font-size: 0.9em; user-select: none;">Advanced Options
           </summary>
+          <SmartField label="API Key (Optional Override)" type="password" v-model="apiKey"
+            placeholder="Leave empty to use global key" />
           <SmartField label="System Prompt Override" type="textarea" v-model="systemPrompt"
             :placeholder="defaultSystemPrompt" :rows="3" />
         </details>

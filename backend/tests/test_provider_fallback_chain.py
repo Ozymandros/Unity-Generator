@@ -1,8 +1,12 @@
 """
-Tests for the provider fallback chain using SK mocks.
+Tests for the provider fallback chain.
+
+Ensures that the registry-based ``resolve`` + adapter dispatch
+correctly falls back across providers when the preferred one has
+no key or fails.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -20,12 +24,13 @@ from app.services.providers import (
 class TestLLMFallbackChain:
     """Test LLM provider fallback via generate_text."""
 
-    @patch("app.services.providers.registry.provider_registry.create_chat_service")
-    def test_fallback_when_preferred_has_no_key(self, mock_create: MagicMock) -> None:
+    @patch("app.services.providers.llm_adapters.requests.post")
+    def test_fallback_when_preferred_has_no_key(self, mock_post: MagicMock) -> None:
         """If preferred provider has no key, fall back to next with key."""
-        mock_service = AsyncMock()
-        mock_service.get_chat_message_content.return_value = "fallback answer"
-        mock_create.return_value = mock_service
+        mock_post.return_value.raise_for_status = MagicMock()
+        mock_post.return_value.json.return_value = {
+            "output": [{"content": "fallback answer"}]
+        }
 
         # Only openai has a key; deepseek is preferred but missing
         api_keys = {"openai_api_key": "sk-test"}
@@ -34,12 +39,13 @@ class TestLLMFallbackChain:
         assert result.provider == "openai"
         assert result.content == "fallback answer"
 
-    @patch("app.services.providers.registry.provider_registry.create_chat_service")
-    def test_first_priority_used_when_no_preference(self, mock_create: MagicMock) -> None:
+    @patch("app.services.providers.llm_adapters.requests.post")
+    def test_first_priority_used_when_no_preference(self, mock_post: MagicMock) -> None:
         """With no preferred provider the highest-priority one with a key wins."""
-        mock_service = AsyncMock()
-        mock_service.get_chat_message_content.return_value = "ok"
-        mock_create.return_value = mock_service
+        mock_post.return_value.raise_for_status = MagicMock()
+        mock_post.return_value.json.return_value = {
+            "output": [{"content": "ok"}]
+        }
 
         api_keys = {"groq_api_key": "g-test", "openai_api_key": "sk-test"}
         result = generate_text("hi", None, {}, api_keys)
@@ -56,12 +62,13 @@ class TestLLMFallbackChain:
 class TestImageFallbackChain:
     """Test image provider fallback via generate_image."""
 
-    @patch("app.services.providers.registry.provider_registry.create_text_to_image_service")
-    def test_fallback_to_next_image_provider(self, mock_create: MagicMock) -> None:
+    @patch("app.services.providers.image_adapters.requests.post")
+    def test_fallback_to_next_image_provider(self, mock_post: MagicMock) -> None:
         """Stability is preferred but missing key; falls back to openai."""
-        mock_service = AsyncMock()
-        mock_service.generate_image.return_value = "img_url"
-        mock_create.return_value = mock_service
+        mock_post.return_value.raise_for_status = MagicMock()
+        mock_post.return_value.json.return_value = {
+            "data": [{"b64_json": "img", "revised_prompt": "p"}]
+        }
 
         api_keys = {"openai_api_key": "sk-test"}
         result = generate_image("a cat", "stability", {}, api_keys)
@@ -71,20 +78,12 @@ class TestImageFallbackChain:
 class TestAudioFallbackChain:
     """Test audio provider fallback via generate_audio."""
 
-    @patch("app.services.providers.registry.provider_registry.create_text_to_audio_service")
-    def test_audio_stub_fallback(self, mock_create: MagicMock) -> None:
-        """ElevenLabs preferred but no key; Google has key -> Google."""
-        mock_service = AsyncMock()
-        mock_content = MagicMock()
-        mock_content.data = b"audio"
-        mock_content.uri = None
-        mock_content.metadata = {}
-        mock_service.get_audio_content.return_value = mock_content
-        mock_create.return_value = mock_service
-
+    def test_audio_stub_fallback(self) -> None:
+        """ElevenLabs preferred but no key; Google has key -> Google stub."""
         api_keys = {"google_api_key": "goog-test"}
         result = generate_audio("hello", "elevenlabs", {}, api_keys)
         assert result.provider == "google"
+        assert "stub" in (result.audio or "")
 
 
 class TestVideoFallbackChain:

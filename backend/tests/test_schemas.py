@@ -76,7 +76,7 @@ def test_ok_response_structure() -> None:
     assert response.success is True
     assert response.error is None
     # ok_response converts AgentResult to dict
-    assert response.data == {"content": "test", "provider": "test"}
+    assert response.data == {"content": "test", "provider": "test", "metadata": {}}
     assert response.date is not None
     # Verify date is valid ISO format
     datetime.fromisoformat(response.date.replace("Z", "+00:00"))
@@ -102,4 +102,4 @@ def test_generation_response_model() -> None:
         success=True, date="2024-01-01T00:00:00Z", error=None, data=result.model_dump(exclude_none=True)
     )
     assert response.success is True
-    assert response.data == {"content": "test", "provider": "test"}
+    assert response.data == {"content": "test", "provider": "test", "metadata": {}}

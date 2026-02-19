@@ -1,28 +1,134 @@
 
+"""
+Tests for the UnityAgent and the ``_build_sk_service`` helper.
+
+Covers provider-specific service construction (OpenAI, DeepSeek,
+OpenRouter, Groq, Azure), unsupported-provider error, and
+missing argument validation.
+"""
+
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.agents.unity_agent import UnityAgent
+from app.agents.unity_agent import UnityAgent, _build_sk_service
+from app.services.providers import Modality
 
 ######################################################################
-# UnityAgent integration tests
+# _build_sk_service unit tests
 ######################################################################
+
+
+class TestBuildSkService:
+    """Unit tests for the _build_sk_service helper."""
+
+    def test_missing_model_raises(self) -> None:
+        """Missing 'model' in options raises ValueError."""
+        with pytest.raises(ValueError, match="Model must be specified"):
+            _build_sk_service("openai", {}, {"openai_api_key": "k"})
+
+    @patch("app.agents.unity_agent.OpenAIChatCompletion")
+    def test_openai_service(self, mock_cls: MagicMock) -> None:
+        """OpenAI uses direct OpenAIChatCompletion (no custom client)."""
+        _build_sk_service("openai", {"model": "gpt-4"}, {"openai_api_key": "sk-test"})
+        mock_cls.assert_called_once_with(
+            service_id="default",
+            ai_model_id="gpt-4",
+            api_key="sk-test",
+        )
+
+    @patch("app.agents.unity_agent.AsyncOpenAI")
+    @patch("app.agents.unity_agent.OpenAIChatCompletion")
+    def test_deepseek_service(self, mock_cls: MagicMock, mock_client: MagicMock) -> None:
+        """DeepSeek creates AsyncOpenAI with base_url."""
+        _build_sk_service("deepseek", {"model": "deepseek-chat"}, {"deepseek_api_key": "ds"})
+        mock_client.assert_called_once_with(
+            api_key="ds",
+            base_url="https://api.deepseek.com",
+        )
+        mock_cls.assert_called_once_with(
+            service_id="default",
+            ai_model_id="deepseek-chat",
+            async_client=mock_client.return_value,
+        )
+
+    @patch("app.agents.unity_agent.AsyncOpenAI")
+    @patch("app.agents.unity_agent.OpenAIChatCompletion")
+    def test_openrouter_service(self, mock_cls: MagicMock, mock_client: MagicMock) -> None:
+        """OpenRouter creates AsyncOpenAI with OpenRouter base_url."""
+        _build_sk_service("openrouter", {"model": "auto"}, {"openrouter_api_key": "or-k"})
+        mock_client.assert_called_once_with(
+            api_key="or-k",
+            base_url="https://openrouter.ai/api/v1",
+        )
+
+    @patch("app.agents.unity_agent.AsyncOpenAI")
+    @patch("app.agents.unity_agent.OpenAIChatCompletion")
+    def test_groq_service(self, mock_cls: MagicMock, mock_client: MagicMock) -> None:
+        """Groq creates AsyncOpenAI with Groq base_url."""
+        _build_sk_service("groq", {"model": "llama-3"}, {"groq_api_key": "g-k"})
+        mock_client.assert_called_once_with(
+            api_key="g-k",
+            base_url="https://api.groq.com/openai/v1",
+        )
+
+    @patch("app.agents.unity_agent.AzureChatCompletion")
+    def test_azure_service(self, mock_azure: MagicMock) -> None:
+        """Azure provider creates AzureChatCompletion."""
+        # Azure is a special registration; patch the registry to recognise it
+        from app.services.providers import ProviderCapabilities, ProviderRegistry
+
+        reg = ProviderRegistry()
+        reg.register(ProviderCapabilities(
+            name="azure", api_key_name="azure_api_key",
+            modalities={Modality.LLM}, openai_compatible=False,
+        ))
+        with patch("app.agents.unity_agent.provider_registry", reg):
+            _build_sk_service(
+                "azure",
+                {"model": "gpt-4-deploy"},
+                {"AZURE_OPENAI_ENDPOINT": "https://my.azure.com", "AZURE_OPENAI_KEY": "az-key"},
+            )
+            mock_azure.assert_called_once()
+
+    def test_google_service(self) -> None:
+        """Google service is correctly constructed."""
+        with patch("app.agents.unity_agent.GoogleAIChatCompletion") as MockSvc:
+            _build_sk_service("google", {"model": "gemini"}, {"google_api_key": "k"})
+            MockSvc.assert_called_once_with(
+                service_id="default",
+                gemini_model_id="gemini",
+                api_key="k"
+            )
+
+    def test_anthropic_service(self) -> None:
+        """Anthropic service is correctly constructed."""
+        with patch("app.agents.unity_agent.AnthropicChatCompletion") as MockSvc:
+            _build_sk_service("anthropic", {"model": "claude"}, {"anthropic_api_key": "k"})
+            MockSvc.assert_called_once_with(
+                service_id="default",
+                ai_model_id="claude",
+                api_key="k"
+            )
+
+
+# ======================================================================
+# UnityAgent integration tests
+# ======================================================================
+
 
 @pytest.mark.asyncio
 async def test_unity_agent_openai():
-    """OpenAI provider constructs the correct SK service via registry."""
+    """OpenAI provider constructs the correct SK service."""
     agent = UnityAgent()
 
     with patch("app.agents.unity_agent.Kernel") as MockKernel, \
-         patch("app.agents.unity_agent.provider_registry.create_chat_service") as MockCreateSvc, \
+         patch("app.agents.unity_agent.OpenAIChatCompletion") as MockOpenAIService, \
          patch("app.agents.unity_agent.UnityMCPPluginWrapper") as MockPlugin:
 
         mock_kernel_instance = MockKernel.return_value
         mock_kernel_instance.invoke_prompt = AsyncMock(return_value="Success")
-
-        mock_service_instance = MagicMock()
-        MockCreateSvc.return_value = mock_service_instance
 
         mock_plugin_instance = AsyncMock()
         mock_plugin_instance.initialize.return_value = MagicMock()
@@ -35,30 +141,26 @@ async def test_unity_agent_openai():
             api_keys={"openai_api_key": "sk-test"}
         )
 
-        MockCreateSvc.assert_called_with(
-            "openai",
-            "sk-test",
-            model_id="gpt-4",
-            endpoint=None,
-            service_id="default"
+        MockOpenAIService.assert_called_with(
+            service_id="default",
+            ai_model_id="gpt-4",
+            api_key="sk-test"
         )
         mock_kernel_instance.add_service.assert_called()
 
 
 @pytest.mark.asyncio
 async def test_unity_agent_deepseek():
-    """DeepSeek provider constructs correct service via registry."""
+    """DeepSeek provider constructs AsyncOpenAI with base_url."""
     agent = UnityAgent()
 
     with patch("app.agents.unity_agent.Kernel") as MockKernel, \
-         patch("app.agents.unity_agent.provider_registry.create_chat_service") as MockCreateSvc, \
-         patch("app.agents.unity_agent.UnityMCPPluginWrapper") as MockPlugin:
+         patch("app.agents.unity_agent.OpenAIChatCompletion") as MockOpenAIService, \
+         patch("app.agents.unity_agent.UnityMCPPluginWrapper") as MockPlugin, \
+         patch("app.agents.unity_agent.AsyncOpenAI") as MockAsyncClient:
 
         mock_kernel_instance = MockKernel.return_value
         mock_kernel_instance.invoke_prompt = AsyncMock(return_value="Success")
-
-        mock_service_instance = MagicMock()
-        MockCreateSvc.return_value = mock_service_instance
 
         mock_plugin_instance = AsyncMock()
         mock_plugin_instance.initialize.return_value = MagicMock()
@@ -71,12 +173,29 @@ async def test_unity_agent_deepseek():
             api_keys={"deepseek_api_key": "sk-deepseek"}
         )
 
-        MockCreateSvc.assert_called_with(
-            "deepseek",
-            "sk-deepseek",
-            model_id="deepseek-chat",
-            endpoint=None,
-            service_id="default"
+        MockAsyncClient.assert_called_with(
+            api_key="sk-deepseek",
+            base_url="https://api.deepseek.com"
+        )
+
+        MockOpenAIService.assert_called_with(
+            service_id="default",
+            ai_model_id="deepseek-chat",
+            async_client=MockAsyncClient.return_value
+        )
+
+
+@pytest.mark.asyncio
+async def test_unity_agent_unsupported_provider():
+    """Unsupported providers raise NotImplementedError."""
+    agent = UnityAgent()
+
+    with pytest.raises(NotImplementedError, match="not currently handled"):
+        await agent.run(
+            prompt="test",
+            provider="pika",
+            options={"model": "v1"},
+            api_keys={}
         )
 
 
@@ -98,7 +217,7 @@ async def test_unity_agent_mcp_unreachable():
     agent = UnityAgent()
 
     with patch("app.agents.unity_agent.Kernel"), \
-         patch("app.agents.unity_agent.provider_registry.create_chat_service"), \
+         patch("app.agents.unity_agent.OpenAIChatCompletion"), \
          patch("app.agents.unity_agent.UnityMCPPluginWrapper") as MockPlugin:
 
         mock_plugin_instance = AsyncMock()

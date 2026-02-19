@@ -46,7 +46,8 @@ app.include_router(config.router)
 app.include_router(prefs.router)
 app.include_router(projects.router)
 app.include_router(scenes.router)
-# app.include_router(finalize.router)
+from app.routers import finalize
+app.include_router(finalize.router)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
