@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { StatusBanner } from "@/components/StatusBanner";
 import { SmartField } from "@/components/generic/SmartField";
+import { ModelManagerModal } from "@/components/generic/ModelManagerModal";
 import { useSettingsPanel } from "./SettingsPanel";
 
 const {
@@ -28,6 +29,9 @@ const {
   defaultSpriteSystemPrompt,
   status,
   save,
+  showModelManager,
+  activeProviderForModal,
+  manageModels,
   TEXT_PROVIDERS,
   IMAGE_PROVIDERS,
   AUDIO_PROVIDERS
@@ -99,26 +103,41 @@ const {
     />
 
     <h3>Preferred Providers</h3>
-    <SmartField 
-      label="LLM" 
-      type="select" 
-      v-model="preferredLlm" 
-      :options="TEXT_PROVIDERS" 
-    />
-    <SmartField 
-      label="Image" 
-      type="select" 
-      v-model="preferredImage" 
-      :options="IMAGE_PROVIDERS" 
-    />
-    <SmartField 
-      label="Audio" 
-      type="select" 
-      v-model="preferredAudio" 
-      :options="AUDIO_PROVIDERS" 
-    />
+    <div class="row">
+      <SmartField 
+        label="LLM" 
+        type="select" 
+        v-model="preferredLlm" 
+        :options="TEXT_PROVIDERS" 
+      />
+      <button class="icon-btn" @click="manageModels(preferredLlm)" :disabled="!preferredLlm">＋</button>
+    </div>
+    <div class="row">
+      <SmartField 
+        label="Image" 
+        type="select" 
+        v-model="preferredImage" 
+        :options="IMAGE_PROVIDERS" 
+      />
+      <button class="icon-btn" @click="manageModels(preferredImage)" :disabled="!preferredImage">＋</button>
+    </div>
+    <div class="row">
+      <SmartField 
+        label="Audio" 
+        type="select" 
+        v-model="preferredAudio" 
+        :options="AUDIO_PROVIDERS" 
+      />
+      <button class="icon-btn" @click="manageModels(preferredAudio)" :disabled="!preferredAudio">＋</button>
+    </div>
 
     <button class="primary" @click="save">Save</button>
+
+    <ModelManagerModal
+      v-if="showModelManager"
+      :provider="activeProviderForModal"
+      v-model="showModelManager"
+    />
   </div>
 </template>
 

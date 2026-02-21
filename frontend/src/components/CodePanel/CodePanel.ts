@@ -1,5 +1,5 @@
 import { computed, ref, watch, onMounted } from "vue";
-import { generateCode, getPref } from "@/api/client";
+import { generateCode, getPref, getProviderModels, type ModelEntry } from "@/api/client";
 import { TEXT_PROVIDERS, TEMPERATURE_PRESETS, LENGTH_PRESETS } from "@/constants/providers";
 import { projectStore } from "@/store/projectStore";
 
@@ -24,13 +24,18 @@ export function useCodePanel() {
     }
   });
 
-  const availableModels = computed(() => {
-    const p = TEXT_PROVIDERS.find((x) => x.value === provider.value);
-    return p ? p.models || [] : [];
-  });
+  const availableModels = ref<ModelEntry[]>([]);
+  const showModelManager = ref(false);
+
+  async function refreshModels() {
+    availableModels.value = provider.value
+      ? await getProviderModels(provider.value)
+      : [];
+  }
 
   watch(provider, () => {
-      model.value = "";
+    model.value = "";
+    refreshModels();
   });
 
   const status = ref<string | null>(null);
@@ -79,6 +84,8 @@ export function useCodePanel() {
     activeProjectName,
     activeProjectPath,
     availableModels,
+    showModelManager,
+    refreshModels,
     status,
     tone,
     result,

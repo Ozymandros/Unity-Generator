@@ -7,7 +7,7 @@ from app.main import app
 
 
 def test_get_latest_output(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from app import unity_project
+    from app.services import unity_project
 
     def fake_root() -> Path:
         return tmp_path

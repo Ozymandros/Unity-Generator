@@ -2,6 +2,7 @@
 
 import { StatusBanner } from "@/components/StatusBanner";
 import { SmartField } from "@/components/generic/SmartField";
+import { ModelManagerModal } from "@/components/generic/ModelManagerModal";
 import { useScenesPanel } from "./ScenesPanel";
 
 const {
@@ -13,6 +14,8 @@ const {
   systemPrompt,
   defaultSystemPrompt,
   availableModels,
+  showModelManager,
+  refreshModels,
   status,
   tone,
   result,
@@ -42,6 +45,12 @@ const {
           placeholder="Select Provider (Optional)" class="field-item" />
         <SmartField label="Model" type="select" v-model="model" :options="availableModels" placeholder="Select Model"
           :disabled="!provider" class="field-item" />
+        <button
+          class="icon-btn"
+          @click="showModelManager = true"
+          :disabled="!provider"
+          title="Manage models"
+        >＋</button>
       </div>
       <div class="options-row">
         <SmartField label="Temperature" type="select" v-model.number="temperature" :options="TEMPERATURE_PRESETS"
@@ -90,6 +99,13 @@ const {
         </details>
       </div>
     </div>
+
+    <ModelManagerModal
+      v-if="showModelManager"
+      :provider="provider"
+      v-model="showModelManager"
+      @models-changed="refreshModels"
+    />
   </div>
 </template>
 

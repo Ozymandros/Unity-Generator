@@ -34,6 +34,14 @@ export function useSettingsPanel() {
 
   const status = ref<string | null>(null);
 
+  const showModelManager = ref(false);
+  const activeProviderForModal = ref("");
+
+  function manageModels(provider: string) {
+    activeProviderForModal.value = provider;
+    showModelManager.value = true;
+  }
+
   onMounted(async () => {
     const keysResponse = await getApiKeys();
     if (
@@ -149,6 +157,9 @@ export function useSettingsPanel() {
     defaultSpriteSystemPrompt,
     status,
     save,
+    showModelManager,
+    activeProviderForModal,
+    manageModels,
     TEXT_PROVIDERS,
     IMAGE_PROVIDERS,
     AUDIO_PROVIDERS,

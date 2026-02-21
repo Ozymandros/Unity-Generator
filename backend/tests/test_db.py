@@ -6,15 +6,21 @@ from pathlib import Path
 
 import pytest
 
-from app import db
+from app.core import db, config
 
 
-def test_init_db_creates_table(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test that init_db creates the user_prefs table."""
-    from app import config
-
+@pytest.fixture
+def db_setup(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Mock repo root and ensure db directory exists."""
     monkeypatch.setattr(config, "get_repo_root", lambda: tmp_path)
-    monkeypatch.setattr(db, "get_db_dir", lambda: tmp_path / "db")
+    db_dir = tmp_path / "db"
+    db_dir.mkdir(parents=True, exist_ok=True)
+    return tmp_path
+
+
+def test_init_db_creates_table(db_setup: Path) -> None:
+    """Test that init_db creates the user_prefs table."""
+    tmp_path = db_setup
 
     db.init_db()
 
@@ -28,12 +34,9 @@ def test_init_db_creates_table(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) 
     conn.close()
 
 
-def test_set_and_get_pref(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_set_and_get_pref(db_setup: Path) -> None:
     """Test set_pref and get_pref roundtrip."""
-    from app import config
-
-    monkeypatch.setattr(config, "get_repo_root", lambda: tmp_path)
-    monkeypatch.setattr(db, "get_db_dir", lambda: tmp_path / "db")
+    tmp_path = db_setup
 
     db.init_db()
     db.set_pref("test_key", "test_value")
@@ -42,12 +45,9 @@ def test_set_and_get_pref(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> No
     assert value == "test_value"
 
 
-def test_get_pref_returns_none_for_missing_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_get_pref_returns_none_for_missing_key(db_setup: Path) -> None:
     """Test get_pref returns None when key doesn't exist."""
-    from app import config
-
-    monkeypatch.setattr(config, "get_repo_root", lambda: tmp_path)
-    monkeypatch.setattr(db, "get_db_dir", lambda: tmp_path / "db")
+    tmp_path = db_setup
 
     db.init_db()
 
@@ -55,12 +55,9 @@ def test_get_pref_returns_none_for_missing_key(tmp_path: Path, monkeypatch: pyte
     assert value is None
 
 
-def test_set_pref_upsert_behavior(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_set_pref_upsert_behavior(db_setup: Path) -> None:
     """Test that set_pref overwrites existing values."""
-    from app import config
-
-    monkeypatch.setattr(config, "get_repo_root", lambda: tmp_path)
-    monkeypatch.setattr(db, "get_db_dir", lambda: tmp_path / "db")
+    tmp_path = db_setup
 
     db.init_db()
 
@@ -71,12 +68,9 @@ def test_set_pref_upsert_behavior(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     assert value == "second_value"
 
 
-def test_multiple_prefs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_multiple_prefs(db_setup: Path) -> None:
     """Test storing multiple preferences."""
-    from app import config
-
-    monkeypatch.setattr(config, "get_repo_root", lambda: tmp_path)
-    monkeypatch.setattr(db, "get_db_dir", lambda: tmp_path / "db")
+    tmp_path = db_setup
 
     db.init_db()
 

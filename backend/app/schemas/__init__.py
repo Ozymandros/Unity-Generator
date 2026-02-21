@@ -127,6 +127,38 @@ class PrefRequest(BaseModel):
     value: str
 
 
+class ModelEntry(BaseModel):
+    """A single model option for a provider.
+
+    Attributes:
+        value: Model identifier (e.g. ``"gpt-4o"``).
+        label: Human-readable label (e.g. ``"GPT-4o"``).
+
+    Example:
+        >>> ModelEntry(value="gpt-4o", label="GPT-4o")
+        ModelEntry(value='gpt-4o', label='GPT-4o')
+    """
+
+    value: str = Field(..., min_length=1)
+    label: str = Field(..., min_length=1)
+
+
+class AddModelRequest(BaseModel):
+    """Request body for adding a model to a provider.
+
+    Attributes:
+        value: Model identifier string.
+        label: Human-readable display label.
+
+    Example:
+        >>> AddModelRequest(value="gpt-4o", label="GPT-4o")
+        AddModelRequest(value='gpt-4o', label='GPT-4o')
+    """
+
+    value: str = Field(..., min_length=1)
+    label: str = Field(..., min_length=1)
+
+
 class UnityProjectRequest(BaseModel):
     project_name: str = "UnityProject"
     code_prompt: str | None = None

@@ -14,6 +14,15 @@ from app.schemas import GenerationRequest
 from app.services.agent_manager import AgentManager
 from app.services.prompts import DEFAULT_CODE_SYSTEM_PROMPT
 
+# Mock generate_text at the agent level to prevent real API calls
+@pytest.fixture(autouse=True)
+def mock_llm_generate():
+    with patch("app.agents.code_agent.generate_text") as m1, \
+         patch("app.agents.text_agent.generate_text") as m2:
+        m1.return_value = {"content": "Mocked LLM Result", "provider": "openai"}
+        m2.return_value = {"content": "Mocked LLM Result", "provider": "openai"}
+        yield (m1, m2)
+
 
 def test_system_prompt_override():
     # Test that providing a system prompt overrides the default
@@ -55,21 +64,19 @@ def test_system_prompt_default():
 
 def test_system_prompt_from_db():
     # Test that if no local override is provided, it fetches from DB
-    mock_agent = MagicMock()
-    mock_agent.run.return_value = {"content": "code", "provider": "openai", "model": "gpt-4"}
-
     manager = AgentManager()
-    manager.code_agent = mock_agent
-
-    with patch("app.services.agent_manager.get_pref") as mock_get_pref:
+    
+    with patch("app.agents.code_agent.CodeAgent.run") as mock_run, \
+         patch("app.services.agent_manager.get_pref") as mock_get_pref:
+        mock_run.return_value = {"content": "code", "provider": "openai"}
         mock_get_pref.return_value = "DB system prompt"
-
-        manager.run_code(prompt="test", provider="openai", options={}, api_key=None)
-
+        
+        manager.run_code(prompt="test", provider="openai", options={"model": "gpt-4"}, api_key=None)
+        
         mock_get_pref.assert_called_with("default_code_system_prompt")
         # Verify agent run was called with the DB prompt
-        args, kwargs = mock_agent.run.call_args
-        # signature: run(prompt, provider, options, api_keys, system_prompt)
+        args, kwargs = mock_run.call_args
+        assert kwargs.get("system_prompt") == "DB system prompt" or args[4] == "DB system prompt"
         # args[4] is system_prompt
         assert args[4] == "DB system prompt"
 

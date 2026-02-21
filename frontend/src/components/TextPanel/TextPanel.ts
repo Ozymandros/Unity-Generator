@@ -1,5 +1,5 @@
-import { ref, computed, onMounted } from "vue";
-import { generateText, getPref } from "@/api/client";
+import { ref, computed, onMounted, watch } from "vue";
+import { generateText, getPref, getProviderModels, type ModelEntry } from "@/api/client";
 import { TEXT_PROVIDERS, TEMPERATURE_PRESETS, LENGTH_PRESETS } from "@/constants/providers";
 import { projectStore } from "@/store/projectStore";
 
@@ -27,9 +27,18 @@ export function useTextPanel() {
     }
   });
 
-  const providerModels = computed(() => {
-    const p = TEXT_PROVIDERS.find((x) => x.value === provider.value);
-    return p ? p.models || [] : [];
+  const providerModels = ref<ModelEntry[]>([]);
+  const showModelManager = ref(false);
+
+  async function refreshModels() {
+    providerModels.value = provider.value
+      ? await getProviderModels(provider.value)
+      : [];
+  }
+
+  watch(provider, () => {
+    model.value = "";
+    refreshModels();
   });
 
   async function run() {
@@ -76,6 +85,8 @@ export function useTextPanel() {
     autoSaveToProject,
     activeProjectName,
     providerModels,
+    showModelManager,
+    refreshModels,
     run,
     TEXT_PROVIDERS,
     TEMPERATURE_PRESETS,

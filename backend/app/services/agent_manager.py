@@ -240,9 +240,9 @@ class AgentManager:
 
         api_keys = load_api_keys()
         if provider and api_key:
-            key_name = VIDEO_KEY_MAP.get(provider)
-            if key_name:
-                api_keys[key_name] = api_key
+            caps = provider_registry.get(provider)
+            if caps and caps.api_key_name:
+                api_keys[caps.api_key_name] = api_key
 
         opts = options.model_dump() if isinstance(options, VideoOptions) else options
 

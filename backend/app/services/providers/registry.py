@@ -266,12 +266,7 @@ class ProviderRegistry:
                 print(f"[RESOLVE] Success! Returning {preferred_lower} (Key required={caps.requires_api_key})")
                 return preferred_lower
             
-            print(f"[RESOLVE] Preferred {preferred_lower} has no key ({key_name}). Raising error.")
-            raise ProviderNotAvailableError(
-                f"API key for preferred provider '{preferred_lower}' is missing or empty. Please configure it in Settings.",
-                provider=preferred_lower,
-                modality=modality.value,
-            )
+            print(f"[RESOLVE] Preferred {preferred_lower} has no key ({key_name}). Falling back to priority list.")
 
         for name in self._priorities.get(modality, []):
             caps = self._providers[name]

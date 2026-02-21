@@ -1,5 +1,5 @@
-import { ref, computed, onMounted } from "vue";
-import { generateAudio, getPref } from "@/api/client";
+import { ref, computed, onMounted, watch } from "vue";
+import { generateAudio, getPref, getProviderModels, type ModelEntry } from "@/api/client";
 import { AUDIO_PROVIDERS } from "@/constants/providers";
 import { projectStore } from "@/store/projectStore";
 
@@ -26,9 +26,18 @@ export function useAudioPanel() {
     }
   });
 
-  const availableVoices = computed(() => {
-    const p = AUDIO_PROVIDERS.find((x) => x.value === provider.value);
-    return p ? p.models || [] : [];
+  const availableVoices = ref<ModelEntry[]>([]);
+  const showModelManager = ref(false);
+
+  async function refreshModels() {
+    availableVoices.value = provider.value
+      ? await getProviderModels(provider.value)
+      : [];
+  }
+
+  watch(provider, () => {
+    voiceId.value = "";
+    refreshModels();
   });
 
   async function run() {
@@ -73,6 +82,8 @@ export function useAudioPanel() {
     autoSaveToProject,
     activeProjectName,
     availableVoices,
+    showModelManager,
+    refreshModels,
     run,
     AUDIO_PROVIDERS
   };

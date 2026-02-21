@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from app import unity_project
+from app.services import unity_project
 
 
 def test_safe_name_cleans_special_chars() -> None:

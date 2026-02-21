@@ -9,7 +9,7 @@ from app.schemas import AgentResult
 
 
 def test_unity_project_generation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from app import unity_project
+    from app.services import unity_project
 
     def fake_root() -> Path:
         return tmp_path

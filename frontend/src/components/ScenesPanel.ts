@@ -1,5 +1,5 @@
 import { computed, ref, watch, onMounted } from "vue";
-import { createScene, getPref } from "@/api/client";
+import { createScene, getPref, getProviderModels, type ModelEntry } from "@/api/client";
 import { TEXT_PROVIDERS, TEMPERATURE_PRESETS } from "@/constants/providers";
 
 export function useScenesPanel() {
@@ -33,14 +33,19 @@ export function useScenesPanel() {
     }
   });
 
-  const availableModels = computed(() => {
-    const p = TEXT_PROVIDERS.find((x) => x.value === provider.value);
-    return p ? p.models || [] : [];
-  });
+  const availableModels = ref<ModelEntry[]>([]);
+  const showModelManager = ref(false);
+
+  async function refreshModels() {
+    availableModels.value = provider.value
+      ? await getProviderModels(provider.value)
+      : [];
+  }
 
   // Reset model when provider changes
   watch(provider, () => {
-      model.value = "";
+    model.value = "";
+    refreshModels();
   });
 
   const canGenerate = computed(() => prompt.value.trim().length > 0 && !loading.value);
@@ -89,6 +94,8 @@ export function useScenesPanel() {
     systemPrompt,
     defaultSystemPrompt,
     availableModels,
+    showModelManager,
+    refreshModels,
     status,
     tone,
     result,

@@ -1,0 +1,184 @@
+/* ---- Backdrop & Card ---- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+}
+
+.modal-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  width: 480px;
+  max-width: 92vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modal-enter 0.18s ease-out;
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---- Header ---- */
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.close-btn:hover {
+  color: #374151;
+  background: #f3f4f6;
+}
+
+/* ---- Error ---- */
+.modal-error {
+  padding: 8px 20px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.82rem;
+  border-bottom: 1px solid #fecaca;
+}
+
+/* ---- Body ---- */
+.modal-body {
+  padding: 12px 20px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 80px;
+}
+
+.loading-text,
+.empty-text {
+  color: #6b7280;
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 16px 0;
+}
+
+/* ---- Model List ---- */
+.model-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.model-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+.model-item:last-child {
+  border-bottom: none;
+}
+
+.model-label {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #111827;
+  flex: 1;
+}
+
+.model-value {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-family: monospace;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: #d1d5db;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.remove-btn:hover {
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+/* ---- Footer (Add form) ---- */
+.modal-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.add-input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.add-input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.add-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.add-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+.add-btn:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}

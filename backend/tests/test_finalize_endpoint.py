@@ -68,7 +68,7 @@ class TestFinalizeEndpoint:
 
     def test_finalize_project_success(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test the full lifecycle: create -> running -> completed/failed (terminal)."""
-        from app import unity_project
+        from app.services import unity_project
 
         monkeypatch.setattr(unity_project, "get_repo_root", lambda: tmp_path)
 
@@ -118,7 +118,7 @@ class TestFinalizeEndpoint:
 
     def test_finalize_job_with_unity_error(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that Unity failures produce proper error diagnostics."""
-        from app import unity_project
+        from app.services import unity_project
 
         monkeypatch.setattr(unity_project, "get_repo_root", lambda: tmp_path)
         mock_am = MagicMock()

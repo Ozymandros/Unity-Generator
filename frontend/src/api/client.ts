@@ -104,6 +104,63 @@ export async function getPref(key: string) {
   return (await response.json()) as GenerationResponse;
 }
 
+// ---------------------------------------------------------------------------
+// Provider model management
+// ---------------------------------------------------------------------------
+
+export type ModelEntry = {
+  value: string;
+  label: string;
+};
+
+export async function getProviderModels(
+  provider: string,
+): Promise<ModelEntry[]> {
+  const response = await fetch(
+    `${getBackendUrl()}/api/models/${provider}`,
+    { method: "GET" },
+  );
+  const json = (await response.json()) as GenerationResponse;
+  return (json.data?.models as ModelEntry[]) ?? [];
+}
+
+export async function getAllProviderModels(): Promise<
+  Record<string, ModelEntry[]>
+> {
+  const response = await fetch(`${getBackendUrl()}/api/models`, {
+    method: "GET",
+  });
+  const json = (await response.json()) as GenerationResponse;
+  return (json.data?.models as Record<string, ModelEntry[]>) ?? {};
+}
+
+export async function addProviderModel(
+  provider: string,
+  value: string,
+  label: string,
+): Promise<GenerationResponse> {
+  const response = await fetch(
+    `${getBackendUrl()}/api/models/${provider}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ value, label }),
+    },
+  );
+  return (await response.json()) as GenerationResponse;
+}
+
+export async function removeProviderModel(
+  provider: string,
+  modelValue: string,
+): Promise<GenerationResponse> {
+  const response = await fetch(
+    `${getBackendUrl()}/api/models/${provider}/${encodeURIComponent(modelValue)}`,
+    { method: "DELETE" },
+  );
+  return (await response.json()) as GenerationResponse;
+}
+
 export type UnityProjectRequest = {
   project_name: string;
   code_prompt?: string;

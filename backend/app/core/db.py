@@ -25,6 +25,17 @@ def init_db() -> None:
             )
             """
         )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS provider_models (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                provider TEXT NOT NULL,
+                model_value TEXT NOT NULL,
+                model_label TEXT NOT NULL,
+                UNIQUE(provider, model_value)
+            )
+            """
+        )
         conn.commit()
     finally:
         conn.close()
@@ -68,11 +79,150 @@ def get_all_prefs() -> dict[str, str]:
         conn.close()
 
 
-def get_all_prefs() -> dict[str, str]:
+# ---------------------------------------------------------------------------
+# Provider models CRUD
+# ---------------------------------------------------------------------------
+
+
+def get_models(provider: str) -> list[dict[str, str]]:
+    """
+    Return all models for a given provider.
+
+    Args:
+        provider: Canonical lowercase provider name.
+
+    Returns:
+        List of dicts with ``value`` and ``label`` keys.
+
+    Example:
+        >>> get_models("openai")  # doctest: +SKIP
+        [{'value': 'gpt-4o', 'label': 'GPT-4o'}, ...]
+    """
     conn = sqlite3.connect(get_db_path())
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT key, value FROM user_prefs")
-        return {row[0]: row[1] for row in cursor.fetchall()}
+        cursor.execute(
+            "SELECT model_value, model_label FROM provider_models WHERE provider = ?",
+            (provider.lower(),),
+        )
+        return [{"value": row[0], "label": row[1]} for row in cursor.fetchall()]
+    finally:
+        conn.close()
+
+
+def get_all_models() -> dict[str, list[dict[str, str]]]:
+    """
+    Return all models grouped by provider.
+
+    Returns:
+        Dictionary mapping provider name to list of model entries.
+
+    Example:
+        >>> get_all_models()  # doctest: +SKIP
+        {'openai': [{'value': 'gpt-4o', 'label': 'GPT-4o'}], ...}
+    """
+    conn = sqlite3.connect(get_db_path())
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT provider, model_value, model_label FROM provider_models ORDER BY provider"
+        )
+        result: dict[str, list[dict[str, str]]] = {}
+        for provider, value, label in cursor.fetchall():
+            result.setdefault(provider, []).append({"value": value, "label": label})
+        return result
+    finally:
+        conn.close()
+
+
+def add_model(provider: str, value: str, label: str) -> None:
+    """
+    Add a model entry for a provider.
+
+    Args:
+        provider: Canonical lowercase provider name.
+        value: Model identifier (e.g. ``"gpt-4o"``).
+        label: Human-readable label (e.g. ``"GPT-4o"``).
+
+    Raises:
+        ValueError: If any argument is empty.
+        sqlite3.IntegrityError: If the model already exists for the provider.
+
+    Example:
+        >>> add_model("openai", "gpt-4o", "GPT-4o")  # doctest: +SKIP
+    """
+    if not provider or not value or not label:
+        raise ValueError("provider, value, and label must be non-empty strings")
+    conn = sqlite3.connect(get_db_path())
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO provider_models (provider, model_value, model_label)
+            VALUES (?, ?, ?)
+            """,
+            (provider.lower(), value, label),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def remove_model(provider: str, value: str) -> bool:
+    """
+    Remove a model entry for a provider.
+
+    Args:
+        provider: Canonical lowercase provider name.
+        value: Model identifier to remove.
+
+    Returns:
+        ``True`` if a row was deleted, ``False`` if not found.
+
+    Example:
+        >>> remove_model("openai", "gpt-4o")  # doctest: +SKIP
+        True
+    """
+    conn = sqlite3.connect(get_db_path())
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM provider_models WHERE provider = ? AND model_value = ?",
+            (provider.lower(), value),
+        )
+        conn.commit()
+        return cursor.rowcount > 0
+    finally:
+        conn.close()
+
+
+def seed_default_models(defaults: dict[str, list[dict[str, str]]]) -> None:
+    """
+    Seed the provider_models table with defaults if it is empty.
+
+    Does nothing if the table already contains data (idempotent).
+
+    Args:
+        defaults: Mapping of ``provider -> [{value, label}, ...]``.
+
+    Example:
+        >>> seed_default_models({"openai": [{"value": "gpt-4o", "label": "GPT-4o"}]})  # doctest: +SKIP
+    """
+    conn = sqlite3.connect(get_db_path())
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM provider_models")
+        if cursor.fetchone()[0] > 0:
+            return  # Already seeded
+        for provider, models in defaults.items():
+            for m in models:
+                cursor.execute(
+                    """
+                    INSERT OR IGNORE INTO provider_models (provider, model_value, model_label)
+                    VALUES (?, ?, ?)
+                    """,
+                    (provider.lower(), m["value"], m["label"]),
+                )
+        conn.commit()
     finally:
         conn.close()
