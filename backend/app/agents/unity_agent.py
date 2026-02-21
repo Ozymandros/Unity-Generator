@@ -99,19 +99,25 @@ class UnityAgent:
         full_prompt = f"{system_message}\n\nUser: {prompt}"
 
         try:
+            # Common settings setup
+            execution_settings = sk_service.instantiate_prompt_execution_settings(
+                service_id=service_id,
+                temperature=options.get("temperature", 0.7),
+                max_tokens=options.get("max_tokens", 2000)
+            )
+            
+            # Ensure model ID is explicitly set if the settings object supports it
+            if hasattr(execution_settings, "ai_model_id"):
+                execution_settings.ai_model_id = options.get("model") or caps.default_models[Modality.LLM]
+
             if use_tools:
                 # Provider supports tool use — register MCP plugin
                 async with create_unity_mcp_plugin() as mcp_plugin:
                     kernel.add_plugin(mcp_plugin, plugin_name="UnityMCP")
-                    kernel.get_service(service_id)
-
-                    from semantic_kernel.connectors.ai.open_ai import OpenAIChatPromptExecutionSettings
-
-                    execution_settings = OpenAIChatPromptExecutionSettings(
-                        function_choice_behavior=FunctionChoiceBehavior.Auto(),
-                        temperature=options.get("temperature", 0.7),
-                        max_tokens=options.get("max_tokens", 2000),
-                    )
+                    
+                    # Set behavior for tool calling
+                    if hasattr(execution_settings, "function_choice_behavior"):
+                        execution_settings.function_choice_behavior = FunctionChoiceBehavior.Auto()
 
                     result = await kernel.invoke_prompt(prompt=full_prompt, settings=execution_settings)
             else:
@@ -121,14 +127,6 @@ class UnityAgent:
                     "MCP plugin skipped.",
                     provider,
                 )
-
-                from semantic_kernel.connectors.ai.open_ai import OpenAIChatPromptExecutionSettings
-
-                execution_settings = OpenAIChatPromptExecutionSettings(
-                    temperature=options.get("temperature", 0.7),
-                    max_tokens=options.get("max_tokens", 2000),
-                )
-
                 result = await kernel.invoke_prompt(prompt=full_prompt, settings=execution_settings)
 
             return {

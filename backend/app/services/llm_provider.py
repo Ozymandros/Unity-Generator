@@ -54,7 +54,8 @@ def generate_text(
     service = provider_registry.create_chat_service(
         selected, 
         api_key, 
-        model_id=opts.get("model")
+        model_id=opts.get("model"),
+        service_id=selected
     )
 
     # Setup Kernel
@@ -62,14 +63,16 @@ def generate_text(
     kernel.add_service(service)
 
     # Configure settings
-    # We assume OpenAI-compatible settings for now as that's what our factory produces
-    settings = OpenAIChatPromptExecutionSettings(
+    settings = service.instantiate_prompt_execution_settings(
         service_id=selected,
-        ai_model_id=opts.get("model") or provider_registry.get(selected).default_models[Modality.LLM],
         temperature=opts.get("temperature", 0.7),
         max_tokens=opts.get("max_tokens", 1000),
-        top_p=opts.get("top_p", 1.0),
+        top_p=opts.get("top_p", 1.0)
     )
+    
+    # Ensure model ID is explicitly set if the settings object supports it
+    if hasattr(settings, "ai_model_id"):
+        settings.ai_model_id = target_model
 
     async def _run_sk():
         chat = ChatHistory()

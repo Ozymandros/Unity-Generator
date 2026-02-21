@@ -319,12 +319,14 @@ class ProviderRegistry:
             return OpenAIChatCompletion(
                 ai_model_id=target_model,
                 async_client=client,
+                service_id=kwargs.get("service_id", provider)
             )
 
         if provider == "openai":
             return OpenAIChatCompletion(
                 ai_model_id=target_model,
                 api_key=api_key,
+                service_id=kwargs.get("service_id", provider)
             )
 
         if provider == "azure":
@@ -339,14 +341,14 @@ class ProviderRegistry:
             return GoogleAIChatCompletion(
                 gemini_model_id=target_model,
                 api_key=api_key,
-                service_id=kwargs.get("service_id", "default"),
+                service_id=kwargs.get("service_id", provider),
             )
 
         if provider == "anthropic":
             return AnthropicChatCompletion(
                 ai_model_id=target_model,
                 api_key=api_key,
-                service_id=kwargs.get("service_id", "default"),
+                service_id=kwargs.get("service_id", provider),
             )
 
         if provider == "huggingface":
@@ -560,7 +562,7 @@ def _build_default_registry() -> ProviderRegistry:
             name="ollama",
             api_key_name="ollama_api_key",
             modalities={Modality.LLM},
-            default_models={Modality.LLM: "minimax-m2:cloud"},
+            default_models={Modality.LLM: "qwen2.5-coder:latest"},
             base_url="http://localhost:11434/v1",
             supports_function_calling=False,
             supports_streaming=True,
