@@ -2,6 +2,7 @@ import logging
 import sys
 from typing import Any
 
+
 from ..agents.base import AsyncAgent, SyncAgent
 from ..core.config import get_repo_root, load_api_keys
 from ..core.db import get_pref
@@ -14,10 +15,7 @@ from ..schemas import (
     VideoOptions,
 )
 from .asset_saver import save_asset_to_project
-from .audio_provider import AUDIO_KEY_MAP
-from .image_provider import IMAGE_KEY_MAP
-from .llm_provider import LLM_KEY_MAP
-from .video_provider import VIDEO_KEY_MAP
+from .providers import Modality, provider_registry
 
 LOGGER = logging.getLogger(__name__)
 
@@ -29,11 +27,9 @@ class AgentManager:
     audio_agent: SyncAgent | None
     unity_agent: AsyncAgent | None
 
-    def __init__(self) -> None:
-        repo_root = get_repo_root()
-        if str(repo_root) not in sys.path:
-            sys.path.insert(0, str(repo_root))
-
+    def _ensure_agents(self):
+        if self.text_agent is not None:
+            return
         try:
             from ..agents import (
                 AudioAgent,
@@ -42,26 +38,24 @@ class AgentManager:
                 TextAgent,
                 UnityAgent,
             )
-
             self.code_agent = CodeAgent()
             self.text_agent = TextAgent()
             self.image_agent = ImageAgent()
             self.audio_agent = AudioAgent()
             self.unity_agent = UnityAgent()
-        except ImportError:
-            LOGGER.warning("Agents not yet implemented.")
-            self.code_agent = None
-            self.text_agent = None
-            self.image_agent = None
-            self.audio_agent = None
-            self.unity_agent = None
         except Exception as e:
-            LOGGER.debug(f"Could not register fallback skills: {e}")
-            self.code_agent = None
-            self.text_agent = None
-            self.image_agent = None
-            self.audio_agent = None
-            self.unity_agent = None
+            LOGGER.error(f"Failed to load agents: {e}")
+
+    def __init__(self) -> None:
+        repo_root = get_repo_root()
+        if str(repo_root) not in sys.path:
+            sys.path.insert(0, str(repo_root))
+        
+        self.code_agent = None
+        self.text_agent = None
+        self.image_agent = None
+        self.audio_agent = None
+        self.unity_agent = None
 
     def run_code(
         self,
@@ -72,11 +66,11 @@ class AgentManager:
         system_prompt: str | None = None,
         project_path: str | None = None,
     ) -> AgentResult:
+        self._ensure_agents()
         api_keys = load_api_keys()
         if provider and api_key:
-            key_name = LLM_KEY_MAP.get(provider)
-            if key_name:
-                api_keys[key_name] = api_key
+            caps = provider_registry.get(provider)
+            api_keys[caps.api_key_name] = api_key
 
         if not self.code_agent:
             raise RuntimeError("CodeAgent is not available.")
@@ -109,16 +103,22 @@ class AgentManager:
         system_prompt: str | None = None,
         project_path: str | None = None,
     ) -> AgentResult:
+        self._ensure_agents()
+        print(f"\n[MANAGER] run_text: provider={provider}, manual_api_key={'PROVIDED' if api_key else 'NONE'}", flush=True)
+        
         api_keys = load_api_keys()
         if provider and api_key:
-            key_name = LLM_KEY_MAP.get(provider)
-            if key_name:
-                api_keys[key_name] = api_key
+            caps = provider_registry.get(provider)
+            api_keys[caps.api_key_name] = api_key
+            print(f"[MANAGER] Added manual api_key for {provider} to key_name {caps.api_key_name}", flush=True)
+        
+        print(f"[MANAGER] Keys available: {list(api_keys.keys())}", flush=True)
 
         if not self.text_agent:
             raise RuntimeError("TextAgent is not available.")
 
         opts = options.dict() if isinstance(options, TextOptions) else options
+        print(f"[MANAGER] Calling text_agent.run with provider={provider}, model={opts.get('model')}")
 
         # Fallback logic for text
         effective_system_prompt = system_prompt
@@ -144,11 +144,11 @@ class AgentManager:
         system_prompt: str | None = None,
         project_path: str | None = None,
     ) -> AgentResult:
+        self._ensure_agents()
         api_keys = load_api_keys()
         if provider and api_key:
-            key_name = IMAGE_KEY_MAP.get(provider)
-            if key_name:
-                api_keys[key_name] = api_key
+            caps = provider_registry.get(provider)
+            api_keys[caps.api_key_name] = api_key
 
         if not self.image_agent:
             raise RuntimeError("ImageAgent is not available.")
@@ -179,11 +179,11 @@ class AgentManager:
         system_prompt: str | None = None,
         project_path: str | None = None,
     ) -> AgentResult:
+        self._ensure_agents()
         api_keys = load_api_keys()
         if provider and api_key:
-            key_name = AUDIO_KEY_MAP.get(provider)
-            if key_name:
-                api_keys[key_name] = api_key
+            caps = provider_registry.get(provider)
+            api_keys[caps.api_key_name] = api_key
 
         if not self.audio_agent:
             raise RuntimeError("AudioAgent is not available.")
@@ -271,11 +271,17 @@ class AgentManager:
         """
         Runs the Unity Agent to orchestrate editor actions.
         """
+        self._ensure_agents()
+        msg = f"\n[MANAGER] run_unity: provider={provider}, manual_api_key={'PROVIDED' if api_key else 'NONE'}"
+        print(msg, flush=True)
+        
         api_keys = load_api_keys()
         if provider and api_key:
-            key_name = LLM_KEY_MAP.get(provider)
-            if key_name:
-                api_keys[key_name] = api_key
+            caps = provider_registry.get(provider)
+            api_keys[caps.api_key_name] = api_key
+            print(f"[MANAGER] Added manual api_key for {provider} to key_name {caps.api_key_name}", flush=True)
+        
+        print(f"[MANAGER] Keys available: {list(api_keys.keys())}", flush=True)
 
         if not self.unity_agent:
             raise RuntimeError("UnityAgent is not available.")

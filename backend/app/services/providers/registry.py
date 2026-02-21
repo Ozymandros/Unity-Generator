@@ -13,22 +13,10 @@ import logging
 from collections.abc import Iterable
 from typing import Any
 
-from openai import AsyncOpenAI
-from semantic_kernel.connectors.ai.anthropic import AnthropicChatCompletion
-from semantic_kernel.connectors.ai.google import GoogleAIChatCompletion
-from semantic_kernel.connectors.ai.hugging_face import HuggingFaceTextCompletion
 
-# SK and provider-specific imports (moved to top as requested)
-from semantic_kernel.connectors.ai.open_ai import (
-    AzureChatCompletion,
-    OpenAIChatCompletion,
-    OpenAITextToAudio,
-    OpenAITextToImage,
-)
-
-from app.services.providers.connectors.elevenlabs import ElevenLabsTextToAudio
-from app.services.providers.connectors.google_custom import GoogleTextToAudio, GoogleTextToImage
-from app.services.providers.connectors.stability import StabilityTextToImage
+from .connectors.elevenlabs import ElevenLabsTextToAudio
+from .connectors.google_custom import GoogleTextToAudio, GoogleTextToImage
+from .connectors.stability import StabilityTextToImage
 
 from .capabilities import Modality, ProviderCapabilities
 from .errors import ProviderNotAvailableError, ProviderNotSupportedError
@@ -271,12 +259,18 @@ class ProviderRegistry:
                     provider=preferred_lower,
                     modality=modality.value,
                 )
+            print(f"[RESOLVE] Checking preferred: {preferred_lower}")
             key_name = caps.api_key_name
-            if key_name and api_keys.get(key_name):
+            api_key = api_keys.get(key_name)
+            if (key_name and api_key) or not caps.requires_api_key:
+                print(f"[RESOLVE] Success! Returning {preferred_lower} (Key required={caps.requires_api_key})")
                 return preferred_lower
-            LOGGER.warning(
-                "Preferred provider '%s' has no valid API key; falling back.",
-                preferred_lower,
+            
+            print(f"[RESOLVE] Preferred {preferred_lower} has no key ({key_name}). Raising error.")
+            raise ProviderNotAvailableError(
+                f"API key for preferred provider '{preferred_lower}' is missing or empty. Please configure it in Settings.",
+                provider=preferred_lower,
+                modality=modality.value,
             )
 
         for name in self._priorities.get(modality, []):
@@ -306,11 +300,27 @@ class ProviderRegistry:
         """
         Create a Semantic Kernel ChatCompletion service for the given provider.
         """
+        from openai import AsyncOpenAI
+        from semantic_kernel.connectors.ai.anthropic import AnthropicChatCompletion
+        from semantic_kernel.connectors.ai.google import GoogleAIChatCompletion
+        from semantic_kernel.connectors.ai.open_ai import (
+            AzureChatCompletion,
+            OpenAIChatCompletion,
+        )
+        print(f"\n[REGISTRY] create_chat_service: provider={provider}, model_id={model_id}", flush=True)
         caps = self.get(provider)
         target_model = model_id or caps.default_models[Modality.LLM]
+        print(f"[REGISTRY] Using target_model: {target_model}", flush=True)
 
         if caps.openai_compatible:
-            client = AsyncOpenAI(api_key=api_key, base_url=caps.base_url)
+            # Handle Hugging Face dynamic base URL for OpenAI compatibility
+            if provider == "huggingface":
+                base_url = "https://router.huggingface.co/v1"
+                api_key = api_key or "sk-dummy" # Ensure valid key for client
+            else:
+                base_url = caps.base_url
+            
+            client = AsyncOpenAI(api_key=api_key, base_url=base_url)
             return OpenAIChatCompletion(
                 ai_model_id=target_model,
                 async_client=client,
@@ -345,50 +355,63 @@ class ProviderRegistry:
             )
 
         if provider == "huggingface":
+            # If it's not marked as openai_compatible, use native HF connector
+            from semantic_kernel.connectors.ai.hugging_face import HuggingFaceTextCompletion
+            # Ensure we pass the api_key if needed
+            import os
+            if api_key:
+                os.environ["HUGGING_FACE_HUB_TOKEN"] = api_key
+            else:
+                # Optionally pop it if it was set to something stale
+                os.environ.pop("HUGGING_FACE_HUB_TOKEN", None)
             return HuggingFaceTextCompletion(
                 ai_model_id=target_model,
-                service_id=kwargs.get("service_id", "default"),
-                task="text-generation")
+                task="text-generation"
+            )
 
         raise NotImplementedError(f"SK Chat service for '{provider}' not yet implemented.")
 
-    def create_text_to_image_service(self, provider: str, api_key: str) -> Any:
+    def create_text_to_image_service(self, provider: str, api_key: str, model_id: str | None = None) -> Any:
         """
         Create a Semantic Kernel TextToImage service.
         """
+        from semantic_kernel.connectors.ai.open_ai import OpenAITextToImage
         caps = self.get(provider)
+        target_model = model_id or caps.default_models[Modality.IMAGE]
 
         if provider == "openai":
             return OpenAITextToImage(
                 api_key=api_key,
-                ai_model_id=caps.default_models[Modality.IMAGE]
+                ai_model_id=target_model
             )
 
         if provider == "stability":
-            return StabilityTextToImage(api_key=api_key, model_id=caps.default_models[Modality.IMAGE])
+            return StabilityTextToImage(api_key=api_key, model_id=target_model)
 
         if provider == "google":
-            return GoogleTextToImage(api_key=api_key, model_id=caps.default_models[Modality.IMAGE])
+            return GoogleTextToImage(api_key=api_key, model_id=target_model)
 
         raise NotImplementedError(f"SK Image service for '{provider}' not yet implemented.")
 
-    def create_text_to_audio_service(self, provider: str, api_key: str) -> Any:
+    def create_text_to_audio_service(self, provider: str, api_key: str, model_id: str | None = None) -> Any:
         """
         Create a Semantic Kernel TextToAudio service.
         """
+        from semantic_kernel.connectors.ai.open_ai import OpenAITextToAudio
         caps = self.get(provider)
+        target_model = model_id or caps.default_models[Modality.AUDIO]
 
         if provider == "openai":
              return OpenAITextToAudio(
                 api_key=api_key,
-                ai_model_id=caps.default_models[Modality.AUDIO]
+                ai_model_id=target_model
             )
 
         if provider == "elevenlabs":
-            return ElevenLabsTextToAudio(api_key=api_key, model_id=caps.default_models[Modality.AUDIO])
+            return ElevenLabsTextToAudio(api_key=api_key, model_id=target_model)
 
         if provider == "google":
-            return GoogleTextToAudio(api_key=api_key, model_id=caps.default_models[Modality.AUDIO])
+            return GoogleTextToAudio(api_key=api_key, model_id=target_model)
 
         raise NotImplementedError(f"SK Audio service for '{provider}' not yet implemented.")
 
@@ -420,9 +443,6 @@ def _build_default_registry() -> ProviderRegistry:
     This consolidates the data previously scattered across
     ``LLM_KEY_MAP``, ``IMAGE_KEY_MAP``, ``AUDIO_KEY_MAP`` in the
     individual provider service modules.
-
-    Returns:
-        A fully populated :class:`ProviderRegistry`.
     """
     reg = ProviderRegistry()
 
@@ -440,6 +460,7 @@ def _build_default_registry() -> ProviderRegistry:
             supports_vision=True,
             supports_streaming=True,
             supports_function_calling=True,
+            supports_tool_use=True,
             openai_compatible=False,
         ),
         priorities={Modality.LLM: 0, Modality.IMAGE: 2, Modality.AUDIO: 2},
@@ -454,6 +475,7 @@ def _build_default_registry() -> ProviderRegistry:
             supports_vision=True,
             supports_streaming=True,
             supports_function_calling=True,
+            supports_tool_use=True,
             openai_compatible=False,
         ),
         priorities={Modality.LLM: 1},
@@ -467,6 +489,7 @@ def _build_default_registry() -> ProviderRegistry:
             default_models={Modality.LLM: "deepseek-chat"},
             base_url="https://api.deepseek.com",
             supports_function_calling=True,
+            supports_tool_use=True,
             openai_compatible=True,
         ),
         priorities={Modality.LLM: 2},
@@ -481,6 +504,7 @@ def _build_default_registry() -> ProviderRegistry:
             base_url="https://openrouter.ai/api/v1",
             supports_function_calling=True,
             supports_streaming=True,
+            supports_tool_use=True,
             openai_compatible=True,
         ),
         priorities={Modality.LLM: 3},
@@ -515,6 +539,7 @@ def _build_default_registry() -> ProviderRegistry:
             base_url="https://api.groq.com/openai/v1",
             supports_function_calling=True,
             supports_streaming=True,
+            supports_tool_use=True,
             openai_compatible=True,
         ),
         priorities={Modality.LLM: 5},
@@ -526,9 +551,11 @@ def _build_default_registry() -> ProviderRegistry:
             api_key_name="huggingface_api_key",
             modalities={Modality.LLM},
             default_models={Modality.LLM: "google/gemma-2b"},
+            base_url="https://router.huggingface.co/v1",
             supports_function_calling=False,
             supports_streaming=True,
-            openai_compatible=False,
+            openai_compatible=True,
+            requires_api_key=False,
         ),
         priorities={Modality.LLM: 6},
     )
@@ -538,11 +565,12 @@ def _build_default_registry() -> ProviderRegistry:
             name="ollama",
             api_key_name="ollama_api_key",
             modalities={Modality.LLM},
-            default_models={Modality.LLM: "gemme3:4b"},
+            default_models={Modality.LLM: "minimax-m2:cloud"},
             base_url="http://localhost:11434/v1",
             supports_function_calling=False,
             supports_streaming=True,
             openai_compatible=True,
+            requires_api_key=False,
         ),
         priorities={Modality.LLM: 7},
     )

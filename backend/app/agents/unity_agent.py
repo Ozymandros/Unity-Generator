@@ -7,6 +7,7 @@ provider only requires a registry entry and (optionally) a ``base_url``.
 """
 
 import logging
+import os
 from typing import Any
 
 from semantic_kernel import Kernel
@@ -14,7 +15,7 @@ from semantic_kernel.connectors.ai.chat_completion_client_base import ChatComple
 from semantic_kernel.connectors.ai.function_choice_behavior import FunctionChoiceBehavior
 
 from ..services.providers import provider_registry
-from .unity_mcp_plugin import UnityMCPPluginWrapper
+from .unity_mcp_plugin import create_unity_mcp_plugin
 
 LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +76,7 @@ class UnityAgent:
 
         caps = provider_registry.get(provider)
         api_key = api_keys.get(caps.api_key_name, "")
+        use_tools = caps.supports_tool_use
 
         # Resolve Azure endpoint for create_chat_service if needed
         endpoint = api_keys.get("AZURE_OPENAI_ENDPOINT") if provider == "azure" else None
@@ -90,47 +92,55 @@ class UnityAgent:
         )
         kernel.add_service(sk_service)
 
-        # Initialize Unity MCP Plugin
-        unity_plugin_wrapper = UnityMCPPluginWrapper()
-        try:
-            plugin_instance = await unity_plugin_wrapper.initialize()
-        except Exception as exc:
-            LOGGER.error("Unity MCP Server not reachable: %s", exc)
-            return {
-                "content": "Unity Editor is not connected. Please ensure the Unity MCP Server is running.",
-                "error": str(exc),
-            }
-        kernel.add_plugin(plugin_instance, plugin_name="UnityMCP")
+        system_message = (
+            system_prompt
+            or "You are a Unity Editor assistant. Use your tools to help the user with Unity tasks."
+        )
+        full_prompt = f"{system_message}\n\nUser: {prompt}"
 
         try:
-            kernel.get_service(service_id)
+            if use_tools:
+                # Provider supports tool use — register MCP plugin
+                async with create_unity_mcp_plugin() as mcp_plugin:
+                    kernel.add_plugin(mcp_plugin, plugin_name="UnityMCP")
+                    kernel.get_service(service_id)
 
-            from semantic_kernel.connectors.ai.open_ai import OpenAIChatPromptExecutionSettings
+                    from semantic_kernel.connectors.ai.open_ai import OpenAIChatPromptExecutionSettings
 
-            execution_settings = OpenAIChatPromptExecutionSettings(
-                function_choice_behavior=FunctionChoiceBehavior.Auto(),
-                temperature=options.get("temperature", 0.7),
-                max_tokens=options.get("max_tokens", 2000),
-            )
+                    execution_settings = OpenAIChatPromptExecutionSettings(
+                        function_choice_behavior=FunctionChoiceBehavior.Auto(),
+                        temperature=options.get("temperature", 0.7),
+                        max_tokens=options.get("max_tokens", 2000),
+                    )
 
-            system_message = (
-                system_prompt
-                or "You are a Unity Editor assistant. Use your tools to help the user with Unity tasks."
-            )
-            full_prompt = f"{system_message}\n\nUser: {prompt}"
+                    result = await kernel.invoke_prompt(prompt=full_prompt, settings=execution_settings)
+            else:
+                # Provider does NOT support tool use — run as plain LLM
+                LOGGER.warning(
+                    "Provider '%s' does not support tool use; "
+                    "MCP plugin skipped.",
+                    provider,
+                )
 
-            result = await kernel.invoke_prompt(prompt=full_prompt, settings=execution_settings)
+                from semantic_kernel.connectors.ai.open_ai import OpenAIChatPromptExecutionSettings
+
+                execution_settings = OpenAIChatPromptExecutionSettings(
+                    temperature=options.get("temperature", 0.7),
+                    max_tokens=options.get("max_tokens", 2000),
+                )
+
+                result = await kernel.invoke_prompt(prompt=full_prompt, settings=execution_settings)
 
             return {
                 "content": str(result),
                 "files": [],
                 "metadata": {"steps": []},
             }
+
         except Exception as exc:
             LOGGER.error("UnityAgent failed: %s", exc)
             return {
                 "content": f"Failed to execute Unity task: {exc}",
                 "error": str(exc),
             }
-        finally:
-            await unity_plugin_wrapper.close()
+

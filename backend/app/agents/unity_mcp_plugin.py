@@ -1,32 +1,26 @@
 
+import logging
+from semantic_kernel.connectors.mcp import MCPStdioPlugin
 
-import os
-
-from semantic_kernel.connectors.mcp import MCPSsePlugin
-
-
-class UnityMCPPluginWrapper:
+def create_unity_mcp_plugin() -> MCPStdioPlugin:
     """
-    Wrapper for Semantic Kernel's MCPSsePlugin to connect to Unity MCP server via SSE.
+    Crea el plugin fent servir l'eina global instal·lada al sistema.
+    Net, portàtil i professional.
     """
-    def __init__(self, url: str | None = None):
-        # Allow configuration via env var UNITY_MCP_URL
-        self.url = url or os.environ.get("UNITY_MCP_URL", "http://localhost:8080")
-        self._plugin = None
-
-    async def initialize(self):
-        """Initialize and connect the MCP plugin."""
-        self._plugin = MCPSsePlugin(
+    logger = logging.getLogger("unity_mcp_plugin")
+    logger.info("Creating UnityMCP plugin...")
+    try:
+        plugin = MCPStdioPlugin(
             name="UnityMCP",
-            description="Unity Editor automation tools via MCP",
-            url=self.url,
+            description="Unity Editor automation tools",
+            # Simplement fem servir el nom de l'eina global
+            command="unity-mcp", 
+            args=[],
             load_tools=True,
-            load_prompts=False,
-            request_timeout=30
+            request_timeout=30,
         )
-        await self._plugin.connect()
-        return self._plugin
-
-    async def close(self):
-        if self._plugin:
-            await self._plugin.close()
+        logger.info("UnityMCP plugin created successfully.")
+        return plugin
+    except Exception as e:
+        logger.error(f"Failed to create UnityMCP plugin: {e}")
+        raise

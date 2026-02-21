@@ -31,7 +31,10 @@ def generate_text(request: GenerationRequest) -> GenerationResponse:
     Generate game narrative or text content using the AI text agent.
     """
     try:
+        print(f"\n[ROUTER] /generate/text received: provider={request.provider}, options={request.options}")
         provider = request.provider or get_pref("preferred_llm_provider")
+        print(f"[ROUTER] Resolved provider for agent_manager: {provider}")
+        
         options: TextOptions | dict[str, Any] = request.options
         if isinstance(options, dict):
             options = TextOptions(**options)

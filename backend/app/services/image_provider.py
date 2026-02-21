@@ -41,7 +41,11 @@ def generate_image(
     api_key = api_keys.get(key_name, "")
 
     # Create SK service
-    service = provider_registry.create_text_to_image_service(selected, api_key)
+    service = provider_registry.create_text_to_image_service(
+        selected, 
+        api_key, 
+        model_id=opts.get("model")
+    )
 
     # Setup Kernel
     kernel = Kernel()

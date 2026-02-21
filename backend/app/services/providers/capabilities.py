@@ -62,4 +62,5 @@ class ProviderCapabilities(BaseModel):
     supports_streaming: bool = False
     supports_tool_use: bool = False
     openai_compatible: bool = False
+    requires_api_key: bool = True
     extra: dict[str, Any] = Field(default_factory=dict)

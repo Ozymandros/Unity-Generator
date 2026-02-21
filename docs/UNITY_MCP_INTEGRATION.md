@@ -10,12 +10,13 @@ This document describes the integration of Unity's Model Context Protocol (MCP) 
 
 ## Configuration
 - **Install requirements**: Ensure `semantic-kernel[mcp]` is in `backend/requirements.txt`.
-- **Set MCP server URL**: Configure the Unity MCP server endpoint via the environment variable:
-  - `UNITY_MCP_URL` (default: `http://localhost:8080`)
+- **Set MCP server command**: Configure the Unity MCP server executable via environment variables:
+  - `UNITY_MCP_COMMAND`: Path to the executable (default: `unity-mcp-server`)
+  - `UNITY_MCP_ARGS`: Arguments for the executable (default: empty)
 
 Example:
 ```sh
-export UNITY_MCP_URL=http://localhost:8080
+export UNITY_MCP_COMMAND="C:\Path\To\UnityMcp.Server.exe"
 ```
 
 ## Usage

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "unity-mcp": {
+      "source": "C:\\Projects\\Unity-MCP-Server\\Skills",
+      "sourceType": "local",
+      "computedHash": "564c4747581ca835724fddcc38e1698bf4e12989da63257699ca5c68e1838225"
+    }
+  }
+}

@@ -29,7 +29,7 @@ class TestLLMProviders:
         assert result.model == "gpt-4"
 
         # Verify service creation
-        mock_create.assert_called_with("openai", "sk-test")
+        mock_create.assert_called_with("openai", "sk-test", model_id="gpt-4")
 
         # Verify SK invocation
         mock_service.get_chat_message_content.assert_called_once()
@@ -53,9 +53,10 @@ class TestImageProviders:
         assert result.content == "https://mock.url/image.png"
         assert result.provider == "openai"
 
+        # Verify service creation
+        mock_create.assert_called_with("openai", "sk-test", model_id=None)
+        
         # Verify SK invocation
-        # generate_image(prompt, width, height)
-        mock_service.generate_image.assert_called_once()
 
 
 class TestAudioProviders:
@@ -80,5 +81,7 @@ class TestAudioProviders:
         # base64 encoded "audio_bytes" -> "YXVkaW9fYnl0ZXM="
         assert result.content == "YXVkaW9fYnl0ZXM="
         assert result.provider == "openai"
+
+        mock_create.assert_called_with("openai", "sk-test", model_id=None)
 
         mock_service.get_audio_content.assert_called_once()

@@ -70,7 +70,7 @@ export const TEXT_PROVIDERS: ProviderOption[] = [
       value: "ollama",
       label: "Ollama",
       models: [
-          { value: "gemme3:4b", label: "Gemma 3 4B" }
+          { value: "gemma3:4b", label: "Gemma 3 4B" }
       ]
   }
 ];
