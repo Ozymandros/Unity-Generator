@@ -52,24 +52,43 @@ def generate_audio(
     kernel.add_service(service)
 
     async def _run_audio():
-        # SK's TextToAudioClientBase usually has get_audio_contents
-        # For OpenAI it is get_audio_content
-        # We pass prompt and settings. Settings can be dict or specific object.
-        # OpenAITextToAudio settings: voice, speed, etc.
-
-        # We need to constructing settings object if possible or pass dict
-        # OpenAITextToAudio usually takes arguments in methods or via settings
-
-        from semantic_kernel.connectors.ai.open_ai import OpenAITextToAudioExecutionSettings
-        settings = OpenAITextToAudioExecutionSettings(
+        # Correctly instantiate settings based on the service/provider type
+        settings = service.instantiate_prompt_execution_settings(
             ai_model_id=opts.get("model") or provider_registry.get(selected).default_models[Modality.AUDIO],
-            input=prompt,
-            voice=opts.get("voice", "alloy"), # 'alloy' is a standard OpenAI voice
-            response_format=opts.get("format", "mp3"),
-            speed=opts.get("speed", 1.0)
+            input=prompt
         )
 
-        content = await service.get_audio_content(prompt, settings)
+        # Apply settings dynamically with robust validation handling
+        voice_to_set = opts.get("voice")
+        
+        try:
+            if hasattr(settings, "voice") and voice_to_set:
+                # Some settings (OpenAI) have strict literals. 
+                # We try to set it, if it fails validation, we fallback.
+                try:
+                    settings.voice = voice_to_set
+                except Exception:
+                    LOGGER.warning(f"Voice '{voice_to_set}' is not supported by {selected}. Falling back to default.")
+                    # If it's OpenAI, we know 'alloy' is safe. Others might not have a 'voice' property if they fail.
+                    if selected == "openai":
+                        settings.voice = "alloy"
+            
+            if hasattr(settings, "response_format"):
+                 settings.response_format = opts.get("format", "mp3")
+            
+            if hasattr(settings, "speed"):
+                 settings.speed = opts.get("speed", 1.0)
+                 
+        except Exception as e:
+            LOGGER.error(f"Error applying audio settings for {selected}: {e}")
+
+        # Handle service call
+        if hasattr(service, "get_audio_content"):
+            content = await service.get_audio_content(prompt, settings)
+        else:
+            results = await service.get_audio_contents(prompt, settings)
+            content = results[0] if results else None
+            
         return content
 
     try:

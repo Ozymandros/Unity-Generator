@@ -1,4 +1,4 @@
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { getPref, saveApiKeys, setPref, getApiKeys } from "@/api/client";
 import {
   TEXT_PROVIDERS,
@@ -23,16 +23,30 @@ export function useSettingsPanel() {
   const playhtKey = ref("");
   const huggingfaceKey = ref("");
   const ollamaKey = ref("");
+  const replicateKey = ref("");
   const preferredLlm = ref("deepseek");
   const preferredImage = ref("stability");
-  const preferredAudio = ref("elevenlabs");
+  const preferredAudio = ref("openai");
+  const preferredMusic = ref("replicate");
   const defaultCodeSystemPrompt = ref("");
   const defaultTextSystemPrompt = ref("");
   const defaultImageSystemPrompt = ref("");
   const defaultAudioSystemPrompt = ref("");
+  const defaultMusicSystemPrompt = ref("");
   const defaultSpriteSystemPrompt = ref("");
-
   const status = ref<string | null>(null);
+
+  const openSections = ref<Record<string, boolean>>({
+    llmKeys: false,
+    imageKeys: false,
+    audioKeys: false,
+    prompts: false,
+    providers: false,
+  });
+
+  const toggleSection = (section: string) => {
+    openSections.value[section] = !openSections.value[section];
+  };
 
   const showModelManager = ref(false);
   const activeProviderForModal = ref("");
@@ -41,6 +55,16 @@ export function useSettingsPanel() {
     activeProviderForModal.value = provider;
     showModelManager.value = true;
   }
+
+  const selectedAudioType = computed(() => {
+    const provider = AUDIO_PROVIDERS.find((p) => p.value === preferredAudio.value);
+    return provider?.type || "tts";
+  });
+
+  const selectedMusicType = computed(() => {
+    const provider = AUDIO_PROVIDERS.find((p) => p.value === preferredMusic.value);
+    return provider?.type || "music";
+  });
 
   onMounted(async () => {
     const keysResponse = await getApiKeys();
@@ -63,15 +87,21 @@ export function useSettingsPanel() {
       playhtKey.value = keys.playht_api_key || "";
       huggingfaceKey.value = keys.huggingface_api_key || "";
       ollamaKey.value = keys.ollama_api_key || "";
+      replicateKey.value = keys.replicate_api_key || "";
     }
 
     const llmPref = await getPref("preferred_llm_provider");
     const imagePref = await getPref("preferred_image_provider");
     const audioPref = await getPref("preferred_audio_provider");
+    const musicPref = await getPref("preferred_music_provider");
+    preferredMusic.value = String(
+      musicPref.data?.value || preferredMusic.value,
+    );
     const codePromptPref = await getPref("default_code_system_prompt");
     const textPromptPref = await getPref("default_text_system_prompt");
     const imagePromptPref = await getPref("default_image_system_prompt");
     const audioPromptPref = await getPref("default_audio_system_prompt");
+    const musicPromptPref = await getPref("default_music_system_prompt");
     const spritePromptPref = await getPref("default_sprite_system_prompt");
 
     preferredLlm.value = String(llmPref.data?.value || preferredLlm.value);
@@ -85,6 +115,7 @@ export function useSettingsPanel() {
     defaultTextSystemPrompt.value = String(textPromptPref.data?.value || "");
     defaultImageSystemPrompt.value = String(imagePromptPref.data?.value || "");
     defaultAudioSystemPrompt.value = String(audioPromptPref.data?.value || "");
+    defaultMusicSystemPrompt.value = String(musicPromptPref.data?.value || "");
     defaultSpriteSystemPrompt.value = String(
       spritePromptPref.data?.value || "",
     );
@@ -106,10 +137,12 @@ export function useSettingsPanel() {
       playht_api_key: playhtKey.value,
       huggingface_api_key: huggingfaceKey.value,
       ollama_api_key: ollamaKey.value,
+      replicate_api_key: replicateKey.value,
     });
     await setPref("preferred_llm_provider", preferredLlm.value);
     await setPref("preferred_image_provider", preferredImage.value);
     await setPref("preferred_audio_provider", preferredAudio.value);
+    await setPref("preferred_music_provider", preferredMusic.value);
     await setPref("default_code_system_prompt", defaultCodeSystemPrompt.value);
     await setPref("default_text_system_prompt", defaultTextSystemPrompt.value);
     await setPref(
@@ -119,6 +152,10 @@ export function useSettingsPanel() {
     await setPref(
       "default_audio_system_prompt",
       defaultAudioSystemPrompt.value,
+    );
+    await setPref(
+      "default_music_system_prompt",
+      defaultMusicSystemPrompt.value,
     );
     await setPref(
       "default_sprite_system_prompt",
@@ -147,19 +184,26 @@ export function useSettingsPanel() {
     playhtKey,
     huggingfaceKey,
     ollamaKey,
+    replicateKey,
     preferredLlm,
     preferredImage,
     preferredAudio,
+    preferredMusic,
     defaultCodeSystemPrompt,
     defaultTextSystemPrompt,
     defaultImageSystemPrompt,
     defaultAudioSystemPrompt,
+    defaultMusicSystemPrompt,
     defaultSpriteSystemPrompt,
     status,
     save,
     showModelManager,
     activeProviderForModal,
     manageModels,
+    selectedAudioType,
+    selectedMusicType,
+    openSections,
+    toggleSection,
     TEXT_PROVIDERS,
     IMAGE_PROVIDERS,
     AUDIO_PROVIDERS,

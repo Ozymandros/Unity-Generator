@@ -193,7 +193,18 @@ class AgentManager:
         # Fallback logic for audio
         effective_system_prompt = system_prompt
         if effective_system_prompt is None:
-            effective_system_prompt = get_pref("default_audio_system_prompt")
+            # Check if this is a music provider or TTS provider
+            is_music = False
+            current_provider = provider or get_pref("preferred_audio_provider")
+            try:
+                if current_provider:
+                    caps = provider_registry.get(current_provider)
+                    is_music = caps.extra.get("is_music", False)
+            except Exception:
+                pass
+            
+            prompt_key = "default_music_system_prompt" if is_music else "default_audio_system_prompt"
+            effective_system_prompt = get_pref(prompt_key)
 
         result = self.audio_agent.run(
             prompt, provider, opts, api_keys, effective_system_prompt

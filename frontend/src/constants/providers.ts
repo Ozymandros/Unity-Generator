@@ -1,7 +1,8 @@
-export type ProviderOption = {
+export interface ProviderOption {
   value: string;
   label: string;
-};
+  type?: "tts" | "music";
+}
 
 export const TEXT_PROVIDERS: ProviderOption[] = [
   { value: "google", label: "Google (Gemini)" },
@@ -12,6 +13,7 @@ export const TEXT_PROVIDERS: ProviderOption[] = [
   { value: "groq", label: "Groq" },
   { value: "huggingface", label: "Hugging Face" },
   { value: "ollama", label: "Ollama" },
+  { value: "replicate", label: "Replicate" },
 ];
 
 export const IMAGE_PROVIDERS: ProviderOption[] = [
@@ -19,13 +21,15 @@ export const IMAGE_PROVIDERS: ProviderOption[] = [
   { value: "openai", label: "OpenAI (DALL-E 3)" },
   { value: "google", label: "Google (Imagen)" },
   { value: "flux", label: "Flux (Replicate)" },
+  { value: "replicate", label: "Replicate (Native)" },
 ];
 
 export const AUDIO_PROVIDERS: ProviderOption[] = [
-  { value: "elevenlabs", label: "ElevenLabs" },
-  { value: "openai", label: "OpenAI (TTS)" },
-  { value: "google", label: "Google (TTS)" },
-  { value: "playht", label: "PlayHT" },
+  { value: "elevenlabs", label: "ElevenLabs", type: "tts" },
+  { value: "openai", label: "OpenAI (TTS)", type: "tts" },
+  { value: "google", label: "Google (TTS)", type: "tts" },
+  { value: "playht", label: "PlayHT", type: "tts" },
+  { value: "replicate", label: "Replicate (Music)", type: "music" },
 ];
 
 export const ASPECT_RATIOS = [

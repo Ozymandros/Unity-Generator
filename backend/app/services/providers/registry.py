@@ -299,8 +299,11 @@ class ProviderRegistry:
         from semantic_kernel.connectors.ai.anthropic import AnthropicChatCompletion
         from semantic_kernel.connectors.ai.google import GoogleAIChatCompletion
         from semantic_kernel.connectors.ai.open_ai import (
-            AzureChatCompletion,
             OpenAIChatCompletion,
+        )
+        from .connectors.replicate import (
+            ReplicateTextToImage,
+            ReplicateTextToAudio,
         )
         print(f"\n[REGISTRY] create_chat_service: provider={provider}, model_id={model_id}", flush=True)
         caps = self.get(provider)
@@ -382,6 +385,10 @@ class ProviderRegistry:
                 ai_model_id=target_model
             )
 
+        if provider == "replicate":
+            from .connectors.replicate import ReplicateTextToImage
+            return ReplicateTextToImage(api_key=api_key, model_id=target_model)
+
         if provider == "stability":
             return StabilityTextToImage(api_key=api_key, model_id=target_model)
 
@@ -403,6 +410,10 @@ class ProviderRegistry:
                 api_key=api_key,
                 ai_model_id=target_model
             )
+
+        if provider == "replicate":
+            from .connectors.replicate import ReplicateTextToAudio
+            return ReplicateTextToAudio(api_key=api_key, model_id=target_model)
 
         if provider == "elevenlabs":
             return ElevenLabsTextToAudio(api_key=api_key, model_id=target_model)
@@ -517,6 +528,7 @@ def _build_default_registry() -> ProviderRegistry:
                 Modality.IMAGE: "dall-e-3",
                 Modality.AUDIO: "tts-1",
             },
+            extra={"is_tts": True},
             supports_function_calling=True,
             supports_vision=True,
             supports_json_mode=True,
@@ -603,6 +615,7 @@ def _build_default_registry() -> ProviderRegistry:
             modalities={Modality.AUDIO},
             default_models={Modality.AUDIO: "eleven_multilingual_v2"},
             openai_compatible=False,
+            extra={"is_tts": True},
         ),
         priorities={Modality.AUDIO: 0},
     )
@@ -614,8 +627,28 @@ def _build_default_registry() -> ProviderRegistry:
             modalities={Modality.AUDIO},
             default_models={Modality.AUDIO: "playht-default"},
             openai_compatible=False,
+            extra={"is_tts": True},
         ),
         priorities={Modality.AUDIO: 3},
+    )
+
+    reg.register(
+        ProviderCapabilities(
+            name="replicate",
+            api_key_name="replicate_api_key",
+            modalities={Modality.LLM, Modality.IMAGE, Modality.AUDIO},
+            default_models={
+                Modality.LLM: "google-deepmind/gemma-2b-it",
+                Modality.IMAGE: "black-forest-labs/flux-schnell",
+                Modality.AUDIO: "facebookresearch/musicgen",
+            },
+            openai_compatible=True,
+            base_url="https://api.replicate.com/v1",
+            supports_function_calling=False,
+            supports_streaming=True,
+            supports_tool_use=False,
+            extra={"is_music": True},
+        )
     )
 
     # ---- Video providers (scaffolds) ----

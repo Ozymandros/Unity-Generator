@@ -83,7 +83,8 @@ specify a provider. Priority is defined in each provider module:
 
 - LLM: `deepseek`, `openrouter`, `openai`, `groq`
 - Image: `stability`, `flux`
-- Audio: `elevenlabs`, `playht`
+- Audio (Voice/TTS): `elevenlabs`, `playht`, `openai`, `google`
+- Audio (Music): `replicate`
 
 The selected provider is based on preference keys in the SQLite DB and available
 API keys in `config/api_keys.json`.
