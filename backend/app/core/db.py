@@ -51,10 +51,16 @@ def init_db() -> None:
                 provider TEXT NOT NULL,
                 model_value TEXT NOT NULL,
                 model_label TEXT NOT NULL,
+                modality TEXT DEFAULT 'llm',
                 UNIQUE(provider, model_value)
             )
             """
         )
+        # Migration: Add modality column if it doesn't exist
+        cursor.execute("PRAGMA table_info(provider_models)")
+        columns = [column[1] for column in cursor.fetchall()]
+        if "modality" not in columns:
+            cursor.execute("ALTER TABLE provider_models ADD COLUMN modality TEXT DEFAULT 'llm'")
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS api_keys (
@@ -131,20 +137,20 @@ def get_models(provider: str) -> list[dict[str, str]]:
         provider: Canonical lowercase provider name.
 
     Returns:
-        List of dicts with ``value`` and ``label`` keys.
+        List of dicts with ``value``, ``label``, and ``modality`` keys.
 
     Example:
         >>> get_models("openai")  # doctest: +SKIP
-        [{'value': 'gpt-4o', 'label': 'GPT-4o'}, ...]
+        [{'value': 'gpt-4o', 'label': 'GPT-4o', 'modality': 'llm'}, ...]
     """
     conn = sqlite3.connect(get_db_path())
     try:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT model_value, model_label FROM provider_models WHERE provider = ?",
+            "SELECT model_value, model_label, modality FROM provider_models WHERE provider = ?",
             (provider.lower(),),
         )
-        return [{"value": row[0], "label": row[1]} for row in cursor.fetchall()]
+        return [{"value": row[0], "label": row[1], "modality": row[2]} for row in cursor.fetchall()]
     finally:
         conn.close()
 
@@ -158,23 +164,23 @@ def get_all_models() -> dict[str, list[dict[str, str]]]:
 
     Example:
         >>> get_all_models()  # doctest: +SKIP
-        {'openai': [{'value': 'gpt-4o', 'label': 'GPT-4o'}], ...}
+        {'openai': [{'value': 'gpt-4o', 'label': 'GPT-4o', 'modality': 'llm'}], ...}
     """
     conn = sqlite3.connect(get_db_path())
     try:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT provider, model_value, model_label FROM provider_models ORDER BY provider"
+            "SELECT provider, model_value, model_label, modality FROM provider_models ORDER BY provider"
         )
         result: dict[str, list[dict[str, str]]] = {}
-        for provider, value, label in cursor.fetchall():
-            result.setdefault(provider, []).append({"value": value, "label": label})
+        for provider, value, label, modality in cursor.fetchall():
+            result.setdefault(provider, []).append({"value": value, "label": label, "modality": modality})
         return result
     finally:
         conn.close()
 
 
-def add_model(provider: str, value: str, label: str) -> None:
+def add_model(provider: str, value: str, label: str, modality: str = "llm") -> None:
     """
     Add a model entry for a provider.
 
@@ -182,13 +188,14 @@ def add_model(provider: str, value: str, label: str) -> None:
         provider: Canonical lowercase provider name.
         value: Model identifier (e.g. ``"gpt-4o"``).
         label: Human-readable label (e.g. ``"GPT-4o"``).
+        modality: Generation modality (e.g. ``"llm"``, ``"image"``).
 
     Raises:
         ValueError: If any argument is empty.
         sqlite3.IntegrityError: If the model already exists for the provider.
 
     Example:
-        >>> add_model("openai", "gpt-4o", "GPT-4o")  # doctest: +SKIP
+        >>> add_model("openai", "gpt-4o", "GPT-4o", "llm")  # doctest: +SKIP
     """
     if not provider or not value or not label:
         raise ValueError("provider, value, and label must be non-empty strings")
@@ -197,10 +204,10 @@ def add_model(provider: str, value: str, label: str) -> None:
         cursor = conn.cursor()
         cursor.execute(
             """
-            INSERT INTO provider_models (provider, model_value, model_label)
-            VALUES (?, ?, ?)
+            INSERT INTO provider_models (provider, model_value, model_label, modality)
+            VALUES (?, ?, ?, ?)
             """,
-            (provider.lower(), value, label),
+            (provider.lower(), value, label, modality.lower()),
         )
         conn.commit()
     finally:

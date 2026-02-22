@@ -105,16 +105,16 @@ class SqliteModelRepository(IModelRepository):
         conn = sqlite3.connect(get_db_path())
         try:
             cursor = conn.cursor()
-            cursor.execute("SELECT model_value, model_label FROM provider_models WHERE provider = ?", (provider.lower(),))
-            return [{"value": row[0], "label": row[1]} for row in cursor.fetchall()]
+            cursor.execute("SELECT model_value, model_label, modality FROM provider_models WHERE provider = ?", (provider.lower(),))
+            return [{"value": row[0], "label": row[1], "modality": row[2]} for row in cursor.fetchall()]
         finally:
             conn.close()
 
-    def add(self, provider: str, value: str, label: str) -> None:
+    def add(self, provider: str, value: str, label: str, modality: str) -> None:
         conn = sqlite3.connect(get_db_path())
         try:
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO provider_models (provider, model_value, model_label) VALUES (?, ?, ?)", (provider.lower(), value, label))
+            cursor.execute("INSERT INTO provider_models (provider, model_value, model_label, modality) VALUES (?, ?, ?, ?)", (provider.lower(), value, label, modality.lower()))
             conn.commit()
         finally:
             conn.close()

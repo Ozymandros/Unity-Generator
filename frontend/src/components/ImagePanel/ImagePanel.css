@@ -1,5 +1,6 @@
 .panel {
   max-width: 820px;
+  margin: 1rem;
 }
 .field {
   display: flex;

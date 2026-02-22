@@ -67,7 +67,7 @@ def test_system_prompt_from_db():
     manager = AgentManager()
     
     with patch("app.agents.code_agent.CodeAgent.run") as mock_run, \
-         patch("app.services.agent_manager.get_system_prompt_repo") as mock_get_repo:
+         patch("app.repositories.get_system_prompt_repo") as mock_get_repo:
         
         mock_repo = MagicMock()
         mock_repo.get.return_value = "DB system prompt"

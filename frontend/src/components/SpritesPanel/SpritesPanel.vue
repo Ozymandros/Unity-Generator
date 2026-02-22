@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { StatusBanner } from "@/components/StatusBanner";
+import { SmartField } from "@/components/generic/SmartField";
 import { useSpritesPanel } from "./SpritesPanel";
 
 const {
@@ -45,58 +46,86 @@ const {
     <div class="content-grid">
         <!-- Controls Sidebar -->
         <div class="sidebar">
-            <div class="field">
-                <label>Prompt</label>
-                <textarea v-model="prompt" rows="3" placeholder="e.g. A pixel art sword, fire enchantment"></textarea>
-            </div>
+            <SmartField
+                label="Prompt"
+                type="textarea"
+                v-model="prompt"
+                :rows="3"
+                placeholder="e.g. A pixel art sword, fire enchantment"
+            />
 
-            <div class="field-group">
-                <div class="field">
-                    <label>Provider</label>
-                    <select v-model="provider">
-                        <option value="" disabled>Select Provider</option>
-                        <option v-for="p in IMAGE_PROVIDERS" :key="p.value" :value="p.value">{{ p.label }}</option>
-                    </select>
+            <v-card variant="flat" border class="pa-4 rounded-lg bg-surface">
+                <SmartField 
+                    label="Provider" 
+                    type="select" 
+                    v-model="provider" 
+                    :options="IMAGE_PROVIDERS" 
+                    placeholder="Select Provider" 
+                />
+
+                <div class="field mb-4">
+                    <label class="field-label mb-2 d-block">Resolution</label>
+                    <v-btn-toggle
+                      v-model="resolution"
+                      mandatory
+                      color="primary"
+                      variant="outlined"
+                      density="compact"
+                      rounded="lg"
+                      class="mb-2"
+                    >
+                      <v-btn
+                        v-for="res in RESOLUTIONS"
+                        :key="res"
+                        :value="res"
+                        size="small"
+                        class="text-none"
+                      >
+                        {{ res }}x
+                      </v-btn>
+                    </v-btn-toggle>
                 </div>
 
-                <div class="field">
-                    <label>Resolution</label>
-                    <div class="toggle-group">
-                         <button 
-                            v-for="res in RESOLUTIONS" 
-                            :key="res"
-                            :class="{ active: resolution === res }"
-                            @click="resolution = res"
-                         >
-                            {{ res }}x
-                         </button>
-                    </div>
-                </div>
+                <SmartField
+                     label="Palette Size"
+                     type="select"
+                     v-model.number="paletteSize"
+                     :options="PALETTE_SIZES.map(s => ({ label: `${s} colors`, value: s }))"
+                />
 
-                <div class="field">
-                     <label>Palette Size</label>
-                     <select v-model.number="paletteSize">
-                        <option v-for="s in PALETTE_SIZES" :key="s" :value="s">{{ s }} colors</option>
-                     </select>
-                </div>
+                <SmartField
+                    label="Auto-Crop Transparent Edges"
+                    type="checkbox"
+                    v-model="autoCrop"
+                />
 
-                <div class="field checkbox">
-                    <input type="checkbox" id="crop" v-model="autoCrop">
-                    <label for="crop">Auto-Crop Transparent Edges</label>
-                </div>
+                <SmartField 
+                  label="API Key (Optional)" 
+                  type="password" 
+                  v-model="apiKey" 
+                  placeholder="Key override" 
+                />
 
-                <div class="field" style="margin-top: 8px;">
-                    <label>API Key (Optional)</label>
-                    <input v-model="apiKey" type="password" placeholder="Key override" />
-                </div>
+                <SmartField 
+                  label="System Prompt Override" 
+                  type="textarea" 
+                  v-model="systemPrompt" 
+                  :placeholder="defaultSystemPrompt" 
+                  :rows="2"
+                />
+            </v-card>
 
-                <div class="field">
-                    <label>System Prompt Override</label>
-                    <textarea v-model="systemPrompt" :placeholder="defaultSystemPrompt" rows="2"></textarea>
-                </div>
-            </div>
-
-            <button class="primary" @click="run">Generate Sprite</button>
+            <v-btn
+              color="primary"
+              size="large"
+              rounded="pill"
+              block
+              prepend-icon="mdi-pencil-box-outline"
+              @click="run"
+              class="mt-4"
+            >
+              Generate Sprite
+            </v-btn>
         </div>
 
         <!-- Main Preview Area -->

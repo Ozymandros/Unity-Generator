@@ -1,5 +1,5 @@
 <template>
-  <div class="prompt-section">
+  <v-card variant="flat" border class="pa-4 rounded-lg bg-surface mb-6">
     <SmartField 
       :label="label" 
       :id="`${type}-prompt`"
@@ -17,10 +17,13 @@
       @update:model-value="val => { localProvider = String(val); emit('update:provider', String(val)); }"
       :options="providers"
       placeholder="Default"
+      class="mt-4"
     />
 
-    <slot name="options" :options="localOptions" :updateOptions="updateOptions" />
-  </div>
+    <div class="mt-4">
+      <slot name="options" :options="localOptions" :updateOptions="updateOptions" />
+    </div>
+  </v-card>
 </template>
 
 <script setup lang="ts">

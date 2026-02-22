@@ -1,14 +1,1 @@
-.status {
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin-bottom: 12px;
-  font-size: 0.9rem;
-}
-.ok {
-  background: #e7f8ef;
-  color: #0f5132;
-}
-.error {
-  background: #fdecea;
-  color: #842029;
-}
+/* StatusBanner.css is no longer used as it has been replaced by v-alert */

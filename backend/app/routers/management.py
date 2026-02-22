@@ -19,6 +19,7 @@ LOGGER = logging.getLogger(__name__)
 class ProviderUpdate(BaseModel):
     name: str = Field(min_length=1)
     api_key_name: Optional[str] = None
+    api_key_value: Optional[str] = None
     base_url: Optional[str] = None
     openai_compatible: bool = False
     requires_api_key: bool = True
@@ -34,6 +35,7 @@ class ModelUpdate(BaseModel):
     provider: str = Field(min_length=1)
     value: str = Field(min_length=1)
     label: str = Field(min_length=1)
+    modality: str = Field(default="llm")
 
 class ApiKeyUpdate(BaseModel):
     service_name: str = Field(min_length=1)
@@ -67,6 +69,13 @@ def save_provider(provider: ProviderUpdate):
         extra=provider.extra
     )
     get_provider_repo().save(caps)
+    
+    # Unified key saving: If api_key_value is provided, save it under api_key_name (or provider name)
+    if provider.api_key_value:
+        key_name = provider.api_key_name or provider.name
+        get_api_key_repo().save(key_name, provider.api_key_value)
+        LOGGER.info(f"Saved API key for {key_name} during provider save.")
+
     # Reload registry to reflect changes immediately
     provider_registry.load_from_db()
     return {"status": "success"}
@@ -86,7 +95,7 @@ def list_models_for_provider(provider: str):
 
 @router.post("/models")
 def add_model(model: ModelUpdate):
-    get_model_repo().add(model.provider, model.value, model.label)
+    get_model_repo().add(model.provider, model.value, model.label, model.modality)
     return {"status": "success"}
 
 @router.delete("/models/{provider}/{value}")

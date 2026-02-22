@@ -115,6 +115,7 @@ export async function getPref(key: string) {
 export type ModelEntry = {
   value: string;
   label: string;
+  modality: string;
 };
 
 export type ProviderCapabilities = {
@@ -137,7 +138,7 @@ export async function listProviders(): Promise<ProviderCapabilities[]> {
   return await response.json();
 }
 
-export async function saveProvider(provider: ProviderCapabilities): Promise<GenerationResponse> {
+export async function saveProvider(provider: ProviderCapabilities & { api_key_value?: string }): Promise<GenerationResponse> {
   const response = await fetch(`${getBackendUrl()}/api/management/providers`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -158,11 +159,11 @@ export async function listModels(provider: string): Promise<ModelEntry[]> {
   return await response.json();
 }
 
-export async function addModel(provider: string, value: string, label: string): Promise<GenerationResponse> {
+export async function addModel(provider: string, value: string, label: string, modality: string = "llm"): Promise<GenerationResponse> {
   const response = await fetch(`${getBackendUrl()}/api/management/models`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ provider, value, label }),
+    body: JSON.stringify({ provider, value, label, modality }),
   });
   return await response.json();
 }
@@ -207,6 +208,11 @@ export async function saveSystemPrompt(modality: string, content: string): Promi
     body: JSON.stringify({ modality, content }),
   });
   return await response.json();
+}
+
+export async function getApiKey(serviceName: string): Promise<string | null> {
+  const keys = await listApiKeys();
+  return keys[serviceName] || null;
 }
 
 export type UnityProjectRequest = {

@@ -58,12 +58,16 @@ const {
           :options="providerModels" 
           placeholder="Select Model" 
         />
-        <button
-          class="icon-btn"
+        <v-btn
+          icon="mdi-plus"
+          size="small"
+          variant="tonal"
+          color="primary"
+          class="ml-2 mt-7"
           @click="showModelManager = true"
           :disabled="!provider"
           title="Manage models"
-        >＋</button>
+        ></v-btn>
       </div>
       <div class="row" style="margin-bottom: 12px;">
       </div>
@@ -83,26 +87,42 @@ const {
       </div>
     </div>
 
-    <details class="advanced-opts">
-      <summary>Advanced Options</summary>
-      <div class="opts-content">
-         <SmartField 
+    <v-expansion-panels class="mb-6">
+      <v-expansion-panel
+        title="Advanced Options"
+        bg-color="surface"
+        class="border rounded-lg"
+        elevation="0"
+      >
+        <v-expansion-panel-text class="pa-4">
+          <SmartField 
             label="API Key (Optional)" 
             type="password" 
             v-model="apiKey" 
             placeholder="Override key..." 
-         />
-        <SmartField 
-          label="System Prompt Override" 
-          type="textarea" 
-          v-model="systemPrompt" 
-          :placeholder="defaultSystemPrompt" 
-          :rows="3"
-        />
-      </div>
-    </details>
+          />
+          <SmartField 
+            label="System Prompt Override" 
+            type="textarea" 
+            v-model="systemPrompt" 
+            :placeholder="defaultSystemPrompt" 
+            :rows="3"
+          />
+        </v-expansion-panel-text>
+      </v-expansion-panel>
+    </v-expansion-panels>
 
-    <button class="primary" @click="run">Generate</button>
+    <v-btn
+      color="primary"
+      size="large"
+      rounded="pill"
+      block
+      prepend-icon="mdi-auto-fix"
+      @click="run"
+      class="mb-6"
+    >
+      Generate Text
+    </v-btn>
 
     <SmartField label="Result" type="textarea" v-model="result" :rows="10" disabled />
 

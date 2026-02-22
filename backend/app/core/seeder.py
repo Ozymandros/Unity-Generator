@@ -1,7 +1,8 @@
 import logging
+import sqlite3
 import json
 from typing import Dict, List, Any
-from .db import get_all_prefs, set_pref # keep for legacy migration if needed
+from .db import get_all_prefs, set_pref, get_db_path # keep for legacy migration if needed
 from ..repositories import (
     get_provider_repo,
     get_model_repo,
@@ -45,7 +46,8 @@ def seed_database():
             for modality, model_id in caps.default_models.items():
                 try:
                     # Use model name as label if we don't have better
-                    model_repo.add(caps.name, model_id, model_id.split("/")[-1].replace("-", " ").title())
+                    label = model_id.split("/")[-1].replace("-", " ").title()
+                    model_repo.add(caps.name, model_id, label, modality.value)
                 except Exception:
                     pass # Probably already exists
 
@@ -98,3 +100,64 @@ def seed_database():
 
         if migrated_count > 0:
             LOGGER.info(f"Successfully migrated {migrated_count} API keys to the new database.")
+
+    # 4. Migrate model modalities if needed
+    migrate_modalities()
+
+def migrate_modalities():
+    """
+    Infers and updates modalities for models that are stuck on the default 'llm'.
+    """
+    provider_repo = get_provider_repo()
+    model_repo = get_model_repo()
+    conn = sqlite3.connect(get_db_path())
+    
+    try:
+        cursor = conn.cursor()
+        # Find all models with modality 'llm'
+        cursor.execute("SELECT id, provider, model_value, modality FROM provider_models WHERE modality = 'llm'")
+        llm_models = cursor.fetchall()
+        
+        if not llm_models:
+            return
+
+        LOGGER.info(f"Checking {len(llm_models)} models for modality migration...")
+        
+        # Cache provider capabilities to avoid repeated repo calls
+        provider_caps: Dict[str, ProviderCapabilities] = {p.name: p for p in provider_repo.get_all()}
+        
+        updates = []
+        for row_id, provider_name, model_value, current_modality in llm_models:
+            caps = provider_caps.get(provider_name)
+            if not caps:
+                continue
+                
+            # If the model matches a default for a specific modality, use that
+            inferred_modality = None
+            for mod, default_id in caps.default_models.items():
+                if default_id == model_value:
+                    inferred_modality = mod.value
+                    break
+            
+            # Smart inference: Check keywords in model name if still unknown
+            if not inferred_modality:
+                name_lower = model_value.lower()
+                if any(x in name_lower for x in ["dall-e", "stable-diffusion", "flux", "midjourney"]):
+                    inferred_modality = "image"
+                elif any(x in name_lower for x in ["tts", "whisper", "elevenlabs", "speech"]):
+                    inferred_modality = "audio"
+                elif any(x in name_lower for x in ["video", "sora", "runway"]):
+                    inferred_modality = "video"
+
+            if inferred_modality and inferred_modality != "llm":
+                updates.append((inferred_modality, row_id))
+
+        if updates:
+            LOGGER.info(f"Migrating {len(updates)} models to correct modalities...")
+            cursor.executemany("UPDATE provider_models SET modality = ? WHERE id = ?", updates)
+            conn.commit()
+            
+    except Exception as e:
+        LOGGER.error(f"Error during modality migration: {e}")
+    finally:
+        conn.close()

@@ -12,8 +12,8 @@ from app.services.agent_manager import AgentManager
 
 
 @pytest.mark.asyncio
-@patch("app.services.agent_manager.get_api_key_repo")
-@patch("app.services.agent_manager.get_system_prompt_repo")
+@patch("app.repositories.get_api_key_repo")
+@patch("app.repositories.get_system_prompt_repo")
 async def test_run_unity_fallback_system_prompt(mock_get_prompt_repo, mock_get_key_repo) -> None:
     """run_unity should read default_code_system_prompt when none is given."""
     mock_get_key_repo.return_value.get_all.return_value = {}
@@ -35,8 +35,8 @@ async def test_run_unity_fallback_system_prompt(mock_get_prompt_repo, mock_get_k
 
 
 @pytest.mark.asyncio
-@patch("app.services.agent_manager.get_api_key_repo")
-@patch("app.services.agent_manager.get_system_prompt_repo")
+@patch("app.repositories.get_api_key_repo")
+@patch("app.repositories.get_system_prompt_repo")
 async def test_run_unity_explicit_system_prompt(mock_get_prompt_repo, mock_get_key_repo) -> None:
     """run_unity should skip get_pref when an explicit system prompt is provided."""
     mock_get_key_repo.return_value.get_all.return_value = {}

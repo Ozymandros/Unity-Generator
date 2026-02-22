@@ -25,7 +25,7 @@ class IModelRepository(ABC):
         pass
 
     @abstractmethod
-    def add(self, provider: str, value: str, label: str) -> None:
+    def add(self, provider: str, value: str, label: str, modality: str) -> None:
         pass
 
     @abstractmethod

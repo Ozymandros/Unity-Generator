@@ -64,7 +64,7 @@ def mock_agent_manager() -> MagicMock:
 
 
 @patch("app.agents.code_agent.CodeAgent.run")
-@patch("app.services.agent_manager.get_api_key_repo")
+@patch("app.repositories.get_api_key_repo")
 def test_agent_manager_run_code(mock_get_repo, mock_run, tmp_path: Path) -> None:
     """Test run_code calls agent.run with correct parameters."""
     mock_run.return_value = {"content": "test", "provider": "openai"}

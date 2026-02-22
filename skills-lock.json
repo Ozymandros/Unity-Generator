@@ -2,9 +2,14 @@
   "version": 1,
   "skills": {
     "unity-mcp": {
-      "source": "C:\\Projects\\Unity-MCP-Server\\Skills",
+      "source": "../Unity-MCP-Server/Skills",
       "sourceType": "local",
       "computedHash": "564c4747581ca835724fddcc38e1698bf4e12989da63257699ca5c68e1838225"
+    },
+    "vuetify0": {
+      "source": "vuetifyjs/0",
+      "sourceType": "github",
+      "computedHash": "3a317966bcd53fedb42fba6144b5ec7a855ddbb3288d371386265da0eac6ce40"
     }
   }
 }

@@ -44,14 +44,14 @@ const {
     <SmartField label="Prompt" type="textarea" v-model="prompt" :rows="6" />
 
     <div class="field-group">
-      <div class="options-row">
+      <div class="options-row d-flex align-center gap-2 mb-4">
         <SmartField 
           label="Provider" 
           type="select" 
           v-model="provider" 
           :options="TEXT_PROVIDERS" 
           placeholder="Select Provider"
-          class="field-item"
+          class="flex-grow-1"
         />
         <SmartField 
           label="Model" 
@@ -60,52 +60,72 @@ const {
           :options="availableModels" 
           placeholder="Select Model" 
           :disabled="!provider"
-          class="field-item"
+          class="flex-grow-1"
         />
-        <button
-          class="icon-btn"
+        <v-btn
+          icon="mdi-plus"
+          size="small"
+          variant="tonal"
+          color="primary"
+          class="mt-7"
           @click="showModelManager = true"
           :disabled="!provider"
           title="Manage models"
-        >＋</button>
+        ></v-btn>
       </div>
-      <div class="options-row">
+      <div class="options-row d-flex gap-4 mb-4">
         <SmartField
            label="Temperature"
            type="select"
            v-model.number="temperature"
            :options="TEMPERATURE_PRESETS"
-           class="field-item"
+           class="flex-grow-1"
         />
         <SmartField
            label="Max Tokens"
            type="select"
            v-model.number="maxTokens"
            :options="LENGTH_PRESETS"
-           class="field-item"
+           class="flex-grow-1"
         />
       </div>
-       <div style="margin-top: 8px;">
-        <details>
-          <summary style="cursor: pointer; margin-bottom: 4px; font-size: 0.9em; user-select: none;">Advanced Options</summary>
-          <SmartField 
-            label="API Key (Optional Override)" 
-            type="password" 
-            v-model="apiKey" 
-            placeholder="Leave empty to use global key" 
-          />
-          <SmartField 
-            label="System Prompt Override" 
-            type="textarea" 
-            v-model="systemPrompt" 
-            :placeholder="defaultSystemPrompt" 
-            :rows="3"
-          />
-        </details>
-      </div>
+       <v-expansion-panels class="mb-6">
+        <v-expansion-panel
+          title="Advanced Options"
+          bg-color="surface"
+          class="border rounded-lg"
+          elevation="0"
+        >
+          <v-expansion-panel-text class="pa-4">
+            <SmartField 
+              label="API Key (Optional Override)" 
+              type="password" 
+              v-model="apiKey" 
+              placeholder="Leave empty to use global key" 
+            />
+            <SmartField 
+              label="System Prompt Override" 
+              type="textarea" 
+              v-model="systemPrompt" 
+              :placeholder="defaultSystemPrompt" 
+              :rows="3"
+            />
+          </v-expansion-panel-text>
+        </v-expansion-panel>
+      </v-expansion-panels>
     </div>
 
-    <button class="primary" @click="run">Generate</button>
+    <v-btn
+      color="primary"
+      size="large"
+      rounded="pill"
+      block
+      prepend-icon="mdi-code-braces"
+      @click="run"
+      class="mb-8"
+    >
+      Generate Code
+    </v-btn>
 
     <SmartField label="Result" type="textarea" v-model="result" :rows="10" disabled />
 

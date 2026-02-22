@@ -42,8 +42,8 @@ def test_provider_repository():
 def test_model_repository():
     repo = get_model_repo()
     
-    repo.add("test_provider", "model-1", "Model One")
-    repo.add("test_provider", "model-2", "Model Two")
+    repo.add("test_provider", "model-1", "Model One", "llm")
+    repo.add("test_provider", "model-2", "Model Two", "llm")
     
     models = repo.get_by_provider("test_provider")
     assert len(models) == 2

@@ -1,195 +1,46 @@
 .panel {
-  max-width: 820px;
+  max-width: 900px;
+  margin: 1rem;
 }
-.field {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 10px;
-}
-.section-group {
-  border: 1px solid #eee;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 12px;
-  background-color: #fafafa;
-}
+
 .options-row {
   display: flex;
-  gap: 12px;
+  gap: 16px;
   margin-top: 8px;
 }
+
 .field-sm {
-  display: flex;
-  flex-direction: column;
   flex: 1;
 }
-.field-sm label {
-  font-size: 0.85em;
-  color: #666;
-  margin-bottom: 4px;
-}
-.row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-textarea,
-input,
-select {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  width: 100%;
-  box-sizing: border-box;
-}
-input[type="checkbox"] {
-  width: auto;
-}
-.primary {
-  margin: 8px 0 14px;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 6px;
-  background: #2563eb;
-  color: white;
-  cursor: pointer;
-}
-.primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.secondary {
-  margin: 0 0 14px;
-  padding: 10px 14px;
-  border: 1px solid #2563eb;
-  border-radius: 6px;
-  background: transparent;
-  color: #2563eb;
-  cursor: pointer;
-}
 
-/* Unity Engine Settings */
 .toggle-row {
   display: flex;
-  gap: 20px;
+  gap: 24px;
   flex-wrap: wrap;
-  margin-bottom: 10px;
-}
-.toggle-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  user-select: none;
-}
-.finalize-btn {
-  background: #059669;
-}
-.finalize-btn:hover:not(:disabled) {
-  background: #047857;
-}
-
-/* Finalize status */
-.finalize-status {
-  border-color: #c7d2fe;
-  background: #f8fafc;
-}
-.progress-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-}
-.step-label {
-  font-size: 0.85rem;
-  color: #475569;
-  font-weight: 500;
-}
-.progress-pct {
-  font-size: 0.85rem;
-  color: #64748b;
-  font-weight: 600;
-}
-.progress-bar-track {
-  height: 8px;
-  background: #e2e8f0;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 12px;
-}
-.progress-bar-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.4s ease;
-}
-.bar-running {
-  background: #2563eb;
-}
-.bar-done {
-  background: #059669;
-}
-.bar-error {
-  background: #dc2626;
 }
 
 /* Log viewer */
 .log-viewer {
-  max-height: 200px;
+  max-height: 250px;
   overflow-y: auto;
-  background: #1e293b;
-  color: #e2e8f0;
-  border-radius: 6px;
-  padding: 10px;
-  font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+  font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
   font-size: 0.8rem;
-  line-height: 1.5;
-  margin-bottom: 10px;
+  line-height: 1.6;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #020617 !important; /* Deep dark for logs */
+  color: #f8fafc !important;
 }
+
 .log-line {
   white-space: pre-wrap;
   word-break: break-word;
 }
+
 .log-error {
-  color: #fca5a5;
-}
-.log-empty {
-  color: #64748b;
-  font-style: italic;
+  color: #fca5a5 !important;
+  font-weight: 600;
 }
 
-/* Error list */
-.error-list {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 6px;
-  padding: 10px;
-  margin-bottom: 10px;
-}
-.error-list strong {
-  color: #991b1b;
-}
-.error-list ul {
-  margin: 4px 0 0;
-  padding-left: 18px;
-}
-.error-list li {
-  color: #dc2626;
-  font-size: 0.85rem;
-}
-
-.advanced-opts-mini {
-  margin-top: 8px;
-  border-top: 1px dashed #eee;
-  padding-top: 8px;
-}
-.advanced-opts-mini summary {
-  cursor: pointer;
-  font-size: 0.85em;
-  color: #6366f1;
-  user-select: none;
-  font-weight: 500;
-}
-.advanced-opts-mini summary:hover {
-  color: #4f46e5;
+.gap-4 {
+  gap: 1rem;
 }
