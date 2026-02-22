@@ -67,13 +67,18 @@ def test_system_prompt_from_db():
     manager = AgentManager()
     
     with patch("app.agents.code_agent.CodeAgent.run") as mock_run, \
-         patch("app.services.agent_manager.get_pref") as mock_get_pref:
+         patch("app.services.agent_manager.get_system_prompt_repo") as mock_get_repo:
+        
+        mock_repo = MagicMock()
+        mock_repo.get.return_value = "DB system prompt"
+        mock_get_repo.return_value = mock_repo
+        
         mock_run.return_value = {"content": "code", "provider": "openai"}
-        mock_get_pref.return_value = "DB system prompt"
         
         manager.run_code(prompt="test", provider="openai", options={"model": "gpt-4"}, api_key=None)
         
-        mock_get_pref.assert_called_with("default_code_system_prompt")
+        # Verify it called the repo
+        mock_repo.get.assert_called_with("code")
         # Verify agent run was called with the DB prompt
         args, kwargs = mock_run.call_args
         assert kwargs.get("system_prompt") == "DB system prompt" or args[4] == "DB system prompt"

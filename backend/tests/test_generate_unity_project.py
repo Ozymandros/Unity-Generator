@@ -1,5 +1,5 @@
-"""Tests for /generate/unity-project endpoint."""
 import pytest
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from app.main import app as fastapi_app
@@ -41,48 +41,39 @@ def test_generate_unity_project_schema(monkeypatch):
     import app.services.unity_project as unity_project_mod
     monkeypatch.setattr(unity_project_mod, "_download", lambda url: b"dummy audio bytes")
 
-    # Patch API key loading only for this test
-    import app.core.config as config_mod
-    import app.services.agent_manager as agent_manager_mod
-
-    dummy_keys = {
-        "openai": "dummy-key",
-        "openai_api_key": "dummy-key",
-        "stable-diffusion": "dummy-key",
-        "stable_diffusion": "dummy-key",
-        "stable_diffusion_api_key": "dummy-key",
-        "elevenlabs": "dummy-key",
-        "elevenlabs_api_key": "dummy-key",
-    }
-    monkeypatch.setattr(config_mod, "load_api_keys", lambda: dummy_keys)
-    monkeypatch.setattr(agent_manager_mod, "load_api_keys", lambda: dummy_keys)
-    client = TestClient(fastapi_app)
-    payload = {
-        "project_name": "TestProject",
-        "code_prompt": "Player movement script",
-        "text_prompt": "Game intro text",
-        "image_prompt": "Player sprite",
-        "audio_prompt": "Jump sound",
-        "provider_overrides": {
-            "code": "openai",
-            "text": "openai",
-            "image": "stable-diffusion",
-            "audio": "elevenlabs",
-        },
-        "options": {
-            "code": {"temperature": 0.7, "max_tokens": 128},
-            "text": {"temperature": 0.7, "max_tokens": 128},
-            "image": {"aspect_ratio": "1:1", "quality": "standard"},
-            "audio": {"voice_id": "default", "stability": 0.5},
-        },
-        "unity_template": "3d",
-        "unity_version": "2022.3",
-        "unity_platform": "windows",
-    }
-    response = client.post("/generate/unity-project", json=payload)
-    assert response.status_code == 200
-    data = response.json()
-    assert data["success"]
+    # Patch API key repository
+    from app.repositories import get_api_key_repo
+    repo = get_api_key_repo()
+    dummy_keys = {"openai_api_key": "sk-test", "stability_api_key": "st-test"}
+    
+    with patch.object(repo, "get_all", return_value=dummy_keys):
+        client = TestClient(fastapi_app)
+        payload = {
+            "project_name": "TestProject",
+            "code_prompt": "Player movement script",
+            "text_prompt": "Game intro text",
+            "image_prompt": "Player sprite",
+            "audio_prompt": "Jump sound",
+            "provider_overrides": {
+                "code": "openai",
+                "text": "openai",
+                "image": "stable-diffusion",
+                "audio": "elevenlabs",
+            },
+            "options": {
+                "code": {"temperature": 0.7, "max_tokens": 128},
+                "text": {"temperature": 0.7, "max_tokens": 128},
+                "image": {"aspect_ratio": "1:1", "quality": "standard"},
+                "audio": {"voice": "default", "stability": 0.5},
+            },
+            "unity_template": "3d",
+            "unity_version": "2022.3",
+            "unity_platform": "windows",
+        }
+        response = client.post("/generate/unity-project", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"]
     assert "project_path" in data["data"]
     assert data["data"]["project_path"]
 

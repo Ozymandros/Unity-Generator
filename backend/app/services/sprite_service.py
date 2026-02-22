@@ -4,7 +4,6 @@ from typing import Any
 
 from PIL import Image
 
-from ..core.config import load_api_keys
 from ..schemas import AgentResult, ImageOptions
 from .image_provider import generate_image
 
@@ -51,20 +50,25 @@ def generate_sprite(
     gen_options = opts.copy(update={"aspect_ratio": "1:1"})
 
     # 3. Call Image Provider with system_prompt
-    keys = load_api_keys()
-    from .image_provider import IMAGE_KEY_MAP
+    from ..repositories import get_api_key_repo
+    from .providers import provider_registry
 
-    # Fallback: if api_key is missing, try to get from config
-    key_name = None
-    if provider and provider in IMAGE_KEY_MAP:
-        key_name = IMAGE_KEY_MAP[provider]
-        if api_key:
-            keys[key_name] = api_key
-        elif key_name not in keys or not keys[key_name]:
-            # Defensive: ensure at least empty string if not found
-            keys[key_name] = ""
+    keys = get_api_key_repo().get_all()
 
-    response = generate_image(enhanced_prompt, provider, gen_options, keys, system_prompt=system_prompt)
+    if provider:
+        try:
+            caps = provider_registry.get(provider)
+            if caps.api_key_name:
+                if api_key:
+                    keys[caps.api_key_name] = api_key
+                elif caps.api_key_name not in keys:
+                    keys[caps.api_key_name] = ""
+        except Exception:
+            pass
+
+    response = generate_image(
+        enhanced_prompt, provider, gen_options, keys, system_prompt=system_prompt
+    )
 
     # 4. Process Image (Downscale -> Quantize -> Crop)
     image_data = response.image

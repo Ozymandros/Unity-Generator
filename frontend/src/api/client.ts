@@ -108,57 +108,105 @@ export async function getPref(key: string) {
 // Provider model management
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Management API
+// ---------------------------------------------------------------------------
+
 export type ModelEntry = {
   value: string;
   label: string;
 };
 
-export async function getProviderModels(
-  provider: string,
-): Promise<ModelEntry[]> {
-  const response = await fetch(
-    `${getBackendUrl()}/api/models/${provider}`,
-    { method: "GET" },
-  );
-  const json = (await response.json()) as GenerationResponse;
-  return (json.data?.models as ModelEntry[]) ?? [];
+export type ProviderCapabilities = {
+  name: string;
+  api_key_name: string | null;
+  base_url: string | null;
+  openai_compatible: boolean;
+  requires_api_key: boolean;
+  supports_vision: boolean;
+  supports_streaming: boolean;
+  supports_function_calling: boolean;
+  supports_tool_use: boolean;
+  modalities: string[];
+  default_models: Record<string, string>;
+  extra: Record<string, unknown>;
+};
+
+export async function listProviders(): Promise<ProviderCapabilities[]> {
+  const response = await fetch(`${getBackendUrl()}/api/management/providers`);
+  return await response.json();
 }
 
-export async function getAllProviderModels(): Promise<
-  Record<string, ModelEntry[]>
-> {
-  const response = await fetch(`${getBackendUrl()}/api/models`, {
-    method: "GET",
+export async function saveProvider(provider: ProviderCapabilities): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/api/management/providers`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(provider),
   });
-  const json = (await response.json()) as GenerationResponse;
-  return (json.data?.models as Record<string, ModelEntry[]>) ?? {};
+  return await response.json();
 }
 
-export async function addProviderModel(
-  provider: string,
-  value: string,
-  label: string,
-): Promise<GenerationResponse> {
-  const response = await fetch(
-    `${getBackendUrl()}/api/models/${provider}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ value, label }),
-    },
-  );
-  return (await response.json()) as GenerationResponse;
+export async function deleteProvider(name: string): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/api/management/providers/${name}`, {
+    method: "DELETE",
+  });
+  return await response.json();
 }
 
-export async function removeProviderModel(
-  provider: string,
-  modelValue: string,
-): Promise<GenerationResponse> {
-  const response = await fetch(
-    `${getBackendUrl()}/api/models/${provider}/${encodeURIComponent(modelValue)}`,
-    { method: "DELETE" },
-  );
-  return (await response.json()) as GenerationResponse;
+export async function listModels(provider: string): Promise<ModelEntry[]> {
+  const response = await fetch(`${getBackendUrl()}/api/management/models/${provider}`);
+  return await response.json();
+}
+
+export async function addModel(provider: string, value: string, label: string): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/api/management/models`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ provider, value, label }),
+  });
+  return await response.json();
+}
+
+export async function removeModel(provider: string, value: string): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/api/management/models/${provider}/${encodeURIComponent(value)}`, {
+    method: "DELETE",
+  });
+  return await response.json();
+}
+
+export async function listApiKeys(): Promise<Record<string, string>> {
+  const response = await fetch(`${getBackendUrl()}/api/management/keys`);
+  return await response.json();
+}
+
+export async function saveApiKey(service_name: string, key_value: string): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/api/management/keys`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ service_name, key_value }),
+  });
+  return await response.json();
+}
+
+export async function deleteApiKey(service_name: string): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/api/management/keys/${service_name}`, {
+    method: "DELETE",
+  });
+  return await response.json();
+}
+
+export async function listSystemPrompts(): Promise<Record<string, string>> {
+  const response = await fetch(`${getBackendUrl()}/api/management/prompts`);
+  return await response.json();
+}
+
+export async function saveSystemPrompt(modality: string, content: string): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/api/management/prompts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ modality, content }),
+  });
+  return await response.json();
 }
 
 export type UnityProjectRequest = {

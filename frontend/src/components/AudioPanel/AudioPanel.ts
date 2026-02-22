@@ -1,5 +1,5 @@
 import { ref, computed, onMounted, watch } from "vue";
-import { generateAudio, getPref, getProviderModels, type ModelEntry } from "@/api/client";
+import { generateAudio, getPref, listModels, type ModelEntry } from "@/api/client";
 import { AUDIO_PROVIDERS } from "@/constants/providers";
 import { projectStore } from "@/store/projectStore";
 
@@ -31,7 +31,7 @@ export function useAudioPanel() {
 
   async function refreshModels() {
     availableVoices.value = provider.value
-      ? await getProviderModels(provider.value)
+      ? await listModels(provider.value)
       : [];
   }
 

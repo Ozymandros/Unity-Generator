@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, TYPE_CHECKING
+if TYPE_CHECKING:
+    from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
 
 
 from .connectors.elevenlabs import ElevenLabsTextToAudio
@@ -207,7 +209,8 @@ class ProviderRegistry:
         result: dict[str, str] = {}
         for name in self._priorities.get(modality, []):
             caps = self._providers[name]
-            result[name] = caps.api_key_name
+            if caps.api_key_name:
+                result[name] = caps.api_key_name
         return result
 
     # ------------------------------------------------------------------
@@ -261,7 +264,7 @@ class ProviderRegistry:
                 )
             print(f"[RESOLVE] Checking preferred: {preferred_lower}")
             key_name = caps.api_key_name
-            api_key = api_keys.get(key_name)
+            api_key = api_keys.get(key_name) if key_name else None
             if (key_name and api_key) or not caps.requires_api_key:
                 print(f"[RESOLVE] Success! Returning {preferred_lower} (Key required={caps.requires_api_key})")
                 return preferred_lower
@@ -300,6 +303,7 @@ class ProviderRegistry:
         from semantic_kernel.connectors.ai.google import GoogleAIChatCompletion
         from semantic_kernel.connectors.ai.open_ai import (
             OpenAIChatCompletion,
+            AzureChatCompletion,
         )
         from .connectors.replicate import (
             ReplicateTextToImage,
@@ -423,6 +427,28 @@ class ProviderRegistry:
 
         raise NotImplementedError(f"SK Audio service for '{provider}' not yet implemented.")
 
+    # ------------------------------------------------------------------
+    # In-memory Lifecycle
+    # ------------------------------------------------------------------
+
+    def load_from_db(self) -> None:
+        """
+        Refresh the registry from the database.
+        """
+        from ...repositories import get_provider_repo
+        repo = get_provider_repo()
+        providers = repo.get_all()
+        
+        # Reset internal state
+        self._providers = {}
+        self._priorities = {m: [] for m in Modality}
+        
+        # Register each provider from DB
+        for caps in providers:
+            self.register(caps)
+            
+        LOGGER.info("Registry loaded %d providers from database", len(providers))
+
     def all_providers(self) -> Iterable[ProviderCapabilities]:
         """
         Iterate over every registered provider.
@@ -447,10 +473,8 @@ class ProviderRegistry:
 def _build_default_registry() -> ProviderRegistry:
     """
     Construct and return the default registry with every known provider.
-
-    This consolidates the data previously scattered across
-    ``LLM_KEY_MAP``, ``IMAGE_KEY_MAP``, ``AUDIO_KEY_MAP`` in the
-    individual provider service modules.
+    
+    NOTE: This is retained for seeding purposes and backward compatibility.
     """
     reg = ProviderRegistry()
 
@@ -688,5 +712,6 @@ def _build_default_registry() -> ProviderRegistry:
     return reg
 
 
-provider_registry: ProviderRegistry = _build_default_registry()
+provider_registry: ProviderRegistry = ProviderRegistry()
+# singleton initialization will happen via load_from_db during app startup
 """Module-level singleton used throughout the application."""

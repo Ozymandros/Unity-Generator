@@ -1,5 +1,5 @@
 import { computed, ref, watch, onMounted } from "vue";
-import { createScene, getPref, getProviderModels, type ModelEntry } from "@/api/client";
+import { createScene, getPref, listModels, type ModelEntry } from "@/api/client";
 import { TEXT_PROVIDERS, TEMPERATURE_PRESETS } from "@/constants/providers";
 
 export function useScenesPanel() {
@@ -38,7 +38,7 @@ export function useScenesPanel() {
 
   async function refreshModels() {
     availableModels.value = provider.value
-      ? await getProviderModels(provider.value)
+      ? await listModels(provider.value)
       : [];
   }
 

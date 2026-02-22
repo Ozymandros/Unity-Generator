@@ -11,6 +11,7 @@ export function useApp() {
     "Sprites",
     "Audio",
     "Unity Project",
+    "Management",
   ] as const;
 
   const active = ref<(typeof tabs)[number]>("Settings");

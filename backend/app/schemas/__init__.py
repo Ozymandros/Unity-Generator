@@ -67,7 +67,7 @@ class AudioOptions(BaseModel):
     """Options for audio generation."""
 
     voice: str = "Rachel"
-    model_id: str = "eleven_multilingual_v2"
+    model: str = "eleven_multilingual_v2"
     stability: float = 0.5
     similarity_boost: float = 0.75
     format: str = "mp3"

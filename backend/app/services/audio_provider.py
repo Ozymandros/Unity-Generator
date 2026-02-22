@@ -9,9 +9,12 @@ from :pydata:`provider_registry`.
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Any
 
 import nest_asyncio
+
+LOGGER = logging.getLogger(__name__)
 from semantic_kernel import Kernel
 
 from ..schemas import AgentResult, AudioOptions
@@ -38,7 +41,7 @@ def generate_audio(
     opts = options if isinstance(options, dict) else options.model_dump()
 
     key_name = provider_registry.get(selected).api_key_name
-    api_key = api_keys.get(key_name, "")
+    api_key = api_keys.get(key_name, "") if key_name else ""
 
     # Create SK service
     service = provider_registry.create_text_to_audio_service(
@@ -98,17 +101,25 @@ def generate_audio(
         import base64
         # If it has data, encode it
         final_data = None
-        if hasattr(audio_content, 'data') and audio_content.data:
-             final_data = base64.b64encode(audio_content.data).decode('utf-8')
-        elif hasattr(audio_content, 'uri') and audio_content.uri:
-             final_data = audio_content.uri
+        if audio_content:
+            if hasattr(audio_content, 'data') and audio_content.data:
+                final_data = base64.b64encode(audio_content.data).decode('utf-8')
+            elif hasattr(audio_content, 'uri') and audio_content.uri:
+                final_data = audio_content.uri
 
     except Exception as e:
         raise RuntimeError(f"Semantic Kernel audio generation failed: {e}") from e
+
+    metadata = getattr(audio_content, 'metadata', {})
+    if not isinstance(metadata, dict):
+        try:
+            metadata = dict(metadata)
+        except (TypeError, ValueError):
+            metadata = {}
 
     return AgentResult(
         content=final_data, # Return base64 or URI as content
         provider=selected,
         model=opts.get("model") or "default",
-        metadata=getattr(audio_content, 'metadata', {})
+        metadata=metadata
     )

@@ -31,64 +31,64 @@ class TestGetBestProvider:
         with pytest.raises(ValueError, match="Invalid provider_type"):
             plugin.get_best_provider("telepathy")
 
-    @patch("app.agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
-    def test_selects_provider_with_key(self, mock_keys) -> None:
+    def test_selects_provider_with_key(self) -> None:
         """Returns a provider whose API key is available."""
-        mock_keys.return_value = {"openai_api_key": "sk-test"}
-        plugin = ProviderOrchestratorPlugin()
-        result = plugin.get_best_provider("llm")
-        assert result == "openai"
+        with patch("app.agents.plugins.native.provider_orchestrator_plugin.get_api_key_repo") as mock_get_repo:
+            mock_get_repo.return_value.get_all.return_value = {"openai_api_key": "sk-test"}
+            plugin = ProviderOrchestratorPlugin()
+            result = plugin.get_best_provider("llm")
+            assert result == "openai"
 
-    @patch("app.agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
-    def test_respects_preferred(self, mock_keys) -> None:
+    def test_respects_preferred(self) -> None:
         """Preferred provider is used when its key exists."""
-        mock_keys.return_value = {
-            "openai_api_key": "sk-test",
-            "groq_api_key": "g-test",
-        }
-        plugin = ProviderOrchestratorPlugin()
-        result = plugin.get_best_provider("llm", preferred_provider="groq")
-        assert result == "groq"
+        with patch("app.agents.plugins.native.provider_orchestrator_plugin.get_api_key_repo") as mock_get_repo:
+            mock_get_repo.return_value.get_all.return_value = {
+                "openai_api_key": "sk-test",
+                "groq_api_key": "g-test",
+            }
+            plugin = ProviderOrchestratorPlugin()
+            result = plugin.get_best_provider("llm", preferred_provider="groq")
+            assert result == "groq"
 
-    @patch("app.agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
-    def test_no_keys_raises_provider_error(self, mock_keys) -> None:
+    def test_no_keys_raises_provider_error(self) -> None:
         """Raises ProviderError when no keys are available."""
-        mock_keys.return_value = {}
-        plugin = ProviderOrchestratorPlugin()
-        with pytest.raises(ProviderError):
-            plugin.get_best_provider("llm")
+        with patch("app.agents.plugins.native.provider_orchestrator_plugin.get_api_key_repo") as mock_get_repo:
+            mock_get_repo.return_value.get_all.return_value = {}
+            plugin = ProviderOrchestratorPlugin()
+            with pytest.raises(ProviderError):
+                plugin.get_best_provider("llm")
 
-    @patch("app.agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
-    def test_image_modality(self, mock_keys) -> None:
+    def test_image_modality(self) -> None:
         """Image modality resolves correctly."""
-        mock_keys.return_value = {"stability_api_key": "st-test"}
-        plugin = ProviderOrchestratorPlugin()
-        result = plugin.get_best_provider("image")
-        assert result == "stability"
+        with patch("app.agents.plugins.native.provider_orchestrator_plugin.get_api_key_repo") as mock_get_repo:
+            mock_get_repo.return_value.get_all.return_value = {"stability_api_key": "st-test"}
+            plugin = ProviderOrchestratorPlugin()
+            result = plugin.get_best_provider("image")
+            assert result == "stability"
 
-    @patch("app.agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
-    def test_audio_modality(self, mock_keys) -> None:
+    def test_audio_modality(self) -> None:
         """Audio modality resolves correctly."""
-        mock_keys.return_value = {"elevenlabs_api_key": "el-test"}
-        plugin = ProviderOrchestratorPlugin()
-        result = plugin.get_best_provider("audio")
-        assert result == "elevenlabs"
+        with patch("app.agents.plugins.native.provider_orchestrator_plugin.get_api_key_repo") as mock_get_repo:
+            mock_get_repo.return_value.get_all.return_value = {"elevenlabs_api_key": "el-test"}
+            plugin = ProviderOrchestratorPlugin()
+            result = plugin.get_best_provider("audio")
+            assert result == "elevenlabs"
 
-    @patch("app.agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
-    def test_video_modality(self, mock_keys) -> None:
+    def test_video_modality(self) -> None:
         """Video modality resolves correctly."""
-        mock_keys.return_value = {"runway_api_key": "r-test"}
-        plugin = ProviderOrchestratorPlugin()
-        result = plugin.get_best_provider("video")
-        assert result == "runway"
+        with patch("app.agents.plugins.native.provider_orchestrator_plugin.get_api_key_repo") as mock_get_repo:
+            mock_get_repo.return_value.get_all.return_value = {"runway_api_key": "r-test"}
+            plugin = ProviderOrchestratorPlugin()
+            result = plugin.get_best_provider("video")
+            assert result == "runway"
 
-    @patch("app.agents.plugins.native.provider_orchestrator_plugin.load_api_keys")
-    def test_case_insensitive_type(self, mock_keys) -> None:
+    def test_case_insensitive_type(self) -> None:
         """Provider type matching is case-insensitive."""
-        mock_keys.return_value = {"openai_api_key": "sk-test"}
-        plugin = ProviderOrchestratorPlugin()
-        assert plugin.get_best_provider("LLM") == "openai"
-        assert plugin.get_best_provider("Llm") == "openai"
+        with patch("app.agents.plugins.native.provider_orchestrator_plugin.get_api_key_repo") as mock_get_repo:
+            mock_get_repo.return_value.get_all.return_value = {"openai_api_key": "sk-test"}
+            plugin = ProviderOrchestratorPlugin()
+            assert plugin.get_best_provider("LLM") == "openai"
+            assert plugin.get_best_provider("Llm") == "openai"
 
 
 class TestModalityAlias:

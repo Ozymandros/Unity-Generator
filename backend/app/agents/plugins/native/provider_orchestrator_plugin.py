@@ -21,7 +21,7 @@ except ImportError:
         return decorator
 
 
-from ....core.config import load_api_keys
+from ....repositories import get_api_key_repo
 from ....services.providers import Modality, ProviderError, provider_registry
 
 LOGGER = logging.getLogger(__name__)
@@ -81,7 +81,7 @@ class ProviderOrchestratorPlugin:
                 f"Must be one of {list(_MODALITY_ALIAS.keys())}"
             )
 
-        api_keys = load_api_keys()
+        api_keys = get_api_key_repo().get_all()
 
         try:
             selected = provider_registry.resolve(

@@ -50,32 +50,33 @@ def test_process_pixel_art_autocrop() -> None:
 
 
 @patch("app.services.sprite_service.generate_image")
-@patch("app.services.sprite_service.load_api_keys")
 def test_generate_sprite_workflow(
-    mock_load_keys: MagicMock, mock_gen_image: MagicMock
+    mock_gen_image: MagicMock
 ) -> None:
-    mock_load_keys.return_value = {"openai_api_key": "test"}
+    from app.repositories import get_api_key_repo
+    repo = get_api_key_repo()
+    
+    with patch.object(repo, "get_all", return_value={"openai_api_key": "test"}):
+        # Create a fake response image
+        img = Image.new("RGBA", (1024, 1024), (0, 255, 0, 255))
+        buffered = io.BytesIO()
+        img.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-    # Create a fake response image
-    img = Image.new("RGBA", (1024, 1024), (0, 255, 0, 255))
-    buffered = io.BytesIO()
-    img.save(buffered, format="PNG")
-    img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        mock_gen_image.return_value = AgentResult(image=img_str, provider="openai")
 
-    mock_gen_image.return_value = AgentResult(image=img_str, provider="openai")
+        result = generate_sprite(
+            prompt="A green square",
+            provider="openai",
+            api_key=None,
+            resolution=16,
+            options={"palette_size": 16, "auto_crop": False},
+        )
 
-    result = generate_sprite(
-        prompt="A green square",
-        provider="openai",
-        api_key=None,
-        resolution=16,
-        options={"palette_size": 16, "auto_crop": False},
-    )
-
-    assert result.raw is not None
-    assert result.raw["resolution"] == 16
-    assert result.image is not None and len(result.image) > 100
-    # Decode result image and check size
-    if result.image is not None:
-        res_img = Image.open(io.BytesIO(base64.b64decode(result.image)))
-        assert res_img.size == (16, 16)
+        assert result.raw is not None
+        assert result.raw["resolution"] == 16
+        assert result.image is not None and len(result.image) > 100
+        # Decode result image and check size
+        if result.image is not None:
+            res_img = Image.open(io.BytesIO(base64.b64decode(result.image)))
+            assert res_img.size == (16, 16)

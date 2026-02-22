@@ -26,7 +26,11 @@ from app.routers import config, finalize, generation, prefs, projects, scenes
 # Initialize database
 logger.info("Initializing database...")
 init_db()
-logger.info("Database initialized.")
+from app.core.seeder import seed_database
+seed_database()
+from app.services.providers.registry import provider_registry
+provider_registry.load_from_db()
+logger.info("Database initialized, seeded, and registry loaded.")
 
 # FastAPI app instance
 app = FastAPI()
@@ -75,6 +79,8 @@ def health() -> dict[str, Any]:
     return {"status": "ok"}
 
 
+from app.routers import config, finalize, generation, prefs, projects, scenes, management
+
 # Include routers
 logger.info("Including routers...")
 app.include_router(generation.router)
@@ -83,6 +89,7 @@ app.include_router(prefs.router)
 app.include_router(projects.router)
 app.include_router(scenes.router)
 app.include_router(finalize.router)
+app.include_router(management.router)
 logger.info("Routers included.")
 
 # Uvicorn logging config (optional, for visibility)

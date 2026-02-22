@@ -1,5 +1,5 @@
 import { computed, ref, watch, onMounted } from "vue";
-import { generateCode, getPref, getProviderModels, type ModelEntry } from "@/api/client";
+import { generateCode, getPref, listModels, type ModelEntry } from "@/api/client";
 import { TEXT_PROVIDERS, TEMPERATURE_PRESETS, LENGTH_PRESETS } from "@/constants/providers";
 import { projectStore } from "@/store/projectStore";
 
@@ -29,7 +29,7 @@ export function useCodePanel() {
 
   async function refreshModels() {
     availableModels.value = provider.value
-      ? await getProviderModels(provider.value)
+      ? await listModels(provider.value)
       : [];
   }
 

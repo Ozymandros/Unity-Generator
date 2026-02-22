@@ -4,7 +4,6 @@ from typing import Any
 
 from fastapi import APIRouter
 
-from ..core.config import load_api_keys as backend_load_api_keys
 from ..core.db import get_pref
 from ..schemas import (
     AudioOptions,
@@ -20,7 +19,6 @@ from ..schemas import (
 )
 from ..services import agent_manager_instance as agent_manager
 from ..services import sprite_service
-from ..services.image_provider import IMAGE_KEY_MAP
 
 router = APIRouter(prefix="/generate", tags=["generation"])
 
@@ -161,9 +159,6 @@ def generate_sprites(request: SpritesRequest) -> GenerationResponse:
     try:
         provider = request.provider or get_pref("preferred_image_provider")
         api_key = request.api_key
-        if (not api_key) and provider and provider in IMAGE_KEY_MAP:
-            keys = backend_load_api_keys()
-            api_key = keys.get(IMAGE_KEY_MAP[provider])
 
         data = sprite_service.generate_sprite(
             request.prompt,

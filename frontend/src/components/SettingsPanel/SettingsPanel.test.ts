@@ -10,7 +10,10 @@ describe("SettingsPanel", () => {
     vi.resetAllMocks();
     // Mock localStorage
     const localStorageMock = {
-      getItem: vi.fn(() => "http://127.0.0.1:8000"),
+      getItem: vi.fn((key) => {
+        if (key === 'backend_url') return "http://127.0.0.1:8000";
+        return null;
+      }),
       setItem: vi.fn(),
       removeItem: vi.fn(),
       clear: vi.fn(),
@@ -26,33 +29,23 @@ describe("SettingsPanel", () => {
       success: true,
       date: new Date().toISOString(),
       error: null,
-      data: { key: "test", value: null },
-    });
-    vi.mocked(client.getApiKeys).mockResolvedValue({
-      success: true,
-      date: new Date().toISOString(),
-      error: null,
-      data: { keys: {} },
+      data: { key: "test", value: "openai" },
     });
   });
 
-  it("renders all API key inputs", async () => {
+  it("renders preference selects and dashboard link", async () => {
     const wrapper = mount(SettingsPanel);
     await flushPromises();
 
-    // Check for key input fields (password type)
-    const passwordInputs = wrapper.findAll('input[type="password"]');
-    expect(passwordInputs.length).toBe(12); // 12 API key fields (added Hugging Face, Ollama)
-
     // Check for preference inputs (selects)
     const selects = wrapper.findAll("select");
-    expect(selects.length).toBe(3); // LLM, Image, Audio preferences
+    expect(selects.length).toBe(4); // LLM, Image, Voice, Music
 
-    // Check for textarea inputs (System Prompts)
-    const textareas = wrapper.findAll("textarea");
-    expect(textareas.length).toBe(5); // Code, Text, Image, Audio, Sprites
+    // Check for the dashboard link button
+    const dashboardBtn = wrapper.find("button.secondary");
+    expect(dashboardBtn.text()).toContain("Go to Management Dashboard");
 
-    expect(wrapper.find("button.primary").text()).toBe("Save");
+    expect(wrapper.find("button.primary").text()).toBe("Save Preferences");
   });
 
   it("loads preferences on mount", async () => {
@@ -62,42 +55,10 @@ describe("SettingsPanel", () => {
     expect(client.getPref).toHaveBeenCalledWith("preferred_llm_provider");
     expect(client.getPref).toHaveBeenCalledWith("preferred_image_provider");
     expect(client.getPref).toHaveBeenCalledWith("preferred_audio_provider");
-    expect(client.getPref).toHaveBeenCalledWith("default_code_system_prompt");
-    expect(client.getPref).toHaveBeenCalledWith("default_text_system_prompt");
-    expect(client.getPref).toHaveBeenCalledWith("default_image_system_prompt");
-    expect(client.getPref).toHaveBeenCalledWith("default_audio_system_prompt");
-    expect(client.getPref).toHaveBeenCalledWith("default_sprite_system_prompt");
+    expect(client.getPref).toHaveBeenCalledWith("preferred_music_provider");
   });
 
-  it("loads api keys on mount", async () => {
-    vi.mocked(client.getApiKeys).mockResolvedValue({
-      success: true,
-      date: new Date().toISOString(),
-      error: null,
-      data: {
-        keys: {
-          google_api_key: "google-key-123",
-          openai_api_key: "openai-key-456",
-        },
-      },
-    });
-
-    const wrapper = mount(SettingsPanel);
-    await flushPromises();
-
-    expect(client.getApiKeys).toHaveBeenCalled();
-    const passwordInputs = wrapper.findAll('input[type="password"]');
-    expect((passwordInputs[0].element as HTMLInputElement).value).toBe("google-key-123");
-    expect((passwordInputs[2].element as HTMLInputElement).value).toBe("openai-key-456");
-  });
-
-  it("saves keys and preferences on button click", async () => {
-    vi.mocked(client.saveApiKeys).mockResolvedValue({
-      success: true,
-      date: new Date().toISOString(),
-      error: null,
-      data: { saved: ["openai"] },
-    });
+  it("saves preferences on button click", async () => {
     vi.mocked(client.setPref).mockResolvedValue({
       success: true,
       date: new Date().toISOString(),
@@ -111,13 +72,12 @@ describe("SettingsPanel", () => {
     await wrapper.find("button.primary").trigger("click");
     await flushPromises();
 
-    expect(client.saveApiKeys).toHaveBeenCalled();
-    expect(client.setPref).toHaveBeenCalledTimes(8); // 3 providers + 5 system prompts
-    expect(wrapper.text()).toContain("Saved locally");
+    expect(client.setPref).toHaveBeenCalledTimes(4); // 4 provider preferences
+    expect(wrapper.text()).toContain("Preferences saved locally");
   });
 
   it("displays error on save failure", async () => {
-    vi.mocked(client.saveApiKeys).mockResolvedValue({
+    vi.mocked(client.setPref).mockResolvedValue({
       success: false,
       date: new Date().toISOString(),
       error: "Network error",
@@ -131,5 +91,15 @@ describe("SettingsPanel", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("Network error");
+  });
+  
+  it("emits switch-tab when dashboard button is clicked", async () => {
+    const wrapper = mount(SettingsPanel);
+    await flushPromises();
+
+    await wrapper.find("button.secondary").trigger("click");
+    
+    expect(wrapper.emitted("switch-tab")).toBeTruthy();
+    expect(wrapper.emitted("switch-tab")![0]).toEqual(["Management"]);
   });
 });

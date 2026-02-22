@@ -7,6 +7,7 @@ import { ImagePanel } from "@/components/ImagePanel";
 import { AudioPanel } from "@/components/AudioPanel";
 import { SpritesPanel } from "@/components/SpritesPanel";
 import { UnityProjectPanel } from "@/components/UnityProjectPanel";
+import ManagementDashboard from "@/components/ManagementDashboard.vue";
 import { useApp } from "@/App";
 
 const { tabs, active, backendStatus, setActive } = useApp();
@@ -31,7 +32,7 @@ const { tabs, active, backendStatus, setActive } = useApp();
       </nav>
     </aside>
     <main>
-      <SettingsPanel v-if="active === 'Settings'" />
+      <SettingsPanel v-if="active === 'Settings'" @switch-tab="setActive" />
       <ScenesPanel v-else-if="active === 'Scenes'" />
       <CodePanel v-else-if="active === 'Code'" />
       <TextPanel v-else-if="active === 'Text'" />
@@ -39,6 +40,7 @@ const { tabs, active, backendStatus, setActive } = useApp();
       <SpritesPanel v-else-if="active === 'Sprites'" />
       <AudioPanel v-else-if="active === 'Audio'" />
       <UnityProjectPanel v-else-if="active === 'Unity Project'" />
+      <ManagementDashboard v-else-if="active === 'Management'" />
     </main>
   </div>
 </template>

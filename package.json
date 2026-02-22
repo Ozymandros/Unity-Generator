@@ -20,7 +20,7 @@
         "test:backend": "pnpm --dir backend test",
         "test:frontend": "pnpm --dir frontend test",
         "typecheck:backend": "pnpm --dir backend typecheck",
-        "typecheck:frontend": "pnpm --dir backend typecheck && pnpm --dir frontend typecheck",
+        "typecheck:frontend": "pnpm --dir frontend typecheck",
         "// --- Quality Control: Unified ---": "",
         "check:all": "pnpm lint:all && pnpm typecheck:all && pnpm test:all",
         "check:all:e2e": "pnpm lint:all && pnpm typecheck:all && pnpm test:all && pnpm --dir frontend test:e2e",

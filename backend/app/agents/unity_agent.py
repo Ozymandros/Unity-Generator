@@ -8,13 +8,16 @@ provider only requires a registry entry and (optionally) a ``base_url``.
 
 import logging
 import os
-from typing import Any
+from typing import Any, TYPE_CHECKING
+if TYPE_CHECKING:
+    from semantic_kernel.connectors.ai.prompt_execution_settings import PromptExecutionSettings
 
 from semantic_kernel import Kernel
 from semantic_kernel.connectors.ai.chat_completion_client_base import ChatCompletionClientBase
 from semantic_kernel.connectors.ai.function_choice_behavior import FunctionChoiceBehavior
 
 from ..services.providers import provider_registry
+from ..services.providers.capabilities import Modality, ProviderCapabilities
 from .unity_mcp_plugin import create_unity_mcp_plugin
 
 LOGGER = logging.getLogger(__name__)
@@ -75,7 +78,7 @@ class UnityAgent:
         service_id = "default"
 
         caps = provider_registry.get(provider)
-        api_key = api_keys.get(caps.api_key_name, "")
+        api_key = api_keys.get(caps.api_key_name, "") if caps.api_key_name else ""
         use_tools = caps.supports_tool_use
 
         # Resolve Azure endpoint for create_chat_service if needed
@@ -108,7 +111,8 @@ class UnityAgent:
             
             # Ensure model ID is explicitly set if the settings object supports it
             if hasattr(execution_settings, "ai_model_id"):
-                execution_settings.ai_model_id = options.get("model") or caps.default_models[Modality.LLM]
+                model_id = options.get("model") or caps.default_models.get(Modality.LLM)
+                setattr(execution_settings, "ai_model_id", model_id)
 
             if use_tools:
                 # Provider supports tool use — register MCP plugin

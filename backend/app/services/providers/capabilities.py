@@ -52,7 +52,7 @@ class ProviderCapabilities(BaseModel):
     """
 
     name: str
-    api_key_name: str
+    api_key_name: str | None = None
     modalities: set[Modality] = Field(default_factory=set)
     default_models: dict[Modality, str] = Field(default_factory=dict)
     base_url: str | None = None

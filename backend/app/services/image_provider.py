@@ -38,7 +38,7 @@ def generate_image(
     opts = options if isinstance(options, dict) else options.model_dump()
 
     key_name = provider_registry.get(selected).api_key_name
-    api_key = api_keys.get(key_name, "")
+    api_key = api_keys.get(key_name, "") if key_name else ""
 
     # Create SK service
     service = provider_registry.create_text_to_image_service(

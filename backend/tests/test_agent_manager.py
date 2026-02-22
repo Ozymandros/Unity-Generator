@@ -1,7 +1,7 @@
 """Tests for agent_manager module."""
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, AsyncMock
 
 import pytest
 
@@ -63,31 +63,21 @@ def mock_agent_manager() -> MagicMock:
     return MagicMock(spec=AgentManager)
 
 
-def test_agent_manager_run_code(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+@patch("app.agents.code_agent.CodeAgent.run")
+@patch("app.services.agent_manager.get_api_key_repo")
+def test_agent_manager_run_code(mock_get_repo, mock_run, tmp_path: Path) -> None:
     """Test run_code calls agent.run with correct parameters."""
-    from app.core import config
-
-    monkeypatch.setattr(config, "get_repo_root", lambda: tmp_path)
-
-    # Create mock config and db directories
-    from app.core import db
-    (tmp_path / "config").mkdir()
-    (tmp_path / "db").mkdir()
-    db.init_db()
-    (tmp_path / "config" / "api_keys.json").write_text('{"openai_api_key": "sk-test"}')
-
-    mock_agent = MagicMock()
-    mock_agent.run.return_value = {"content": "test", "provider": "openai"}
+    mock_run.return_value = {"content": "test", "provider": "openai"}
+    mock_get_repo.return_value.get_all.return_value = {"openai_api_key": "sk-test"}
 
     manager = AgentManager()
-    manager.code_agent = mock_agent
+    # Ensure agents are initialized
+    manager._ensure_agents()
+    manager.code_agent = MagicMock()
+    manager.code_agent.run = mock_run
 
-    monkeypatch.setattr("app.services.agent_manager.get_pref", lambda k: None)
-    
-    with patch("app.agents.code_agent.CodeAgent.run") as mock_run:
-        mock_run.return_value = {"content": "test", "provider": "openai"}
-        result = manager.run_code("test prompt", "openai", {"model": "gpt-4o"})
-    
+    result = manager.run_code("test prompt", "openai", {"model": "gpt-4o"})
+
     mock_run.assert_called_once_with(
         "test prompt", "openai", {"model": "gpt-4o"}, {"openai_api_key": "sk-test"}, None
     )

@@ -1,5 +1,5 @@
 import { ref, computed, onMounted, watch } from "vue";
-import { generateText, getPref, getProviderModels, type ModelEntry } from "@/api/client";
+import { generateText, getPref, listModels, type ModelEntry } from "@/api/client";
 import { TEXT_PROVIDERS, TEMPERATURE_PRESETS, LENGTH_PRESETS } from "@/constants/providers";
 import { projectStore } from "@/store/projectStore";
 
@@ -32,7 +32,7 @@ export function useTextPanel() {
 
   async function refreshModels() {
     providerModels.value = provider.value
-      ? await getProviderModels(provider.value)
+      ? await listModels(provider.value)
       : [];
   }
 

@@ -47,7 +47,7 @@ def generate_text(
     print(f"[DEBUG] TARGET MODEL: {target_model}", flush=True)
 
     key_name = provider_registry.get(selected).api_key_name
-    api_key = api_keys.get(key_name, "")
+    api_key = api_keys.get(key_name, "") if key_name else ""
     print(f"[DEBUG] API KEY NAME: {key_name} (Found: {'YES' if api_key else 'NO'})", flush=True)
 
     # Create SK service

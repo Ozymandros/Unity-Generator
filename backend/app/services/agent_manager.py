@@ -1,11 +1,10 @@
 import logging
 import sys
-from typing import Any
+from typing import Any, cast
 
 
 from ..agents.base import AsyncAgent, SyncAgent
-from ..core.config import get_repo_root, load_api_keys
-from ..core.db import get_pref
+from ..core.config import get_repo_root
 from ..schemas import (
     AgentResult,
     AudioOptions,
@@ -67,10 +66,12 @@ class AgentManager:
         project_path: str | None = None,
     ) -> AgentResult:
         self._ensure_agents()
-        api_keys = load_api_keys()
+        from ..repositories import get_api_key_repo, get_system_prompt_repo
+        api_keys = cast(dict[str, str], get_api_key_repo().get_all())
         if provider and api_key:
             caps = provider_registry.get(provider)
-            api_keys[caps.api_key_name] = api_key
+            if caps.api_key_name:
+                api_keys[caps.api_key_name] = api_key
 
         if not self.code_agent:
             raise RuntimeError("CodeAgent is not available.")
@@ -81,7 +82,7 @@ class AgentManager:
         # Fallback to global preference if no system prompt provided
         effective_system_prompt = system_prompt
         if effective_system_prompt is None:
-            effective_system_prompt = get_pref("default_code_system_prompt")
+            effective_system_prompt = get_system_prompt_repo().get("code")
 
         result = self.code_agent.run(
             prompt, provider, opts, api_keys, effective_system_prompt
@@ -104,13 +105,15 @@ class AgentManager:
         project_path: str | None = None,
     ) -> AgentResult:
         self._ensure_agents()
+        from ..repositories import get_api_key_repo, get_system_prompt_repo
         print(f"\n[MANAGER] run_text: provider={provider}, manual_api_key={'PROVIDED' if api_key else 'NONE'}", flush=True)
         
-        api_keys = load_api_keys()
+        api_keys = cast(dict[str, str], get_api_key_repo().get_all())
         if provider and api_key:
             caps = provider_registry.get(provider)
-            api_keys[caps.api_key_name] = api_key
-            print(f"[MANAGER] Added manual api_key for {provider} to key_name {caps.api_key_name}", flush=True)
+            if caps.api_key_name:
+                api_keys[caps.api_key_name] = api_key
+                print(f"[MANAGER] Added manual api_key for {provider} to key_name {caps.api_key_name}", flush=True)
         
         print(f"[MANAGER] Keys available: {list(api_keys.keys())}", flush=True)
 
@@ -123,7 +126,7 @@ class AgentManager:
         # Fallback logic for text
         effective_system_prompt = system_prompt
         if effective_system_prompt is None:
-            effective_system_prompt = get_pref("default_text_system_prompt")
+            effective_system_prompt = get_system_prompt_repo().get("text")
 
         result = self.text_agent.run(
             prompt, provider, opts, api_keys, effective_system_prompt
@@ -145,10 +148,12 @@ class AgentManager:
         project_path: str | None = None,
     ) -> AgentResult:
         self._ensure_agents()
-        api_keys = load_api_keys()
+        from ..repositories import get_api_key_repo, get_system_prompt_repo
+        api_keys = cast(dict[str, str], get_api_key_repo().get_all())
         if provider and api_key:
             caps = provider_registry.get(provider)
-            api_keys[caps.api_key_name] = api_key
+            if caps.api_key_name:
+                api_keys[caps.api_key_name] = api_key
 
         if not self.image_agent:
             raise RuntimeError("ImageAgent is not available.")
@@ -158,7 +163,7 @@ class AgentManager:
         # Fallback logic for image
         effective_system_prompt = system_prompt
         if effective_system_prompt is None:
-            effective_system_prompt = get_pref("default_image_system_prompt")
+            effective_system_prompt = get_system_prompt_repo().get("image")
 
         result = self.image_agent.run(
             prompt, provider, opts, api_keys, effective_system_prompt
@@ -180,10 +185,12 @@ class AgentManager:
         project_path: str | None = None,
     ) -> AgentResult:
         self._ensure_agents()
-        api_keys = load_api_keys()
+        from ..repositories import get_api_key_repo, get_system_prompt_repo
+        api_keys = cast(dict[str, str], get_api_key_repo().get_all())
         if provider and api_key:
             caps = provider_registry.get(provider)
-            api_keys[caps.api_key_name] = api_key
+            if caps.api_key_name:
+                api_keys[caps.api_key_name] = api_key
 
         if not self.audio_agent:
             raise RuntimeError("AudioAgent is not available.")
@@ -195,6 +202,7 @@ class AgentManager:
         if effective_system_prompt is None:
             # Check if this is a music provider or TTS provider
             is_music = False
+            from ..core.db import get_pref # still use for preferred_audio_provider pref
             current_provider = provider or get_pref("preferred_audio_provider")
             try:
                 if current_provider:
@@ -203,8 +211,8 @@ class AgentManager:
             except Exception:
                 pass
             
-            prompt_key = "default_music_system_prompt" if is_music else "default_audio_system_prompt"
-            effective_system_prompt = get_pref(prompt_key)
+            prompt_key = "music" if is_music else "audio"
+            effective_system_prompt = get_system_prompt_repo().get(prompt_key)
 
         result = self.audio_agent.run(
             prompt, provider, opts, api_keys, effective_system_prompt
@@ -248,8 +256,9 @@ class AgentManager:
             ... # doctest: +SKIP
         """
         from services.video_provider import generate_video
+        from ..repositories import get_api_key_repo, get_system_prompt_repo
 
-        api_keys = load_api_keys()
+        api_keys = cast(dict[str, str], get_api_key_repo().get_all())
         if provider and api_key:
             caps = provider_registry.get(provider)
             if caps and caps.api_key_name:
@@ -259,7 +268,7 @@ class AgentManager:
 
         effective_system_prompt = system_prompt
         if effective_system_prompt is None:
-            effective_system_prompt = get_pref("default_video_system_prompt")
+            effective_system_prompt = get_system_prompt_repo().get("video")
 
         result = generate_video(
             prompt, provider, opts, api_keys, effective_system_prompt
@@ -283,14 +292,16 @@ class AgentManager:
         Runs the Unity Agent to orchestrate editor actions.
         """
         self._ensure_agents()
+        from ..repositories import get_api_key_repo, get_system_prompt_repo
         msg = f"\n[MANAGER] run_unity: provider={provider}, manual_api_key={'PROVIDED' if api_key else 'NONE'}"
         print(msg, flush=True)
         
-        api_keys = load_api_keys()
+        api_keys = cast(dict[str, str], get_api_key_repo().get_all())
         if provider and api_key:
             caps = provider_registry.get(provider)
-            api_keys[caps.api_key_name] = api_key
-            print(f"[MANAGER] Added manual api_key for {provider} to key_name {caps.api_key_name}", flush=True)
+            if caps.api_key_name:
+                api_keys[caps.api_key_name] = api_key
+                print(f"[MANAGER] Added manual api_key for {provider} to key_name {caps.api_key_name}", flush=True)
         
         print(f"[MANAGER] Keys available: {list(api_keys.keys())}", flush=True)
 
@@ -300,7 +311,7 @@ class AgentManager:
         # Fallback logic for unity (default to code prompt since it writes C#)
         effective_system_prompt = system_prompt
         if effective_system_prompt is None:
-            effective_system_prompt = get_pref("default_code_system_prompt")
+            effective_system_prompt = get_system_prompt_repo().get("code")
 
         # UnityAgent.run is async and returns a dict
         result = await self.unity_agent.run(

@@ -1,9 +1,7 @@
-import json
 import logging
 import os
 import platform
 from pathlib import Path
-from typing import Any, cast
 
 LOGGER = logging.getLogger(__name__)
 
@@ -17,83 +15,29 @@ def get_config_dir() -> Path:
 
 
 def get_db_dir() -> Path:
+    env_path = os.environ.get("DATABASE_DIR")
+    if env_path:
+        return Path(env_path)
     return get_repo_root() / "db"
 
 
 def get_logs_dir() -> Path:
+    env_path = os.environ.get("LOGS_DIR")
+    if env_path:
+        return Path(env_path)
     return get_repo_root() / "logs"
 
 
 def get_output_dir() -> Path:
+    env_path = os.environ.get("OUTPUT_DIR")
+    if env_path:
+        return Path(env_path)
     return get_repo_root() / "output"
 
 
 def get_templates_dir() -> Path:
     """Return the path to the backend C# templates directory."""
     return get_repo_root() / "backend" / "templates" / "unity"
-
-
-def load_api_keys() -> dict[str, Any]:
-    """
-    Load API keys from user_prefs database, with lazy migration from legacy JSON.
-    """
-    from .db import get_all_prefs, set_pref
-
-    all_prefs = get_all_prefs()
-    
-    # Identify keys that look like API keys (ending in _key)
-    api_keys = {k: v for k, v in all_prefs.items() if k.endswith("_api_key")}
-    
-    # Also check for keys without _api_key suffix if they are known ones
-    legacy_keys_map = {
-        "google_api_key": "google_api_key",
-        "anthropic_api_key": "anthropic_api_key",
-        "openai_api_key": "openai_api_key",
-        "deepseek_api_key": "deepseek_api_key",
-        "openrouter_api_key": "openrouter_api_key",
-        "groq_api_key": "groq_api_key",
-        "huggingface_api_key": "huggingface_api_key",
-        "ollama_api_key": "ollama_api_key",
-    }
-
-    # If no keys in DB, check for legacy JSON file and migrate
-    if not api_keys or len(api_keys) < 2: # Heuristic: if very few keys, maybe try migration
-        config_dir = get_config_dir()
-        config_path = config_dir / "api_keys.json"
-        if config_path.exists():
-            try:
-                print(f"[CONFIG] Found legacy api_keys.json at {config_path}. Checking for migration...")
-                legacy_data = json.loads(config_path.read_text(encoding="utf-8"))
-                migrated_count = 0
-                for k, v in legacy_data.items():
-                    if v:
-                        # Ensure key has _api_key suffix
-                        db_key = k if k.endswith("_api_key") else f"{k}_api_key"
-                        if db_key not in api_keys:
-                            set_pref(db_key, v)
-                            api_keys[db_key] = v
-                            migrated_count += 1
-                
-                if migrated_count > 0:
-                    print(f"[CONFIG] Migrated {migrated_count} keys to database.")
-                    # Keep backup
-                    backup_path = config_path.with_suffix(".json.bak")
-                    if not backup_path.exists():
-                        config_path.rename(backup_path)
-                        print(f"[CONFIG] Renamed legacy file to {backup_path}")
-            except Exception as e:
-                print(f"[CONFIG] Error during migration: {e}")
-
-    return api_keys
-
-
-def save_api_keys(keys: dict[str, Any]) -> None:
-    """
-    Save API keys to the user_prefs database.
-    """
-    from .db import set_pref
-    for k, v in keys.items():
-        set_pref(k, v)
 
 
 # ---------------------------------------------------------------------------

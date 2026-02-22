@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, AsyncMock
 from app.services.audio_provider import generate_audio
 from app.schemas import AudioOptions
 
@@ -17,8 +17,9 @@ def test_generate_audio_voice_validation_fix():
         mock_registry.get.return_value.api_key_name = "openai_api_key"
         mock_registry.get.return_value.default_models = {"audio": "tts-1"}
         
-        # Mock the service
+        # Mock the service with AsyncMock for the actual call
         mock_service = MagicMock()
+        mock_service.get_audio_content = AsyncMock(return_value=MagicMock(data=b"dummy", metadata={}))
         mock_registry.create_text_to_audio_service.return_value = mock_service
         
         # Mock instantiate_prompt_execution_settings to return an object with 'voice'
@@ -37,20 +38,16 @@ def test_generate_audio_voice_validation_fix():
         mock_settings = MockSettings()
         mock_service.instantiate_prompt_execution_settings.return_value = mock_settings
         
-        # We need to mock asyncio.run
-        with patch("app.services.audio_provider.asyncio.run") as mock_run:
-            mock_run.return_value = MagicMock(data=b"dummy")
-            
-            result = generate_audio(
-                prompt="Hello",
-                provider="openai",
-                options=AudioOptions(voice="Rachel", model="tts-1"),
-                api_keys=api_keys
-            )
-            
-            assert result.provider == "openai"
-            # Should have fallen back to alloy
-            assert mock_settings.voice == "alloy"
+        result = generate_audio(
+            prompt="Hello",
+            provider="openai",
+            options=AudioOptions(voice="Rachel", model="tts-1"),
+            api_keys=api_keys
+        )
+        
+        assert result.provider == "openai"
+        # Should have fallen back to alloy
+        assert mock_settings.voice == "alloy"
 
 def test_generate_audio_custom_voice_success():
     """
@@ -64,6 +61,7 @@ def test_generate_audio_custom_voice_success():
         mock_registry.get.return_value.default_models = {"audio": "eleven_multilingual_v2"}
         
         mock_service = MagicMock()
+        mock_service.get_audio_content = AsyncMock(return_value=MagicMock(data=b"dummy", metadata={}))
         mock_registry.create_text_to_audio_service.return_value = mock_service
         
         class GenericSettings:
@@ -73,15 +71,12 @@ def test_generate_audio_custom_voice_success():
         mock_settings = GenericSettings()
         mock_service.instantiate_prompt_execution_settings.return_value = mock_settings
         
-        with patch("app.services.audio_provider.asyncio.run") as mock_run:
-            mock_run.return_value = MagicMock(data=b"dummy")
-            
-            result = generate_audio(
-                prompt="Hello",
-                provider="elevenlabs",
-                options=AudioOptions(voice="Rachel", model="eleven_multilingual_v2"),
-                api_keys=api_keys
-            )
-            
-            assert result.provider == "elevenlabs"
-            assert mock_settings.voice == "Rachel"
+        result = generate_audio(
+            prompt="Hello",
+            provider="elevenlabs",
+            options=AudioOptions(voice="Rachel", model="eleven_multilingual_v2"),
+            api_keys=api_keys
+        )
+        
+        assert result.provider == "elevenlabs"
+        assert mock_settings.voice == "Rachel"

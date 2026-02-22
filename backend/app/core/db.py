@@ -27,12 +27,51 @@ def init_db() -> None:
         )
         cursor.execute(
             """
+            CREATE TABLE IF NOT EXISTS providers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL,
+                api_key_name TEXT,
+                base_url TEXT,
+                openai_compatible BOOLEAN DEFAULT 0,
+                requires_api_key BOOLEAN DEFAULT 1,
+                supports_vision BOOLEAN DEFAULT 0,
+                supports_streaming BOOLEAN DEFAULT 0,
+                supports_function_calling BOOLEAN DEFAULT 0,
+                supports_tool_use BOOLEAN DEFAULT 0,
+                modalities TEXT NOT NULL, -- JSON array of strings
+                default_models TEXT NOT NULL, -- JSON object: modality -> model_id
+                extra TEXT -- JSON extra metadata
+            )
+            """
+        )
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS provider_models (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 provider TEXT NOT NULL,
                 model_value TEXT NOT NULL,
                 model_label TEXT NOT NULL,
                 UNIQUE(provider, model_value)
+            )
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS api_keys (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                service_name TEXT UNIQUE NOT NULL,
+                key_value TEXT NOT NULL,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS system_prompts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                modality TEXT UNIQUE NOT NULL, -- code, text, image, audio, music, video, sprite
+                content TEXT NOT NULL,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
             """
         )
