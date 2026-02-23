@@ -49,7 +49,7 @@ class AgentManager:
         repo_root = get_repo_root()
         if str(repo_root) not in sys.path:
             sys.path.insert(0, str(repo_root))
-        
+
         self.code_agent = None
         self.text_agent = None
         self.image_agent = None
@@ -107,14 +107,14 @@ class AgentManager:
         self._ensure_agents()
         from ..repositories import get_api_key_repo, get_system_prompt_repo
         print(f"\n[MANAGER] run_text: provider={provider}, manual_api_key={'PROVIDED' if api_key else 'NONE'}", flush=True)
-        
+
         api_keys = cast(dict[str, str], get_api_key_repo().get_all())
         if provider and api_key:
             caps = provider_registry.get(provider)
             if caps.api_key_name:
                 api_keys[caps.api_key_name] = api_key
                 print(f"[MANAGER] Added manual api_key for {provider} to key_name {caps.api_key_name}", flush=True)
-        
+
         print(f"[MANAGER] Keys available: {list(api_keys.keys())}", flush=True)
 
         if not self.text_agent:
@@ -183,6 +183,7 @@ class AgentManager:
         api_key: str | None = None,
         system_prompt: str | None = None,
         project_path: str | None = None,
+        modality: str | None = None,
     ) -> AgentResult:
         self._ensure_agents()
         from ..repositories import get_api_key_repo, get_system_prompt_repo
@@ -201,16 +202,17 @@ class AgentManager:
         effective_system_prompt = system_prompt
         if effective_system_prompt is None:
             # Check if this is a music provider or TTS provider
-            is_music = False
-            from ..core.db import get_pref # still use for preferred_audio_provider pref
-            current_provider = provider or get_pref("preferred_audio_provider")
-            try:
-                if current_provider:
-                    caps = provider_registry.get(current_provider)
-                    is_music = caps.extra.get("is_music", False)
-            except Exception:
-                pass
-            
+            is_music = modality == "music"
+            if not is_music:
+                from ..core.db import get_pref
+                current_provider = provider or get_pref("preferred_audio_provider")
+                try:
+                    if current_provider:
+                        caps = provider_registry.get(current_provider)
+                        is_music = Modality.MUSIC in caps.modalities or caps.extra.get("is_music", False)
+                except Exception:
+                    pass
+
             prompt_key = "music" if is_music else "audio"
             effective_system_prompt = get_system_prompt_repo().get(prompt_key)
 
@@ -295,14 +297,14 @@ class AgentManager:
         from ..repositories import get_api_key_repo, get_system_prompt_repo
         msg = f"\n[MANAGER] run_unity: provider={provider}, manual_api_key={'PROVIDED' if api_key else 'NONE'}"
         print(msg, flush=True)
-        
+
         api_keys = cast(dict[str, str], get_api_key_repo().get_all())
         if provider and api_key:
             caps = provider_registry.get(provider)
             if caps.api_key_name:
                 api_keys[caps.api_key_name] = api_key
                 print(f"[MANAGER] Added manual api_key for {provider} to key_name {caps.api_key_name}", flush=True)
-        
+
         print(f"[MANAGER] Keys available: {list(api_keys.keys())}", flush=True)
 
         if not self.unity_agent:

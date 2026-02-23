@@ -1,10 +1,13 @@
 import { ref, computed, onMounted, watch } from "vue";
-import { generateAudio, getPref, listModels, type ModelEntry } from "@/api/client";
-import { AUDIO_PROVIDERS } from "@/constants/providers";
+import { generateAudio } from "@/api/client";
 import { projectStore } from "@/store/projectStore";
+import { useIntelligenceStore } from "@/store/intelligenceStore";
 
 export function useAudioPanel() {
+  const store = useIntelligenceStore();
+
   const prompt = ref("");
+  const modality = ref<"audio" | "music">("audio");
   const provider = ref("");
   const apiKey = ref("");
   const voiceId = ref("");
@@ -18,27 +21,56 @@ export function useAudioPanel() {
 
   const activeProjectName = computed(() => projectStore.activeProjectName);
 
+  // Discovery data from store
+  const providers = computed(() => store.getProvidersByModality(modality.value));
+  const availableVoices = computed(() => store.getModelsByProvider(provider.value, modality.value));
+  const showModelManager = ref(false);
+
   onMounted(async () => {
-    const pref = await getPref("default_audio_system_prompt");
-    if (pref.success && pref.data?.value) {
-      const val = String(pref.data.value);
-      defaultSystemPrompt.value = val ? `Default: ${val.substring(0, 50)}...` : defaultSystemPrompt.value;
+    try {
+      await store.load();
+      await updateDefaults();
+    } catch (e) {
+      console.error("Failed to load AudioPanel state via store", e);
     }
   });
 
-  const availableVoices = ref<ModelEntry[]>([]);
-  const showModelManager = ref(false);
+  async function updateDefaults() {
+    // Auto-default to preferred provider/model based on modality
+    const prefProvider = store.getPreference(`preferred_${modality.value}_provider`);
+    const prefModel = store.getPreference(`preferred_${modality.value}_model`);
 
-  async function refreshModels() {
-    availableVoices.value = provider.value
-      ? await listModels(provider.value)
-      : [];
+    if (prefProvider) provider.value = prefProvider;
+    if (prefModel) voiceId.value = prefModel;
+
+    const dbSysPrompt = store.getPreference(`default_${modality.value}_system_prompt`);
+    if (dbSysPrompt) {
+      defaultSystemPrompt.value = `Default: ${dbSysPrompt.substring(0, 50)}...`;
+    } else {
+      defaultSystemPrompt.value = modality.value === "music" 
+        ? "Default: Cinematic background music..." 
+        : "Default: High quality sound effect...";
+    }
   }
 
-  watch(provider, () => {
+  watch(modality, async () => {
+    provider.value = "";
     voiceId.value = "";
-    refreshModels();
+    systemPrompt.value = "";
+    await updateDefaults();
   });
+
+  watch(provider, () => {
+    // Reset voice if not in new provider's list
+    if (provider.value && !availableVoices.value.some((m: { value: string }) => m.value === voiceId.value)) {
+      voiceId.value = "";
+    }
+  });
+
+  async function refreshModels() {
+    await store.load();
+  }
+
 
   async function run() {
     status.value = "Generating audio...";
@@ -46,6 +78,7 @@ export function useAudioPanel() {
     try {
       const response = await generateAudio({
         prompt: prompt.value,
+        modality: modality.value,
         system_prompt: systemPrompt.value || undefined,
         provider: provider.value || undefined,
         options: { 
@@ -70,7 +103,9 @@ export function useAudioPanel() {
 
   return {
     prompt,
+    modality,
     provider,
+    providers,
     apiKey,
     voiceId,
     stability,
@@ -84,7 +119,6 @@ export function useAudioPanel() {
     availableVoices,
     showModelManager,
     refreshModels,
-    run,
-    AUDIO_PROVIDERS
+    run
   };
 }

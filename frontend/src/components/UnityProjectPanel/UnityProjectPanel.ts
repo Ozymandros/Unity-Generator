@@ -8,9 +8,6 @@ import {
 } from "@/api/client";
 import type { FinalizeJobStatusResponse } from "@/api/client";
 import { 
-  TEXT_PROVIDERS, 
-  IMAGE_PROVIDERS, 
-  AUDIO_PROVIDERS, 
   ASPECT_RATIOS, 
   QUALITY_OPTIONS, 
   TEMPERATURE_PRESETS, 
@@ -288,9 +285,6 @@ export function useUnityProjectPanel() {
     run,
     runFinalize,
     openOutputFolder,
-    TEXT_PROVIDERS,
-    IMAGE_PROVIDERS,
-    AUDIO_PROVIDERS,
     ASPECT_RATIOS,
     QUALITY_OPTIONS,
     TEMPERATURE_PRESETS,

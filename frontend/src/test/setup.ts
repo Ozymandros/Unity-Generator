@@ -7,7 +7,7 @@ class ResizeObserver {
   disconnect = vi.fn();
 }
 
-global.ResizeObserver = ResizeObserver;
+(globalThis as any).ResizeObserver = ResizeObserver;
 window.ResizeObserver = ResizeObserver;
 
 // Mock localStorage if needed globally
@@ -27,4 +27,4 @@ const localStorageMock = (function () {
   };
 })();
 
-Object.defineProperty(global, 'localStorage', { value: localStorageMock });
+Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock });

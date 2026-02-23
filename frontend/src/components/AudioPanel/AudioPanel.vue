@@ -6,6 +6,7 @@ import { useAudioPanel } from "./AudioPanel";
 
 const {
   prompt,
+  modality,
   provider,
   apiKey,
   voiceId,
@@ -21,7 +22,7 @@ const {
   showModelManager,
   refreshModels,
   run,
-  AUDIO_PROVIDERS
+  providers
 } = useAudioPanel();
 </script>
 
@@ -35,9 +36,25 @@ const {
         Auto-save to project
       </label>
     </div>
-    <h2>Audio Generation</h2>
+    <h2>Audio & Music Generation</h2>
     <StatusBanner :status="status" :tone="tone" />
-    <SmartField label="Prompt" type="textarea" v-model="prompt" :rows="6" />
+
+    <div class="mb-6">
+      <div class="text-overline mb-2 text-primary">Generation Type</div>
+      <v-btn-toggle
+        v-model="modality"
+        mandatory
+        color="primary"
+        variant="outlined"
+        rounded="pill"
+        class="w-100"
+      >
+        <v-btn value="audio" prepend-icon="mdi-account-voice" class="flex-grow-1">Speech (TTS)</v-btn>
+        <v-btn value="music" prepend-icon="mdi-music-note" class="flex-grow-1">Atmospheric Music</v-btn>
+      </v-btn-toggle>
+    </div>
+
+    <SmartField :label="modality === 'music' ? 'Music Description' : 'Speech Prompt'" type="textarea" v-model="prompt" :rows="6" />
 
     <div class="field-group">
       <div class="row">
@@ -45,7 +62,7 @@ const {
           label="Provider" 
           type="select" 
           v-model="provider" 
-          :options="AUDIO_PROVIDERS" 
+          :options="providers.map(p => ({ value: p.name, label: p.name }))" 
           placeholder="Select Provider" 
         />
         <v-btn
@@ -61,11 +78,11 @@ const {
       </div>
       <div class="row">
         <SmartField 
-          label="Voice (optional)" 
+          :label="modality === 'music' ? 'Music Model' : 'Voice (optional)'" 
           type="select" 
           v-model="voiceId" 
           :options="availableVoices" 
-          placeholder="Select Voice" 
+          :placeholder="modality === 'music' ? 'Select Model' : 'Select Voice'" 
         />
         <SmartField
           label="Stability"

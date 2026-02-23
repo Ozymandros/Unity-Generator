@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import ScenesPanel from "@/components/ScenesPanel.vue";
-import { SettingsPanel } from "@/components/SettingsPanel";
-import { CodePanel } from "@/components/CodePanel";
-import { TextPanel } from "@/components/TextPanel";
-import { ImagePanel } from "@/components/ImagePanel";
-import { AudioPanel } from "@/components/AudioPanel";
-import { SpritesPanel } from "@/components/SpritesPanel";
-import { UnityProjectPanel } from "@/components/UnityProjectPanel";
+import SettingsPanel from "@/components/SettingsPanel";
+import CodePanel from "@/components/CodePanel";
+import TextPanel from "@/components/TextPanel";
+import ImagePanel from "@/components/ImagePanel";
+import AudioPanel from "@/components/AudioPanel";
+import SpritesPanel from "@/components/SpritesPanel";
+import UnityProjectPanel from "@/components/UnityProjectPanel";
 import { useApp } from "@/App";
 
 const { tabs, active, backendStatus, setActive } = useApp();

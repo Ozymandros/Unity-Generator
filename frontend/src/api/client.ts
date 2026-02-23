@@ -19,6 +19,7 @@ export function createScene(body: CreateSceneRequest) {
 
 export type GenerationRequest = {
   prompt: string;
+  modality?: string;
   provider?: string;
   api_key?: string;
   options?: Record<string, unknown>;
@@ -207,6 +208,19 @@ export async function saveSystemPrompt(modality: string, content: string): Promi
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ modality, content }),
   });
+  return await response.json();
+}
+
+export type DiscoveryResponse = {
+  providers: ProviderCapabilities[];
+  models: Record<string, ModelEntry[]>;
+  prompts: Record<string, string>;
+  keys: string[];
+  preferences: Record<string, string>;
+};
+
+export async function getAllConfig(): Promise<DiscoveryResponse> {
+  const response = await fetch(`${getBackendUrl()}/api/management/all`);
   return await response.json();
 }
 

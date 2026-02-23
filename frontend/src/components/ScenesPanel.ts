@@ -1,19 +1,22 @@
 import { computed, ref, watch, onMounted } from "vue";
-import { createScene, getPref, listModels, type ModelEntry } from "@/api/client";
-import { TEXT_PROVIDERS, TEMPERATURE_PRESETS } from "@/constants/providers";
+import { createScene } from "@/api/client";
+import { TEMPERATURE_PRESETS } from "@/constants/providers";
+import { useIntelligenceStore } from "@/store/intelligenceStore";
 
 export function useScenesPanel() {
+  const store = useIntelligenceStore();
+
   const prompt = ref("");
-  const provider = ref(""); // Default to empty, backend falls back to global pref
+  const provider = ref("");
   const model = ref("");
-  const temperature = ref(0.7); // Default for creative tasks
+  const temperature = ref(0.7);
   const apiKey = ref("");
   const systemPrompt = ref("");
   const defaultSystemPrompt = ref("Default: You are a senior Unity engineer...");
-  
+
   const status = ref<string | null>(null);
   const tone = ref<"ok" | "error">("ok");
-  
+
   interface AgentResult {
     content: string;
     files: string[];
@@ -25,28 +28,43 @@ export function useScenesPanel() {
   const result = ref<AgentResult | null>(null);
   const loading = ref(false);
 
+  // Discovery data from store
+  const providers = computed(() => store.getProvidersByModality("llm"));
+  const availableModels = computed(() => store.getModelsByProvider(provider.value, "llm"));
+  const showModelManager = ref(false);
+
   onMounted(async () => {
-    // We reuse code prompt for now as scenes are code-heavy
-    const pref = await getPref("default_code_system_prompt");
-    if (pref.success && pref.data?.value) {
-      defaultSystemPrompt.value = `Default: ${String(pref.data.value).substring(0, 50)}...`;
+    try {
+      await store.load();
+
+      // Auto-default to preferred choices
+      if (!provider.value) {
+        provider.value = store.getPreference("preferred_llm_provider");
+      }
+      if (!model.value) {
+        model.value = store.getPreference("preferred_llm_model");
+      }
+
+      const dbSysPrompt = store.getPreference("default_code_system_prompt");
+      if (dbSysPrompt) {
+        defaultSystemPrompt.value = `Default: ${dbSysPrompt.substring(0, 50)}...`;
+      }
+    } catch (e) {
+      console.error("Failed to load ScenesPanel state via store", e);
     }
   });
 
-  const availableModels = ref<ModelEntry[]>([]);
-  const showModelManager = ref(false);
+  watch(provider, () => {
+    // Reset model if not in new provider's list
+    if (provider.value && !availableModels.value.some((m: { value: string }) => m.value === model.value)) {
+      model.value = "";
+    }
+  });
 
   async function refreshModels() {
-    availableModels.value = provider.value
-      ? await listModels(provider.value)
-      : [];
+    await store.load();
   }
 
-  // Reset model when provider changes
-  watch(provider, () => {
-    model.value = "";
-    refreshModels();
-  });
 
   const canGenerate = computed(() => prompt.value.trim().length > 0 && !loading.value);
 
@@ -89,6 +107,7 @@ export function useScenesPanel() {
     prompt,
     provider,
     model,
+    providers,
     temperature,
     apiKey,
     systemPrompt,
@@ -102,7 +121,6 @@ export function useScenesPanel() {
     loading,
     canGenerate,
     run,
-    TEXT_PROVIDERS,
     TEMPERATURE_PRESETS
   };
 }

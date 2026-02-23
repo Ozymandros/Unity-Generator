@@ -1,9 +1,12 @@
 import { ref, computed, onMounted, watch } from "vue";
-import { generateText, getPref, listModels, type ModelEntry } from "@/api/client";
-import { TEXT_PROVIDERS, TEMPERATURE_PRESETS, LENGTH_PRESETS } from "@/constants/providers";
+import { generateText } from "@/api/client";
+import { TEMPERATURE_PRESETS, LENGTH_PRESETS } from "@/constants/providers";
 import { projectStore } from "@/store/projectStore";
+import { useIntelligenceStore } from "@/store/intelligenceStore";
 
 export function useTextPanel() {
+  const store = useIntelligenceStore();
+
   const prompt = ref("");
   const provider = ref("");
   const apiKey = ref("");
@@ -19,27 +22,44 @@ export function useTextPanel() {
 
   const activeProjectName = computed(() => projectStore.activeProjectName);
 
+  // Discovery data from store
+  const providers = computed(() => store.getProvidersByModality("llm"));
+  const providerModels = computed(() => store.getModelsByProvider(provider.value, "llm"));
+  const showModelManager = ref(false);
+
   onMounted(async () => {
-    const pref = await getPref("default_text_system_prompt");
-    if (pref.success && pref.data?.value) {
-      const val = String(pref.data.value);
-      defaultSystemPrompt.value = val ? `Default: ${val.substring(0, 50)}...` : defaultSystemPrompt.value;
+    try {
+      await store.load();
+
+      // Auto-default to preferred choices if local choice is empty
+      if (!provider.value) {
+        provider.value = store.getPreference("preferred_llm_provider");
+      }
+      if (!model.value) {
+        model.value = store.getPreference("preferred_llm_model");
+      }
+
+      const dbSysPrompt = store.getPreference("default_text_system_prompt");
+      if (dbSysPrompt) {
+        defaultSystemPrompt.value = `Default: ${dbSysPrompt.substring(0, 50)}...`;
+      }
+    } catch (e) {
+      console.error("Failed to load TextPanel state via store", e);
     }
   });
 
-  const providerModels = ref<ModelEntry[]>([]);
-  const showModelManager = ref(false);
+  watch(provider, () => {
+    // Reset model when provider changes if not in discovery list
+    if (provider.value && !providerModels.value.some((m: { value: string }) => m.value === model.value)) {
+      model.value = "";
+    }
+  });
 
   async function refreshModels() {
-    providerModels.value = provider.value
-      ? await listModels(provider.value)
-      : [];
+    // No-op or call store.refresh() if needed, but computed handled it
+    await store.load();
   }
 
-  watch(provider, () => {
-    model.value = "";
-    refreshModels();
-  });
 
   async function run() {
     status.value = "Generating text...";
@@ -85,10 +105,10 @@ export function useTextPanel() {
     autoSaveToProject,
     activeProjectName,
     providerModels,
+    providers,
     showModelManager,
     refreshModels,
     run,
-    TEXT_PROVIDERS,
     TEMPERATURE_PRESETS,
     LENGTH_PRESETS
   };

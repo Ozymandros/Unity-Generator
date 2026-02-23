@@ -1,11 +1,14 @@
-import { computed, ref, onMounted, type CSSProperties } from "vue";
-import { generateSprites, getPref } from "@/api/client";
-import { IMAGE_PROVIDERS } from "@/constants/providers";
+import { computed, ref, onMounted, watch, type CSSProperties } from "vue";
+import { generateSprites } from "@/api/client";
 import { projectStore } from "@/store/projectStore";
+import { useIntelligenceStore } from "@/store/intelligenceStore";
 
 export function useSpritesPanel() {
+  const store = useIntelligenceStore();
+
   const prompt = ref("");
   const provider = ref("");
+  const model = ref("");
   const apiKey = ref("");
   const resolution = ref(64);
   const paletteSize = ref(32);
@@ -21,13 +24,42 @@ export function useSpritesPanel() {
 
   const activeProjectName = computed(() => projectStore.activeProjectName);
 
+  // Discovery data from store
+  const providers = computed(() => store.getProvidersByModality("image"));
+  const availableModels = computed(() => store.getModelsByProvider(provider.value, "image"));
+  const showModelManager = ref(false);
+
   onMounted(async () => {
-    const pref = await getPref("default_sprite_system_prompt");
-    if (pref.success && pref.data?.value) {
-      const val = String(pref.data.value);
-      defaultSystemPrompt.value = val ? `Default: ${val.substring(0, 50)}...` : defaultSystemPrompt.value;
+    try {
+      await store.load();
+
+      // Auto-default to preferred image provider/model
+      if (!provider.value) {
+        provider.value = store.getPreference("preferred_image_provider");
+      }
+      if (!model.value) {
+        model.value = store.getPreference("preferred_image_model");
+      }
+
+      const dbSysPrompt = store.getPreference("default_sprite_system_prompt");
+      if (dbSysPrompt) {
+        defaultSystemPrompt.value = `Default: ${dbSysPrompt.substring(0, 50)}...`;
+      }
+    } catch (e) {
+      console.error("Failed to load SpritesPanel state via store", e);
     }
   });
+
+  watch(provider, () => {
+    if (provider.value && !availableModels.value.some((m: { value: string }) => m.value === model.value)) {
+      model.value = "";
+    }
+  });
+
+  async function refreshModels() {
+    await store.load();
+  }
+
 
   const RESOLUTIONS = [16, 32, 64, 128, 256];
   const PALETTE_SIZES = [8, 16, 32, 64, 256];
@@ -51,6 +83,7 @@ export function useSpritesPanel() {
         api_key: apiKey.value || undefined,
         resolution: resolution.value,
         options: {
+          model: model.value || undefined,
           palette_size: paletteSize.value,
           auto_crop: autoCrop.value
         },
@@ -89,6 +122,8 @@ export function useSpritesPanel() {
   return {
     prompt,
     provider,
+    model,
+    providers,
     apiKey,
     resolution,
     paletteSize,
@@ -103,8 +138,10 @@ export function useSpritesPanel() {
     PALETTE_SIZES,
     autoSaveToProject,
     activeProjectName,
+    availableModels,
+    showModelManager,
+    refreshModels,
     run,
-    canvasStyle,
-    IMAGE_PROVIDERS
+    canvasStyle
   };
 }

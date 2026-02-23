@@ -165,7 +165,7 @@ const {
           <span class="text-subtitle-2 font-weight-bold">{{ finalizeStep }}</span>
           <span class="text-caption font-weight-black">{{ finalizeProgress }}%</span>
         </div>
-        
+
         <v-progress-linear
           :model-value="finalizeProgress"
           height="10"

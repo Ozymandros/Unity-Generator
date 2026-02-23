@@ -4,34 +4,6 @@ export interface ProviderOption {
   type?: "tts" | "music";
 }
 
-export const TEXT_PROVIDERS: ProviderOption[] = [
-  { value: "google", label: "Google (Gemini)" },
-  { value: "openai", label: "OpenAI" },
-  { value: "anthropic", label: "Anthropic" },
-  { value: "deepseek", label: "DeepSeek" },
-  { value: "openrouter", label: "OpenRouter" },
-  { value: "groq", label: "Groq" },
-  { value: "huggingface", label: "Hugging Face" },
-  { value: "ollama", label: "Ollama" },
-  { value: "replicate", label: "Replicate" },
-];
-
-export const IMAGE_PROVIDERS: ProviderOption[] = [
-  { value: "stability", label: "Stability AI" },
-  { value: "openai", label: "OpenAI (DALL-E 3)" },
-  { value: "google", label: "Google (Imagen)" },
-  { value: "flux", label: "Flux (Replicate)" },
-  { value: "replicate", label: "Replicate (Native)" },
-];
-
-export const AUDIO_PROVIDERS: ProviderOption[] = [
-  { value: "elevenlabs", label: "ElevenLabs", type: "tts" },
-  { value: "openai", label: "OpenAI (TTS)", type: "tts" },
-  { value: "google", label: "Google (TTS)", type: "tts" },
-  { value: "playht", label: "PlayHT", type: "tts" },
-  { value: "replicate", label: "Replicate (Music)", type: "music" },
-];
-
 export const ASPECT_RATIOS = [
   { value: "1:1", label: "1:1 Square" },
   { value: "16:9", label: "16:9 Landscape" },

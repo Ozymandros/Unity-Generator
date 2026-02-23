@@ -6,7 +6,7 @@ export function useGlobalKeyManagement() {
   const isLoading = ref(false);
   const status = ref<string | null>(null);
   const showAddDialog = ref(false);
-  
+
   const newKey = reactive({
     name: '',
     value: ''

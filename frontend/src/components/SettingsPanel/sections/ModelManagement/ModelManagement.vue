@@ -28,7 +28,7 @@ const headers = [
         <v-icon color="secondary" size="36" class="mr-4">mdi-robot-outline</v-icon>
         <h2 class="text-h4 font-weight-bold">Model Registration</h2>
       </div>
-      
+
       <v-select
         v-model="selectedProviderName"
         :items="providers"

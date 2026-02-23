@@ -69,7 +69,7 @@ const loadData = async () => {
     ]);
     providers.value = pList;
     apiKeys.value = kList;
-    
+
     // Ensure all modalities exist in prompts object for reactivity
     const initializedPrompts: Record<string, string> = {};
     promptModalities.forEach(m => {
@@ -99,7 +99,7 @@ const selectProvider = async (p: ProviderCapabilities) => {
       ...JSON.parse(JSON.stringify(p)), 
       api_key_value: apiKeyValue 
     };
-    
+
     providerModels.value = await listModels(p.name);
   } catch (e) {
     showMessage('Error loading provider details', 'error');
@@ -237,9 +237,9 @@ onMounted(loadData);
           <v-btn icon="mdi-plus-circle" color="primary" variant="text" @click="initiateAddProvider" title="Add Provider"></v-btn>
         </template>
       </v-toolbar>
-      
+
       <v-divider></v-divider>
-      
+
       <v-list nav v-if="!isLoadingProviders">
         <v-list-subheader>ENABLED PROVIDERS</v-list-subheader>
         <v-list-item
@@ -331,7 +331,7 @@ onMounted(loadData);
 
                       <v-divider class="my-4"></v-divider>
                       <div class="text-overline mb-2">Capabilities & Protocols</div>
-                      
+
                       <v-row dense>
                         <v-col cols="6" sm="4">
                           <v-checkbox v-model="selectedProvider.openai_compatible" label="OpenAI Proto" color="primary" hide-details density="compact"></v-checkbox>
@@ -398,7 +398,7 @@ onMounted(loadData);
                       <v-btn icon="mdi-close-circle-outline" size="small" color="red" variant="text" @click="handleRemoveModel(item.value)"></v-btn>
                     </template>
                   </v-data-table>
-                  
+
                   <v-divider></v-divider>
                   <v-card-text class="bg-surface-light">
                     <div class="text-subtitle-2 font-weight-bold mb-3">Quick Register Model</div>

@@ -29,7 +29,7 @@ class ReplicateConnectorBase:
         # For simplicity, we assume model_id is usable in the URL if formatted correctly.
         # The recommended way is POST https://api.replicate.com/v1/models/{model_id}/predictions
         url = f"https://api.replicate.com/v1/models/{self.model_id}/predictions"
-        
+
         response = requests.post(url, headers=self.headers, json={"input": input_data})
         if response.status_code == 404:
             # Fallback to generic predictions endpoint if model-specific fails
@@ -38,7 +38,7 @@ class ReplicateConnectorBase:
                 "version": self.model_id.split(":")[-1] if ":" in self.model_id else None,
                 "input": input_data
             })
-            
+
         response.raise_for_status()
         return response.json()["urls"]["get"]
 
@@ -49,14 +49,14 @@ class ReplicateConnectorBase:
             response = requests.get(get_url, headers=self.headers)
             response.raise_for_status()
             data = response.json()
-            
+
             if data["status"] == "succeeded":
                 return data["output"]
             elif data["status"] in ["failed", "canceled"]:
                 raise RuntimeError(f"Replicate prediction {data['status']}: {data.get('error')}")
-            
+
             await asyncio.sleep(2)
-        
+
         raise TimeoutError("Replicate prediction timed out")
 
 class ReplicateTextToImage(TextToImageClientBase, ReplicateConnectorBase):
@@ -83,7 +83,7 @@ class ReplicateTextToImage(TextToImageClientBase, ReplicateConnectorBase):
         try:
             get_url = await self._create_prediction(input_data)
             output = await self._poll_prediction(get_url)
-            
+
             # Replicate output for images is usually a list of strings (URLs)
             if isinstance(output, list) and len(output) > 0:
                 return output[0]
@@ -106,18 +106,18 @@ class ReplicateTextToAudio(TextToAudioClientBase, ReplicateConnectorBase):
     ) -> AudioContent:
         # MusicGen expects 'prompt'
         input_data = {"prompt": text}
-        
+
         try:
             get_url = await self._create_prediction(input_data)
             output = await self._poll_prediction(get_url)
-            
+
             # Replicate musicgen usually returns a URL to the audio file
             audio_url = output if isinstance(output, str) else output[0]
-            
+
             # Fetch the actual bytes
             resp = requests.get(audio_url)
             resp.raise_for_status()
-            
+
             return AudioContent(
                 data=resp.content,
                 ai_model_id=self.model_id,

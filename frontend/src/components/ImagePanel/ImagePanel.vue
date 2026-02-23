@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { StatusBanner } from "@/components/StatusBanner";
 import { SmartField } from "@/components/generic/SmartField";
+import { ModelManagerModal } from "@/components/generic/ModelManagerModal";
 import { useImagePanel } from "./ImagePanel";
 
 const {
   prompt,
   provider,
+  model,
   apiKey,
   aspectRatio,
   quality,
@@ -16,8 +18,11 @@ const {
   defaultSystemPrompt,
   autoSaveToProject,
   activeProjectName,
+  availableModels,
+  showModelManager,
+  refreshModels,
   run,
-  IMAGE_PROVIDERS,
+  providers,
   ASPECT_RATIOS,
   QUALITY_OPTIONS
 } = useImagePanel();
@@ -38,14 +43,34 @@ const {
     <SmartField label="Prompt" type="textarea" v-model="prompt" :rows="6" />
 
     <div class="field-group">
-      <div class="row">
+      <div class="row d-flex align-center gap-2 mb-4">
         <SmartField 
           label="Provider" 
           type="select" 
           v-model="provider" 
-          :options="IMAGE_PROVIDERS" 
+          :options="providers.map((p: any) => ({ value: p.name, label: p.name }))" 
           placeholder="Select Provider" 
+          class="flex-grow-1"
         />
+        <SmartField 
+          label="Model" 
+          type="select" 
+          v-model="model" 
+          :options="availableModels" 
+          placeholder="Select Model" 
+          :disabled="!provider"
+          class="flex-grow-1"
+        />
+        <v-btn
+          icon="mdi-plus"
+          size="small"
+          variant="tonal"
+          color="primary"
+          class="ml-2 mt-7"
+          @click="showModelManager = true"
+          :disabled="!provider"
+          title="Manage models"
+        ></v-btn>
       </div>
       <div class="row">
         <SmartField
@@ -101,6 +126,13 @@ const {
     </v-btn>
 
     <SmartField label="Result (JSON)" type="textarea" v-model="result" :rows="10" disabled />
+
+    <ModelManagerModal
+      v-if="showModelManager"
+      :provider="provider"
+      v-model="showModelManager"
+      @models-changed="refreshModels"
+    />
   </div>
 </template>
 

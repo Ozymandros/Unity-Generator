@@ -18,7 +18,7 @@ async def test_run_unity_fallback_system_prompt(mock_get_prompt_repo, mock_get_k
     """run_unity should read default_code_system_prompt when none is given."""
     mock_get_key_repo.return_value.get_all.return_value = {}
     mock_get_prompt_repo.return_value.get.return_value = "Default System Prompt"
-    
+
     manager = AgentManager()
     with patch("app.agents.unity_agent.UnityAgent.run", new_callable=AsyncMock) as mock_run:
         mock_run.return_value = {"content": "result", "provider": "test"}
@@ -56,6 +56,6 @@ async def test_run_unity_explicit_system_prompt(mock_get_prompt_repo, mock_get_k
         )
 
         mock_get_prompt_repo.return_value.get.assert_not_called()
-    
+
         args, _ = mock_run.call_args
         assert args[4] == "Explicit System Prompt"

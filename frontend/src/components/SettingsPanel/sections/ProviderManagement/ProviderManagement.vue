@@ -47,9 +47,9 @@ const {
             </template>
           </v-list-item>
         </v-list>
-        
+
         <v-skeleton-loader v-else-if="isLoading" type="list-item@5" class="bg-transparent"></v-skeleton-loader>
-        
+
         <div v-else class="text-center py-8 text-grey text-caption italic">
           No providers registered.
         </div>

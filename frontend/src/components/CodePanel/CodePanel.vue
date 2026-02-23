@@ -22,7 +22,7 @@ const {
   tone,
   result,
   run,
-  TEXT_PROVIDERS,
+  providers,
   TEMPERATURE_PRESETS,
   LENGTH_PRESETS
 } = useCodePanel();
@@ -49,7 +49,7 @@ const {
           label="Provider" 
           type="select" 
           v-model="provider" 
-          :options="TEXT_PROVIDERS" 
+          :options="providers.map(p => ({ value: p.name, label: p.name }))" 
           placeholder="Select Provider"
           class="flex-grow-1"
         />

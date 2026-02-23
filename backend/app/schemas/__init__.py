@@ -102,8 +102,8 @@ class VideoOptions(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-class GenerationRequest(BaseModel):
     prompt: str
+    modality: str | None = None
     provider: str | None = None
     api_key: str | None = None
     options: dict[str, Any] = Field(default_factory=dict)

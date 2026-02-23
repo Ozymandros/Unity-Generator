@@ -32,7 +32,7 @@ def generate_text(request: GenerationRequest) -> GenerationResponse:
         print(f"\n[ROUTER] /generate/text received: provider={request.provider}, options={request.options}")
         provider = request.provider or get_pref("preferred_llm_provider")
         print(f"[ROUTER] Resolved provider for agent_manager: {provider}")
-        
+
         options: TextOptions | dict[str, Any] = request.options
         if isinstance(options, dict):
             options = TextOptions(**options)
@@ -119,6 +119,7 @@ def generate_audio(request: GenerationRequest) -> GenerationResponse:
             request.api_key,
             request.system_prompt,
             request.project_path,
+            request.modality,
         )
         return ok_response(data)
     except Exception as exc:

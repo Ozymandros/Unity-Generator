@@ -37,7 +37,7 @@ def seed_database():
         LOGGER.info("Seeding default providers and models...")
         from ..services.providers.registry import _build_default_registry
         default_registry = _build_default_registry()
-        
+
         for caps in default_registry.all_providers():
             provider_repo.save(caps)
             # Default models for this provider? 
@@ -63,7 +63,7 @@ def seed_database():
     if not existing_keys:
         LOGGER.info("No API keys in new storage. Checking legacy sources...")
         migrated_count = 0
-        
+
         # Source A: Legacy user_prefs table (where config.py used to store them)
         all_prefs = get_all_prefs()
         for k, v in all_prefs.items():
@@ -72,7 +72,7 @@ def seed_database():
                 if v:
                     api_key_repo.save(service_name, v)
                     migrated_count += 1
-        
+
         # Source B: Legacy api_keys.json file
         from .config import get_config_dir
         config_path = get_config_dir() / "api_keys.json"
@@ -89,7 +89,7 @@ def seed_database():
                             if service_name not in api_key_repo.get_all():
                                 api_key_repo.save(service_name, v)
                                 migrated_count += 1
-                
+
                 # Optionally rename the file to avoid re-migration
                 backup_path = config_path.with_suffix(".json.bak")
                 if not backup_path.exists():
@@ -111,34 +111,34 @@ def migrate_modalities():
     provider_repo = get_provider_repo()
     model_repo = get_model_repo()
     conn = sqlite3.connect(get_db_path())
-    
+
     try:
         cursor = conn.cursor()
         # Find all models with modality 'llm'
         cursor.execute("SELECT id, provider, model_value, modality FROM provider_models WHERE modality = 'llm'")
         llm_models = cursor.fetchall()
-        
+
         if not llm_models:
             return
 
         LOGGER.info(f"Checking {len(llm_models)} models for modality migration...")
-        
+
         # Cache provider capabilities to avoid repeated repo calls
         provider_caps: Dict[str, ProviderCapabilities] = {p.name: p for p in provider_repo.get_all()}
-        
+
         updates = []
         for row_id, provider_name, model_value, current_modality in llm_models:
             caps = provider_caps.get(provider_name)
             if not caps:
                 continue
-                
+
             # If the model matches a default for a specific modality, use that
             inferred_modality = None
             for mod, default_id in caps.default_models.items():
                 if default_id == model_value:
                     inferred_modality = mod.value
                     break
-            
+
             # Smart inference: Check keywords in model name if still unknown
             if not inferred_modality:
                 name_lower = model_value.lower()
@@ -146,6 +146,8 @@ def migrate_modalities():
                     inferred_modality = "image"
                 elif any(x in name_lower for x in ["tts", "whisper", "elevenlabs", "speech"]):
                     inferred_modality = "audio"
+                elif any(x in name_lower for x in ["musicgen", "riffusion", "music"]):
+                    inferred_modality = "music"
                 elif any(x in name_lower for x in ["video", "sora", "runway"]):
                     inferred_modality = "video"
 
@@ -156,7 +158,7 @@ def migrate_modalities():
             LOGGER.info(f"Migrating {len(updates)} models to correct modalities...")
             cursor.executemany("UPDATE provider_models SET modality = ? WHERE id = ?", updates)
             conn.commit()
-            
+
     except Exception as e:
         LOGGER.error(f"Error during modality migration: {e}")
     finally:

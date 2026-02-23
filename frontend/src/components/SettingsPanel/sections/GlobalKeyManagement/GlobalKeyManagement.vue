@@ -25,7 +25,7 @@ const headers = [
         <v-icon color="warning" size="36" class="mr-4">mdi-key-chain</v-icon>
         <h2 class="text-h4 font-weight-bold">Intelligence Keys</h2>
       </div>
-      
+
       <v-btn
         color="warning"
         variant="elevated"

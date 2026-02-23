@@ -18,7 +18,7 @@ const {
     </div>
 
     <v-skeleton-loader v-if="isLoading" type="card@2" class="bg-transparent"></v-skeleton-loader>
-    
+
     <div v-else>
       <v-row>
         <v-col v-for="mod in promptModalities" :key="mod" cols="12" md="6">

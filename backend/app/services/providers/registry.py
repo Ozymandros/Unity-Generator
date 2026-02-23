@@ -268,7 +268,7 @@ class ProviderRegistry:
             if (key_name and api_key) or not caps.requires_api_key:
                 print(f"[RESOLVE] Success! Returning {preferred_lower} (Key required={caps.requires_api_key})")
                 return preferred_lower
-            
+
             print(f"[RESOLVE] Preferred {preferred_lower} has no key ({key_name}). Falling back to priority list.")
 
         for name in self._priorities.get(modality, []):
@@ -321,7 +321,7 @@ class ProviderRegistry:
                 api_key = api_key or "sk-dummy" # Ensure valid key for client
             else:
                 base_url = caps.base_url
-            
+
             client = AsyncOpenAI(api_key=api_key, base_url=base_url)
             return OpenAIChatCompletion(
                 ai_model_id=target_model,
@@ -438,15 +438,15 @@ class ProviderRegistry:
         from ...repositories import get_provider_repo
         repo = get_provider_repo()
         providers = repo.get_all()
-        
+
         # Reset internal state
         self._providers = {}
         self._priorities = {m: [] for m in Modality}
-        
+
         # Register each provider from DB
         for caps in providers:
             self.register(caps)
-            
+
         LOGGER.info("Registry loaded %d providers from database", len(providers))
 
     def all_providers(self) -> Iterable[ProviderCapabilities]:
@@ -473,7 +473,7 @@ class ProviderRegistry:
 def _build_default_registry() -> ProviderRegistry:
     """
     Construct and return the default registry with every known provider.
-    
+
     NOTE: This is retained for seeding purposes and backward compatibility.
     """
     reg = ProviderRegistry()
@@ -660,11 +660,12 @@ def _build_default_registry() -> ProviderRegistry:
         ProviderCapabilities(
             name="replicate",
             api_key_name="replicate_api_key",
-            modalities={Modality.LLM, Modality.IMAGE, Modality.AUDIO},
+            modalities={Modality.LLM, Modality.IMAGE, Modality.AUDIO, Modality.MUSIC},
             default_models={
                 Modality.LLM: "google-deepmind/gemma-2b-it",
                 Modality.IMAGE: "black-forest-labs/flux-schnell",
                 Modality.AUDIO: "facebookresearch/musicgen",
+                Modality.MUSIC: "facebookresearch/musicgen",
             },
             openai_compatible=True,
             base_url="https://api.replicate.com/v1",
@@ -672,7 +673,8 @@ def _build_default_registry() -> ProviderRegistry:
             supports_streaming=True,
             supports_tool_use=False,
             extra={"is_music": True},
-        )
+        ),
+        priorities={Modality.MUSIC: 0}
     )
 
     # ---- Video providers (scaffolds) ----

@@ -22,7 +22,7 @@ const {
   showModelManager,
   refreshModels,
   run,
-  TEXT_PROVIDERS,
+  providers,
   TEMPERATURE_PRESETS,
   LENGTH_PRESETS
 } = useTextPanel();
@@ -48,7 +48,7 @@ const {
           label="Provider" 
           type="select" 
           v-model="provider" 
-          :options="TEXT_PROVIDERS" 
+          :options="providers.map(p => ({ value: p.name, label: p.name }))" 
           placeholder="Select Provider" 
         />
         <SmartField 

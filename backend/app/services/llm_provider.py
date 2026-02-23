@@ -69,7 +69,7 @@ def generate_text(
         max_tokens=opts.get("max_tokens", 1000),
         top_p=opts.get("top_p", 1.0)
     )
-    
+
     # Ensure model ID is explicitly set if the settings object supports it
     if hasattr(settings, "ai_model_id"):
         settings.ai_model_id = target_model

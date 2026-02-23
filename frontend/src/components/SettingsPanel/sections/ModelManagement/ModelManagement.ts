@@ -8,16 +8,16 @@ export function useModelManagement() {
   const providers = ref<ProviderCapabilities[]>([]);
   const selectedProviderName = ref<string | null>(null);
   const models = ref<ModelEntry[]>([]);
-  
+
   const isLoading = ref(false);
   const status = ref<string | null>(null);
-  
+
   const newModel = reactive({
     value: '',
     label: '',
     modality: 'llm'
   });
-  
+
   const modelModalities = ['llm', 'image', 'audio', 'video', 'sprite', 'text', 'code'];
 
   const loadProviders = async () => {

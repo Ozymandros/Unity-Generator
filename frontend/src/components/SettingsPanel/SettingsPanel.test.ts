@@ -37,7 +37,7 @@ describe("SettingsPanel", () => {
       error: null,
       data: { key: "environment", value: "openai" },
     });
-    
+
     vi.mocked(client.listProviders).mockResolvedValue([]);
     vi.mocked(client.listApiKeys).mockResolvedValue({});
     vi.mocked(client.listSystemPrompts).mockResolvedValue({});
@@ -79,7 +79,7 @@ describe("SettingsPanel", () => {
     // Click on Providers tab (tab 1)
     const providerTab = wrapper.findAll(".v-tab")[1];
     await providerTab.trigger("click");
-    
+
     expect((wrapper.vm as any).activeTab).toBe(1);
   });
 });

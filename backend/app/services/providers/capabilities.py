@@ -19,6 +19,7 @@ class Modality(str, Enum):
     LLM = "llm"
     IMAGE = "image"
     AUDIO = "audio"
+    MUSIC = "music"
     VIDEO = "video"
 
 

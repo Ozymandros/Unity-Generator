@@ -14,6 +14,7 @@ const ENDPOINTS = {
   GENERATE_AUDIO: `${BACKEND_URL}/generate/audio`,
   GENERATE_SPRITES: `${BACKEND_URL}/generate/sprites`,
   GENERATE_UNITY_PROJECT: `${BACKEND_URL}/generate/unity-project`,
+  MANAGEMENT_ALL: `${BACKEND_URL}/api/management/all`,
   OUTPUT_LATEST: `${BACKEND_URL}/output/latest`,
 } as const;
 
@@ -72,6 +73,36 @@ test.beforeEach(async ({ page }) => {
     });
   });
 
+  // Mock unified discovery endpoint
+  await setupRouteHandler(page, ENDPOINTS.MANAGEMENT_ALL, {
+    providers: [
+      { name: "openai", modalities: ["text", "image"] },
+      { name: "deepseek", modalities: ["text", "code"] },
+      { name: "elevenlabs", modalities: ["audio"] },
+      { name: "stability", modalities: ["image"] }
+    ],
+    models: {
+      openai: [{ value: "gpt-4", label: "GPT-4", modality: "text" }],
+      deepseek: [{ value: "deepseek-coder", label: "DeepSeek Coder", modality: "code" }],
+      elevenlabs: [{ value: "Rachel", label: "Rachel", modality: "audio" }],
+      stability: [{ value: "stable-diffusion-xl", label: "SDXL", modality: "image" }]
+    },
+    prompts: {
+      default_code_system_prompt: "You are a Unity C# expert."
+    },
+    keys: ["openai", "deepseek", "elevenlabs", "stability"],
+    preferences: {
+      preferred_llm_provider: "openai",
+      preferred_llm_model: "gpt-4",
+      preferred_code_provider: "deepseek",
+      preferred_code_model: "deepseek-coder",
+      preferred_image_provider: "openai",
+      preferred_image_model: "dall-e-3",
+      preferred_audio_provider: "elevenlabs",
+      preferred_audio_model: "Rachel"
+    }
+  });
+
   // Mock all API endpoints with default success responses
   await setupRouteHandler(page, ENDPOINTS.PREFS_WILDCARD, { key: "test", value: null });
   await setupRouteHandler(page, ENDPOINTS.GENERATE_CODE, { content: "public class PlayerController {}" });
@@ -89,9 +120,12 @@ test.beforeEach(async ({ page }) => {
 
 test("shows backend status and generates code", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByText("Backend: online")).toBeVisible();
+  // Wait for the discovery API to finish loading by checking a model dropdown (which should be enabled eventually)
+  await expect(page.getByText("Online")).toBeVisible();
 
-  await page.getByRole("button", { name: "Code" }).click();
+  // Navigate to Code panel
+  await page.getByText("Code", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible();
   // Use first textarea for prompt input
   await page.locator("textarea").first().fill("Create a player controller");
 
@@ -105,7 +139,9 @@ test("shows backend status and generates code", async ({ page }) => {
 
 test("generates text", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Text" }).click();
+  await page.getByText("Text", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Text Generation" })).toBeVisible();
+
   await page.locator("textarea").first().fill("Write a greeting");
 
   // Click generate and wait for the status message to update
@@ -117,7 +153,8 @@ test("generates text", async ({ page }) => {
 
 test("generates image", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Image" }).click();
+  await page.getByText("Image", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Image Generation" })).toBeVisible();
   await page.locator("textarea").first().fill("A hero portrait");
 
   // Click generate and wait for the status message to update
@@ -130,7 +167,8 @@ test("generates image", async ({ page }) => {
 
 test("generates audio", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Audio" }).click();
+  await page.getByText("Audio", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Audio Generation" })).toBeVisible();
   await page.locator("textarea").first().fill("A battle cry");
 
   // Click generate and wait for the status message to update
@@ -143,7 +181,8 @@ test("generates audio", async ({ page }) => {
 
 test("generates unity project", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Unity Project" }).click();
+  await page.getByText("Unity Project", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible();
   // Fill project name input and first textarea (code prompt)
   await page.locator("input").first().fill("TestProject");
   await page.locator("textarea").first().fill("Create player");
@@ -161,7 +200,8 @@ test("saves settings", async ({ page }) => {
   await setupRouteHandler(page, ENDPOINTS.PREFS, { key: "test" });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Settings" }).click();
+  await page.getByText("Settings", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByText("Saved locally")).toBeVisible();
 });
@@ -172,7 +212,8 @@ test("shows error on API failure", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Code" }).click();
+  await page.getByText("Code", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible();
   await page.locator("textarea").first().fill("Test prompt");
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByText("API rate limit exceeded")).toBeVisible();
@@ -182,22 +223,22 @@ test("navigates between all tabs", async ({ page }) => {
   await page.goto("/");
 
   // Check all tabs can be clicked and show correct content
-  await page.getByRole("button", { name: "Settings" }).click();
-  await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+  await page.getByText("Settings", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Code" }).click();
+  await page.getByText("Code", { exact: true }).click();
   await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Text" }).click();
+  await page.getByText("Text", { exact: true }).click();
   await expect(page.getByRole("heading", { name: "Text Generation" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Image" }).click();
+  await page.getByText("Image", { exact: true }).click();
   await expect(page.getByRole("heading", { name: "Image Generation" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Audio" }).click();
+  await page.getByText("Audio", { exact: true }).click();
   await expect(page.getByRole("heading", { name: "Audio Generation" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Unity Project" }).click();
+  await page.getByText("Unity Project", { exact: true }).click();
   await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible();
 });
 
@@ -208,7 +249,7 @@ test("shows offline status when backend unavailable", async ({ page }) => {
   });
 
   await page.goto("/");
-  await expect(page.getByText("Backend: offline")).toBeVisible();
+  await expect(page.getByText("Offline")).toBeVisible();
 });
 
 // Advanced generation tests
@@ -220,7 +261,8 @@ test("generates code with provider and model options", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Code" }).click();
+  await page.getByText("Code", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible();
   await page.locator("textarea").first().fill("Create a controller");
 
   // Select provider and model using dropdowns
@@ -287,7 +329,8 @@ test("generates unity project with all prompts filled", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Unity Project" }).click();
+  await page.getByText("Unity Project", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible();
 
   // Fill all inputs
   await page.locator("input").first().fill("FullTestProject");
@@ -318,7 +361,8 @@ test("generates unity project with provider overrides", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Unity Project" }).click();
+  await page.getByText("Unity Project", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible();
 
   await page.locator("input").first().fill("CustomProject");
   await page.locator("textarea").first().fill("Generate code");
@@ -395,7 +439,8 @@ test("shows error when audio generation fails", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Audio" }).click();
+  await page.getByText("Audio", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Audio Generation" })).toBeVisible();
   await page.locator("textarea").first().fill("Generate audio");
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByText("Invalid voice ID")).toBeVisible();
@@ -407,7 +452,8 @@ test("shows error when unity project generation fails", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Unity Project" }).click();
+  await page.getByText("Unity Project", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible();
   await page.locator("input").first().fill("ExistingProject");
   await page.locator("textarea").first().fill("Create project");
   await page.getByRole("button", { name: "Generate Project" }).click();
@@ -428,18 +474,8 @@ test("fills and saves API keys in settings", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Settings" }).click();
-
-  // Fill API keys by selecting password inputs
-  const passwordInputs = await page.locator("input[type='password']").all();
-  if (passwordInputs.length >= 2) {
-    await passwordInputs[0].fill("sk-test-openai-key"); // OpenAI key
-    await passwordInputs[4].fill("sk-test-stability-key"); // Stability key
-  }
-
-  // Set preferred providers using selects
-  await page.getByLabel("LLM").selectOption("openai");
-  await page.getByLabel("Image").selectOption("stability");
+  await page.getByText("Settings", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
 
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByText("Saved locally.")).toBeVisible();
@@ -486,7 +522,8 @@ test("handles empty response data gracefully", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Code" }).click();
+  await page.getByText("Code", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible();
   await page.locator("textarea").first().fill("Test");
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByText("Code generated.")).toBeVisible();
@@ -497,7 +534,8 @@ test("handles empty response data gracefully", async ({ page }) => {
 
 test("generates and previews 2D sprites", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Sprites" }).click();
+  await page.getByText("Sprites", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: "2D Game Assets" })).toBeVisible();
 
   await page.locator("textarea").fill("A pixel art health potion");
 

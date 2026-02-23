@@ -108,7 +108,7 @@ class UnityAgent:
                 temperature=options.get("temperature", 0.7),
                 max_tokens=options.get("max_tokens", 2000)
             )
-            
+
             # Ensure model ID is explicitly set if the settings object supports it
             if hasattr(execution_settings, "ai_model_id"):
                 model_id = options.get("model") or caps.default_models.get(Modality.LLM)
@@ -118,7 +118,7 @@ class UnityAgent:
                 # Provider supports tool use — register MCP plugin
                 async with create_unity_mcp_plugin() as mcp_plugin:
                     kernel.add_plugin(mcp_plugin, plugin_name="UnityMCP")
-                    
+
                     # Set behavior for tool calling
                     if hasattr(execution_settings, "function_choice_behavior"):
                         execution_settings.function_choice_behavior = FunctionChoiceBehavior.Auto()

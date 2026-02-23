@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { StatusBanner } from "@/components/StatusBanner";
 import { SmartField } from "@/components/generic/SmartField";
+import { ModelManagerModal } from "@/components/generic/ModelManagerModal";
 import { useSpritesPanel } from "./SpritesPanel";
 
 const {
@@ -20,9 +21,12 @@ const {
   PALETTE_SIZES,
   autoSaveToProject,
   activeProjectName,
+  availableModels,
+  showModelManager,
+  refreshModels,
   run,
   canvasStyle,
-  IMAGE_PROVIDERS
+  providers
 } = useSpritesPanel();
 </script>
 
@@ -55,13 +59,37 @@ const {
             />
 
             <v-card variant="flat" border class="pa-4 rounded-lg bg-surface">
-                <SmartField 
-                    label="Provider" 
-                    type="select" 
-                    v-model="provider" 
-                    :options="IMAGE_PROVIDERS" 
-                    placeholder="Select Provider" 
-                />
+                <div class="field-group mb-4">
+                  <div class="row d-flex align-center gap-2">
+                    <SmartField 
+                        label="Provider" 
+                        type="select" 
+                        v-model="provider" 
+                        :options="providers.map(p => ({ value: p.name, label: p.name }))" 
+                        placeholder="Select Provider" 
+                        class="flex-grow-1"
+                    />
+                    <SmartField 
+                        label="Model" 
+                        type="select" 
+                        v-model="model" 
+                        :options="availableModels" 
+                        placeholder="Select Model" 
+                        :disabled="!provider"
+                        class="flex-grow-1"
+                    />
+                    <v-btn
+                      icon="mdi-plus"
+                      size="small"
+                      variant="tonal"
+                      color="primary"
+                      class="ml-2 mt-7"
+                      @click="showModelManager = true"
+                      :disabled="!provider"
+                      title="Manage models"
+                    ></v-btn>
+                  </div>
+                </div>
 
                 <div class="field mb-4">
                     <label class="field-label mb-2 d-block">Resolution</label>
@@ -142,6 +170,13 @@ const {
             </div>
         </div>
     </div>
+
+    <ModelManagerModal
+      v-if="showModelManager"
+      :provider="provider"
+      v-model="showModelManager"
+      @models-changed="refreshModels"
+    />
   </div>
 </template>
 

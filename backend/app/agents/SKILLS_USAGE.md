@@ -175,25 +175,25 @@ from backend.app.kernel import create_kernel
 async def create_fire_scene():
     # Initialize kernel (MCP settings defaults to localhost:8765)
     kernel = create_kernel({})
-    
+
     # Get the Unity MCP plugin
     # Note: Plugin name is "UnityMCP" as registered in kernel.py
     unity = kernel.get_plugin("UnityMCP")
-    
+
     # Call functions (async)
     # Create a new scene
     await kernel.invoke(unity["create_scene"], scene_name="FireScene")
-    
+
     # Create some game objects
     await kernel.invoke(unity["create_gameobject"], 
                         name="Ground", 
                         object_type="plane")
-                        
+
     await kernel.invoke(unity["create_gameobject"], 
                         name="Bonfire", 
                         object_type="sphere", 
                         position_y=1.0)
-    
+
     # Get scene info
     result = await kernel.invoke(unity["get_scene_info"])
     print(f"Scene info: {result}")

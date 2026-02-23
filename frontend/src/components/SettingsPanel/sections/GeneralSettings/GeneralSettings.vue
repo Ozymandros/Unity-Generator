@@ -3,15 +3,21 @@ import { useGeneralSettings } from "./GeneralSettings";
 
 const {
   backendUrl,
+  providers,
   preferredLlm,
+  preferredLlmModel,
+  llmModels,
   preferredImage,
+  preferredImageModel,
+  imageModels,
   preferredAudio,
+  preferredAudioModel,
+  audioModels,
   preferredMusic,
+  preferredMusicModel,
+  musicModels,
   status,
   save,
-  TEXT_PROVIDERS,
-  IMAGE_PROVIDERS,
-  AUDIO_PROVIDERS
 } = useGeneralSettings();
 </script>
 
@@ -51,41 +57,97 @@ const {
         <v-col cols="12" md="6">
           <v-select
             v-model="preferredLlm"
-            label="Default Text/Logic (LLM)"
-            :items="TEXT_PROVIDERS"
+            label="Default Text/Logic Provider"
+            :items="providers.filter(p => p.modalities.includes('llm'))"
+            item-title="name"
+            item-value="name"
+            rounded="lg"
+            variant="outlined"
+            density="comfortable"
+          ></v-select>
+          <v-select
+            v-model="preferredLlmModel"
+            label="Default LLM Model"
+            :items="llmModels"
             item-title="label"
             item-value="value"
+            :disabled="!preferredLlm || llmModels.length === 0"
             rounded="lg"
+            variant="outlined"
+            density="compact"
+            class="mt-n2"
           ></v-select>
         </v-col>
         <v-col cols="12" md="6">
           <v-select
             v-model="preferredImage"
-            label="Default Image Generation"
-            :items="IMAGE_PROVIDERS"
+            label="Default Image Generation Provider"
+            :items="providers.filter(p => p.modalities.includes('image'))"
+            item-title="name"
+            item-value="name"
+            rounded="lg"
+            variant="outlined"
+            density="comfortable"
+          ></v-select>
+          <v-select
+            v-model="preferredImageModel"
+            label="Default Image Model"
+            :items="imageModels"
             item-title="label"
             item-value="value"
+            :disabled="!preferredImage || imageModels.length === 0"
             rounded="lg"
+            variant="outlined"
+            density="compact"
+            class="mt-n2"
           ></v-select>
         </v-col>
         <v-col cols="12" md="6">
           <v-select
             v-model="preferredAudio"
-            label="Default Speech (TTS)"
-            :items="AUDIO_PROVIDERS.filter((p: any) => p.type !== 'music')"
+            label="Default Speech (TTS) Provider"
+            :items="providers.filter(p => p.modalities.includes('audio'))"
+            item-title="name"
+            item-value="name"
+            rounded="lg"
+            variant="outlined"
+            density="comfortable"
+          ></v-select>
+          <v-select
+            v-model="preferredAudioModel"
+            label="Default Speech Model"
+            :items="audioModels"
             item-title="label"
             item-value="value"
+            :disabled="!preferredAudio || audioModels.length === 0"
             rounded="lg"
+            variant="outlined"
+            density="compact"
+            class="mt-n2"
           ></v-select>
         </v-col>
         <v-col cols="12" md="6">
           <v-select
             v-model="preferredMusic"
-            label="Default Music Generation"
-            :items="AUDIO_PROVIDERS.filter((p: any) => p.type === 'music')"
+            label="Default Music Generation Provider"
+            :items="providers.filter(p => p.modalities.includes('music'))"
+            item-title="name"
+            item-value="name"
+            rounded="lg"
+            variant="outlined"
+            density="comfortable"
+          ></v-select>
+          <v-select
+            v-model="preferredMusicModel"
+            label="Default Music Model"
+            :items="musicModels"
             item-title="label"
             item-value="value"
+            :disabled="!preferredMusic || musicModels.length === 0"
             rounded="lg"
+            variant="outlined"
+            density="compact"
+            class="mt-n2"
           ></v-select>
         </v-col>
       </v-row>

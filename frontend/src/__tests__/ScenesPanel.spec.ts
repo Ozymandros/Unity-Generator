@@ -20,7 +20,7 @@ describe("ScenesPanel", () => {
     it("renders input fields", async () => {
         const wrapper = mount(ScenesPanel);
         await flushPromises();
-        
+
         // SmartField renders inputs/textareas/selects
         expect(wrapper.findAll("textarea").length).toBe(2); // Prompt + System Prompt
         expect(wrapper.findAll("select").length).toBe(3); // Provider + Model + Temperature
@@ -42,19 +42,19 @@ describe("ScenesPanel", () => {
 
     const wrapper = mount(ScenesPanel);
     await flushPromises();
-    
+
     // Set prompt (first textarea)
     await wrapper.findAll("textarea")[0].setValue("Create a test scene");
-    
+
     // Set provider (first select)
     await wrapper.findAll("select")[0].setValue("openai");
-    
+
     // Set model (second select, now enabled)
     await wrapper.findAll("select")[1].setValue("gpt-4o");
-    
+
     // Set api key
     await wrapper.find('input[type="password"]').setValue("sk-test-key");
-    
+
     // Click generate
     await wrapper.find("button.primary").trigger("click");
     await flushPromises();

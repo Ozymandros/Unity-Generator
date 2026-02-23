@@ -11,8 +11,49 @@ from ..repositories import (
 from ..services.providers.capabilities import ProviderCapabilities, Modality
 from ..services.providers.registry import provider_registry
 
+from ..core.db import get_all_prefs
+
+
 router = APIRouter(prefix="/api/management", tags=["management"])
 LOGGER = logging.getLogger(__name__)
+
+# --- Discovery ---
+
+@router.get("/all")
+def get_all_config():
+    """
+    Unified discovery endpoint that returns all providers, models, prompts, 
+    key status, and user preferences in a single request.
+    """
+    provider_repo = get_provider_repo()
+    model_repo = get_model_repo()
+    api_key_repo = get_api_key_repo()
+    prompt_repo = get_system_prompt_repo()
+
+    # 1. Get all providers
+    providers = provider_repo.get_all()
+
+    # 2. Get all models grouped by provider
+    all_models = {}
+    for p in providers:
+        all_models[p.name] = model_repo.get_by_provider(p.name)
+
+    # 3. Get all prompts
+    prompts = prompt_repo.get_all()
+
+    # 4. Get API key status (names only)
+    keys = list(api_key_repo.get_all().keys())
+
+    # 5. Get all preferences
+    preferences = get_all_prefs()
+
+    return {
+        "providers": providers,
+        "models": all_models,
+        "prompts": prompts,
+        "keys": keys,
+        "preferences": preferences
+    }
 
 # --- Schemas ---
 
@@ -69,7 +110,7 @@ def save_provider(provider: ProviderUpdate):
         extra=provider.extra
     )
     get_provider_repo().save(caps)
-    
+
     # Unified key saving: If api_key_value is provided, save it under api_key_name (or provider name)
     if provider.api_key_value:
         key_name = provider.api_key_name or provider.name

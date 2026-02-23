@@ -13,17 +13,17 @@ def setup_test_env(tmp_path):
     # Use a unique directory for each test
     db_dir = tmp_path / "db"
     db_dir.mkdir(parents=True, exist_ok=True)
-    
+
     # Override environment variables for config.py
     os.environ["DATABASE_DIR"] = str(db_dir)
     os.environ["LOGS_DIR"] = str(tmp_path / "logs")
     os.environ["OUTPUT_DIR"] = str(tmp_path / "output")
-    
+
     # Initialize the database in the temporary directory
     init_db()
-    
+
     yield
-    
+
     # Cleanup environment variables after test
     if "DATABASE_DIR" in os.environ:
         del os.environ["DATABASE_DIR"]

@@ -30,7 +30,7 @@ export function useProviderManagement() {
     try {
       // Deep clone to avoid mutating the list item directly
       const baseCaps = JSON.parse(JSON.stringify(p));
-      
+
       // Fetch associated API key value
       let apiKeyValue = '';
       if (p.api_key_name) {
@@ -53,7 +53,7 @@ export function useProviderManagement() {
 
   const saveSelected = async () => {
     if (!selectedProvider.value) return;
-    
+
     isLoading.value = true;
     try {
       const result = await saveProvider(selectedProvider.value);
@@ -81,7 +81,7 @@ export function useProviderManagement() {
 
   const deleteSelected = async () => {
     if (!selectedProvider.value || !confirm(`Delete provider '${selectedProvider.value.name}'?`)) return;
-    
+
     isLoading.value = true;
     try {
       await deleteProvider(selectedProvider.value.name);

@@ -22,7 +22,7 @@ const {
   loading,
   canGenerate,
   run,
-  TEXT_PROVIDERS,
+  providers,
   TEMPERATURE_PRESETS
 } = useScenesPanel();
 </script>
@@ -41,8 +41,8 @@ const {
 
     <div class="field-group">
       <div class="options-row d-flex align-center gap-2 mb-4">
-        <SmartField label="Provider" type="select" v-model="provider" :options="TEXT_PROVIDERS"
-          placeholder="Select Provider (Optional)" class="flex-grow-1" />
+        <SmartField label="Provider" type="select" v-model="provider" :options="providers.map((p: any) => ({ value: p.name, label: p.name }))"
+          placeholder="Select Provider" class="flex-grow-1" />
         <SmartField label="Model" type="select" v-model="model" :options="availableModels" placeholder="Select Model"
           :disabled="!provider" class="flex-grow-1" />
         <v-btn

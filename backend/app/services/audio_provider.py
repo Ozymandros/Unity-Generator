@@ -63,7 +63,7 @@ def generate_audio(
 
         # Apply settings dynamically with robust validation handling
         voice_to_set = opts.get("voice")
-        
+
         try:
             if hasattr(settings, "voice") and voice_to_set:
                 # Some settings (OpenAI) have strict literals. 
@@ -75,13 +75,13 @@ def generate_audio(
                     # If it's OpenAI, we know 'alloy' is safe. Others might not have a 'voice' property if they fail.
                     if selected == "openai":
                         settings.voice = "alloy"
-            
+
             if hasattr(settings, "response_format"):
                  settings.response_format = opts.get("format", "mp3")
-            
+
             if hasattr(settings, "speed"):
                  settings.speed = opts.get("speed", 1.0)
-                 
+
         except Exception as e:
             LOGGER.error(f"Error applying audio settings for {selected}: {e}")
 
@@ -91,7 +91,7 @@ def generate_audio(
         else:
             results = await service.get_audio_contents(prompt, settings)
             content = results[0] if results else None
-            
+
         return content
 
     try:

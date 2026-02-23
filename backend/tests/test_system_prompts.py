@@ -65,18 +65,18 @@ def test_system_prompt_default():
 def test_system_prompt_from_db():
     # Test that if no local override is provided, it fetches from DB
     manager = AgentManager()
-    
+
     with patch("app.agents.code_agent.CodeAgent.run") as mock_run, \
          patch("app.repositories.get_system_prompt_repo") as mock_get_repo:
-        
+
         mock_repo = MagicMock()
         mock_repo.get.return_value = "DB system prompt"
         mock_get_repo.return_value = mock_repo
-        
+
         mock_run.return_value = {"content": "code", "provider": "openai"}
-        
+
         manager.run_code(prompt="test", provider="openai", options={"model": "gpt-4"}, api_key=None)
-        
+
         # Verify it called the repo
         mock_repo.get.assert_called_with("code")
         # Verify agent run was called with the DB prompt

@@ -21,18 +21,18 @@ def setup_test_db(tmp_path):
 
 def test_provider_repository():
     repo = get_provider_repo()
-    
+
     caps = ProviderCapabilities(
         name="test_provider",
         api_key_name="test_key",
         modalities={Modality.LLM},
         default_models={Modality.LLM: "test-model"}
     )
-    
+
     repo.save(caps)
     all_providers = repo.get_all()
     assert "test_provider" in [p.name for p in all_providers]
-    
+
     fetched = repo.get_by_name("test_provider")
     assert fetched is not None
     assert fetched.name == "test_provider"
@@ -41,15 +41,15 @@ def test_provider_repository():
 
 def test_model_repository():
     repo = get_model_repo()
-    
+
     repo.add("test_provider", "model-1", "Model One", "llm")
     repo.add("test_provider", "model-2", "Model Two", "llm")
-    
+
     models = repo.get_by_provider("test_provider")
     assert len(models) == 2
     assert models[0]["value"] == "model-1"
     assert models[1]["label"] == "Model Two"
-    
+
     repo.remove("test_provider", "model-1")
     models = repo.get_by_provider("test_provider")
     assert len(models) == 1
@@ -57,14 +57,14 @@ def test_model_repository():
 
 def test_api_key_repository():
     repo = get_api_key_repo()
-    
+
     repo.save("openai", "sk-test")
     repo.save("anthropic", "ant-test")
-    
+
     keys = repo.get_all()
     assert keys["openai"] == "sk-test"
     assert keys["anthropic"] == "ant-test"
-    
+
     repo.delete("openai")
     keys = repo.get_all()
     assert "openai" not in keys
@@ -72,14 +72,14 @@ def test_api_key_repository():
 
 def test_system_prompt_repository():
     repo = get_system_prompt_repo()
-    
+
     repo.save("code", "Expert coder")
     repo.save("text", "Helpful assistant")
-    
+
     prompts = repo.get_all()
     assert prompts["code"] == "Expert coder"
     assert prompts["text"] == "Helpful assistant"
-    
+
     repo.save("code", "Senior dev")
     prompts = repo.get_all()
     assert prompts["code"] == "Senior dev"

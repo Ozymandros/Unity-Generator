@@ -16,14 +16,14 @@ class TestLLMProviders:
         # Mock SK Service
         mock_service = AsyncMock()
         mock_service.get_chat_message_content.return_value = "Mocked Response"
-        
+
         # Ensure prompt settings instantiation is synchronous
         mock_settings = MagicMock()
         mock_settings.ai_model_id = "gpt-4"
         mock_settings.temperature = 0.5
         mock_settings.max_tokens = 2048
         mock_service.instantiate_prompt_execution_settings = MagicMock(return_value=mock_settings)
-        
+
         mock_create.return_value = mock_service
 
         api_keys = {"openai_api_key": "sk-test"}
@@ -63,7 +63,7 @@ class TestImageProviders:
 
         # Verify service creation
         mock_create.assert_called_with("openai", "sk-test", model_id=None)
-        
+
         # Verify SK invocation
 
 
@@ -79,23 +79,23 @@ class TestAudioProviders:
         mock_content.metadata = {"format": "mp3"}
 
         mock_service.get_audio_content.return_value = mock_content
-        
+
         # Ensure prompt settings instantiation is synchronous
         mock_settings = MagicMock()
         mock_settings.ai_model_id = "eleven_multilingual_v2"
         mock_service.instantiate_prompt_execution_settings = MagicMock(return_value=mock_settings)
-        
+
         mock_create.return_value = mock_service
-    
+
         api_keys = {"openai_api_key": "sk-test"}
         options = AudioOptions(voice="alloy", model="tts-1")
-    
+
         result = generate_audio("Hello world", "openai", options, api_keys)
-    
+
         # base64 encoded "audio_bytes" -> "YXVkaW9fYnl0ZXM="
         assert result.content == "YXVkaW9fYnl0ZXM="
         assert result.provider == "openai"
-    
+
         mock_create.assert_called_with("openai", "sk-test", model_id="tts-1")
 
         mock_service.get_audio_content.assert_called_once()

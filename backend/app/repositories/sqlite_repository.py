@@ -81,10 +81,10 @@ class SqliteProviderRepository(IProviderRepository):
     def _row_to_caps(self, row: tuple) -> ProviderCapabilities:
         modalities_list = json.loads(row[9])
         modalities = {Modality(m) for m in modalities_list}
-        
+
         default_models_dict = json.loads(row[10])
         default_models = {Modality(m): model for m, model in default_models_dict.items()}
-        
+
         return ProviderCapabilities(
             name=row[0],
             api_key_name=row[1],
