@@ -31,6 +31,7 @@ _MODALITY_ALIAS: dict[str, Modality] = {
     "image": Modality.IMAGE,
     "audio": Modality.AUDIO,
     "video": Modality.VIDEO,
+    "music": Modality.MUSIC,
 }
 
 

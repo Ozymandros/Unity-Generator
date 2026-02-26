@@ -29,9 +29,14 @@ describe("IntelligenceStore", () => {
       prompts: { "default": "You are a bot" },
       keys: ["openai"],
       preferences: { "preferred_llm_provider": "openai" },
+      // ...other properties
+      getModelsByProvider: vi.fn().mockReturnValue([{ value: "gpt-4", label: "GPT-4", modality: "llm" }]),
+      getProvidersByModality: vi.fn().mockReturnValue([{ name: "openai", modalities: ["llm"] }]),
+      getPreference: vi.fn().mockReturnValue("mocked preference"),
+      isKeyConfigured: vi.fn().mockReturnValue(true),
+      
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(client.getAllConfig).mockResolvedValue(mockData as unknown as DiscoveryResponse);
 
     const store = useIntelligenceStore();
@@ -55,7 +60,6 @@ describe("IntelligenceStore", () => {
       preferences: {},
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     vi.mocked(client.getAllConfig).mockResolvedValue(mockData as unknown as DiscoveryResponse);
 
     const store = useIntelligenceStore();
@@ -74,6 +78,7 @@ describe("IntelligenceStore", () => {
   });
 
   it("handles errors during load", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
     vi.mocked(client.getAllConfig).mockRejectedValue(new Error("Network Error"));
 
     const store = useIntelligenceStore();
@@ -82,5 +87,6 @@ describe("IntelligenceStore", () => {
     expect(store.loading).toBe(false);
     expect(store.error).toBe("Network Error");
     expect(store.isLoaded).toBe(false);
+    consoleError.mockRestore();
   });
 });

@@ -30,3 +30,4 @@ htmlcov
 .claude/
 .cursor/
 .qwen/
+.kiro/

@@ -1,22 +1,23 @@
 import { onMounted, ref } from "vue";
 import { healthCheck } from "@/api/client";
 
+// Shared module-level state for useApp
+const tabs = [
+  "Settings",
+  "Scenes",
+  "Code",
+  "Text",
+  "Image",
+  "Sprites",
+  "Audio",
+  "Unity Project",
+  "Management",
+] as const;
+
+const active = ref<(typeof tabs)[number]>("Settings");
+const backendStatus = ref<"online" | "offline">("offline");
+
 export function useApp() {
-  const tabs = [
-    "Settings",
-    "Scenes",
-    "Code",
-    "Text",
-    "Image",
-    "Sprites",
-    "Audio",
-    "Unity Project",
-    "Management",
-  ] as const;
-
-  const active = ref<(typeof tabs)[number]>("Settings");
-  const backendStatus = ref<"online" | "offline">("offline");
-
   const setActive = (tab: (typeof tabs)[number]) => {
     active.value = tab;
     return active.value;

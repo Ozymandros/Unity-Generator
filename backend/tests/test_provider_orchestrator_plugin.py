@@ -104,6 +104,7 @@ class TestModalityAlias:
         assert _MODALITY_ALIAS["image"] == Modality.IMAGE
         assert _MODALITY_ALIAS["audio"] == Modality.AUDIO
         assert _MODALITY_ALIAS["video"] == Modality.VIDEO
+        assert _MODALITY_ALIAS["music"] == Modality.MUSIC
 
 
 class TestValidateResponse:

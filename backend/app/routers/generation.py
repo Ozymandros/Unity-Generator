@@ -5,7 +5,7 @@ from typing import Any
 from fastapi import APIRouter
 
 from ..core.db import get_pref
-from ..schemas import (
+from app.schemas import (
     AudioOptions,
     CodeOptions,
     GenerationRequest,

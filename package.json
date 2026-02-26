@@ -34,8 +34,14 @@
         "clean:frontend": "pnpm --dir frontend run clean"
     },
     "devDependencies": {
+        "@types/node": "^25.3.0",
         "@vitejs/plugin-vue": "^6.0.4",
+        "@vitest/ui": "^4.0.18",
+        "@vue/test-utils": "~2.4.6",
         "jsdom": "^28.1.0",
-        "vitest": "^4.0.18"
+        "pinia": "~2.3.1",
+        "vite": "^7.3.1",
+        "vitest": "^4.0.18",
+        "vuetify": "~3.12.1"
     }
 }

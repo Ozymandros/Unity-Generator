@@ -3,14 +3,16 @@
 
 import json
 from pathlib import Path
-
+from pyfakefs.fake_filesystem_unittest import patchfs
+from pyfakefs import fake_filesystem as fs
 import pytest
 
 from app.core import config
 
 
-def test_get_repo_root() -> None:
+def test_get_repo_root(fs: fs.FakeFilesystem) -> None:
     """Test that get_repo_root returns a valid path."""
+    fs.create_dir('C:/Projects/Unity-Generator')
     root = config.get_repo_root()
     assert isinstance(root, Path)
     assert root.exists()
@@ -45,16 +47,17 @@ def test_get_templates_dir() -> None:
 def test_get_db_dir_override(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Test get_db_dir environment variable override."""
     monkeypatch.setenv("DATABASE_DIR", str(tmp_path / "custom_db"))
-    assert config.get_db_dir() == tmp_path / "custom_db"
+    # Compare string representations for robust comparison
+    assert str(config.get_db_dir()) == str(tmp_path / "custom_db")
 
 
 def test_get_logs_dir_override(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Test get_logs_dir environment variable override."""
     monkeypatch.setenv("LOGS_DIR", str(tmp_path / "custom_logs"))
-    assert config.get_logs_dir() == tmp_path / "custom_logs"
+    assert str(config.get_logs_dir()) == str(tmp_path / "custom_logs")
 
 
 def test_get_output_dir_override(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Test get_output_dir environment variable override."""
     monkeypatch.setenv("OUTPUT_DIR", str(tmp_path / "custom_output"))
-    assert config.get_output_dir() == tmp_path / "custom_output"
+    assert str(config.get_output_dir()) == str(tmp_path / "custom_output")

@@ -157,13 +157,13 @@ def test_get_latest_project_path_returns_latest(tmp_path: Path, monkeypatch: pyt
     monkeypatch.setattr(unity_project, "get_repo_root", lambda: tmp_path)
 
     output_dir = tmp_path / "output"
-    output_dir.mkdir()
+    output_dir.mkdir(exist_ok=True)
 
     import time
 
-    (output_dir / "ProjectA").mkdir()
+    (output_dir / "ProjectA").mkdir(exist_ok=True)
     time.sleep(0.1)
-    (output_dir / "ProjectB").mkdir()
+    (output_dir / "ProjectB").mkdir(exist_ok=True)
 
     result = unity_project.get_latest_project_path()
     assert result is not None

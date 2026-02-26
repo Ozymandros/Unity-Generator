@@ -259,9 +259,10 @@ class TestModality:
         assert Modality.IMAGE.value == "image"
         assert Modality.AUDIO.value == "audio"
         assert Modality.VIDEO.value == "video"
+        assert Modality.MUSIC.value == "music"
 
     def test_all_members(self) -> None:
-        assert len(Modality) == 4
+        assert len(Modality) == 5
 
 
 # ======================================================================

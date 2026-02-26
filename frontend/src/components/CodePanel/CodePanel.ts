@@ -6,7 +6,6 @@ import { useIntelligenceStore } from "@/store/intelligenceStore";
 
 export function useCodePanel() {
   const store = useIntelligenceStore();
-
   const prompt = ref("");
   const provider = ref("");
   const model = ref("");

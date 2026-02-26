@@ -14,7 +14,9 @@ describe("Smoke Test", () => {
       global: {
         plugins: [pinia],
         stubs: {
-          'v-btn': true
+          'v-btn': {
+            template: '<button><slot /></button>'
+          }
         }
       }
     });

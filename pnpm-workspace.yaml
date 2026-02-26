@@ -1,2 +1,9 @@
 ignoredBuiltDependencies:
   - esbuild
+
+overrides:
+  minimatch@<10.2.1: '>=10.2.1'
+
+packages:
+  - frontend
+  - backend

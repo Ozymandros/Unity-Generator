@@ -11,6 +11,7 @@ export function useAudioPanel() {
   const provider = ref("");
   const apiKey = ref("");
   const voiceId = ref("");
+  const musicModel = ref("");
   const stability = ref(0.5);
   const status = ref<string | null>(null);
   const tone = ref<"ok" | "error">("ok");
@@ -23,7 +24,8 @@ export function useAudioPanel() {
 
   // Discovery data from store
   const providers = computed(() => store.getProvidersByModality(modality.value));
-  const availableVoices = computed(() => store.getModelsByProvider(provider.value, modality.value));
+  const availableVoices = computed(() => modality.value === "audio" ? store.getModelsByProvider(provider.value, "audio") : []);
+  const availableModels = computed(() => modality.value === "music" ? store.getModelsByProvider(provider.value, "music") : []);
   const showModelManager = ref(false);
 
   onMounted(async () => {
@@ -56,6 +58,7 @@ export function useAudioPanel() {
   watch(modality, async () => {
     provider.value = "";
     voiceId.value = "";
+    musicModel.value = "";
     systemPrompt.value = "";
     await updateDefaults();
   });
@@ -73,7 +76,7 @@ export function useAudioPanel() {
 
 
   async function run() {
-    status.value = "Generating audio...";
+    status.value = modality.value === "audio" ? "Generating audio..." : "Generating music...";
     tone.value = "ok";
     try {
       const response = await generateAudio({
@@ -81,19 +84,17 @@ export function useAudioPanel() {
         modality: modality.value,
         system_prompt: systemPrompt.value || undefined,
         provider: provider.value || undefined,
-        options: { 
-          voice_id: voiceId.value || undefined,
-          stability: stability.value,
-          api_key: apiKey.value || undefined,
-        },
+        options: modality.value === "audio"
+          ? { voice_id: voiceId.value || undefined, stability: stability.value, api_key: apiKey.value || undefined }
+          : { model: musicModel.value || undefined, stability: stability.value, api_key: apiKey.value || undefined },
         project_path: (autoSaveToProject.value && projectStore.activeProjectPath) || undefined
       });
       if (!response.success) {
         tone.value = "error";
-        status.value = response.error || "Failed to generate audio.";
+        status.value = response.error || (modality.value === "audio" ? "Failed to generate audio." : "Failed to generate music.");
         return;
       }
-      status.value = "Audio request complete.";
+      status.value = modality.value === "audio" ? "Audio request complete." : "Music request complete.";
       result.value = JSON.stringify(response.data || {}, null, 2);
     } catch (error) {
       tone.value = "error";
@@ -108,6 +109,7 @@ export function useAudioPanel() {
     providers,
     apiKey,
     voiceId,
+    musicModel,
     stability,
     status,
     tone,
@@ -117,6 +119,7 @@ export function useAudioPanel() {
     autoSaveToProject,
     activeProjectName,
     availableVoices,
+    availableModels,
     showModelManager,
     refreshModels,
     run

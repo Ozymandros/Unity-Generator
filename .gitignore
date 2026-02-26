@@ -99,6 +99,7 @@ frontend/node_modules/
 .claude/
 .cursor/
 .qwen/
+.kiro/
 
 # Python cache directories at any level
 **/__pycache__/

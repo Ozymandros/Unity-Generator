@@ -6,6 +6,7 @@ import { useSpritesPanel } from "./SpritesPanel";
 
 const {
   prompt,
+  model,
   provider,
   apiKey,
   resolution,

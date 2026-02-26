@@ -97,11 +97,12 @@ class VideoOptions(BaseModel):
     model: str | None = None
 
 
+
 # ---------------------------------------------------------------------------
 # Request/Response Models
 # ---------------------------------------------------------------------------
 
-
+class GenerationRequest(BaseModel):
     prompt: str
     modality: str | None = None
     provider: str | None = None

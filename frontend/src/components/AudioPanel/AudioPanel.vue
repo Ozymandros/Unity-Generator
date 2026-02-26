@@ -10,6 +10,8 @@ const {
   provider,
   apiKey,
   voiceId,
+  musicModel,
+  availableModels,
   stability,
   status,
   tone,
@@ -78,11 +80,20 @@ const {
       </div>
       <div class="row">
         <SmartField 
-          :label="modality === 'music' ? 'Music Model' : 'Voice (optional)'" 
+          v-if="modality === 'audio'"
+          label="Voice (optional)" 
           type="select" 
           v-model="voiceId" 
           :options="availableVoices" 
-          :placeholder="modality === 'music' ? 'Select Model' : 'Select Voice'" 
+          placeholder="Select Voice" 
+        />
+        <SmartField 
+          v-if="modality === 'music'"
+          label="Music Model" 
+          type="select" 
+          v-model="musicModel" 
+          :options="availableModels" 
+          placeholder="Select Model" 
         />
         <SmartField
           label="Stability"

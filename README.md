@@ -200,6 +200,21 @@ Output:
   - Audio: `Assets/Audio/`
 - Every saved asset includes an automatically generated `.meta` file.
 
+
+## Test Isolation & Mocking
+
+All tests in this repository are fully isolated from the real filesystem and network:
+
+- **Frontend unit/integration tests**: All network requests are globally mocked using [MSW](https://mswjs.io/). No real HTTP requests are made; all dependencies must be mocked in each test.
+- **Backend unit/integration tests**: All filesystem operations are globally mocked using [pyfakefs](https://github.com/jmcgeheeiv/pyfakefs). No real files or directories are created, modified, or deleted during tests. All network dependencies must be mocked in each test.
+- **E2E tests**: All backend API endpoints are intercepted and mocked using Playwright’s route interception. No real backend or network is required for E2E tests; all dependencies are mocked for deterministic, fast, and safe runs.
+
+> **Note:** Any test that attempts to access the real filesystem or network will fail by default. If you add new dependencies, ensure they are properly mocked in your tests.
+
+See the test setup files in `frontend/src/test/setup.ts` and `backend/tests/conftest.py` for details.
+
+---
+
 ## Tests
 
 ```bash

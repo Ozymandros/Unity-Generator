@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import ScenesPanel from "@/components/ScenesPanel.vue";
-import SettingsPanel from "@/components/SettingsPanel";
-import CodePanel from "@/components/CodePanel";
-import TextPanel from "@/components/TextPanel";
-import ImagePanel from "@/components/ImagePanel";
-import AudioPanel from "@/components/AudioPanel";
-import SpritesPanel from "@/components/SpritesPanel";
-import UnityProjectPanel from "@/components/UnityProjectPanel";
-import { useApp } from "@/App";
+import ScenesPanel from "./components/ScenesPanel.vue";
+import SettingsPanel from "./components/SettingsPanel/SettingsPanel.vue";
+import CodePanel from "./components/CodePanel/CodePanel.vue";
+import TextPanel from "./components/TextPanel/TextPanel.vue";
+import ImagePanel from "./components/ImagePanel/ImagePanel.vue";
+import AudioPanel from "./components/AudioPanel/AudioPanel.vue";
+import SpritesPanel from "./components/SpritesPanel/SpritesPanel.vue";
+import UnityProjectPanel from "./components/UnityProjectPanel/UnityProjectPanel.vue";
+import { useApp } from "./App";
 
 const { tabs, active, backendStatus, setActive } = useApp();
 const drawer = ref(true);
@@ -31,25 +31,13 @@ const getTabIcon = (tab: string) => {
 <template>
   <v-app>
     <!-- Navigation Drawer -->
-    <v-navigation-drawer
-      v-model="drawer"
-      permanent
-      width="260"
-      color="surface"
-      border="0"
-      class="app-sidebar"
-    >
+    <v-navigation-drawer v-model="drawer" permanent width="260" color="surface" border="0" class="app-sidebar">
       <div class="pa-6 d-flex align-center">
         <v-icon color="primary" size="32" class="mr-3">mdi-gravity</v-icon>
         <div>
           <h1 class="text-h6 font-weight-bold line-height-1 mb-0">Antigravity</h1>
           <div class="d-flex align-center">
-            <v-badge
-              dot
-              :color="backendStatus === 'online' ? 'success' : 'error'"
-              inline
-              class="mr-2"
-            ></v-badge>
+            <v-badge dot :color="backendStatus === 'online' ? 'success' : 'error'" inline class="mr-2"></v-badge>
             <span class="text-caption text-grey">{{ backendStatus === 'online' ? 'Online' : 'Offline' }}</span>
           </div>
         </div>
@@ -58,31 +46,15 @@ const getTabIcon = (tab: string) => {
       <v-divider class="mx-4 mb-4" opacity="0.25"></v-divider>
 
       <v-list nav density="comfortable">
-        <v-list-item
-          v-for="tab in tabs.filter(t => t !== 'Management')"
-          :key="tab"
-          :active="tab === active"
-          :prepend-icon="getTabIcon(tab)"
-          :title="tab"
-          rounded="xl"
-          class="mb-1 nav-item"
-          @click="setActive(tab)"
-          color="primary"
-        ></v-list-item>
+        <v-list-item v-for="tab in tabs.filter(t => t !== 'Management')" :key="tab" :active="tab === active"
+          :prepend-icon="getTabIcon(tab)" :title="tab" rounded="xl" class="mb-1 nav-item" @click="setActive(tab)"
+          color="primary"></v-list-item>
       </v-list>
 
       <template v-slot:append>
         <div class="pa-4">
-          <v-btn
-            variant="tonal"
-            block
-            prepend-icon="mdi-github"
-            size="small"
-            class="text-none"
-            rounded="lg"
-            href="https://github.com/Ozymandros/Unity-Generator"
-            target="_blank"
-          >
+          <v-btn variant="tonal" block prepend-icon="mdi-github" size="small" class="text-none" rounded="lg"
+            href="https://github.com/Ozymandros/Unity-Generator" target="_blank">
             Repository
           </v-btn>
         </div>
@@ -94,14 +66,14 @@ const getTabIcon = (tab: string) => {
       <v-container fluid class="pa-0 h-100">
         <v-fade-transition hide-on-leave>
           <div :key="active" class="content-wrapper">
-             <SettingsPanel v-if="active === 'Settings'" @switch-tab="setActive" />
-             <ScenesPanel v-else-if="active === 'Scenes'" />
-             <CodePanel v-else-if="active === 'Code'" />
-             <TextPanel v-else-if="active === 'Text'" />
-             <ImagePanel v-else-if="active === 'Image'" />
-             <SpritesPanel v-else-if="active === 'Sprites'" />
-             <AudioPanel v-else-if="active === 'Audio'" />
-             <UnityProjectPanel v-else-if="active === 'Unity Project'" />
+            <SettingsPanel v-if="active === 'Settings'" @switch-tab="setActive" />
+            <ScenesPanel v-else-if="active === 'Scenes'" />
+            <CodePanel v-else-if="active === 'Code'" />
+            <TextPanel v-else-if="active === 'Text'" />
+            <ImagePanel v-else-if="active === 'Image'" />
+            <SpritesPanel v-else-if="active === 'Sprites'" />
+            <AudioPanel v-else-if="active === 'Audio'" />
+            <UnityProjectPanel v-else-if="active === 'Unity Project'" />
           </div>
         </v-fade-transition>
       </v-container>
@@ -172,7 +144,7 @@ const getTabIcon = (tab: string) => {
 }
 
 .app-main {
-  background: transparent; 
+  background: transparent;
 }
 
 /* Ensure our dark theme stays consistent */
