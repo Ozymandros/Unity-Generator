@@ -69,25 +69,25 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: frontend
-        run: npm install --no-frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Lint frontend
         working-directory: frontend
-        run: npm run lint:check
+        run: pnpm run lint:check
 
       - name: Typecheck frontend
         working-directory: frontend
-        run: npm run typecheck
+        run: pnpm run typecheck
 
       - name: Unit tests (frontend)
         working-directory: frontend
         env:
           CI: true
-        run: npm test
+        run: pnpm test
 
       - name: Build frontend
         working-directory: frontend
-        run: npm run build
+        run: pnpm run build
 
   playwright:
     name: Playwright E2E
@@ -107,7 +107,7 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: frontend
-        run: npm install --no-frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Install Playwright browsers
         working-directory: frontend
@@ -117,4 +117,4 @@ jobs:
         working-directory: frontend
         env:
           CI: true
-        run: npm run test:e2e
+        run: pnpm run test:e2e
