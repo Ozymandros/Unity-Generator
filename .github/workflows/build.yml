@@ -35,8 +35,7 @@ jobs:
 
       - name: Get pnpm store path
         id: pnpmstore
-        run: |
-          echo "storepath=$(pnpm store path)" >> $GITHUB_OUTPUT
+        run: echo "storepath=$(pnpm store path)" >> $GITHUB_OUTPUT
 
       - name: Cache pnpm store
         uses: actions/cache@v3
@@ -53,7 +52,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Unity-Generator-Installer
-          path: '**/*.msi'
+          path: "**/*.msi"
 
       - name: Upload SK Integration Docs
         uses: actions/upload-artifact@v4
