@@ -35,7 +35,11 @@ jobs:
 
       - name: Get pnpm store path
         id: pnpmstore
+        shell: bash
         run: echo "storepath=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Debug pnpm store path
+        run: echo "PNPM store path is ${{ steps.pnpmstore.outputs.storepath }}"
 
       - name: Cache pnpm store
         uses: actions/cache@v3
