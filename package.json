@@ -7,7 +7,7 @@
         "// --- Build & Distribution ---": "",
         "build:backend": "powershell -ExecutionPolicy Bypass -File scripts/build_backend.ps1",
         "build:frontend": "pnpm --dir frontend build",
-        "package": "pnpm run clean && pnpm run build:backend && pnpm run tauri:build",
+        "package": "pnpm run build:backend && pnpm run tauri:build",
         "// --- Development ---": "",
         "dev": "pnpm --dir frontend dev:tauri",
         "tauri": "pnpm --dir frontend tauri",
@@ -28,9 +28,7 @@
         "test:all": "pnpm test:backend && pnpm test:frontend",
         "typecheck:all": "pnpm typecheck:backend && pnpm typecheck:frontend",
         "// --- Project Lifecycle & Utilities ---": "",
-        "setup": "pnpm install && pnpm --dir frontend install && pip install -r backend/requirements.txt",
-        "clean": "pnpm run clean:frontend",
-        "clean:frontend": "pnpm --dir frontend run clean"
+        "setup": "pnpm install && pnpm --dir frontend install && pip install -r backend/requirements.txt"
     },
     "devDependencies": {
         "@types/node": "^25.3.0",
