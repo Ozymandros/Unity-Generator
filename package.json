@@ -28,10 +28,7 @@
         "test:all": "pnpm test:backend && pnpm test:frontend",
         "typecheck:all": "pnpm typecheck:backend && pnpm typecheck:frontend",
         "// --- Project Lifecycle & Utilities ---": "",
-        "setup": "pnpm install && pnpm --dir frontend install && pip install -r backend/requirements.txt",
-        "clean": "pnpm run clean:backend && pnpm run clean:frontend",
-        "clean:backend": "powershell -Command \"Get-ChildItem backend/dist,backend/build,frontend/src-tauri/binaries/backend-* -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue\"",
-        "clean:frontend": "pnpm --dir frontend run clean"
+        "setup": "pnpm install && pnpm --dir frontend install && pip install -r backend/requirements.txt"
     },
     "devDependencies": {
         "@types/node": "^25.3.0",
