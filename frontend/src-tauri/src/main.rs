@@ -1,9 +1,11 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use tauri::process::{Command, CommandEvent};
+
 fn main() {
     tauri::Builder::default()
         .setup(|_app| {
-            let sidecar = tauri::api::process::Command::new_sidecar("unity-generator-backend")
+            let sidecar = Command::new_sidecar("unity-generator-backend")
                 .map_err(|error| format!("Failed to init backend sidecar: {error}"))?;
             let (mut rx, _child) = sidecar
                 .spawn()
@@ -11,7 +13,7 @@ fn main() {
 
             tauri::async_runtime::spawn(async move {
                 while let Some(event) = rx.recv().await {
-                    if let tauri::api::process::CommandEvent::Error(error) = event {
+                    if let CommandEvent::Error(error) = event {
                         eprintln!("Backend sidecar error: {error}");
                     }
                 }

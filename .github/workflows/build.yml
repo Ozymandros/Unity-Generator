@@ -1,5 +1,10 @@
 name: Build and Release
-on: [push, pull_request]
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
 
 jobs:
   build-windows:
@@ -34,7 +39,7 @@ jobs:
 
       - name: Ensure curl is available
         run: choco install curl -y
-        
+
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
