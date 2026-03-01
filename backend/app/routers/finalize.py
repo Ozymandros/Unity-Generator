@@ -181,6 +181,7 @@ def _run_finalize_in_background(job_id: str, request: FinalizeProjectRequest) ->
             packages=request.unity_settings.packages,
             scene_name=request.unity_settings.scene_name,
             timeout=request.unity_settings.timeout,
+            unity_automation_mode=request.unity_settings.unity_automation_mode,
             on_progress=on_progress,
         )
 

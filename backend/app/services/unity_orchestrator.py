@@ -2,7 +2,9 @@
 Unity Engine orchestrator service.
 
 Manages headless Unity batch-mode execution: script injection, process
-spawning, log capture/parsing, and cleanup.
+spawning, log capture/parsing, and cleanup. Supports a hybrid model where
+setup can run via batch-mode scripts (CI/headless) or via the MCP-Unity
+plugin (live Editor).
 """
 
 import logging
@@ -15,12 +17,16 @@ import zipfile
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Literal, Protocol
 
 from jinja2 import Environment, FileSystemLoader
 
 from ..core.constants import DEFAULT_TIMEOUT
 
 LOGGER = logging.getLogger(__name__)
+
+# Automation mode: batch = injected scripts + -executeMethod; mcp = MCP-Unity plugin; auto = MCP if available else batch
+UnityAutomationMode = Literal["batch", "mcp", "auto"]
 
 
 # ---------------------------------------------------------------------------
@@ -50,6 +56,34 @@ class FinalizeResult:
     zip_path: str = ""
     errors: list[str] = field(default_factory=list)
     logs: list[str] = field(default_factory=list)
+
+
+@dataclass
+class SetupResult:
+    """Result of Unity setup steps (packages, scene, URP, validation) before zipping."""
+
+    success: bool
+    errors: list[str] = field(default_factory=list)
+    logs: list[str] = field(default_factory=list)
+
+
+class UnitySetupBackend(Protocol):
+    """Protocol for running Unity setup (packages, scene, URP, validation)."""
+
+    def run_setup(
+        self,
+        project_path: Path,
+        *,
+        install_packages: bool = False,
+        packages: list[str] | None = None,
+        generate_scene: bool = False,
+        scene_name: str = "MainScene",
+        setup_urp: bool = False,
+        timeout: int = DEFAULT_TIMEOUT,
+        on_progress: Callable[[str, int, str], None] | None = None,
+    ) -> SetupResult:
+        """Run setup steps; returns success, errors, and logs (no zip)."""
+        ...
 
 
 # ---------------------------------------------------------------------------
@@ -375,6 +409,125 @@ def zip_project(project_path: Path, output_path: Path | None = None) -> Path:
 
 
 # ---------------------------------------------------------------------------
+# Setup backends (batch vs MCP)
+# ---------------------------------------------------------------------------
+
+
+def _get_setup_backend(
+    mode: UnityAutomationMode,
+    unity_path: Path,
+    templates_dir: Path,
+) -> UnitySetupBackend:
+    """Return the setup backend for the given mode. For 'auto', uses batch unless MCP is available."""
+    if mode == "mcp":
+        from .unity_mcp_client import McpUnitySetupBackend
+        return McpUnitySetupBackend()
+    if mode == "auto":
+        try:
+            from .unity_mcp_client import mcp_available
+            if mcp_available():
+                from .unity_mcp_client import McpUnitySetupBackend
+                return McpUnitySetupBackend()
+        except Exception as e:  # noqa: BLE001
+            LOGGER.debug("MCP-Unity not available, using batch: %s", e)
+    return BatchUnitySetupBackend(unity_path=unity_path, templates_dir=templates_dir)
+
+
+class BatchUnitySetupBackend:
+    """Runs Unity setup via injected Editor scripts and batch-mode -executeMethod."""
+
+    def __init__(self, *, unity_path: Path, templates_dir: Path) -> None:
+        self.unity_path = unity_path
+        self.templates_dir = templates_dir
+
+    def run_setup(
+        self,
+        project_path: Path,
+        *,
+        install_packages: bool = False,
+        packages: list[str] | None = None,
+        generate_scene: bool = False,
+        scene_name: str = "MainScene",
+        setup_urp: bool = False,
+        timeout: int = DEFAULT_TIMEOUT,
+        on_progress: Callable[[str, int, str], None] | None = None,
+    ) -> SetupResult:
+        logs: list[str] = []
+        errors: list[str] = []
+
+        def _progress(step: str, pct: int, msg: str) -> None:
+            logs.append(f"[{step}] {msg}")
+            if on_progress:
+                on_progress(step, pct, msg)
+
+        inject_dir: Path | None = None
+
+        try:
+            _progress("render", 10, "Rendering Editor automation scripts...")
+            scripts: dict[str, str] = {}
+            template_context = {
+                "install_packages": install_packages,
+                "generate_scene": generate_scene,
+                "setup_urp": setup_urp,
+                "packages": packages or [],
+                "scene_name": scene_name,
+            }
+            scripts["AutomatedSetup.cs"] = render_template("AutomatedSetup.cs.j2", template_context, self.templates_dir)
+            if install_packages and packages:
+                scripts["PackageSetup.cs"] = render_template("PackageSetup.cs.j2", template_context, self.templates_dir)
+            if generate_scene:
+                scripts["ScenePrefabSetup.cs"] = render_template("ScenePrefabSetup.cs.j2", template_context, self.templates_dir)
+            if setup_urp:
+                scripts["ProjectSettingsSetup.cs"] = render_template(
+                    "ProjectSettingsSetup.cs.j2", template_context, self.templates_dir
+                )
+            scripts["ImportValidation.cs"] = render_template("ImportValidation.cs.j2", template_context, self.templates_dir)
+
+            _progress("inject", 20, "Injecting Editor scripts into project...")
+            inject_dir = inject_editor_scripts(project_path, scripts)
+
+            _progress("unity_run", 30, "Launching Unity in batch mode...")
+            unity_result = run_unity_batch(
+                unity_path=self.unity_path,
+                project_path=project_path,
+                execute_method="AutoGenerated.ProjectInitializer.Setup",
+                timeout=timeout,
+            )
+            _progress("unity_run", 70, f"Unity exited with code {unity_result.exit_code}")
+
+            if unity_result.stdout:
+                logs.append(f"[stdout] {unity_result.stdout[:2000]}")
+            if unity_result.stderr:
+                logs.append(f"[stderr] {unity_result.stderr[:2000]}")
+
+            if not unity_result.success:
+                errors.extend(unity_result.errors)
+                if not errors:
+                    errors.append(f"Unity batch failed with exit code {unity_result.exit_code}")
+                _progress("parse", 80, f"Found {len(errors)} error(s)")
+                return SetupResult(success=False, errors=errors, logs=logs)
+
+            for w in unity_result.warnings[:20]:
+                logs.append(f"[warning] {w}")
+            _progress("parse", 80, "Unity batch completed successfully")
+            return SetupResult(success=True, errors=[], logs=logs)
+
+        except Exception as exc:
+            LOGGER.exception("Batch setup failed unexpectedly")
+            errors.append(f"Unexpected error: {exc}")
+            return SetupResult(success=False, errors=errors, logs=logs)
+
+        finally:
+            if inject_dir:
+                try:
+                    cleanup_injected_scripts(inject_dir)
+                    logs.append("[cleanup] Removed injected Editor scripts")
+                except Exception as exc:
+                    LOGGER.warning("Cleanup failed: %s", exc)
+                    logs.append(f"[cleanup] Warning: {exc}")
+
+
+# ---------------------------------------------------------------------------
 # High-level finalize orchestration
 # ---------------------------------------------------------------------------
 
@@ -390,29 +543,27 @@ def run_finalize_job(
     packages: list[str] | None = None,
     scene_name: str = "MainScene",
     timeout: int = DEFAULT_TIMEOUT,
+    unity_automation_mode: UnityAutomationMode = "auto",
     on_progress: Callable[[str, int, str], None] | None = None,
 ) -> FinalizeResult:
     """
     Run the full finalize workflow on an existing scaffolded Unity project.
 
-    Steps:
-    1. Render and inject Editor automation scripts.
-    2. Execute Unity in batch mode via ``-executeMethod``.
-    3. Parse logs and collect errors.
-    4. Cleanup injected scripts.
-    5. Zip the project for download.
+    Uses a setup backend (batch or MCP-Unity) according to unity_automation_mode,
+    then zips the project for download.
 
     Args:
         project_path: Root of the scaffolded Unity project.
-        unity_path: Path to the Unity Editor executable.
-        templates_dir: Path to the Jinja2 template directory.
+        unity_path: Path to the Unity Editor executable (used for batch backend).
+        templates_dir: Path to the Jinja2 template directory (used for batch backend).
         install_packages: Whether to install UPM packages.
         generate_scene: Whether to generate a default scene.
         setup_urp: Whether to set up Universal Render Pipeline.
         packages: List of UPM package identifiers to install.
         scene_name: Name of the scene to create.
         timeout: Batch-mode timeout in seconds.
-        on_progress: Optional callback ``(step: str, progress: int, log: str) -> None``.
+        unity_automation_mode: "batch" | "mcp" | "auto". Default "auto" uses MCP if available else batch.
+        on_progress: Optional callback (step, progress, log).
 
     Returns:
         FinalizeResult with paths and any errors.
@@ -425,95 +576,22 @@ def run_finalize_job(
         if on_progress:
             on_progress(step, pct, msg)
 
-    inject_dir: Path | None = None
+    backend = _get_setup_backend(unity_automation_mode, unity_path, templates_dir)
+    _progress("setup", 5, f"Using {unity_automation_mode} automation backend")
+    setup_result = backend.run_setup(
+        project_path,
+        install_packages=install_packages,
+        packages=packages,
+        generate_scene=generate_scene,
+        scene_name=scene_name,
+        setup_urp=setup_urp,
+        timeout=timeout,
+        on_progress=on_progress,
+    )
+    errors = setup_result.errors
+    logs = setup_result.logs
 
-    try:
-        # Step 1: Render templates
-        _progress("render", 10, "Rendering Editor automation scripts...")
-        scripts: dict[str, str] = {}
-
-        template_context = {
-            "install_packages": install_packages,
-            "generate_scene": generate_scene,
-            "setup_urp": setup_urp,
-            "packages": packages or [],
-            "scene_name": scene_name,
-        }
-
-        # Always include the main setup entrypoint
-        scripts["AutomatedSetup.cs"] = render_template("AutomatedSetup.cs.j2", template_context, templates_dir)
-
-        if install_packages and packages:
-            scripts["PackageSetup.cs"] = render_template("PackageSetup.cs.j2", template_context, templates_dir)
-
-        if generate_scene:
-            scripts["ScenePrefabSetup.cs"] = render_template("ScenePrefabSetup.cs.j2", template_context, templates_dir)
-
-        if setup_urp:
-            scripts["ProjectSettingsSetup.cs"] = render_template(
-                "ProjectSettingsSetup.cs.j2", template_context, templates_dir
-            )
-
-        # Always include import validation
-        scripts["ImportValidation.cs"] = render_template("ImportValidation.cs.j2", template_context, templates_dir)
-
-        # Step 2: Inject scripts
-        _progress("inject", 20, "Injecting Editor scripts into project...")
-        inject_dir = inject_editor_scripts(project_path, scripts)
-
-        # Step 3: Run Unity batch
-        _progress("unity_run", 30, "Launching Unity in batch mode...")
-        unity_result = run_unity_batch(
-            unity_path=unity_path,
-            project_path=project_path,
-            execute_method="AutoGenerated.ProjectInitializer.Setup",
-            timeout=timeout,
-        )
-
-        _progress("unity_run", 70, f"Unity exited with code {unity_result.exit_code}")
-
-        if unity_result.stdout:
-            logs.append(f"[stdout] {unity_result.stdout[:2000]}")
-        if unity_result.stderr:
-            logs.append(f"[stderr] {unity_result.stderr[:2000]}")
-
-        if not unity_result.success:
-            errors.extend(unity_result.errors)
-            if not errors:
-                errors.append(f"Unity batch failed with exit code {unity_result.exit_code}")
-            _progress("parse", 80, f"Found {len(errors)} error(s)")
-            return FinalizeResult(
-                success=False,
-                project_path=str(project_path),
-                errors=errors,
-                logs=logs,
-            )
-
-        if unity_result.warnings:
-            for w in unity_result.warnings[:20]:
-                logs.append(f"[warning] {w}")
-
-        _progress("parse", 80, "Unity batch completed successfully")
-
-        # Step 4 is in the finally block (cleanup)
-
-        # Step 5: Zip
-        _progress("zip", 90, "Zipping project for download...")
-        zip_path = zip_project(project_path)
-
-        _progress("done", 100, "Finalization complete")
-
-        return FinalizeResult(
-            success=True,
-            project_path=str(project_path),
-            zip_path=str(zip_path),
-            errors=errors,
-            logs=logs,
-        )
-
-    except Exception as exc:
-        LOGGER.exception("Finalize job failed unexpectedly")
-        errors.append(f"Unexpected error: {exc}")
+    if not setup_result.success:
         return FinalizeResult(
             success=False,
             project_path=str(project_path),
@@ -521,13 +599,24 @@ def run_finalize_job(
             logs=logs,
         )
 
-    finally:
-        # Always cleanup injected scripts
-        if inject_dir:
-            try:
-                cleanup_injected_scripts(inject_dir)
-                logs.append("[cleanup] Removed injected Editor scripts")
-            except Exception as exc:
-                LOGGER.warning("Cleanup failed: %s", exc)
-                logs.append(f"[cleanup] Warning: {exc}")
+    _progress("zip", 90, "Zipping project for download...")
+    try:
+        zip_path = zip_project(project_path)
+        _progress("done", 100, "Finalization complete")
+        return FinalizeResult(
+            success=True,
+            project_path=str(project_path),
+            zip_path=str(zip_path),
+            errors=[],
+            logs=logs,
+        )
+    except Exception as exc:
+        LOGGER.exception("Zip failed")
+        errors.append(f"Zip failed: {exc}")
+        return FinalizeResult(
+            success=False,
+            project_path=str(project_path),
+            errors=errors,
+            logs=logs,
+        )
 

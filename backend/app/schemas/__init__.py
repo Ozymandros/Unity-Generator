@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -212,6 +212,10 @@ class UnityEngineSettings(BaseModel):
     scene_name: str = "MainScene"
     unity_editor_path: str | None = None
     timeout: int = Field(default=300, ge=30, le=1800)
+    unity_automation_mode: Literal["batch", "mcp", "auto"] = Field(
+        default="auto",
+        description="Use 'batch' for script injection, 'mcp' for MCP-Unity plugin, 'auto' to prefer MCP when available.",
+    )
 
 
 class FinalizeProjectRequest(BaseModel):

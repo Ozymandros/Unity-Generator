@@ -1,5 +1,6 @@
 fastapi
 uvicorn
+mcp[cli]
 semantic-kernel[mcp]>=1.15.0
 pydantic
 requests

@@ -299,6 +299,16 @@ Alternatively, set it in the UI Settings panel or via the preferences API.
 4. Watch the log viewer for real-time progress.
 5. On completion, download the `.zip` artifact.
 
+### Automation mode (batch vs MCP)
+
+Finalize supports two backends. In **Unity Engine Settings** (or the finalize request payload) you can set `unity_automation_mode`:
+
+- **`auto`** (default): Use the MCP-Unity plugin if configured and available; otherwise use batch mode (injected scripts and `-executeMethod`).
+- **`batch`**: Always use injected Editor scripts and Unity batch mode. Use this for CI or headless environments where no Editor window is running.
+- **`mcp`**: Always use the MCP-Unity (Semantic Kernel) plugin. Fails with a clear error if the plugin is not configured.
+
+To use MCP for local development, set **`UNITY_USE_MCP=1`** and either **`UNITY_MCP_SERVER_URL`** (HTTP) or ensure **`unity-mcp`** (or the command in **`UNITY_MCP_COMMAND`**) is on PATH for stdio. The backend connects via the MCP Python SDK and calls the Unity-MCP-Server contract tools. For CI pipelines, set `unity_automation_mode` to `"batch"` so finalize does not depend on MCP. See [Unity Engine Integration](UNITY_INTEGRATION.md) for the tool contract and configuration.
+
 ### Debugging Unity batch execution
 
 - Unity writes its log to platform-specific locations:

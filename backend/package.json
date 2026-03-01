@@ -1,5 +1,7 @@
 {
   "name": "unity-generator-backend",
+  "version": "0.2.0",
+  "description": "Backend for Unity Generator",
   "private": true,
   "scripts": {
     "typecheck": "pyright --project ..",
