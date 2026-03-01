@@ -44,7 +44,7 @@ def test_generate_unity_project_schema(monkeypatch):
     # Patch API key repository
     from app.repositories import get_api_key_repo
     repo = get_api_key_repo()
-    dummy_keys = {"openai_api_key": "sk-test", "stability_api_key": "st-test"}
+    dummy_keys = {"openai": "sk-test", "stability": "st-test"}
 
     with patch.object(repo, "get_all", return_value=dummy_keys):
         client = TestClient(fastapi_app)

@@ -39,6 +39,31 @@ def test_provider_repository():
     assert fetched.api_key_name == "test_key"
     assert fetched.default_models[Modality.LLM] == "test-model"
 
+
+def test_provider_delete_cascades_models():
+    """Deleting a provider removes its models (no orphan rows in provider_models)."""
+    provider_repo = get_provider_repo()
+    model_repo = get_model_repo()
+
+    caps = ProviderCapabilities(
+        name="cascade_test",
+        api_key_name="key",
+        modalities={Modality.LLM},
+        default_models={Modality.LLM: "m1"},
+    )
+    provider_repo.save(caps)
+    model_repo.add("cascade_test", "model-a", "Model A", "llm")
+    model_repo.add("cascade_test", "model-b", "Model B", "llm")
+
+    models_before = model_repo.get_by_provider("cascade_test")
+    assert len(models_before) == 2
+
+    deleted = provider_repo.delete("cascade_test")
+    assert deleted is True
+
+    models_after = model_repo.get_by_provider("cascade_test")
+    assert len(models_after) == 0
+
 def test_model_repository():
     repo = get_model_repo()
 

@@ -34,7 +34,7 @@ async def test_unity_agent_openai():
 
         # Mock Registry
         mock_caps = MagicMock()
-        mock_caps.api_key_name = "openai_api_key"
+        mock_caps.api_key_name = "openai"
         mock_caps.supports_tool_use = True
         MockRegistry.get.return_value = mock_caps
         MockRegistry.create_chat_service.return_value = MagicMock()
@@ -50,7 +50,7 @@ async def test_unity_agent_openai():
             prompt="test",
             provider="openai",
             options={"model": "gpt-4"},
-            api_keys={"openai_api_key": "sk-test"}
+            api_keys={"openai": "sk-test"}
         )
 
         MockRegistry.get.assert_called_with("openai")
@@ -77,7 +77,7 @@ async def test_unity_agent_deepseek():
 
         # Mock Registry
         mock_caps = MagicMock()
-        mock_caps.api_key_name = "deepseek_api_key"
+        mock_caps.api_key_name = "deepseek"
         mock_caps.supports_tool_use = True
         MockRegistry.get.return_value = mock_caps
         MockRegistry.create_chat_service.return_value = MagicMock()
@@ -93,7 +93,7 @@ async def test_unity_agent_deepseek():
             prompt="test",
             provider="deepseek",
             options={"model": "deepseek-chat"},
-            api_keys={"deepseek_api_key": "sk-deepseek"}
+            api_keys={"deepseek": "sk-deepseek"}
         )
 
         MockRegistry.get.assert_called_with("deepseek")
@@ -140,7 +140,7 @@ async def test_unity_agent_mcp_connection_failure():
 
         # Mock Registry
         mock_caps = MagicMock()
-        mock_caps.api_key_name = "openai_api_key"
+        mock_caps.api_key_name = "openai"
         mock_caps.supports_tool_use = True
         MockRegistry.get.return_value = mock_caps
 
@@ -153,7 +153,7 @@ async def test_unity_agent_mcp_connection_failure():
             prompt="test",
             provider="openai",
             options={"model": "gpt-4"},
-            api_keys={"openai_api_key": "sk-test"},
+            api_keys={"openai": "sk-test"},
         )
 
         assert "failed" in result["content"].lower()

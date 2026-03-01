@@ -72,7 +72,9 @@ class SqliteProviderRepository(IProviderRepository):
         conn = sqlite3.connect(get_db_path())
         try:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM providers WHERE name = ?", (name.lower(),))
+            name_lower = name.lower()
+            cursor.execute("DELETE FROM provider_models WHERE provider = ?", (name_lower,))
+            cursor.execute("DELETE FROM providers WHERE name = ?", (name_lower,))
             conn.commit()
             return cursor.rowcount > 0
         finally:

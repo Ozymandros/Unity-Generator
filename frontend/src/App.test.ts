@@ -71,12 +71,23 @@ function createMockIntelligenceStore() {
     openai: [{ value: "gpt-4o-mini", modality: "llm", label: "GPT-4o mini" }],
   };
 
+  const getPreferredEngine = (modality: string) => {
+    const provider = preferences[`preferred_${modality}_provider`] ?? "";
+    const model = preferences[`preferred_${modality}_model`] ?? "";
+    const providerModels = models[provider] ?? [];
+    const allowed = providerModels.filter((m) => m.modality === modality);
+    const valid = allowed.some((m) => m.value === model);
+    if (valid) return { provider, model };
+    return { provider, model: allowed.length ? allowed[0].value : "" };
+  };
+
   return {
     providers,
     preferences,
     models,
     load: vi.fn().mockResolvedValue(undefined),
     getPreference: vi.fn((key: string) => preferences[key] ?? ""),
+    getPreferredEngine: vi.fn(getPreferredEngine),
     getProvidersByModality: vi.fn((modality: string) =>
       providers.filter((p) => p.modalities.includes(modality)),
     ),

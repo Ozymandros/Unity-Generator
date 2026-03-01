@@ -56,7 +56,7 @@ def test_generate_sprite_workflow(
     from app.repositories import get_api_key_repo
     repo = get_api_key_repo()
 
-    with patch.object(repo, "get_all", return_value={"openai_api_key": "test"}):
+    with patch.object(repo, "get_all", return_value={"openai": "test"}):
         # Create a fake response image
         img = Image.new("RGBA", (1024, 1024), (0, 255, 0, 255))
         buffered = io.BytesIO()

@@ -8,6 +8,7 @@ from ..repositories import (
     get_api_key_repo,
     get_system_prompt_repo
 )
+from ..schemas import ok_response
 from ..services.providers.capabilities import ProviderCapabilities, Modality
 from ..services.providers.registry import provider_registry
 
@@ -119,7 +120,7 @@ def save_provider(provider: ProviderUpdate):
 
     # Reload registry to reflect changes immediately
     provider_registry.load_from_db()
-    return {"status": "success"}
+    return ok_response({})
 
 @router.delete("/providers/{name}")
 def delete_provider(name: str):
@@ -127,7 +128,7 @@ def delete_provider(name: str):
     if not success:
         raise HTTPException(status_code=404, detail="Provider not found")
     provider_registry.load_from_db()
-    return {"status": "success"}
+    return ok_response({})
 
 # Models
 @router.get("/models/{provider}")
@@ -136,15 +137,18 @@ def list_models_for_provider(provider: str):
 
 @router.post("/models")
 def add_model(model: ModelUpdate):
+    provider_name = model.provider.strip().lower()
+    if get_provider_repo().get_by_name(provider_name) is None:
+        raise HTTPException(status_code=400, detail="Provider not found")
     get_model_repo().add(model.provider, model.value, model.label, model.modality)
-    return {"status": "success"}
+    return ok_response({})
 
 @router.delete("/models/{provider}/{value}")
 def delete_model(provider: str, value: str):
     success = get_model_repo().remove(provider, value)
     if not success:
         raise HTTPException(status_code=404, detail="Model not found")
-    return {"status": "success"}
+    return ok_response({})
 
 # API Keys
 @router.get("/keys")
@@ -154,14 +158,14 @@ def list_keys():
 @router.post("/keys")
 def save_key(key: ApiKeyUpdate):
     get_api_key_repo().save(key.service_name, key.key_value)
-    return {"status": "success"}
+    return ok_response({})
 
 @router.delete("/keys/{service_name}")
 def delete_key(service_name: str):
     success = get_api_key_repo().delete(service_name)
     if not success:
         raise HTTPException(status_code=404, detail="Key not found")
-    return {"status": "success"}
+    return ok_response({})
 
 # System Prompts
 @router.get("/prompts")
@@ -171,4 +175,4 @@ def list_prompts():
 @router.post("/prompts")
 def save_prompt(prompt: SystemPromptUpdate):
     get_system_prompt_repo().save(prompt.modality, prompt.content)
-    return {"status": "success"}
+    return ok_response({})

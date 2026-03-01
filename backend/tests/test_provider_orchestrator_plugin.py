@@ -34,7 +34,7 @@ class TestGetBestProvider:
     def test_selects_provider_with_key(self) -> None:
         """Returns a provider whose API key is available."""
         with patch("app.agents.plugins.native.provider_orchestrator_plugin.get_api_key_repo") as mock_get_repo:
-            mock_get_repo.return_value.get_all.return_value = {"openai_api_key": "sk-test"}
+            mock_get_repo.return_value.get_all.return_value = {"openai": "sk-test"}
             plugin = ProviderOrchestratorPlugin()
             result = plugin.get_best_provider("llm")
             assert result == "openai"
@@ -43,8 +43,8 @@ class TestGetBestProvider:
         """Preferred provider is used when its key exists."""
         with patch("app.agents.plugins.native.provider_orchestrator_plugin.get_api_key_repo") as mock_get_repo:
             mock_get_repo.return_value.get_all.return_value = {
-                "openai_api_key": "sk-test",
-                "groq_api_key": "g-test",
+                "openai": "sk-test",
+                "groq": "g-test",
             }
             plugin = ProviderOrchestratorPlugin()
             result = plugin.get_best_provider("llm", preferred_provider="groq")
@@ -61,7 +61,7 @@ class TestGetBestProvider:
     def test_image_modality(self) -> None:
         """Image modality resolves correctly."""
         with patch("app.agents.plugins.native.provider_orchestrator_plugin.get_api_key_repo") as mock_get_repo:
-            mock_get_repo.return_value.get_all.return_value = {"stability_api_key": "st-test"}
+            mock_get_repo.return_value.get_all.return_value = {"stability": "st-test"}
             plugin = ProviderOrchestratorPlugin()
             result = plugin.get_best_provider("image")
             assert result == "stability"
@@ -69,7 +69,7 @@ class TestGetBestProvider:
     def test_audio_modality(self) -> None:
         """Audio modality resolves correctly."""
         with patch("app.agents.plugins.native.provider_orchestrator_plugin.get_api_key_repo") as mock_get_repo:
-            mock_get_repo.return_value.get_all.return_value = {"elevenlabs_api_key": "el-test"}
+            mock_get_repo.return_value.get_all.return_value = {"elevenlabs": "el-test"}
             plugin = ProviderOrchestratorPlugin()
             result = plugin.get_best_provider("audio")
             assert result == "elevenlabs"
@@ -77,7 +77,7 @@ class TestGetBestProvider:
     def test_video_modality(self) -> None:
         """Video modality resolves correctly."""
         with patch("app.agents.plugins.native.provider_orchestrator_plugin.get_api_key_repo") as mock_get_repo:
-            mock_get_repo.return_value.get_all.return_value = {"runway_api_key": "r-test"}
+            mock_get_repo.return_value.get_all.return_value = {"runway": "r-test"}
             plugin = ProviderOrchestratorPlugin()
             result = plugin.get_best_provider("video")
             assert result == "runway"
@@ -85,7 +85,7 @@ class TestGetBestProvider:
     def test_case_insensitive_type(self) -> None:
         """Provider type matching is case-insensitive."""
         with patch("app.agents.plugins.native.provider_orchestrator_plugin.get_api_key_repo") as mock_get_repo:
-            mock_get_repo.return_value.get_all.return_value = {"openai_api_key": "sk-test"}
+            mock_get_repo.return_value.get_all.return_value = {"openai": "sk-test"}
             plugin = ProviderOrchestratorPlugin()
             assert plugin.get_best_provider("LLM") == "openai"
             assert plugin.get_best_provider("Llm") == "openai"

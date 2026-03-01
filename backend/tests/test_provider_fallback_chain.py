@@ -27,7 +27,7 @@ class TestLLMFallbackChain:
     def test_fallback_when_preferred_has_no_key(self) -> None:
         """If preferred provider has no key, fall back to next with key."""
         # Only openai has a key; deepseek is preferred but missing
-        api_keys = {"openai_api_key": "sk-test"}
+        api_keys = {"openai": "sk-test"}
 
         # Mock the service creation to return a mock service that returns our expected content
         with patch("app.services.providers.registry.ProviderRegistry.create_chat_service") as mock_create:
@@ -57,7 +57,7 @@ class TestLLMFallbackChain:
 
     def test_first_priority_used_when_no_preference(self) -> None:
         """With no preferred provider the highest-priority one with a key wins."""
-        api_keys = {"groq_api_key": "g-test", "openai_api_key": "sk-test"}
+        api_keys = {"groq": "g-test", "openai": "sk-test"}
 
         with patch("app.services.providers.registry.ProviderRegistry.create_chat_service") as mock_create:
             mock_service = MagicMock()
@@ -83,7 +83,7 @@ class TestImageFallbackChain:
 
     def test_fallback_to_next_image_provider(self) -> None:
         """Stability is preferred but missing key; falls back to openai."""
-        api_keys = {"openai_api_key": "sk-test"}
+        api_keys = {"openai": "sk-test"}
 
         with patch("app.services.providers.registry.ProviderRegistry.create_text_to_image_service") as mock_create:
             mock_service = MagicMock()
@@ -104,7 +104,7 @@ class TestAudioFallbackChain:
 
     def test_audio_stub_fallback(self) -> None:
         """ElevenLabs preferred but no key; Google has key -> Google stub."""
-        api_keys = {"google_api_key": "goog-test"}
+        api_keys = {"google": "goog-test"}
         result = generate_audio("hello", "elevenlabs", {}, api_keys)
         assert result.provider == "google"
         assert result.metadata.get("status") == "stub_implementation"
@@ -121,7 +121,7 @@ class TestVideoFallbackChain:
     def test_video_resolve_with_key(self) -> None:
         """Video resolve returns the first provider with a key."""
         selected = provider_registry.resolve(
-            Modality.VIDEO, {"runway_api_key": "r-key"}
+            Modality.VIDEO, {"runway": "r-key"}
         )
         assert selected == "runway"
 
@@ -133,7 +133,7 @@ class TestCrossModalityErrors:
         with pytest.raises(ProviderNotSupportedError, match="does not support"):
             provider_registry.resolve(
                 Modality.IMAGE,
-                {"groq_api_key": "g-test"},
+                {"groq": "g-test"},
                 preferred="groq",
             )
 
@@ -141,6 +141,6 @@ class TestCrossModalityErrors:
         with pytest.raises(ProviderNotSupportedError, match="does not support"):
             provider_registry.resolve(
                 Modality.AUDIO,
-                {"stability_api_key": "s-test"},
+                {"stability": "s-test"},
                 preferred="stability",
             )

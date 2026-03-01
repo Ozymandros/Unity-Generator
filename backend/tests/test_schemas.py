@@ -32,8 +32,8 @@ def test_generation_request_full() -> None:
 
 def test_api_keys_request() -> None:
     """Test ApiKeysRequest model."""
-    req = ApiKeysRequest(keys={"openai_api_key": "sk-test"})
-    assert req.keys == {"openai_api_key": "sk-test"}
+    req = ApiKeysRequest(keys={"openai": "sk-test"})
+    assert req.keys == {"openai": "sk-test"}
 
 
 def test_pref_request() -> None:

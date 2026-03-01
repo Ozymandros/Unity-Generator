@@ -320,27 +320,27 @@ class TestDefaultRegistry:
         assert "luma" in vid_list
 
     def test_llm_key_map_matches_legacy(self) -> None:
-        """The registry-derived key map should be a superset of the old LLM_KEY_MAP."""
+        """Seeded providers use api_key_name = provider name (short form)."""
         km = provider_registry.key_map(Modality.LLM)
-        assert km["openai"] == "openai_api_key"
-        assert km["deepseek"] == "deepseek_api_key"
-        assert km["groq"] == "groq_api_key"
+        assert km["openai"] == "openai"
+        assert km["deepseek"] == "deepseek"
+        assert km["groq"] == "groq"
 
     def test_image_key_map(self) -> None:
         km = provider_registry.key_map(Modality.IMAGE)
-        assert km["stability"] == "stability_api_key"
-        assert km["openai"] == "openai_api_key"
+        assert km["stability"] == "stability"
+        assert km["openai"] == "openai"
 
     def test_audio_key_map(self) -> None:
         km = provider_registry.key_map(Modality.AUDIO)
-        assert km["elevenlabs"] == "elevenlabs_api_key"
-        assert km["playht"] == "playht_api_key"
+        assert km["elevenlabs"] == "elevenlabs"
+        assert km["playht"] == "playht"
 
     def test_video_key_map(self) -> None:
         km = provider_registry.key_map(Modality.VIDEO)
-        assert km["runway"] == "runway_api_key"
-        assert km["pika"] == "pika_api_key"
-        assert km["luma"] == "luma_api_key"
+        assert km["runway"] == "runway"
+        assert km["pika"] == "pika"
+        assert km["luma"] == "luma"
 
     def test_openai_capabilities(self) -> None:
         caps = provider_registry.get("openai")

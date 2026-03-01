@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.schemas import AgentResult
 
 client = TestClient(app)
 
@@ -121,3 +122,30 @@ def test_create_scene_failure():
         data = response.json()
         assert data["success"] is False
         assert "Unity error" in data["error"]
+
+
+def test_create_scene_agent_returns_error_in_raw():
+    """When run_unity returns a result with error in raw, API returns success=False."""
+    with patch("app.routers.scenes.agent_manager") as mock_agent_manager, \
+         patch("app.routers.scenes.get_pref") as mock_get_pref:
+
+        mock_get_pref.return_value = "openai"
+        mock_agent_manager.run_unity = MagicMock()
+        async def mock_run(*args, **kwargs):
+            return AgentResult(
+                content="Failed to execute Unity task: 1 validation error for KernelParameterMetadata...",
+                provider="openai",
+                raw={"content": "Failed to execute Unity task: ...", "error": "1 validation error for KernelParameterMetadata"},
+            )
+        mock_agent_manager.run_unity.side_effect = mock_run
+
+        response = client.post(
+            "/api/scenes/create",
+            json={"prompt": "Create a cube", "options": {"model": "gpt-4"}},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is False
+        assert "error" in data
+        assert "KernelParameterMetadata" in data["error"]

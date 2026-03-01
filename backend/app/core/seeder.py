@@ -13,6 +13,178 @@ from ..services.providers.capabilities import ProviderCapabilities, Modality
 
 LOGGER = logging.getLogger(__name__)
 
+
+def _default_providers() -> List[ProviderCapabilities]:
+    """Default provider capabilities for initial DB seed. api_key_name = provider name for all."""
+    return [
+        ProviderCapabilities(
+            name="google",
+            api_key_name="google",
+            modalities={Modality.LLM, Modality.IMAGE, Modality.AUDIO},
+            default_models={
+                Modality.LLM: "gemini-1.5-flash",
+                Modality.IMAGE: "imagen-3.0-generate-002",
+                Modality.AUDIO: "google-tts",
+            },
+            supports_vision=True,
+            supports_streaming=True,
+            supports_function_calling=True,
+            supports_tool_use=True,
+            openai_compatible=False,
+        ),
+        ProviderCapabilities(
+            name="anthropic",
+            api_key_name="anthropic",
+            modalities={Modality.LLM},
+            default_models={Modality.LLM: "claude-3-5-sonnet-20240620"},
+            supports_vision=True,
+            supports_streaming=True,
+            supports_function_calling=True,
+            supports_tool_use=True,
+            openai_compatible=False,
+        ),
+        ProviderCapabilities(
+            name="deepseek",
+            api_key_name="deepseek",
+            modalities={Modality.LLM},
+            default_models={Modality.LLM: "deepseek-chat"},
+            base_url="https://api.deepseek.com",
+            supports_function_calling=True,
+            supports_tool_use=True,
+            openai_compatible=True,
+        ),
+        ProviderCapabilities(
+            name="openrouter",
+            api_key_name="openrouter",
+            modalities={Modality.LLM},
+            default_models={Modality.LLM: "openrouter/auto"},
+            base_url="https://openrouter.ai/api/v1",
+            supports_function_calling=True,
+            supports_streaming=True,
+            supports_tool_use=True,
+            openai_compatible=True,
+        ),
+        ProviderCapabilities(
+            name="openai",
+            api_key_name="openai",
+            modalities={Modality.LLM, Modality.IMAGE, Modality.AUDIO},
+            default_models={
+                Modality.LLM: "gpt-4o",
+                Modality.IMAGE: "dall-e-3",
+                Modality.AUDIO: "tts-1",
+            },
+            extra={"is_tts": True},
+            supports_function_calling=True,
+            supports_vision=True,
+            supports_json_mode=True,
+            supports_streaming=True,
+            supports_tool_use=True,
+            openai_compatible=True,
+        ),
+        ProviderCapabilities(
+            name="groq",
+            api_key_name="groq",
+            modalities={Modality.LLM},
+            default_models={Modality.LLM: "llama-3.1-8b-instant"},
+            base_url="https://api.groq.com/openai/v1",
+            supports_function_calling=True,
+            supports_streaming=True,
+            supports_tool_use=True,
+            openai_compatible=True,
+        ),
+        ProviderCapabilities(
+            name="huggingface",
+            api_key_name="huggingface",
+            modalities={Modality.LLM},
+            default_models={Modality.LLM: "google/gemma-2b"},
+            base_url="https://router.huggingface.co/v1",
+            supports_function_calling=False,
+            supports_streaming=True,
+            openai_compatible=True,
+            requires_api_key=False,
+        ),
+        ProviderCapabilities(
+            name="ollama",
+            api_key_name="ollama",
+            modalities={Modality.LLM},
+            default_models={Modality.LLM: "qwen2.5-coder:latest"},
+            base_url="http://localhost:11434/v1",
+            supports_function_calling=False,
+            supports_streaming=True,
+            openai_compatible=True,
+            requires_api_key=False,
+        ),
+        ProviderCapabilities(
+            name="stability",
+            api_key_name="stability",
+            modalities={Modality.IMAGE},
+            default_models={Modality.IMAGE: "stable-diffusion-xl-1024-v1-0"},
+            openai_compatible=False,
+        ),
+        ProviderCapabilities(
+            name="flux",
+            api_key_name="flux",
+            modalities={Modality.IMAGE},
+            default_models={Modality.IMAGE: "flux-1.1-pro"},
+            openai_compatible=False,
+        ),
+        ProviderCapabilities(
+            name="elevenlabs",
+            api_key_name="elevenlabs",
+            modalities={Modality.AUDIO},
+            default_models={Modality.AUDIO: "eleven_multilingual_v2"},
+            openai_compatible=False,
+            extra={"is_tts": True},
+        ),
+        ProviderCapabilities(
+            name="playht",
+            api_key_name="playht",
+            modalities={Modality.AUDIO},
+            default_models={Modality.AUDIO: "playht-default"},
+            openai_compatible=False,
+            extra={"is_tts": True},
+        ),
+        ProviderCapabilities(
+            name="replicate",
+            api_key_name="replicate",
+            modalities={Modality.LLM, Modality.IMAGE, Modality.AUDIO, Modality.MUSIC},
+            default_models={
+                Modality.LLM: "google-deepmind/gemma-2b-it",
+                Modality.IMAGE: "black-forest-labs/flux-schnell",
+                Modality.AUDIO: "facebookresearch/musicgen",
+                Modality.MUSIC: "facebookresearch/musicgen",
+            },
+            openai_compatible=True,
+            base_url="https://api.replicate.com/v1",
+            supports_function_calling=False,
+            supports_streaming=True,
+            supports_tool_use=False,
+            extra={"is_music": True},
+        ),
+        ProviderCapabilities(
+            name="runway",
+            api_key_name="runway",
+            modalities={Modality.VIDEO},
+            default_models={Modality.VIDEO: "gen-3-alpha"},
+            openai_compatible=False,
+        ),
+        ProviderCapabilities(
+            name="pika",
+            api_key_name="pika",
+            modalities={Modality.VIDEO},
+            default_models={Modality.VIDEO: "pika-1.0"},
+            openai_compatible=False,
+        ),
+        ProviderCapabilities(
+            name="luma",
+            api_key_name="luma",
+            modalities={Modality.VIDEO},
+            default_models={Modality.VIDEO: "dream-machine"},
+            openai_compatible=False,
+        ),
+    ]
+
+
 DEFAULT_SYSTEM_PROMPTS = {
     "code": "You are an expert Unity C# developer. Generate clean, efficient, and well-commented code.",
     "text": "You are a helpful assistant providing concise and accurate information.",
@@ -31,25 +203,18 @@ def seed_database():
     api_key_repo = get_api_key_repo()
     prompt_repo = get_system_prompt_repo()
 
-    # 1. Seed Providers and Models from registry defaults
+    # 1. Seed Providers and Models (default list; api_key_name = provider name for all)
     existing_providers = provider_repo.get_all()
     if not existing_providers:
         LOGGER.info("Seeding default providers and models...")
-        from ..services.providers.registry import _build_default_registry
-        default_registry = _build_default_registry()
-
-        for caps in default_registry.all_providers():
+        for caps in _default_providers():
             provider_repo.save(caps)
-            # Default models for this provider? 
-            # The registry doesn't store all available models, just defaults.
-            # We should probably seed some well-known ones or just use the defaults as a starting point.
             for modality, model_id in caps.default_models.items():
                 try:
-                    # Use model name as label if we don't have better
                     label = model_id.split("/")[-1].replace("-", " ").title()
                     model_repo.add(caps.name, model_id, label, modality.value)
                 except Exception:
-                    pass # Probably already exists
+                    pass
 
     # 2. Seed System Prompts
     existing_prompts = prompt_repo.get_all()

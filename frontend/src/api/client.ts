@@ -89,13 +89,17 @@ export async function getApiKeys() {
   return (await response.json()) as GenerationResponse;
 }
 
-export async function setPref(key: string, value: string) {
+export async function setPref(key: string, value: string): Promise<GenerationResponse> {
   const response = await fetch(`${getBackendUrl()}/prefs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ key, value }),
   });
-  return (await response.json()) as GenerationResponse;
+  const body = (await response.json()) as GenerationResponse & { detail?: string };
+  if (!response.ok) {
+    throw new Error(body.detail ?? body.error ?? `Request failed (${response.status})`);
+  }
+  return body as GenerationResponse;
 }
 
 export async function getPref(key: string) {

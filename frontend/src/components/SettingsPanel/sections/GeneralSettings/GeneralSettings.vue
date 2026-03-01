@@ -17,6 +17,7 @@ const {
   preferredMusicModel,
   musicModels,
   status,
+  statusType,
   save,
 } = useGeneralSettings();
 </script>
@@ -30,7 +31,7 @@ const {
 
     <v-alert
       v-if="status"
-      :type="status.includes('failed') || status.includes('error') ? 'error' : 'success'"
+      :type="statusType === 'error' ? 'error' : statusType === 'info' ? 'info' : 'success'"
       variant="tonal"
       class="mb-6"
       density="comfortable"
@@ -67,7 +68,7 @@ const {
           ></v-select>
           <v-select
             v-model="preferredLlmModel"
-            label="Default LLM Model"
+            :label="preferredLlm ? `Model (for ${preferredLlm})` : 'Model (select a provider first)'"
             :items="llmModels"
             item-title="label"
             item-value="value"
@@ -91,7 +92,7 @@ const {
           ></v-select>
           <v-select
             v-model="preferredImageModel"
-            label="Default Image Model"
+            :label="preferredImage ? `Model (for ${preferredImage})` : 'Model (select a provider first)'"
             :items="imageModels"
             item-title="label"
             item-value="value"
@@ -115,7 +116,7 @@ const {
           ></v-select>
           <v-select
             v-model="preferredAudioModel"
-            label="Default Speech Model"
+            :label="preferredAudio ? `Model (for ${preferredAudio})` : 'Model (select a provider first)'"
             :items="audioModels"
             item-title="label"
             item-value="value"
@@ -139,7 +140,7 @@ const {
           ></v-select>
           <v-select
             v-model="preferredMusicModel"
-            label="Default Music Model"
+            :label="preferredMusic ? `Model (for ${preferredMusic})` : 'Model (select a provider first)'"
             :items="musicModels"
             item-title="label"
             item-value="value"

@@ -89,4 +89,35 @@ describe("IntelligenceStore", () => {
     expect(store.isLoaded).toBe(false);
     consoleError.mockRestore();
   });
+
+  it("getPreferredEngine returns provider and model with correct-on-read", async () => {
+    const mockData = {
+      providers: [{ name: "openai", modalities: ["llm"] }],
+      models: {
+        openai: [
+          { value: "gpt-4", label: "GPT-4", modality: "llm" },
+          { value: "gpt-4o", label: "GPT-4o", modality: "llm" },
+        ],
+      },
+      prompts: {},
+      keys: [],
+      preferences: {
+        preferred_llm_provider: "openai",
+        preferred_llm_model: "gpt-4",
+      },
+    };
+    vi.mocked(client.getAllConfig).mockResolvedValue(mockData as unknown as DiscoveryResponse);
+
+    const store = useIntelligenceStore();
+    await store.load();
+
+    const valid = store.getPreferredEngine("llm");
+    expect(valid).toEqual({ provider: "openai", model: "gpt-4" });
+
+    // Correct-on-read: stored model not in list -> return first allowed model
+    store.preferences.preferred_llm_model = "deleted-model";
+    const corrected = store.getPreferredEngine("llm");
+    expect(corrected.provider).toBe("openai");
+    expect(corrected.model).toBe("gpt-4");
+  });
 });

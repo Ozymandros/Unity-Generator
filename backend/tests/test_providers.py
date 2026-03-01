@@ -26,7 +26,7 @@ class TestLLMProviders:
 
         mock_create.return_value = mock_service
 
-        api_keys = {"openai_api_key": "sk-test"}
+        api_keys = {"openai": "sk-test"}
         options = TextOptions(model="gpt-4", temperature=0.5)
 
         result = generate_text("Hello", "openai", options, api_keys)
@@ -53,7 +53,7 @@ class TestImageProviders:
         mock_service.generate_image.return_value = "https://mock.url/image.png"
         mock_create.return_value = mock_service
 
-        api_keys = {"openai_api_key": "sk-test"}
+        api_keys = {"openai": "sk-test"}
         options = ImageOptions(aspect_ratio="1024x1024", quality="hd")
 
         result = generate_image("A futuristic city", "openai", options, api_keys)
@@ -87,7 +87,7 @@ class TestAudioProviders:
 
         mock_create.return_value = mock_service
 
-        api_keys = {"openai_api_key": "sk-test"}
+        api_keys = {"openai": "sk-test"}
         options = AudioOptions(voice="alloy", model="tts-1")
 
         result = generate_audio("Hello world", "openai", options, api_keys)

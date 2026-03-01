@@ -40,6 +40,11 @@ def setup_test_env(tmp_path):
 
     # Initialize the database in the temporary directory
     init_db()
+    # Seed default providers (api_key_name = provider name) and load registry
+    from app.core.seeder import seed_database
+    from app.services.providers.registry import provider_registry
+    seed_database()
+    provider_registry.load_from_db()
 
     yield
 

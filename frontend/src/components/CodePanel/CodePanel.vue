@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { StatusBanner } from "@/components/StatusBanner";
-import { SmartField } from "@/components/generic/SmartField";
-import { ModelManagerModal } from "@/components/generic/ModelManagerModal";
+import { StatusBanner } from "../StatusBanner";
+import { SmartField } from "../generic/SmartField";
+import { ModelManagerModal } from "../generic/ModelManagerModal";
 import { useCodePanel } from "./CodePanel";
 
 const {
@@ -54,7 +54,7 @@ const {
           class="flex-grow-1"
         />
         <SmartField 
-          label="Model" 
+          :label="provider ? `Model (for ${provider})` : 'Model'" 
           type="select" 
           v-model="model" 
           :options="availableModels" 

@@ -25,6 +25,21 @@ export const useIntelligenceStore = defineStore("intelligence", {
     getPreference: (state) => (key: string) => {
       return state.preferences[key] || "";
     },
+    /**
+     * Preferred engine (provider + model) for a modality, with correct-on-read:
+     * if the stored model is not in the provider's list, returns the same provider
+     * with the first available model or empty string.
+     */
+    getPreferredEngine: (state) => (modality: string): { provider: string; model: string } => {
+      const provider = (state.preferences[`preferred_${modality}_provider`] || "").trim();
+      const model = (state.preferences[`preferred_${modality}_model`] || "").trim();
+      if (!provider) return { provider: "", model: "" };
+      const providerModels = state.models[provider] || [];
+      const allowed = providerModels.filter((m) => m.modality === modality);
+      const valid = allowed.some((m) => m.value === model);
+      if (valid) return { provider, model };
+      return { provider, model: allowed.length ? allowed[0].value : "" };
+    },
     isKeyConfigured: (state) => (serviceName: string) => {
       return state.keys.includes(serviceName);
     }

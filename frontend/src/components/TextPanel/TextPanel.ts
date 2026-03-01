@@ -31,13 +31,9 @@ export function useTextPanel() {
     try {
       await store.load();
 
-      // Auto-default to preferred choices if local choice is empty
-      if (!provider.value) {
-        provider.value = store.getPreference("preferred_llm_provider");
-      }
-      if (!model.value) {
-        model.value = store.getPreference("preferred_llm_model");
-      }
+      const preferred = store.getPreferredEngine("llm");
+      if (!provider.value) provider.value = preferred.provider;
+      if (!model.value) model.value = preferred.model;
 
       const dbSysPrompt = store.getPreference("default_text_system_prompt");
       if (dbSysPrompt) {

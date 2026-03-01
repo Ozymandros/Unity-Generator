@@ -48,7 +48,7 @@ class TestFinalizeRegistryIntegration:
     def test_resolve_code_provider_from_override(self) -> None:
         selected = provider_registry.resolve(
             Modality.LLM,
-            {"deepseek_api_key": "ds-test"},
+            {"deepseek": "ds-test"},
             preferred="deepseek",
         )
         assert selected == "deepseek"
@@ -56,7 +56,7 @@ class TestFinalizeRegistryIntegration:
     def test_resolve_image_provider_from_override(self) -> None:
         selected = provider_registry.resolve(
             Modality.IMAGE,
-            {"stability_api_key": "st-test"},
+            {"stability": "st-test"},
             preferred="stability",
         )
         assert selected == "stability"
@@ -64,7 +64,7 @@ class TestFinalizeRegistryIntegration:
     def test_resolve_audio_provider_from_override(self) -> None:
         selected = provider_registry.resolve(
             Modality.AUDIO,
-            {"elevenlabs_api_key": "el-test"},
+            {"elevenlabs": "el-test"},
             preferred="elevenlabs",
         )
         assert selected == "elevenlabs"

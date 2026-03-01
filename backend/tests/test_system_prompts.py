@@ -35,7 +35,7 @@ def test_system_prompt_override():
             prompt="Create a script",
             provider="openai",
             options={},
-            api_keys={"openai_api_key": "dummy"},
+            api_keys={"openai": "dummy"},
             system_prompt="Custom system prompt",
         )
 
@@ -54,7 +54,7 @@ def test_system_prompt_default():
             prompt="Create a script",
             provider="openai",
             options={},
-            api_keys={"openai_api_key": "dummy"},
+            api_keys={"openai": "dummy"},
         )
 
         # Verify generate_text was called with the default system prompt

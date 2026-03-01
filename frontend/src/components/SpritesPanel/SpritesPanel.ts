@@ -33,13 +33,9 @@ export function useSpritesPanel() {
     try {
       await store.load();
 
-      // Auto-default to preferred image provider/model
-      if (!provider.value) {
-        provider.value = store.getPreference("preferred_image_provider");
-      }
-      if (!model.value) {
-        model.value = store.getPreference("preferred_image_model");
-      }
+      const preferred = store.getPreferredEngine("image");
+      if (!provider.value) provider.value = preferred.provider;
+      if (!model.value) model.value = preferred.model;
 
       const dbSysPrompt = store.getPreference("default_sprite_system_prompt");
       if (dbSysPrompt) {

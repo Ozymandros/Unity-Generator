@@ -23,6 +23,7 @@ export function useGeneralSettings() {
   const preferredMusicModel = ref("");
 
   const status = ref<string | null>(null);
+  const statusType = ref<"success" | "error" | "info" | null>(null);
 
   // Computed lists derived from store
   const providers = computed(() => store.providers);
@@ -43,19 +44,22 @@ export function useGeneralSettings() {
     try {
       await store.load();
 
-      // Initialize selection from store preferences
-      preferredLlm.value = store.getPreference("preferred_llm_provider");
-      preferredLlmModel.value = store.getPreference("preferred_llm_model");
+      // Initialize from store (correct-on-read via getPreferredEngine)
+      const llm = store.getPreferredEngine("llm");
+      preferredLlm.value = llm.provider;
+      preferredLlmModel.value = llm.model;
 
-      preferredImage.value = store.getPreference("preferred_image_provider");
-      preferredImageModel.value = store.getPreference("preferred_image_model");
+      const image = store.getPreferredEngine("image");
+      preferredImage.value = image.provider;
+      preferredImageModel.value = image.model;
 
-      preferredAudio.value = store.getPreference("preferred_audio_provider");
-      preferredAudioModel.value = store.getPreference("preferred_audio_model");
+      const audio = store.getPreferredEngine("audio");
+      preferredAudio.value = audio.provider;
+      preferredAudioModel.value = audio.model;
 
-      preferredMusic.value = store.getPreference("preferred_music_provider");
-      preferredMusicModel.value = store.getPreference("preferred_music_model");
-
+      const music = store.getPreferredEngine("music");
+      preferredMusic.value = music.provider;
+      preferredMusicModel.value = music.model;
     } catch (e) {
       console.error("Failed to load settings via store", e);
     }
@@ -64,30 +68,47 @@ export function useGeneralSettings() {
   async function save() {
     localStorage.setItem("backendUrl", backendUrl.value);
     status.value = "Saving...";
+    statusType.value = "info";
+
+    // Validate each model is in the selected provider's list before saving
+    const checks: [string, string, string][] = [
+      [preferredLlm.value, preferredLlmModel.value, "llm"],
+      [preferredImage.value, preferredImageModel.value, "image"],
+      [preferredAudio.value, preferredAudioModel.value, "audio"],
+      [preferredMusic.value, preferredMusicModel.value, "music"],
+    ];
+    for (const [prov, modVal, modality] of checks) {
+      if (prov && modVal) {
+        const allowed = store.getModelsByProvider(prov, modality).map((m) => m.value);
+        if (allowed.length && !allowed.includes(modVal)) {
+          status.value = `Model "${modVal}" is not registered for provider "${prov}".`;
+          statusType.value = "error";
+          return;
+        }
+      }
+    }
 
     try {
-      const results = await Promise.all([
-        setPref("preferred_llm_provider", preferredLlm.value),
-        setPref("preferred_llm_model", preferredLlmModel.value),
-        setPref("preferred_image_provider", preferredImage.value),
-        setPref("preferred_image_model", preferredImageModel.value),
-        setPref("preferred_audio_provider", preferredAudio.value),
-        setPref("preferred_audio_model", preferredAudioModel.value),
-        setPref("preferred_music_provider", preferredMusic.value),
-        setPref("preferred_music_model", preferredMusicModel.value),
-      ]);
+      // Save provider keys first, then model keys
+      await setPref("preferred_llm_provider", preferredLlm.value);
+      await setPref("preferred_llm_model", preferredLlmModel.value);
+      await setPref("preferred_image_provider", preferredImage.value);
+      await setPref("preferred_image_model", preferredImageModel.value);
+      await setPref("preferred_audio_provider", preferredAudio.value);
+      await setPref("preferred_audio_model", preferredAudioModel.value);
+      await setPref("preferred_music_provider", preferredMusic.value);
+      await setPref("preferred_music_model", preferredMusicModel.value);
 
-      const errorResult = results.find(r => !r.success);
-      if (errorResult) {
-        status.value = errorResult.error || "Save failed";
-      } else {
-        // Refresh store after save to ensure all components see new preferences
-        await store.refresh();
-        status.value = "Preferences saved successfully.";
-        setTimeout(() => status.value = null, 3000);
-      }
-    } catch {
-      status.value = "Network error: Failed to reach backend.";
+      await store.refresh();
+      status.value = "Preferences saved successfully.";
+      statusType.value = "success";
+      setTimeout(() => {
+        status.value = null;
+        statusType.value = null;
+      }, 3000);
+    } catch (e) {
+      status.value = (e as Error).message ?? "Network error: Failed to reach backend.";
+      statusType.value = "error";
     }
   }
 
@@ -111,6 +132,7 @@ export function useGeneralSettings() {
     preferredMusic,
     preferredMusicModel,
     status,
+    statusType,
     save,
   };
 }

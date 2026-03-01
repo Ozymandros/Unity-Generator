@@ -37,13 +37,9 @@ export function useScenesPanel() {
     try {
       await store.load();
 
-      // Auto-default to preferred choices
-      if (!provider.value) {
-        provider.value = store.getPreference("preferred_llm_provider");
-      }
-      if (!model.value) {
-        model.value = store.getPreference("preferred_llm_model");
-      }
+      const preferred = store.getPreferredEngine("llm");
+      if (!provider.value) provider.value = preferred.provider;
+      if (!model.value) model.value = preferred.model;
 
       const dbSysPrompt = store.getPreference("default_code_system_prompt");
       if (dbSysPrompt) {

@@ -5,11 +5,11 @@ from app.services.provider_select import select_provider
 
 def test_get_provider_for_request_all_fallbacks() -> None:
     """Ensure it falls back to OpenAI if no preference is set in DB."""
-    api_keys: dict[str, str] = {"openai_api_key": "sk-test"}
+    api_keys: dict[str, str] = {"openai": "sk-test"}
     priority: list[str] = ["deepseek", "openai"]
     key_map: dict[str, str] = {
-        "openai": "openai_api_key",
-        "deepseek": "deepseek_api_key",
+        "openai": "openai",
+        "deepseek": "deepseek",
     }
 
     selected: str = select_provider("openai", api_keys, priority, key_map)
@@ -32,11 +32,11 @@ def test_select_provider_preferred_missing_falls_back() -> None:
 
 def test_select_provider_no_preferred_uses_priority() -> None:
     """Test when no preferred provider is specified, it uses priority list."""
-    api_keys: dict[str, str] = {"openai_api_key": "sk-test"}
+    api_keys: dict[str, str] = {"openai": "sk-test"}
     priority: list[str] = ["deepseek", "openai"]
     key_map: dict[str, str] = {
-        "openai": "openai_api_key",
-        "deepseek": "deepseek_api_key",
+        "openai": "openai",
+        "deepseek": "deepseek",
     }
 
     selected: str = select_provider(None, api_keys, priority, key_map)
@@ -47,7 +47,7 @@ def test_select_provider_no_keys_raises_error() -> None:
     """Test that it raises RuntimeError when no keys are available."""
     api_keys: dict[str, str] = {}
     priority: list[str] = ["openai"]
-    key_map: dict[str, str] = {"openai": "openai_api_key"}
+    key_map: dict[str, str] = {"openai": "openai"}
 
     with pytest.raises(RuntimeError, match="No valid API key found"):
         select_provider(None, api_keys, priority, key_map)

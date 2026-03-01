@@ -36,6 +36,13 @@ async def create_scene(request: CreateSceneRequest) -> GenerationResponse:
             api_key=request.api_key,
             system_prompt=request.system_prompt,
         )
+        # Agent returns error in raw when Unity task fails; treat as error response
+        raw = getattr(data, "raw", None) or {}
+        if isinstance(raw, dict) and raw.get("error"):
+            return error_response(raw["error"])
+        content = getattr(data, "content", "") or ""
+        if content and str(content).startswith("Failed to execute Unity task"):
+            return error_response(str(content))
         return ok_response(data)
     except Exception as exc:
         logging.getLogger("failed_requests").warning("Scene creation failed: %s", exc)

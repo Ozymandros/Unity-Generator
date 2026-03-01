@@ -7,14 +7,22 @@ This module defines the API application and includes routers for various feature
 import logging
 from typing import Any
 
-# Configure logging early
+from app.core.config import get_logs_dir
+from app.core.logging import setup_logging
+
+setup_logging(get_logs_dir()) 
+
+# Configure logging early: root logger so all app loggers (e.g. app.agents.unity_agent) emit
+_root = logging.getLogger()
+_root.setLevel(logging.INFO)
+if not _root.handlers:
+    _handler = logging.StreamHandler()
+    _handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s %(name)s: %(message)s"))
+    _root.addHandler(_handler)
+
 logger = logging.getLogger("unity_generator")
-handler = logging.StreamHandler()
-formatter = logging.Formatter('[%(asctime)s] %(levelname)s %(name)s: %(message)s')
-handler.setFormatter(formatter)
-logger.addHandler(handler)
 logger.setLevel(logging.INFO)
-logger.propagate = False
+logger.propagate = True
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

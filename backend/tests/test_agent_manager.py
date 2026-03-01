@@ -68,7 +68,7 @@ def mock_agent_manager() -> MagicMock:
 def test_agent_manager_run_code(mock_get_repo, mock_run, tmp_path: Path) -> None:
     """Test run_code calls agent.run with correct parameters."""
     mock_run.return_value = {"content": "test", "provider": "openai"}
-    mock_get_repo.return_value.get_all.return_value = {"openai_api_key": "sk-test"}
+    mock_get_repo.return_value.get_all.return_value = {"openai": "sk-test"}
 
     manager = AgentManager()
     # Ensure agents are initialized
@@ -78,7 +78,10 @@ def test_agent_manager_run_code(mock_get_repo, mock_run, tmp_path: Path) -> None
 
     result = manager.run_code("test prompt", "openai", {"model": "gpt-4o"})
 
+    # System prompt comes from DB (seeded) when not mocked
+    from app.repositories import get_system_prompt_repo
+    expected_prompt = get_system_prompt_repo().get("code")
     mock_run.assert_called_once_with(
-        "test prompt", "openai", {"model": "gpt-4o"}, {"openai_api_key": "sk-test"}, None
+        "test prompt", "openai", {"model": "gpt-4o"}, {"openai": "sk-test"}, expected_prompt
     )
     assert result.content == "test"

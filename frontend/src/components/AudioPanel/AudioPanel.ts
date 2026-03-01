@@ -38,12 +38,9 @@ export function useAudioPanel() {
   });
 
   async function updateDefaults() {
-    // Auto-default to preferred provider/model based on modality
-    const prefProvider = store.getPreference(`preferred_${modality.value}_provider`);
-    const prefModel = store.getPreference(`preferred_${modality.value}_model`);
-
-    if (prefProvider) provider.value = prefProvider;
-    if (prefModel) voiceId.value = prefModel;
+    const preferred = store.getPreferredEngine(modality.value);
+    if (preferred.provider) provider.value = preferred.provider;
+    if (preferred.model) voiceId.value = preferred.model;
 
     const dbSysPrompt = store.getPreference(`default_${modality.value}_system_prompt`);
     if (dbSysPrompt) {

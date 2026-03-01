@@ -18,8 +18,10 @@ import {
 
 const mockFetch = vi.fn();
 
-function mockResponse(data: unknown) {
+function mockResponse(data: unknown, ok = true) {
   return Promise.resolve({
+    ok,
+    status: ok ? 200 : 400,
     json: () => Promise.resolve(data),
   });
 }

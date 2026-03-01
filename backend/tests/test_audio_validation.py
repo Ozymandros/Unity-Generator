@@ -9,12 +9,12 @@ def test_generate_audio_voice_validation_fix():
     without crashing due to OpenAI's strict validation.
     """
     # Mock api_keys
-    api_keys = {"openai_api_key": "fake-key"}
+    api_keys = {"openai": "fake-key"}
 
     # Mock provider_registry
     with patch("app.services.audio_provider.provider_registry") as mock_registry:
         mock_registry.resolve.return_value = "openai"
-        mock_registry.get.return_value.api_key_name = "openai_api_key"
+        mock_registry.get.return_value.api_key_name = "openai"
         mock_registry.get.return_value.default_models = {"audio": "tts-1"}
 
         # Mock the service with AsyncMock for the actual call
@@ -53,11 +53,11 @@ def test_generate_audio_custom_voice_success():
     """
     Test that a custom voice (like Rachel for ElevenLabs) works.
     """
-    api_keys = {"elevenlabs_api_key": "fake-key"}
+    api_keys = {"elevenlabs": "fake-key"}
 
     with patch("app.services.audio_provider.provider_registry") as mock_registry:
         mock_registry.resolve.return_value = "elevenlabs"
-        mock_registry.get.return_value.api_key_name = "elevenlabs_api_key"
+        mock_registry.get.return_value.api_key_name = "elevenlabs"
         mock_registry.get.return_value.default_models = {"audio": "eleven_multilingual_v2"}
 
         mock_service = MagicMock()
