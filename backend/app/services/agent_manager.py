@@ -70,7 +70,7 @@ class AgentManager:
         api_keys = cast(dict[str, str], get_api_key_repo().get_all())
         if provider and api_key:
             caps = provider_registry.get(provider)
-            if caps.api_key_name:
+            if caps and caps.api_key_name:
                 api_keys[caps.api_key_name] = api_key
 
         if not self.code_agent:
@@ -106,22 +106,17 @@ class AgentManager:
     ) -> AgentResult:
         self._ensure_agents()
         from ..repositories import get_api_key_repo, get_system_prompt_repo
-        print(f"\n[MANAGER] run_text: provider={provider}, manual_api_key={'PROVIDED' if api_key else 'NONE'}", flush=True)
 
         api_keys = cast(dict[str, str], get_api_key_repo().get_all())
         if provider and api_key:
             caps = provider_registry.get(provider)
-            if caps.api_key_name:
+            if caps and caps.api_key_name:
                 api_keys[caps.api_key_name] = api_key
-                print(f"[MANAGER] Added manual api_key for {provider} to key_name {caps.api_key_name}", flush=True)
-
-        print(f"[MANAGER] Keys available: {list(api_keys.keys())}", flush=True)
 
         if not self.text_agent:
             raise RuntimeError("TextAgent is not available.")
 
         opts = options.dict() if isinstance(options, TextOptions) else options
-        print(f"[MANAGER] Calling text_agent.run with provider={provider}, model={opts.get('model')}")
 
         # Fallback logic for text
         effective_system_prompt = system_prompt
@@ -152,7 +147,7 @@ class AgentManager:
         api_keys = cast(dict[str, str], get_api_key_repo().get_all())
         if provider and api_key:
             caps = provider_registry.get(provider)
-            if caps.api_key_name:
+            if caps and caps.api_key_name:
                 api_keys[caps.api_key_name] = api_key
 
         if not self.image_agent:
@@ -190,7 +185,7 @@ class AgentManager:
         api_keys = cast(dict[str, str], get_api_key_repo().get_all())
         if provider and api_key:
             caps = provider_registry.get(provider)
-            if caps.api_key_name:
+            if caps and caps.api_key_name:
                 api_keys[caps.api_key_name] = api_key
 
         if not self.audio_agent:
@@ -209,7 +204,8 @@ class AgentManager:
                 try:
                     if current_provider:
                         caps = provider_registry.get(current_provider)
-                        is_music = Modality.MUSIC in caps.modalities or caps.extra.get("is_music", False)
+                        if caps:
+                            is_music = Modality.MUSIC in caps.modalities or caps.extra.get("is_music", False)
                 except Exception:
                     pass
 
@@ -295,17 +291,12 @@ class AgentManager:
         """
         self._ensure_agents()
         from ..repositories import get_api_key_repo, get_system_prompt_repo
-        msg = f"\n[MANAGER] run_unity: provider={provider}, manual_api_key={'PROVIDED' if api_key else 'NONE'}"
-        print(msg, flush=True)
 
         api_keys = cast(dict[str, str], get_api_key_repo().get_all())
         if provider and api_key:
             caps = provider_registry.get(provider)
-            if caps.api_key_name:
+            if caps and caps.api_key_name:
                 api_keys[caps.api_key_name] = api_key
-                print(f"[MANAGER] Added manual api_key for {provider} to key_name {caps.api_key_name}", flush=True)
-
-        print(f"[MANAGER] Keys available: {list(api_keys.keys())}", flush=True)
 
         if not self.unity_agent:
             raise RuntimeError("UnityAgent is not available.")

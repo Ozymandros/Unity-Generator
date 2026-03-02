@@ -262,14 +262,10 @@ class ProviderRegistry:
                     provider=preferred_lower,
                     modality=modality.value,
                 )
-            print(f"[RESOLVE] Checking preferred: {preferred_lower}")
             key_name = caps.api_key_name
             api_key = api_keys.get(key_name) if key_name else None
             if (key_name and api_key) or not caps.requires_api_key:
-                print(f"[RESOLVE] Success! Returning {preferred_lower} (Key required={caps.requires_api_key})")
                 return preferred_lower
-
-            print(f"[RESOLVE] Preferred {preferred_lower} has no key ({key_name}). Falling back to priority list.")
 
         for name in self._priorities.get(modality, []):
             caps = self._providers[name]
@@ -310,10 +306,8 @@ class ProviderRegistry:
             ReplicateTextToAudio,
             ReplicateTextToImage,
         )
-        print(f"\n[REGISTRY] create_chat_service: provider={provider}, model_id={model_id}", flush=True)
         caps = self.get(provider)
         target_model = model_id or caps.default_models[Modality.LLM]
-        print(f"[REGISTRY] Using target_model: {target_model}", flush=True)
 
         if provider == "replicate":
             return ReplicateChatCompletion(

@@ -1,26 +1,30 @@
-
 import logging
+from contextlib import asynccontextmanager
+
 from semantic_kernel.connectors.mcp import MCPStdioPlugin
 
-def create_unity_mcp_plugin() -> MCPStdioPlugin:
+LOGGER = logging.getLogger("unity_mcp_plugin")
+
+
+@asynccontextmanager
+async def create_unity_mcp_plugin():
     """
-    Crea el plugin fent servir l'eina global instal·lada al sistema.
-    Net, portàtil i professional.
+    Async context manager for the Unity MCP plugin (global unity-mcp tool).
+    Use with: async with create_unity_mcp_plugin() as mcp_plugin: ...
     """
-    logger = logging.getLogger("unity_mcp_plugin")
-    logger.info("Creating UnityMCP plugin...")
+    LOGGER.info("Creating UnityMCP plugin...")
     try:
         plugin = MCPStdioPlugin(
             name="UnityMCP",
             description="Unity Editor automation tools",
-            # Simplement fem servir el nom de l'eina global
-            command="unity-mcp", 
+            command="unity-mcp",
             args=[],
             load_tools=True,
             request_timeout=30,
         )
-        logger.info("UnityMCP plugin created successfully.")
-        return plugin
+        async with plugin as mcp_plugin:
+            LOGGER.info("UnityMCP plugin created successfully.")
+            yield mcp_plugin
     except Exception as e:
-        logger.error(f"Failed to create UnityMCP plugin: {e}")
+        LOGGER.error("Failed to create UnityMCP plugin: %s", e)
         raise

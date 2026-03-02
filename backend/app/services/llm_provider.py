@@ -36,19 +36,13 @@ def generate_text(
     """
     Generate text using the best available LLM provider via Semantic Kernel.
     """
-    # Selection logic
-    print(f"\n[DEBUG] --- LLM Request Resolution ---", flush=True)
-    print(f"[DEBUG] Preferred provider from request: {provider}", flush=True)
     selected = provider_registry.resolve(Modality.LLM, api_keys, preferred=provider)
-    print(f"[DEBUG] RESOLVED PROVIDER: {selected}", flush=True)
 
     opts = options if isinstance(options, dict) else options.model_dump()
     target_model = opts.get("model") or provider_registry.get(selected).default_models[Modality.LLM]
-    print(f"[DEBUG] TARGET MODEL: {target_model}", flush=True)
 
     key_name = provider_registry.get(selected).api_key_name
     api_key = api_keys.get(key_name, "") if key_name else ""
-    print(f"[DEBUG] API KEY NAME: {key_name} (Found: {'YES' if api_key else 'NO'})", flush=True)
 
     # Create SK service
     service = provider_registry.create_chat_service(
