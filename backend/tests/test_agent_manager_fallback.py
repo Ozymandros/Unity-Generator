@@ -29,9 +29,10 @@ async def test_run_unity_fallback_system_prompt(mock_get_prompt_repo, mock_get_k
         )
 
         mock_get_prompt_repo.return_value.get.assert_called_with("code")
-        # Check the system_prompt argument (5th positional: args[4])
+        # Check the system_prompt (5th) and project_path (6th) arguments
         args, _ = mock_run.call_args
         assert args[4] == "Default System Prompt"
+        assert args[5] is None  # project_path not passed
 
 
 @pytest.mark.asyncio
@@ -59,3 +60,4 @@ async def test_run_unity_explicit_system_prompt(mock_get_prompt_repo, mock_get_k
 
         args, _ = mock_run.call_args
         assert args[4] == "Explicit System Prompt"
+        assert args[5] is None  # project_path not passed

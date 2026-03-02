@@ -17,10 +17,23 @@ const emitUpdate = async (wrapper: VueWrapper<unknown>, label: string, value: un
   await (wrapper.vm as unknown as { $nextTick: () => Promise<void> }).$nextTick();
 };
 
+const SESSION_NAME_KEY = "unity_session_project_name";
+const SESSION_PATH_KEY = "unity_session_project_path";
+
 describe("UnityProjectPanel", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     (window as unknown as { __TAURI__?: unknown }).__TAURI__ = undefined;
+    // Align with useSessionProject: default name so panel and finalize tests see "UnityProject"
+    vi.stubGlobal("sessionStorage", {
+      getItem: (k: string) =>
+        k === SESSION_NAME_KEY ? "UnityProject" : k === SESSION_PATH_KEY ? "" : null,
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+      length: 0,
+      key: vi.fn(),
+    });
   });
 
   const mountPanel = () => mount(UnityProjectPanel, {

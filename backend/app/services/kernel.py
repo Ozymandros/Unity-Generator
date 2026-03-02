@@ -78,10 +78,13 @@ def create_kernel(settings: dict[str, Any]) -> Any:
             UnityProjectPlugin,
         )
 
-        # UnityProjectPlugin
+        # UnityProjectPlugin: use settings, else DB/env default (./output)
         output_root = settings.get("output_root")
-        if output_root:
+        if output_root is not None:
             output_root = Path(output_root)
+        else:
+            from ..core.config import get_output_dir
+            output_root = get_output_dir()
         unity_project_plugin = UnityProjectPlugin(output_root=output_root)
         kernel.add_plugin(unity_project_plugin, plugin_name="UnityProject")
         LOGGER.debug("Registered UnityProjectPlugin")

@@ -2,9 +2,11 @@ import { computed, ref, watch, onMounted } from "vue";
 import { createScene } from "@/api/client";
 import { TEMPERATURE_PRESETS } from "@/constants/providers";
 import { useIntelligenceStore } from "@/store/intelligenceStore";
+import { useSessionProject } from "@/composables/useSessionProject";
 
 export function useScenesPanel() {
   const store = useIntelligenceStore();
+  const { projectName } = useSessionProject();
 
   const prompt = ref("");
   const provider = ref("");
@@ -78,6 +80,7 @@ export function useScenesPanel() {
         system_prompt: systemPrompt.value || undefined,
         provider: provider.value || undefined,
         api_key: apiKey.value || undefined,
+        project_name: projectName.value || undefined,
         options: {
              model: model.value || undefined,
              temperature: temperature.value

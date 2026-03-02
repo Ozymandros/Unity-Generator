@@ -29,10 +29,28 @@ def get_logs_dir() -> Path:
 
 
 def get_output_dir() -> Path:
+    """
+    Base path for generated Unity projects. Relative paths are resolved against repo root.
+    Precedence: DB preference ``output_base_path`` → env ``OUTPUT_DIR`` → ``./output``.
+    """
+    try:
+        from .db import get_pref
+        pref = get_pref("output_base_path")
+        if pref and pref.strip():
+            p = Path(pref.strip())
+            if not p.is_absolute():
+                p = get_repo_root() / p
+            resolved = p.resolve()
+            return resolved
+    except Exception:
+        pass
     env_path = os.environ.get("OUTPUT_DIR")
     if env_path:
-        return Path(env_path)
-    return get_repo_root() / "output"
+        p = Path(env_path)
+        if not p.is_absolute():
+            p = get_repo_root() / p
+        return p.resolve()
+    return (get_repo_root() / "output").resolve()
 
 
 def get_templates_dir() -> Path:

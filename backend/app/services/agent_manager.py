@@ -91,7 +91,11 @@ class AgentManager:
         final_result = AgentResult(**result) if isinstance(result, dict) else result
 
         if project_path:
-            save_asset_to_project(project_path, "code", final_result)
+            rel = save_asset_to_project(project_path, "code", final_result)
+            if rel:
+                LOGGER.info("Saved code asset to project: %s", rel)
+        else:
+            LOGGER.debug("No project_path provided; code will not be saved to a Unity project.")
 
         return final_result
 
@@ -129,7 +133,11 @@ class AgentManager:
         final_result = AgentResult(**result) if isinstance(result, dict) else result
 
         if project_path:
-            save_asset_to_project(project_path, "text", final_result)
+            rel = save_asset_to_project(project_path, "text", final_result)
+            if rel:
+                LOGGER.info("Saved text asset to project: %s", rel)
+        else:
+            LOGGER.debug("No project_path provided; text will not be saved to a Unity project.")
 
         return final_result
 
@@ -166,7 +174,11 @@ class AgentManager:
         final_result = AgentResult(**result) if isinstance(result, dict) else result
 
         if project_path:
-            save_asset_to_project(project_path, "image", final_result)
+            rel = save_asset_to_project(project_path, "image", final_result)
+            if rel:
+                LOGGER.info("Saved image asset to project: %s", rel)
+        else:
+            LOGGER.debug("No project_path provided; image will not be saved to a Unity project.")
 
         return final_result
 
@@ -218,7 +230,11 @@ class AgentManager:
         final_result = AgentResult(**result) if isinstance(result, dict) else result
 
         if project_path:
-            save_asset_to_project(project_path, "audio", final_result)
+            rel = save_asset_to_project(project_path, "audio", final_result)
+            if rel:
+                LOGGER.info("Saved audio asset to project: %s", rel)
+        else:
+            LOGGER.debug("No project_path provided; audio will not be saved to a Unity project.")
 
         return final_result
 
@@ -285,6 +301,7 @@ class AgentManager:
         options: dict[str, Any],
         api_key: str | None = None,
         system_prompt: str | None = None,
+        project_path: str | None = None,
     ) -> AgentResult:
         """
         Runs the Unity Agent to orchestrate editor actions.
@@ -308,7 +325,7 @@ class AgentManager:
 
         # UnityAgent.run is async and returns a dict
         result = await self.unity_agent.run(
-            prompt, provider, options, api_keys, effective_system_prompt
+            prompt, provider, options, api_keys, effective_system_prompt, project_path
         )
         # Ensure result is dict for type safety
         if not isinstance(result, dict):

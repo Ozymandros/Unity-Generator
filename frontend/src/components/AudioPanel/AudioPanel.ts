@@ -1,10 +1,12 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { generateAudio } from "@/api/client";
+import { useSessionProject } from "@/composables/useSessionProject";
 import { projectStore } from "@/store/projectStore";
 import { useIntelligenceStore } from "@/store/intelligenceStore";
 
 export function useAudioPanel() {
   const store = useIntelligenceStore();
+  const { projectName: sessionProjectName } = useSessionProject();
 
   const prompt = ref("");
   const modality = ref<"audio" | "music">("audio");
@@ -84,7 +86,7 @@ export function useAudioPanel() {
         options: modality.value === "audio"
           ? { voice_id: voiceId.value || undefined, stability: stability.value, api_key: apiKey.value || undefined }
           : { model: musicModel.value || undefined, stability: stability.value, api_key: apiKey.value || undefined },
-        project_path: (autoSaveToProject.value && projectStore.activeProjectPath) || undefined
+        project_name: (autoSaveToProject.value && (projectStore.activeProjectName || sessionProjectName.value)) || undefined
       });
       if (!response.success) {
         tone.value = "error";

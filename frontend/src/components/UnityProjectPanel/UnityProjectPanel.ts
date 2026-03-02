@@ -21,9 +21,10 @@ import {
   UNITY_PLATFORMS 
 } from "@/constants/unity";
 import { setActiveProject } from "@/store/projectStore";
+import { useSessionProject } from "@/composables/useSessionProject";
 
 export function useUnityProjectPanel() {
-  const projectName = ref("UnityProject");
+  const { projectName, projectPath, setProjectPath } = useSessionProject();
 
   // Unity Engine Settings
   const settings = reactive({
@@ -130,10 +131,12 @@ export function useUnityProjectPanel() {
       }
       status.value = "Unity project generated.";
       result.value = JSON.stringify(response.data || {}, null, 2);
-      lastProjectPath.value = String(response.data?.project_path || "");
-      if (lastProjectPath.value) {
-        setActiveProject(projectName.value, lastProjectPath.value);
-    }
+      const path = String(response.data?.project_path || "");
+      lastProjectPath.value = path;
+      if (path) {
+        setProjectPath(path);
+        setActiveProject(projectName.value, path);
+      }
     } catch (error) {
       tone.value = UI_TONE.ERROR;
       status.value = String(error);
@@ -156,7 +159,7 @@ export function useUnityProjectPanel() {
 
       const response = await finalizeProject({
         project_name: projectName.value,
-        project_path: lastProjectPath.value || undefined,
+        project_path: lastProjectPath.value || projectPath.value || undefined,
         unity_settings: {
           install_packages: settings.installPackages,
           generate_scene: settings.generateScene,
@@ -211,7 +214,9 @@ export function useUnityProjectPanel() {
         stopPolling();
         tone.value = UI_TONE.OK;
         status.value = "Finalization completed successfully!";
-        lastProjectPath.value = statusResp.project_path || "";
+        const path = statusResp.project_path || "";
+        lastProjectPath.value = path;
+        if (path) setProjectPath(path);
       } else if (statusResp.status === FINALIZE_STATUS.FAILED) {
         stopPolling();
         tone.value = UI_TONE.ERROR;
@@ -227,9 +232,10 @@ export function useUnityProjectPanel() {
 
   async function openOutputFolder() {
     try {
+      const pathForFolder = lastProjectPath.value || projectPath.value;
       const response: { success: boolean; data?: Record<string, unknown> | null; error?: string | null } =
-        lastProjectPath.value
-          ? { success: true, data: { path: lastProjectPath.value } }
+        pathForFolder
+          ? { success: true, data: { path: pathForFolder } }
           : await getLatestOutput();
 
       if (!response.success) {

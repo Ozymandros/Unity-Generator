@@ -1,11 +1,13 @@
 import { computed, ref, watch, onMounted } from "vue";
 import { generateCode } from "@/api/client";
 import { TEMPERATURE_PRESETS, LENGTH_PRESETS } from "@/constants/providers";
+import { useSessionProject } from "@/composables/useSessionProject";
 import { projectStore } from "@/store/projectStore";
 import { useIntelligenceStore } from "@/store/intelligenceStore";
 
 export function useCodePanel() {
   const store = useIntelligenceStore();
+  const { projectName: sessionProjectName } = useSessionProject();
   const prompt = ref("");
   const provider = ref("");
   const model = ref("");
@@ -72,7 +74,7 @@ export function useCodePanel() {
           temperature: temperature.value,
           max_tokens: maxTokens.value,
         },
-        project_path: (autoSaveToProject.value && projectStore.activeProjectPath) || undefined
+        project_name: (autoSaveToProject.value && (projectStore.activeProjectName || sessionProjectName.value)) || undefined
       });
       if (!response.success) {
         tone.value = "error";

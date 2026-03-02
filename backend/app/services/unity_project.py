@@ -8,7 +8,7 @@ from typing import Any
 
 import requests
 
-from ..core.config import get_repo_root
+from ..core.config import get_output_dir, get_repo_root
 
 
 def _safe_name(value: str) -> str:
@@ -214,8 +214,7 @@ def create_unity_project(
     image_data: Any | None,
     audio_data: dict[str, Any] | None,
 ) -> dict[str, Any]:
-    root = get_repo_root()
-    output_root = root / "output"
+    output_root = get_output_dir()
     output_root.mkdir(parents=True, exist_ok=True)
 
     folder_name = f"{_safe_name(project_name)}_{_timestamp()}"
@@ -260,9 +259,17 @@ def create_unity_project(
     }
 
 
+def resolve_project_path(project_name: str) -> str:
+    """
+    Always: project_path = base_path + project_name (safe folder name).
+    Use this everywhere a Unity project path is needed for saving/scenes.
+    """
+    base = get_output_dir()
+    return str(base / _safe_name(project_name))
+
+
 def get_latest_project_path() -> str | None:
-    root = get_repo_root()
-    output_root = root / "output"
+    output_root = get_output_dir()
     if not output_root.exists():
         return None
     candidates = [p for p in output_root.iterdir() if p.is_dir()]

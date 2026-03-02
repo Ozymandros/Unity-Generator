@@ -35,13 +35,14 @@ def generate_text(request: GenerationRequest) -> GenerationResponse:
         if isinstance(options, dict):
             options = TextOptions(**options)
 
+        project_path = resolve_project_path(request.project_name) if request.project_name else None
         data = agent_manager.run_text(
             request.prompt,
             provider,
             options,
             request.api_key,
             request.system_prompt,
-            request.project_path,
+            project_path,
         )
         return ok_response(data)
     except Exception as exc:
@@ -60,13 +61,14 @@ def generate_code(request: GenerationRequest) -> GenerationResponse:
         if isinstance(options, dict):
             options = CodeOptions(**options)
 
+        project_path = resolve_project_path(request.project_name) if request.project_name else None
         data = agent_manager.run_code(
             request.prompt,
             provider,
             options,
             request.api_key,
             request.system_prompt,
-            request.project_path,
+            project_path,
         )
         return ok_response(data)
     except Exception as exc:
@@ -85,13 +87,14 @@ def generate_image(request: GenerationRequest) -> GenerationResponse:
         if isinstance(options, dict):
             options = ImageOptions(**options)
 
+        project_path = resolve_project_path(request.project_name) if request.project_name else None
         data = agent_manager.run_image(
             request.prompt,
             provider,
             options,
             request.api_key,
             request.system_prompt,
-            request.project_path,
+            project_path,
         )
         return ok_response(data)
     except Exception as exc:
@@ -110,13 +113,14 @@ def generate_audio(request: GenerationRequest) -> GenerationResponse:
         if isinstance(options, dict):
             options = AudioOptions(**options)
 
+        project_path = resolve_project_path(request.project_name) if request.project_name else None
         data = agent_manager.run_audio(
             request.prompt,
             provider,
             options,
             request.api_key,
             request.system_prompt,
-            request.project_path,
+            project_path,
             request.modality,
         )
         return ok_response(data)
@@ -136,13 +140,14 @@ def generate_video(request: GenerationRequest) -> GenerationResponse:
         if isinstance(options, dict):
             options = VideoOptions(**options)
 
+        project_path = resolve_project_path(request.project_name) if request.project_name else None
         data = agent_manager.run_video(
             request.prompt,
             provider,
             options,
             request.api_key,
             request.system_prompt,
-            request.project_path,
+            project_path,
         )
         return ok_response(data)
     except Exception as exc:
@@ -159,6 +164,7 @@ def generate_sprites(request: SpritesRequest) -> GenerationResponse:
         provider = request.provider or get_pref("preferred_image_provider")
         api_key = request.api_key
 
+        project_path = resolve_project_path(request.project_name) if request.project_name else None
         data = sprite_service.generate_sprite(
             request.prompt,
             provider,
@@ -166,7 +172,7 @@ def generate_sprites(request: SpritesRequest) -> GenerationResponse:
             request.resolution,
             request.options,
             system_prompt=request.system_prompt,
-            project_path=request.project_path,
+            project_path=project_path,
         )
         result_data = data.dict() if hasattr(data, 'dict') else data
         return GenerationResponse(

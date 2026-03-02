@@ -1,10 +1,12 @@
 import { computed, ref, onMounted, watch, type CSSProperties } from "vue";
 import { generateSprites } from "@/api/client";
+import { useSessionProject } from "@/composables/useSessionProject";
 import { projectStore } from "@/store/projectStore";
 import { useIntelligenceStore } from "@/store/intelligenceStore";
 
 export function useSpritesPanel() {
   const store = useIntelligenceStore();
+  const { projectName: sessionProjectName } = useSessionProject();
 
   const prompt = ref("");
   const provider = ref("");
@@ -83,7 +85,7 @@ export function useSpritesPanel() {
           palette_size: paletteSize.value,
           auto_crop: autoCrop.value
         },
-        project_path: (autoSaveToProject.value && projectStore.activeProjectPath) || undefined
+        project_name: (autoSaveToProject.value && (projectStore.activeProjectName || sessionProjectName.value)) || undefined
       });
 
       if (!response.success) {

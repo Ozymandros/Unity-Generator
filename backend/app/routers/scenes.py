@@ -10,6 +10,7 @@ from ..schemas import (
     ok_response,
 )
 from ..services import agent_manager_instance as agent_manager
+from ..services.unity_project import resolve_project_path
 
 router = APIRouter(tags=["scenes"])
 
@@ -28,6 +29,8 @@ async def create_scene(request: CreateSceneRequest) -> GenerationResponse:
             )
 
         options = request.options
+        # Always: project_path = base_path + project_name
+        project_path = resolve_project_path(request.project_name or "UnityProject")
 
         data = await agent_manager.run_unity(
             prompt=request.prompt,
@@ -35,6 +38,7 @@ async def create_scene(request: CreateSceneRequest) -> GenerationResponse:
             options=options,
             api_key=request.api_key,
             system_prompt=request.system_prompt,
+            project_path=project_path,
         )
         # Agent returns error in raw when Unity task fails; treat as error response
         raw = getattr(data, "raw", None) or {}

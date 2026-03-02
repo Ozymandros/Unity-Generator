@@ -1,11 +1,13 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { generateImage } from "@/api/client";
 import { ASPECT_RATIOS, QUALITY_OPTIONS } from "@/constants/providers";
+import { useSessionProject } from "@/composables/useSessionProject";
 import { projectStore } from "@/store/projectStore";
 import { useIntelligenceStore } from "@/store/intelligenceStore";
 
 export function useImagePanel() {
   const store = useIntelligenceStore();
+  const { projectName: sessionProjectName } = useSessionProject();
 
   const prompt = ref("");
   const provider = ref("");
@@ -70,7 +72,7 @@ export function useImagePanel() {
           quality: quality.value,
           api_key: apiKey.value || undefined,
         },
-        project_path: (autoSaveToProject.value && projectStore.activeProjectPath) || undefined
+        project_name: (autoSaveToProject.value && (projectStore.activeProjectName || sessionProjectName.value)) || undefined
       });
       if (!response.success) {
         tone.value = "error";

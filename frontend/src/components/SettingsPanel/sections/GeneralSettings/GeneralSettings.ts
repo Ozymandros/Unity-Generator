@@ -9,6 +9,9 @@ export function useGeneralSettings() {
     localStorage.getItem("backendUrl") || "http://127.0.0.1:8000",
   );
 
+  /** Base path for generated Unity projects (relative, e.g. ./output). Stored in DB. */
+  const outputBasePath = ref("./output");
+
   // Selection refs (staged for saving)
   const preferredLlm = ref("");
   const preferredLlmModel = ref("");
@@ -60,6 +63,9 @@ export function useGeneralSettings() {
       const music = store.getPreferredEngine("music");
       preferredMusic.value = music.provider;
       preferredMusicModel.value = music.model;
+
+      const basePath = store.getPreference("output_base_path");
+      if (basePath) outputBasePath.value = basePath;
     } catch (e) {
       console.error("Failed to load settings via store", e);
     }
@@ -98,6 +104,7 @@ export function useGeneralSettings() {
       await setPref("preferred_audio_model", preferredAudioModel.value);
       await setPref("preferred_music_provider", preferredMusic.value);
       await setPref("preferred_music_model", preferredMusicModel.value);
+      await setPref("output_base_path", outputBasePath.value.trim() || "./output");
 
       await store.refresh();
       status.value = "Preferences saved successfully.";
@@ -114,6 +121,7 @@ export function useGeneralSettings() {
 
   return {
     backendUrl,
+    outputBasePath,
     providers,
     llmProviders,
     llmModels,

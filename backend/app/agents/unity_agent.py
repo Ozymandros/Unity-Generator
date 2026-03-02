@@ -119,6 +119,7 @@ class UnityAgent:
         options: dict[str, Any],
         api_keys: dict[str, str],
         system_prompt: str | None = None,
+        project_path: str | None = None,
     ) -> dict[str, Any]:
         """
         Execute a Unity automation task based on the user prompt.
@@ -177,6 +178,20 @@ class UnityAgent:
             system_prompt
             or "You are a Unity Editor assistant. Use your tools to help the user with Unity tasks."
         )
+        if project_path:
+            normalized_path = project_path.replace("\\", "/")
+            system_message += (
+                f" The Unity project path (project root, folder containing Assets/) is: {normalized_path}. "
+                "Use this path when calling MCP tools that require a project path (or projectPath). "
+                "Do not use the MCP server executable path or any NuGet/nupkg path. Do not ask the user for the path."
+            )
+        # Explicit instruction so the model calls creation/write tools instead of stopping after ping or get_project_info
+        system_message += (
+            " You must try touse available tools to create or modify content in the project. Do not reply with only text. "
+            "After any connectivity or project-info check, call the appropriate tools (e.g. create_scene, create_gameobject, "
+            "create_script, or other tools that write or create assets) to fulfill the user's request. "
+            "Continue calling tools until the requested scene, objects, or scripts are created."
+        )
         full_prompt = f"{system_message}\n\nUser: {prompt}"
 
         try:
@@ -194,6 +209,7 @@ class UnityAgent:
 
             if use_tools:
                 # Provider supports tool use — register MCP plugin
+                LOGGER.info("Provider '%s' supports tool use; registering Unity MCP plugin.", provider)
                 async with create_unity_mcp_plugin() as mcp_plugin:
                     kernel.add_plugin(mcp_plugin, plugin_name="UnityMCP")
 

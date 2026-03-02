@@ -9,7 +9,8 @@ client = TestClient(app)
 
 def test_create_scene_success():
     with patch("app.routers.scenes.agent_manager") as mock_agent_manager, \
-         patch("app.routers.scenes.get_pref") as mock_get_pref:
+         patch("app.routers.scenes.get_pref") as mock_get_pref, \
+         patch("app.routers.scenes.resolve_project_path", return_value="/output/UnityProject"):
 
         # Mock preferences to return a provider
         mock_get_pref.side_effect = lambda key: "openai" if key == "preferred_llm_provider" else None
@@ -37,12 +38,40 @@ def test_create_scene_success():
         data = response.json()
         assert data["success"] is True
 
-        # Verify agent was called with correct args
+        # Verify agent was called with correct args; project_path = base + project_name (default UnityProject)
         mock_agent_manager.run_unity.assert_called_once()
         call_args = mock_agent_manager.run_unity.call_args
         assert call_args.kwargs["prompt"] == "Create a red cube"
-        assert call_args.kwargs["provider"] == "openai" # From mocked pref
+        assert call_args.kwargs["provider"] == "openai"  # From mocked pref
         assert call_args.kwargs["options"]["model"] == "gpt-4"
+        assert call_args.kwargs["project_path"] == "/output/UnityProject"
+
+
+def test_create_scene_project_name_resolved_to_path():
+    """project_path is always base_path + project_name; request.project_name is used."""
+    with patch("app.routers.scenes.agent_manager") as mock_agent_manager, \
+         patch("app.routers.scenes.get_pref") as mock_get_pref, \
+         patch("app.routers.scenes.resolve_project_path", return_value="C:/output/MyGame"):
+
+        mock_get_pref.side_effect = lambda key: "openai" if key == "preferred_llm_provider" else None
+        mock_agent_manager.run_unity = MagicMock()
+        async def mock_run(*args, **kwargs):
+            return {"content": "OK", "files": []}
+        mock_agent_manager.run_unity.side_effect = mock_run
+
+        response = client.post(
+            "/api/scenes/create",
+            json={
+                "prompt": "Add a cube",
+                "project_name": "MyGame",
+                "options": {"model": "gpt-4"},
+            },
+        )
+
+        assert response.status_code == 200
+        mock_agent_manager.run_unity.assert_called_once()
+        assert mock_agent_manager.run_unity.call_args.kwargs["project_path"] == "C:/output/MyGame"
+
 
 def test_create_scene_missing_config():
     with patch("app.routers.scenes.get_pref") as mock_get_pref:
@@ -62,7 +91,8 @@ def test_create_scene_missing_config():
 
 def test_create_scene_with_api_key():
     with patch("app.routers.scenes.agent_manager") as mock_agent_manager, \
-         patch("app.routers.scenes.get_pref") as mock_get_pref:
+         patch("app.routers.scenes.get_pref") as mock_get_pref, \
+         patch("app.routers.scenes.resolve_project_path", return_value="/output/UnityProject"):
 
         mock_get_pref.return_value = "openai"
         mock_agent_manager.run_unity = MagicMock()
@@ -85,7 +115,8 @@ def test_create_scene_with_api_key():
         assert call_args.kwargs["api_key"] == "sk-12345"
 
 def test_create_scene_with_provider_and_options():
-    with patch("app.routers.scenes.agent_manager") as mock_agent_manager:
+    with patch("app.routers.scenes.agent_manager") as mock_agent_manager, \
+         patch("app.routers.scenes.resolve_project_path", return_value="/output/UnityProject"):
         mock_agent_manager.run_unity = MagicMock()
         async def mock_run(*args, **kwargs):
             return {"content": "Success"}
@@ -108,7 +139,8 @@ def test_create_scene_with_provider_and_options():
 
 def test_create_scene_failure():
     with patch("app.routers.scenes.agent_manager") as mock_agent_manager, \
-         patch("app.routers.scenes.get_pref") as mock_get_pref:
+         patch("app.routers.scenes.get_pref") as mock_get_pref, \
+         patch("app.routers.scenes.resolve_project_path", return_value="/output/UnityProject"):
 
         mock_get_pref.return_value = "openai"
         mock_agent_manager.run_unity.side_effect = Exception("Unity error")
@@ -127,7 +159,8 @@ def test_create_scene_failure():
 def test_create_scene_agent_returns_error_in_raw():
     """When run_unity returns a result with error in raw, API returns success=False."""
     with patch("app.routers.scenes.agent_manager") as mock_agent_manager, \
-         patch("app.routers.scenes.get_pref") as mock_get_pref:
+         patch("app.routers.scenes.get_pref") as mock_get_pref, \
+         patch("app.routers.scenes.resolve_project_path", return_value="/output/UnityProject"):
 
         mock_get_pref.return_value = "openai"
         mock_agent_manager.run_unity = MagicMock()

@@ -144,6 +144,14 @@ def test_save_audio_with_url(tmp_path: Path) -> None:
         mock_download.assert_called_once()
 
 
+def test_resolve_project_path(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """resolve_project_path returns base_path + safe(project_name) always."""
+    with patch.object(unity_project, "get_output_dir", return_value=tmp_path):
+        assert unity_project.resolve_project_path("MyGame") == str(tmp_path / "MyGame")
+        assert unity_project.resolve_project_path("My Project!") == str(tmp_path / "My_Project")
+        assert unity_project.resolve_project_path("") == str(tmp_path / "UnityProject")
+
+
 def test_get_latest_project_path_empty(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test get_latest_project_path returns None when no projects."""
     monkeypatch.setattr(unity_project, "get_repo_root", lambda: tmp_path)

@@ -11,6 +11,8 @@ export type CreateSceneRequest = {
   options?: Record<string, unknown>;
   api_key?: string;
   system_prompt?: string;
+  project_name?: string;  // backend always uses base_path + project_name
+  project_path?: string;  // ignored by backend
 };
 
 export function createScene(body: CreateSceneRequest) {
@@ -24,7 +26,8 @@ export type GenerationRequest = {
   api_key?: string;
   options?: Record<string, unknown>;
   system_prompt?: string;
-  project_path?: string;
+  project_name?: string;  // backend always uses base_path + project_name
+  project_path?: string;  // ignored by backend
 };
 
 function getBackendUrl(): string {
@@ -66,7 +69,8 @@ export type SpritesRequest = {
   resolution: number;
   options?: Record<string, unknown>;
   system_prompt?: string;
-  project_path?: string;
+  project_name?: string;  // backend always uses base_path + project_name
+  project_path?: string;  // ignored by backend
 };
 
 export function generateSprites(body: SpritesRequest) {

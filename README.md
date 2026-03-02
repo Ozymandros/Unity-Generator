@@ -89,7 +89,7 @@ All contributions must follow the **SRP**, **KISS**, and **Clean Architecture** 
 3. Agents call provider wrappers (LLM, image, audio) using your keys.
 4. Responses are normalized and returned to the UI.
 5. Unity project requests are written to `output/` with Unity metadata.
-6. **Active Projects**: Individual assets can be auto-saved to any active Unity project workspace.
+6. **Active Projects**: Individual assets can be auto-saved to any active Unity project workspace. The UI keeps a session-scoped project name and path; when you create a scene, that path is sent to the backend and injected into the Unity agent so MCP tools (e.g. save_*, contract) receive the correct project path.
 
 ## Configuration
 

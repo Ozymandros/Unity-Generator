@@ -3,6 +3,7 @@ import { useGeneralSettings } from "./GeneralSettings";
 
 const {
   backendUrl,
+  outputBasePath,
   providers,
   preferredLlm,
   preferredLlmModel,
@@ -49,6 +50,16 @@ const {
         persistent-hint
         hint="The address of your Unity Generator backend service"
         rounded="lg"
+      ></v-text-field>
+      <v-text-field
+        v-model="outputBasePath"
+        label="Base path (output)"
+        placeholder="./output"
+        variant="outlined"
+        persistent-hint
+        hint="Relative path for generated Unity projects (e.g. ./output). Stored in database."
+        rounded="lg"
+        class="mt-4"
       ></v-text-field>
     </v-card>
 

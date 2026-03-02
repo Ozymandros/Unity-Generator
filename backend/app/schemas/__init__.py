@@ -109,7 +109,8 @@ class GenerationRequest(BaseModel):
     api_key: str | None = None
     options: dict[str, Any] = Field(default_factory=dict)
     system_prompt: str | None = Field(default=None, max_length=4000)
-    project_path: str | None = None
+    project_name: str | None = None  # project_path is always base_path + project_name
+    project_path: str | None = None  # ignored; kept for API compatibility
 
 
 class GenerationResponse(BaseModel):
@@ -185,7 +186,8 @@ class SpritesRequest(BaseModel):
     resolution: int = 64
     options: dict[str, Any] = Field(default_factory=dict)
     system_prompt: str | None = None
-    project_path: str | None = None
+    project_name: str | None = None  # project_path is always base_path + project_name
+    project_path: str | None = None  # ignored; kept for API compatibility
 
 
 class CreateSceneRequest(BaseModel):
@@ -194,6 +196,8 @@ class CreateSceneRequest(BaseModel):
     options: dict[str, Any] = Field(default_factory=dict)
     api_key: str | None = None
     system_prompt: str | None = None
+    project_name: str | None = None  # project_path is always base_path + project_name
+    project_path: str | None = None  # ignored; kept for API compatibility
 
 
 

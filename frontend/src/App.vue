@@ -9,8 +9,10 @@ import AudioPanel from "./components/AudioPanel/AudioPanel.vue";
 import SpritesPanel from "./components/SpritesPanel/SpritesPanel.vue";
 import UnityProjectPanel from "./components/UnityProjectPanel/UnityProjectPanel.vue";
 import { useApp } from "./App";
+import { useSessionProject } from "./composables/useSessionProject";
 
 const { tabs, active, backendStatus, setActive } = useApp();
+const { projectName } = useSessionProject();
 const drawer = ref(true);
 
 const getTabIcon = (tab: string) => {
@@ -34,8 +36,15 @@ const getTabIcon = (tab: string) => {
     <v-navigation-drawer v-model="drawer" permanent width="260" color="surface" border="0" class="app-sidebar">
       <div class="pa-6 d-flex align-center">
         <v-icon color="primary" size="32" class="mr-3">mdi-gravity</v-icon>
-        <div>
-          <h1 class="text-h6 font-weight-bold line-height-1 mb-0">Antigravity</h1>
+        <div class="flex-grow-1 min-width-0">
+          <v-text-field
+            v-model="projectName"
+            variant="plain"
+            hide-details
+            density="compact"
+            class="project-name-field text-h6 font-weight-bold line-height-1"
+            placeholder="Project name"
+          />
           <div class="d-flex align-center">
             <v-badge dot :color="backendStatus === 'online' ? 'success' : 'error'" inline class="mr-2"></v-badge>
             <span class="text-caption text-grey">{{ backendStatus === 'online' ? 'Online' : 'Offline' }}</span>
@@ -85,6 +94,22 @@ const getTabIcon = (tab: string) => {
 /* Global App Styles */
 .line-height-1 {
   line-height: 1;
+}
+
+/* Sidebar project name: borderless by default, border on hover/focus */
+.project-name-field :deep(.v-field__overlay) {
+  opacity: 0;
+}
+.project-name-field:hover :deep(.v-field__overlay),
+.project-name-field.v-field--focused :deep(.v-field__overlay) {
+  opacity: 1;
+}
+.project-name-field :deep(.v-field) {
+  --v-field-border-opacity: 0;
+}
+.project-name-field:hover :deep(.v-field),
+.project-name-field.v-field--focused :deep(.v-field) {
+  --v-field-border-opacity: 0.6;
 }
 
 .app-sidebar {
