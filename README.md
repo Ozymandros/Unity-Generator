@@ -104,21 +104,27 @@ LLM:
 - `deepseek`
 - `openrouter`
 - `groq`
+- `google`
+- `anthropic`
+- `huggingface`
+- `replicate` (chat via [Replicate predictions API](https://replicate.com/docs/reference/http); default model `meta/llama-2-7b`)
 
 Image:
 
 - `stability`
 - `flux`
+- `openai`
+- `replicate` (e.g. Flux)
 
 Audio:
 
 - `elevenlabs`
 - `playht`
+- `replicate` (e.g. MusicGen)
 
 The backend selects providers by priority when no explicit provider is set.
-Priority order is defined in [services/llm_provider.py](services/llm_provider.py),
-[services/image_provider.py](services/image_provider.py), and
-[services/audio_provider.py](services/audio_provider.py).
+Replicate LLM uses a custom Semantic Kernel adapter that calls the predictions API (create + poll) instead of an OpenAI-compatible endpoint. See [backend/app/services/providers/connectors/replicate.py](backend/app/services/providers/connectors/replicate.py).
+Priority order is defined in the provider registry and in [services/llm_provider.py](services/llm_provider.py), [services/image_provider.py](services/image_provider.py), and [services/audio_provider.py](services/audio_provider.py).
 
 ### Preferences
 

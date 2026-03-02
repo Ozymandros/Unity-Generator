@@ -306,13 +306,21 @@ class ProviderRegistry:
             AzureChatCompletion,
         )
         from .connectors.replicate import (
-            ReplicateTextToImage,
+            ReplicateChatCompletion,
             ReplicateTextToAudio,
+            ReplicateTextToImage,
         )
         print(f"\n[REGISTRY] create_chat_service: provider={provider}, model_id={model_id}", flush=True)
         caps = self.get(provider)
         target_model = model_id or caps.default_models[Modality.LLM]
         print(f"[REGISTRY] Using target_model: {target_model}", flush=True)
+
+        if provider == "replicate":
+            return ReplicateChatCompletion(
+                api_key=api_key,
+                model_id=target_model,
+                service_id=kwargs.get("service_id", provider),
+            )
 
         if caps.openai_compatible:
             # Handle Hugging Face dynamic base URL for OpenAI compatibility

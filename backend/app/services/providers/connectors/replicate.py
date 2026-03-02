@@ -3,24 +3,42 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import requests
+from pydantic import ConfigDict
+from semantic_kernel.connectors.ai.chat_completion_client_base import ChatCompletionClientBase
+from semantic_kernel.connectors.ai.prompt_execution_settings import PromptExecutionSettings
 from semantic_kernel.connectors.ai.text_to_image_client_base import TextToImageClientBase
 from semantic_kernel.connectors.ai.text_to_audio_client_base import TextToAudioClientBase
 from semantic_kernel.contents.audio_content import AudioContent
+from semantic_kernel.contents.chat_message_content import ChatMessageContent
+from semantic_kernel.contents.utils.author_role import AuthorRole
+
+if TYPE_CHECKING:
+    from semantic_kernel.contents.chat_history import ChatHistory
 
 LOGGER = logging.getLogger(__name__)
 
 class ReplicateConnectorBase:
     """Base class for Replicate API interactions using prediction polling."""
+
+    # Annotated for type checkers; set in __init__ via object.__setattr__ (so Pydantic subclasses work).
+    api_key: str = ""
+    model_id: str = ""
+    headers: dict[str, str] | None = None
+
     def __init__(self, api_key: str, model_id: str):
-        self.api_key = api_key
-        self.model_id = model_id
-        self.headers = {
-            "Authorization": f"Token {self.api_key}",
-            "Content-Type": "application/json",
-        }
+        object.__setattr__(self, "api_key", api_key)
+        object.__setattr__(self, "model_id", model_id)
+        object.__setattr__(
+            self,
+            "headers",
+            {
+                "Authorization": f"Token {api_key}",
+                "Content-Type": "application/json",
+            },
+        )
 
     async def _create_prediction(self, input_data: dict[str, Any]) -> str:
         """Create a prediction and return the prediction ID/URL."""
@@ -42,7 +60,7 @@ class ReplicateConnectorBase:
         response.raise_for_status()
         return response.json()["urls"]["get"]
 
-    async def _poll_prediction(self, get_url: str, timeout: int = 60) -> Any:
+    async def _poll_prediction(self, get_url: str, timeout: int = 120) -> Any:
         """Poll the prediction until it's finished."""
         start_time = time.time()
         while time.time() - start_time < timeout:
@@ -58,6 +76,86 @@ class ReplicateConnectorBase:
             await asyncio.sleep(2)
 
         raise TimeoutError("Replicate prediction timed out")
+
+
+def _chat_history_to_prompt(chat_history: "ChatHistory") -> str:
+    """Convert SK chat history to a single prompt string for Replicate LLaMA-style models."""
+    if not chat_history.messages:
+        return ""
+    parts = []
+    for msg in chat_history.messages:
+        role = getattr(msg.role, "value", str(msg.role))
+        content = getattr(msg, "content", None) or ""
+        if isinstance(content, str):
+            parts.append(f"{role}: {content}")
+    return "\n".join(parts)
+
+
+class ReplicateChatCompletion(ChatCompletionClientBase, ReplicateConnectorBase):
+    """Replicate chat completion via the predictions API (e.g. meta/llama-2-7b)."""
+
+    model_config = ConfigDict(extra="allow")  # allow api_key, model_id, headers from ReplicateConnectorBase
+
+    def __init__(self, api_key: str, model_id: str, service_id: str | None = None):
+        ChatCompletionClientBase.__init__(
+            self,
+            ai_model_id=model_id,
+            service_id=service_id or model_id,
+        )
+        # ReplicateConnectorBase.__init__ uses object.__setattr__ so Pydantic doesn't reject api_key/model_id/headers.
+        ReplicateConnectorBase.__init__(self, api_key=api_key, model_id=model_id)
+
+    def get_prompt_execution_settings_class(self) -> type[PromptExecutionSettings]:
+        return PromptExecutionSettings
+
+    async def _inner_get_chat_message_contents(
+        self,
+        chat_history: "ChatHistory",
+        settings: PromptExecutionSettings,
+    ) -> list[ChatMessageContent]:
+        prompt = _chat_history_to_prompt(chat_history)
+        if not prompt.strip():
+            return [
+                ChatMessageContent(
+                    role=AuthorRole.ASSISTANT,
+                    content="No input provided.",
+                    ai_model_id=self.ai_model_id,
+                )
+            ]
+        max_tokens = getattr(settings, "max_tokens", None) or settings.extension_data.get("max_tokens", 500)
+        temperature = getattr(settings, "temperature", None) or settings.extension_data.get("temperature", 0.7)
+        input_data: dict[str, Any] = {
+            "prompt": prompt,
+            "max_new_tokens": max(1, int(max_tokens)),
+            "temperature": float(temperature),
+        }
+        try:
+            get_url = await self._create_prediction(input_data)
+            output = await self._poll_prediction(get_url)
+        except Exception as e:
+            LOGGER.error("Replicate chat completion failed: %s", e)
+            raise
+        if isinstance(output, list):
+            text = "".join(str(x) for x in output) if output else ""
+        else:
+            text = str(output)
+        return [
+            ChatMessageContent(
+                role=AuthorRole.ASSISTANT,
+                content=text,
+                ai_model_id=self.ai_model_id,
+            )
+        ]
+
+    async def _inner_get_streaming_chat_message_contents(
+        self,
+        chat_history: "ChatHistory",
+        settings: PromptExecutionSettings,
+        function_invoke_attempt: int = 0,
+    ):  # noqa: ARG002
+        raise NotImplementedError("Replicate chat streaming is not implemented.")
+        yield  # unreachable; makes this an async generator so the base can async for over it
+
 
 class ReplicateTextToImage(TextToImageClientBase, ReplicateConnectorBase):
     """Replicate TextToImage service (e.g. for Flux)."""
@@ -120,7 +218,7 @@ class ReplicateTextToAudio(TextToAudioClientBase, ReplicateConnectorBase):
 
             return AudioContent(
                 data=resp.content,
-                ai_model_id=self.model_id,
+                ai_model_id=self.ai_model_id,
                 metadata={"provider": "replicate", "audio_url": audio_url}
             )
         except Exception as e:

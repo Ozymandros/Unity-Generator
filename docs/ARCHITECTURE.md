@@ -79,15 +79,22 @@ flowchart TD
 ## Provider selection
 
 Providers are selected with a simple priority fallback when the request does not
-specify a provider. Priority is defined in each provider module:
+specify a provider. Priority is defined in the provider registry and in each provider module:
 
-- LLM: `deepseek`, `openrouter`, `openai`, `groq`
-- Image: `stability`, `flux`
+- LLM: `google`, `anthropic`, `deepseek`, `openrouter`, `openai`, `groq`, `huggingface`, `replicate`
+- Image: `stability`, `flux`, `openai`, `replicate`
 - Audio (Voice/TTS): `elevenlabs`, `playht`, `openai`, `google`
 - Audio (Music): `replicate`
 
 The selected provider is based on preference keys in the SQLite DB and available
-API keys in `config/api_keys.json`.
+API keys in the config (and provider rows in the DB).
+
+**Replicate LLM**: Chat for Replicate uses a custom Semantic Kernel adapter
+(`ReplicateChatCompletion` in `app/services/providers/connectors/replicate.py`)
+that calls the [Replicate predictions API](https://replicate.com/docs/reference/http)
+(create prediction, poll for output) instead of an OpenAI-compatible endpoint.
+Default model is `meta/llama-2-7b`. Image and audio for Replicate use the same
+predictions flow via `ReplicateTextToImage` and `ReplicateTextToAudio`.
 
 ## Storage and data locations
 
