@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { StatusBanner } from "@/components/StatusBanner";
-import { SmartField } from "@/components/generic/SmartField";
+import { StatusBanner } from "../StatusBanner";
+import { SmartField } from "../generic/SmartField";
 import { useUnityProjectPanel } from "./UnityProjectPanel";
 
 const {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { StatusBanner } from "@/components/StatusBanner";
-import { SmartField } from "@/components/generic/SmartField";
-import { ModelManagerModal } from "@/components/generic/ModelManagerModal";
+import { StatusBanner } from "../StatusBanner";
+import { SmartField } from "../generic/SmartField";
+import { ModelManagerModal } from "../generic/ModelManagerModal";
 import { useImagePanel } from "./ImagePanel";
 
 const {
@@ -22,7 +22,7 @@ const {
   showModelManager,
   refreshModels,
   run,
-  providers,
+  providerOptions,
   ASPECT_RATIOS,
   QUALITY_OPTIONS
 } = useImagePanel();
@@ -48,7 +48,7 @@ const {
           label="Provider" 
           type="select" 
           v-model="provider" 
-          :options="providers.map((p: any) => ({ value: p.name, label: p.name }))" 
+          :options="providerOptions" 
           placeholder="Select Provider" 
           class="flex-grow-1"
         />

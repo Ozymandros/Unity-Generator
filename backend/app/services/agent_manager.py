@@ -13,6 +13,7 @@ from ..schemas import (
     TextOptions,
     VideoOptions,
 )
+from ..agents.unity_mcp_plugin import unity_mcp_plugin_available_for_writing
 from .asset_saver import save_asset_to_project
 from .providers import Modality, provider_registry
 

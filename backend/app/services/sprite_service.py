@@ -4,6 +4,7 @@ from typing import Any
 
 from PIL import Image
 
+from ..agents.unity_mcp_plugin import unity_mcp_plugin_available_for_writing
 from ..schemas import AgentResult, ImageOptions
 from .image_provider import generate_image
 
@@ -99,26 +100,27 @@ def generate_sprite(
     processed_img.save(buffered, format="PNG")
     img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-    # 5. Optionally save to project_path if provided
+    # 5. Optionally save to project_path if provided (fallback only when MCP not live)
     saved_path = None
-    if project_path:
+    if project_path and str(project_path).strip() and not unity_mcp_plugin_available_for_writing():
         import time
         from pathlib import Path
 
-        project_root = Path(project_path)
-        sprites_dir = project_root / "Assets" / "Sprites"
+        project_root = Path(project_path).resolve()
+        if project_root != Path.cwd().resolve():
+            sprites_dir = project_root / "Assets" / "Sprites"
 
-        if sprites_dir.exists() or (project_root / "Assets").exists():
-            sprites_dir.mkdir(parents=True, exist_ok=True)
+            if sprites_dir.exists() or (project_root / "Assets").exists():
+                sprites_dir.mkdir(parents=True, exist_ok=True)
 
-            # Generate filename
-            timestamp = int(time.time())
-            filename = f"sprite_{resolution}x{resolution}_{timestamp}.png"
-            sprite_path = sprites_dir / filename
+                # Generate filename
+                timestamp = int(time.time())
+                filename = f"sprite_{resolution}x{resolution}_{timestamp}.png"
+                sprite_path = sprites_dir / filename
 
-            # Save the sprite
-            processed_img.save(sprite_path, format="PNG")
-            saved_path = str(sprite_path.relative_to(project_root))
+                # Save the sprite
+                processed_img.save(sprite_path, format="PNG")
+                saved_path = str(sprite_path.relative_to(project_root))
 
     result_raw = {
         "original_prompt": prompt,

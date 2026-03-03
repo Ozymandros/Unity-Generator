@@ -17,6 +17,7 @@ from ..schemas import (
 from ..services import agent_manager_instance as agent_manager
 from ..services import create_unity_project
 from ..services import finalize_store_instance as finalize_store
+from ..services.unity_project import resolve_project_path
 from ..services.finalize_store import JobStatus
 from ..services.unity_orchestrator import run_finalize_job
 
@@ -48,8 +49,13 @@ def _run_finalize_in_background(job_id: str, request: FinalizeProjectRequest) ->
 
         templates_dir = get_templates_dir()
 
-        # Determine project path: use explicit path or scaffold a new project
+        # project_path is always base_path (from settings DB) + project_name; never use project_name alone as path
         project_path_str = request.project_path
+        if project_path_str and project_path_str.strip():
+            p = project_path_str.strip().replace("\\", "/")
+            if "/" not in p:
+                # Single segment = project name only → resolve to base_path + project_name
+                project_path_str = resolve_project_path(project_path_str.strip())
         if not project_path_str:
             finalize_store.update_job(
                 job_id,

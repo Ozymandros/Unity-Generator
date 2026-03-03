@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { SmartField } from "@/components/generic/SmartField";
+import { SmartField } from "../SmartField";
 import { usePromptInputSection, type PromptInputSectionProps } from "./PromptInputSection";
 
 const props = defineProps<PromptInputSectionProps>();

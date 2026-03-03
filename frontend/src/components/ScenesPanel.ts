@@ -32,6 +32,9 @@ export function useScenesPanel() {
 
   // Discovery data from store
   const providers = computed(() => store.getProvidersByModality("llm"));
+  const providerOptions = computed(() =>
+    providers.value.map((p: { name: string }) => ({ value: p.name, label: p.name }))
+  );
   const availableModels = computed(() => store.getModelsByProvider(provider.value, "llm"));
   const showModelManager = ref(false);
 
@@ -107,6 +110,7 @@ export function useScenesPanel() {
     provider,
     model,
     providers,
+    providerOptions,
     temperature,
     apiKey,
     systemPrompt,

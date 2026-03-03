@@ -154,7 +154,9 @@ def test_resolve_project_path(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -
 
 def test_get_latest_project_path_empty(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test get_latest_project_path returns None when no projects."""
-    monkeypatch.setattr(unity_project, "get_repo_root", lambda: tmp_path)
+    output_dir = tmp_path / "output"
+    output_dir.mkdir(exist_ok=True)
+    monkeypatch.setattr(unity_project, "get_output_dir", lambda: output_dir)
 
     result = unity_project.get_latest_project_path()
     assert result is None
@@ -162,10 +164,9 @@ def test_get_latest_project_path_empty(tmp_path: Path, monkeypatch: pytest.Monke
 
 def test_get_latest_project_path_returns_latest(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test get_latest_project_path returns most recent project."""
-    monkeypatch.setattr(unity_project, "get_repo_root", lambda: tmp_path)
-
     output_dir = tmp_path / "output"
     output_dir.mkdir(exist_ok=True)
+    monkeypatch.setattr(unity_project, "get_output_dir", lambda: output_dir)
 
     import time
 
@@ -180,7 +181,7 @@ def test_get_latest_project_path_returns_latest(tmp_path: Path, monkeypatch: pyt
 
 def test_create_unity_project_structure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test create_unity_project creates expected folder structure."""
-    monkeypatch.setattr(unity_project, "get_repo_root", lambda: tmp_path)
+    monkeypatch.setattr(unity_project, "get_output_dir", lambda: tmp_path)
 
     result = unity_project.create_unity_project(
         "TestProject",

@@ -92,12 +92,21 @@ DefaultImporter:
 
 def save_asset_to_project(project_path: str, asset_type: str, result: AgentResult) -> str | None:
     """
-    Saves a generated asset into the appropriate subfolder of a Unity project.
-    Returns the relative path of the saved asset.
+    Saves a generated asset under project_path (the project root).
+    project_path = basepath + project_name; all generated files and subfolders go under it.
+    Resolves project_path to absolute; creates whatever subfolders are needed.
+    Returns the relative path of the saved asset from the project root.
+    Refuses to write when project_path is empty or resolves to cwd (avoids writing into app root).
     """
-    base_path = Path(project_path)
-    if not (base_path / "Assets").exists():
-        LOGGER.error(f"Invalid project path (missing Assets folder): {project_path}")
+    if not project_path or not str(project_path).strip():
+        LOGGER.warning("save_asset_to_project: project_path is empty; skipping save.")
+        return None
+    root = Path(project_path).resolve()
+    if root == Path.cwd().resolve():
+        LOGGER.warning(
+            "save_asset_to_project: project_path resolves to cwd (%s); refusing to write into app root.",
+            root,
+        )
         return None
 
     # Determine subfolder and filename
@@ -112,7 +121,7 @@ def save_asset_to_project(project_path: str, asset_type: str, result: AgentResul
     file_path: Path | None = None
 
     if asset_type == "code":
-        target_dir = base_path / "Assets" / "Scripts"
+        target_dir = root / "Assets" / "Scripts"
         target_dir.mkdir(parents=True, exist_ok=True)
         filename = result.raw.get("filename") if result.raw else None
         if not filename:
@@ -123,7 +132,7 @@ def save_asset_to_project(project_path: str, asset_type: str, result: AgentResul
         rel_path = f"Assets/Scripts/{filename}"
 
     elif asset_type == "text":
-        target_dir = base_path / "Assets" / "Text"
+        target_dir = root / "Assets" / "Text"
         target_dir.mkdir(parents=True, exist_ok=True)
         filename = result.raw.get("filename") if result.raw else None
         if not filename:
@@ -133,7 +142,7 @@ def save_asset_to_project(project_path: str, asset_type: str, result: AgentResul
         rel_path = f"Assets/Text/{filename}"
 
     elif asset_type == "image":
-        target_dir = base_path / "Assets" / "Sprites"
+        target_dir = root / "Assets" / "Sprites"
         target_dir.mkdir(parents=True, exist_ok=True)
         filename = result.raw.get("filename") if result.raw else None
         if not filename:
@@ -153,7 +162,7 @@ def save_asset_to_project(project_path: str, asset_type: str, result: AgentResul
                 content_bytes = base64.b64decode(result.image)
 
     elif asset_type == "audio":
-        target_dir = base_path / "Assets" / "Audio"
+        target_dir = root / "Assets" / "Audio"
         target_dir.mkdir(parents=True, exist_ok=True)
         filename = result.raw.get("filename") if result.raw else None
         if not filename:

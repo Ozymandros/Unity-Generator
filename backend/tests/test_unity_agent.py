@@ -26,6 +26,7 @@ async def test_unity_agent_openai():
 
     with patch("app.agents.unity_agent.Kernel") as MockKernel, \
          patch("app.agents.unity_agent.provider_registry") as MockRegistry, \
+         patch("app.agents.unity_agent.unity_mcp_plugin_available_for_writing", return_value=True), \
          patch("app.agents.unity_agent.create_unity_mcp_plugin") as MockFactory:
 
         # Mock Kernel
@@ -61,6 +62,12 @@ async def test_unity_agent_openai():
         MockFactory.assert_called_once()
         mock_kernel_instance.add_plugin.assert_called_with(mock_plugin_instance, plugin_name="UnityMCP")
 
+        # When use_tools is True, prompt must contain tool-use instruction
+        call_kwargs = mock_kernel_instance.invoke_prompt.call_args[1]
+        full_prompt = call_kwargs.get("prompt", "")
+        assert "try to use available tools" in full_prompt
+        assert "create or modify content" in full_prompt
+
 
 @pytest.mark.asyncio
 async def test_unity_agent_deepseek():
@@ -69,6 +76,7 @@ async def test_unity_agent_deepseek():
 
     with patch("app.agents.unity_agent.Kernel") as MockKernel, \
          patch("app.agents.unity_agent.provider_registry") as MockRegistry, \
+         patch("app.agents.unity_agent.unity_mcp_plugin_available_for_writing", return_value=True), \
          patch("app.agents.unity_agent.create_unity_mcp_plugin") as MockFactory:
 
         # Mock Kernel
@@ -136,6 +144,7 @@ async def test_unity_agent_mcp_connection_failure():
 
     with patch("app.agents.unity_agent.Kernel"), \
          patch("app.agents.unity_agent.provider_registry") as MockRegistry, \
+         patch("app.agents.unity_agent.unity_mcp_plugin_available_for_writing", return_value=True), \
          patch("app.agents.unity_agent.create_unity_mcp_plugin") as MockFactory:
 
         # Mock Registry
@@ -195,3 +204,43 @@ async def test_unity_agent_no_tool_use_skips_mcp():
         # But the prompt should still be invoked
         mock_kernel_instance.invoke_prompt.assert_called_once()
         assert result["content"] == "Plain LLM response"
+
+        # When use_tools is False, system message must NOT contain tool-use instruction
+        call_kwargs = mock_kernel_instance.invoke_prompt.call_args[1]
+        full_prompt = call_kwargs.get("prompt", "")
+        assert "try to use available tools" not in full_prompt
+        assert "create or modify content" not in full_prompt
+        assert "reply with plain text only" in full_prompt
+
+
+@pytest.mark.asyncio
+async def test_unity_agent_tool_use_but_mcp_unavailable_skips_plugin():
+    """When provider supports tool use but MCP is not available, MCP plugin is NOT registered."""
+    agent = UnityAgent()
+
+    with patch("app.agents.unity_agent.Kernel") as MockKernel, \
+         patch("app.agents.unity_agent.provider_registry") as MockRegistry, \
+         patch("app.agents.unity_agent.unity_mcp_plugin_available_for_writing", return_value=False), \
+         patch("app.agents.unity_agent.create_unity_mcp_plugin") as MockFactory:
+
+        mock_kernel_instance = MockKernel.return_value
+        mock_kernel_instance.invoke_prompt = AsyncMock(return_value="Plain text fallback")
+
+        mock_caps = MagicMock()
+        mock_caps.api_key_name = "openai"
+        mock_caps.supports_tool_use = True
+        MockRegistry.get.return_value = mock_caps
+        MockRegistry.create_chat_service.return_value = MagicMock()
+
+        result = await agent.run(
+            prompt="test",
+            provider="openai",
+            options={"model": "gpt-4"},
+            api_keys={"openai": "sk-test"},
+        )
+
+        MockFactory.assert_not_called()
+        mock_kernel_instance.add_plugin.assert_not_called()
+        mock_kernel_instance.invoke_prompt.assert_called_once()
+        call_kwargs = mock_kernel_instance.invoke_prompt.call_args[1]
+        assert "reply with plain text only" in call_kwargs.get("prompt", "")

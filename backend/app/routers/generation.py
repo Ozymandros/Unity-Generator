@@ -19,8 +19,16 @@ from app.schemas import (
 )
 from ..services import agent_manager_instance as agent_manager
 from ..services import sprite_service
+from ..services.unity_project import resolve_project_path
 
 router = APIRouter(prefix="/generate", tags=["generation"])
+
+
+def _project_path_from_request(project_name: str | None) -> str | None:
+    """Resolve project path only when project_name is non-empty. Never write under app root."""
+    if not project_name or not str(project_name).strip():
+        return None
+    return resolve_project_path(project_name.strip())
 
 
 @router.post("/text", response_model=GenerationResponse)
@@ -35,7 +43,7 @@ def generate_text(request: GenerationRequest) -> GenerationResponse:
         if isinstance(options, dict):
             options = TextOptions(**options)
 
-        project_path = resolve_project_path(request.project_name) if request.project_name else None
+        project_path = _project_path_from_request(request.project_name)
         data = agent_manager.run_text(
             request.prompt,
             provider,
@@ -61,7 +69,7 @@ def generate_code(request: GenerationRequest) -> GenerationResponse:
         if isinstance(options, dict):
             options = CodeOptions(**options)
 
-        project_path = resolve_project_path(request.project_name) if request.project_name else None
+        project_path = _project_path_from_request(request.project_name)
         data = agent_manager.run_code(
             request.prompt,
             provider,
@@ -87,7 +95,7 @@ def generate_image(request: GenerationRequest) -> GenerationResponse:
         if isinstance(options, dict):
             options = ImageOptions(**options)
 
-        project_path = resolve_project_path(request.project_name) if request.project_name else None
+        project_path = _project_path_from_request(request.project_name)
         data = agent_manager.run_image(
             request.prompt,
             provider,
@@ -113,7 +121,7 @@ def generate_audio(request: GenerationRequest) -> GenerationResponse:
         if isinstance(options, dict):
             options = AudioOptions(**options)
 
-        project_path = resolve_project_path(request.project_name) if request.project_name else None
+        project_path = _project_path_from_request(request.project_name)
         data = agent_manager.run_audio(
             request.prompt,
             provider,
@@ -140,7 +148,7 @@ def generate_video(request: GenerationRequest) -> GenerationResponse:
         if isinstance(options, dict):
             options = VideoOptions(**options)
 
-        project_path = resolve_project_path(request.project_name) if request.project_name else None
+        project_path = _project_path_from_request(request.project_name)
         data = agent_manager.run_video(
             request.prompt,
             provider,
@@ -164,7 +172,7 @@ def generate_sprites(request: SpritesRequest) -> GenerationResponse:
         provider = request.provider or get_pref("preferred_image_provider")
         api_key = request.api_key
 
-        project_path = resolve_project_path(request.project_name) if request.project_name else None
+        project_path = _project_path_from_request(request.project_name)
         data = sprite_service.generate_sprite(
             request.prompt,
             provider,

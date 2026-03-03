@@ -1,8 +1,8 @@
 <script setup lang="ts">
 
-import { StatusBanner } from "@/components/StatusBanner";
-import { SmartField } from "@/components/generic/SmartField";
-import { ModelManagerModal } from "@/components/generic/ModelManagerModal";
+import { StatusBanner } from "./StatusBanner";
+import { SmartField } from "./generic/SmartField";
+import { ModelManagerModal } from "./generic/ModelManagerModal";
 import { useScenesPanel } from "./ScenesPanel";
 
 const {
@@ -22,7 +22,7 @@ const {
   loading,
   canGenerate,
   run,
-  providers,
+  providerOptions,
   TEMPERATURE_PRESETS
 } = useScenesPanel();
 </script>
@@ -41,7 +41,7 @@ const {
 
     <div class="field-group">
       <div class="options-row d-flex align-center gap-2 mb-4">
-        <SmartField label="Provider" type="select" v-model="provider" :options="providers.map((p: any) => ({ value: p.name, label: p.name }))"
+        <SmartField label="Provider" type="select" v-model="provider" :options="providerOptions"
           placeholder="Select Provider" class="flex-grow-1" />
         <SmartField label="Model" type="select" v-model="model" :options="availableModels" placeholder="Select Model"
           :disabled="!provider" class="flex-grow-1" />

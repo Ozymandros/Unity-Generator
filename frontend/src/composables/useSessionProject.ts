@@ -23,7 +23,8 @@ function setSession(key: string, value: string): void {
 
 /**
  * Session-scoped project name and path (sessionStorage).
- * Shared by App.vue sidebar and UnityProjectPanel; ScenesPanel uses projectPath for createScene.
+ * Backend always derives project_path as base_path (output from settings) + project_name; never project_name alone.
+ * Shared by App.vue sidebar and UnityProjectPanel; ScenesPanel sends project_name for createScene.
  */
 export function useSessionProject() {
   const projectName = ref(getSession(NAME_KEY));

@@ -30,8 +30,10 @@ def get_logs_dir() -> Path:
 
 def get_output_dir() -> Path:
     """
-    Base path for generated Unity projects. Relative paths are resolved against repo root.
-    Precedence: DB preference ``output_base_path`` → env ``OUTPUT_DIR`` → ``./output``.
+    Base path for generated Unity projects (output path from settings DB).
+    project_path is always this base_path + project_name; never use project_name alone as a path.
+    Precedence: DB preference ``output_base_path`` → env ``OUTPUT_DIR`` → cwd ``output``.
+    Relative prefs are resolved against repo root. Default uses cwd so packaged apps don't write into the app dir.
     """
     try:
         from .db import get_pref
@@ -40,8 +42,7 @@ def get_output_dir() -> Path:
             p = Path(pref.strip())
             if not p.is_absolute():
                 p = get_repo_root() / p
-            resolved = p.resolve()
-            return resolved
+            return p.resolve()
     except Exception:
         pass
     env_path = os.environ.get("OUTPUT_DIR")
@@ -50,7 +51,20 @@ def get_output_dir() -> Path:
         if not p.is_absolute():
             p = get_repo_root() / p
         return p.resolve()
-    return (get_repo_root() / "output").resolve()
+    # Default: cwd/output unless that would sit under repo/app, then use user dir
+    default_cwd = (Path.cwd() / "output").resolve()
+    try:
+        repo = get_repo_root().resolve()
+        if default_cwd == repo or str(default_cwd).startswith(str(repo) + os.sep):
+            user_default = (Path.home() / "UnityGenerator" / "output").resolve()
+            LOGGER.info(
+                "Output base defaulted to user dir (%s) to avoid writing under app/repo.",
+                user_default,
+            )
+            return user_default
+    except Exception:
+        pass
+    return default_cwd
 
 
 def get_templates_dir() -> Path:

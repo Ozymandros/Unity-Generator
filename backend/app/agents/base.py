@@ -29,5 +29,6 @@ class AsyncAgent(Protocol):
         options: dict[str, Any] | Any,
         api_keys: dict[str, str],
         system_prompt: str | None = None,
+        project_path: str | None = None,
     ) -> dict[str, Any] | AgentResult:
         ...

@@ -263,9 +263,10 @@ def resolve_project_path(project_name: str) -> str:
     """
     Always: project_path = base_path + project_name (safe folder name).
     Use this everywhere a Unity project path is needed for saving/scenes.
+    Returns an absolute path.
     """
     base = get_output_dir()
-    return str(base / _safe_name(project_name))
+    return str((base / _safe_name(project_name)).resolve())
 
 
 def get_latest_project_path() -> str | None:

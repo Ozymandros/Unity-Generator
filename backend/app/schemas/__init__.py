@@ -228,10 +228,14 @@ class FinalizeProjectRequest(BaseModel):
 
     The project is identified either by an explicit *project_path* or by
     generating a new scaffold first via the standard generation payload.
+
+    project_path is always base_path (settings output_base_path) + project_name.
+    If you send only a project name (no path separators), the backend resolves
+    it to base_path + project_name.
     """
 
     project_name: str = "UnityProject"
-    project_path: str | None = None
+    project_path: str | None = None  # full path (base_path + project_name), or just name to resolve
 
     # AI generation payload (reuse from UnityProjectRequest)
     code_prompt: str | None = None

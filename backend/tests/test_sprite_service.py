@@ -80,3 +80,33 @@ def test_generate_sprite_workflow(
         if result.image is not None:
             res_img = Image.open(io.BytesIO(base64.b64decode(result.image)))
             assert res_img.size == (16, 16)
+
+
+@patch("app.services.sprite_service.unity_mcp_plugin_available_for_writing", return_value=True)
+@patch("app.services.sprite_service.generate_image")
+def test_generate_sprite_skips_save_when_mcp_live(
+    mock_gen_image: MagicMock, mock_mcp_available: MagicMock, tmp_path
+) -> None:
+    """When MCP is live, sprite is not written to disk (no saved_path in result)."""
+    from app.repositories import get_api_key_repo
+
+    (tmp_path / "Assets").mkdir()
+    img = Image.new("RGBA", (64, 64), (0, 255, 0, 255))
+    buffered = io.BytesIO()
+    img.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+    mock_gen_image.return_value = AgentResult(image=img_str, provider="openai")
+
+    with patch.object(get_api_key_repo(), "get_all", return_value={"openai": "test"}):
+        result = generate_sprite(
+            prompt="A green square",
+            provider="openai",
+            api_key=None,
+            resolution=16,
+            options={"palette_size": 16, "auto_crop": False},
+            project_path=str(tmp_path),
+        )
+
+    mock_mcp_available.assert_called_once()
+    assert "saved_path" not in (result.raw or {})
+    assert not list((tmp_path / "Assets").rglob("*.png"))

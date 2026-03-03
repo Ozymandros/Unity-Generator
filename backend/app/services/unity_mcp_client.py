@@ -223,7 +223,7 @@ class McpUnitySetupBackend:
             progress("mcp_packages", 25, f"Installing {len(packages)} package(s) via MCP...")
             result = _call_tool(
                 "unity_install_packages",
-                {"project_path": project_path_str, "packages": packages},
+                {"projectPath": project_path_str, "packages": packages},
                 timeout_seconds=timeout_sec,
             )
             if not result.get("success"):
@@ -234,7 +234,7 @@ class McpUnitySetupBackend:
             progress("mcp_scene", 45, f"Creating scene {scene_name} via MCP...")
             result = _call_tool(
                 "unity_create_default_scene",
-                {"project_path": project_path_str, "scene_name": scene_name},
+                {"projectPath": project_path_str, "sceneName": scene_name},
                 timeout_seconds=timeout_sec,
             )
             if not result.get("success"):
@@ -245,7 +245,7 @@ class McpUnitySetupBackend:
             progress("mcp_urp", 60, "Configuring URP via MCP...")
             result = _call_tool(
                 "unity_configure_urp",
-                {"project_path": project_path_str},
+                {"projectPath": project_path_str},
                 timeout_seconds=timeout_sec,
             )
             if not result.get("success"):
@@ -255,7 +255,7 @@ class McpUnitySetupBackend:
         progress("mcp_validate", 80, "Validating imports via MCP...")
         result = _call_tool(
             "unity_validate_import",
-            {"project_path": project_path_str},
+            {"projectPath": project_path_str},
             timeout_seconds=timeout_sec,
         )
         if not result.get("success"):

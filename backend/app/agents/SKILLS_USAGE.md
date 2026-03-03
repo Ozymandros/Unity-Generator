@@ -33,13 +33,21 @@ Provides real-time integration with a running Unity Editor via the Unity MCP Ser
 - Plugin Source: [Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin)
 - Server Source: [Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)
 
-Requires the `unity-mcp-plugin` package installed in the Python environment.
+Requires the `unity-mcp-plugin` package installed in the Python environment. For the full tool list and parameter details, see the server’s tool reference (e.g. Unity-MCP-Server `Skills/SKILL.md` or README).
 
-- `ping(message)` - Test connectivity with the Unity MCP Server
-- `create_scene(scene_name, path, setup)` - Create a new Unity scene in the active project
-- `create_gameobject(name, object_type, position_x, position_y, position_z, parent)` - Instantiate a GameObject
-- `get_scene_info(include_hierarchy, include_components)` - Get detailed metadata about the active scene
-- `create_script(script_name, script_type, path, namespace)` - Generate a C# script directly in the project
+**Path handling:** The server requires **projectPath** (project root) and **fileName** (or **folderName** for folder/list tools) on all file, scene, and asset tools. Pass `projectPath` as the project root directory and `fileName` as the path under the project (e.g. `Assets/Scenes/MyScene.unity`). Do not duplicate path segments (e.g. do not put the project root inside `fileName`).
+
+**Project writes:** When the Unity MCP plugin is live (verified by a connection check), all project writes go through MCP tools. Manual file writing (asset_saver, sprite_service) is used only as a fallback when the plugin is not available.
+
+Representative tools (parameter names are camelCase in JSON-RPC):
+
+- `ping()` - Test connectivity with the Unity MCP Server (no parameters)
+- `unity_create_scene(projectPath, fileName)` - Create a new Unity scene
+- `unity_create_material(projectPath, fileName, materialJson)` - Create a material asset
+- `unity_add_gameobject(projectPath, fileName, gameObjectJson)` - Add a GameObject to a scene
+- `unity_save_script(projectPath, fileName, ...)` - Save a C# script to the project
+- `unity_get_project_info(projectPath)` - Get project metadata
+- Other tools follow the same contract; see the server’s SKILL.md/README for the full list
 
 ### Core Skills (`agents/core_skills.py`)
 
@@ -166,37 +174,31 @@ unity_mcp = kernel.get_plugin("UnityMCP")
 
 ### Example: Using Unity MCP Plugin
 
-The `UnityMCPPlugin` allows agents to interact with a running Unity Editor instance.
+The `UnityMCPPlugin` allows agents to interact with a running Unity Editor instance. All tools that create or modify content require **projectPath** (project root) and **fileName** (path under the project).
 
 ```python
 import asyncio
 from backend.app.kernel import create_kernel
 
 async def create_fire_scene():
-    # Initialize kernel (MCP settings defaults to localhost:8765)
     kernel = create_kernel({})
-
-    # Get the Unity MCP plugin
-    # Note: Plugin name is "UnityMCP" as registered in kernel.py
     unity = kernel.get_plugin("UnityMCP")
+    project_path = "/path/to/your/UnityProject"  # project root (contains Assets/)
 
-    # Call functions (async)
-    # Create a new scene
-    await kernel.invoke(unity["create_scene"], scene_name="FireScene")
+    # Create a new scene (projectPath + fileName)
+    await kernel.invoke(unity["unity_create_scene"],
+                        projectPath=project_path,
+                        fileName="Assets/Scenes/FireScene.unity")
 
-    # Create some game objects
-    await kernel.invoke(unity["create_gameobject"], 
-                        name="Ground", 
-                        object_type="plane")
+    # Add game objects (projectPath + fileName for the scene)
+    await kernel.invoke(unity["unity_add_gameobject"],
+                        projectPath=project_path,
+                        fileName="Assets/Scenes/FireScene.unity",
+                        gameObjectJson='{"name":"Ground","objectType":"plane"}')
 
-    await kernel.invoke(unity["create_gameobject"], 
-                        name="Bonfire", 
-                        object_type="sphere", 
-                        position_y=1.0)
-
-    # Get scene info
-    result = await kernel.invoke(unity["get_scene_info"])
-    print(f"Scene info: {result}")
+    # Get project info
+    result = await kernel.invoke(unity["unity_get_project_info"], projectPath=project_path)
+    print(f"Project info: {result}")
 
 if __name__ == "__main__":
     asyncio.run(create_fire_scene())

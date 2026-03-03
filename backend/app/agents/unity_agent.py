@@ -18,7 +18,7 @@ from semantic_kernel.connectors.ai.function_choice_behavior import FunctionChoic
 
 from ..services.providers import provider_registry
 from ..services.providers.capabilities import Modality, ProviderCapabilities
-from .unity_mcp_plugin import create_unity_mcp_plugin
+from .unity_mcp_plugin import create_unity_mcp_plugin, unity_mcp_plugin_available_for_writing
 
 LOGGER = logging.getLogger(__name__)
 
@@ -158,7 +158,8 @@ class UnityAgent:
 
         caps = provider_registry.get(provider)
         api_key = api_keys.get(caps.api_key_name, "") if caps.api_key_name else ""
-        use_tools = caps.supports_tool_use
+        # Use MCP plugin when provider allows tool use (from DB) and plugin is available
+        use_tools = caps.supports_tool_use and unity_mcp_plugin_available_for_writing()
 
         # Resolve Azure endpoint for create_chat_service if needed
         endpoint = api_keys.get("AZURE_OPENAI_ENDPOINT") if provider == "azure" else None
@@ -181,17 +182,26 @@ class UnityAgent:
         if project_path:
             normalized_path = project_path.replace("\\", "/")
             system_message += (
-                f" The Unity project path (project root, folder containing Assets/) is: {normalized_path}. "
-                "Use this path when calling MCP tools that require a project path (or projectPath). "
-                "Do not use the MCP server executable path or any NuGet/nupkg path. Do not ask the user for the path."
+                f" The Unity project root (projectPath) is: {normalized_path}. "
+                "For every tool call that creates or modifies files (scenes, materials, game objects, scripts, assets), "
+                "you must pass projectPath equal to this project root, and fileName (or folderName for folder/list tools) "
+                "as the path under the project (e.g. Assets/Scenes/MyScene.unity). Never pass only a relative path; always include projectPath. "
+                "Do not use the MCP server executable path or any NuGet/nupkg path. Do not ask the user for the path. "
+                "Tool parameters: unity_create_scene(projectPath, fileName); unity_create_material(projectPath, fileName, materialJson); "
+                "unity_add_gameobject(projectPath, fileName, gameObjectJson); unity_create_script(projectPath, fileName, scriptName, content?)."
             )
-        # Explicit instruction so the model calls creation/write tools instead of stopping after ping or get_project_info
-        system_message += (
-            " You must try touse available tools to create or modify content in the project. Do not reply with only text. "
-            "After any connectivity or project-info check, call the appropriate tools (e.g. create_scene, create_gameobject, "
-            "create_script, or other tools that write or create assets) to fulfill the user's request. "
-            "Continue calling tools until the requested scene, objects, or scripts are created."
-        )
+        if use_tools:
+            # Only add tool-use instruction when we will register the MCP plugin
+            system_message += (
+                " You must try to use available tools to create or modify content in the project. Do not reply with only text. "
+                "After any connectivity or project-info check, call the appropriate tools (e.g. unity_create_scene, unity_add_gameobject, "
+                "unity_create_script, unity_create_material) to fulfill the user's request. "
+                "Continue calling tools until the requested scene, objects, or scripts are created."
+            )
+        else:
+            system_message += (
+                " You do not have access to Unity tools; reply with plain text only."
+            )
         full_prompt = f"{system_message}\n\nUser: {prompt}"
 
         try:
@@ -208,8 +218,11 @@ class UnityAgent:
                 setattr(execution_settings, "ai_model_id", model_id)
 
             if use_tools:
-                # Provider supports tool use — register MCP plugin
-                LOGGER.info("Provider '%s' supports tool use; registering Unity MCP plugin.", provider)
+                # Provider allows tool use and MCP is available — register plugin
+                LOGGER.info(
+                    "Provider '%s' allows tool use and Unity MCP is available; registering plugin.",
+                    provider,
+                )
                 async with create_unity_mcp_plugin() as mcp_plugin:
                     kernel.add_plugin(mcp_plugin, plugin_name="UnityMCP")
 
@@ -219,10 +232,9 @@ class UnityAgent:
 
                     result = await kernel.invoke_prompt(prompt=full_prompt, settings=execution_settings)
             else:
-                # Provider does NOT support tool use — run as plain LLM
-                LOGGER.warning(
-                    "Provider '%s' does not support tool use; "
-                    "MCP plugin skipped.",
+                # Provider does not allow tool use or MCP not available — run as plain LLM
+                LOGGER.debug(
+                    "Provider '%s' tool use or MCP unavailable; running without Unity MCP plugin.",
                     provider,
                 )
                 result = await kernel.invoke_prompt(prompt=full_prompt, settings=execution_settings)
