@@ -8,10 +8,10 @@ export default defineConfig({
     viewport: { width: 1280, height: 720 },
   },
   webServer: {
-    command: "pnpm run dev -- --host 127.0.0.1 --port 5173",
+    command: "pnpm run dev -- --host 127.0.0.1 --port 5173 --strictPort",
     url: "http://127.0.0.1:5173",
     reuseExistingServer: !process.env.CI,
-    timeout: 120000,
+    timeout: 180000,
   },
   // Exclude frontend unit tests from Playwright
   exclude: ["../src/**/*.test.ts", "../src/**/*.spec.ts", "../src/**/*.test.js", "../src/**/*.spec.js"],

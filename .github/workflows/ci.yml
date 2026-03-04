@@ -67,6 +67,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "25"
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -74,7 +76,6 @@ jobs:
           version: 10
 
       - name: Install frontend dependencies
-        working-directory: frontend
         run: pnpm install --no-frozen-lockfile
 
       - name: Lint frontend
@@ -116,9 +117,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "25"
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install frontend dependencies
-        working-directory: frontend
         run: pnpm install --no-frozen-lockfile
 
       - name: Install Playwright browsers
@@ -129,4 +131,5 @@ jobs:
         working-directory: frontend
         env:
           CI: true
+          DEBUG: pw:webserver
         run: pnpm run test:e2e
