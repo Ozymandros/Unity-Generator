@@ -21,6 +21,7 @@ from typing import Literal, Protocol
 
 from jinja2 import Environment, FileSystemLoader
 
+from ..core.config import get_app_dir
 from ..core.constants import DEFAULT_TIMEOUT
 
 LOGGER = logging.getLogger(__name__)
@@ -214,8 +215,8 @@ def render_template(
         Rendered template string.
     """
     if templates_dir is None:
-        # Default: backend/templates/unity
-        templates_dir = Path(__file__).resolve().parents[3] / "templates" / "unity"
+        # Default: app/templates/unity (relative to app directory)
+        templates_dir = get_app_dir() / "templates" / "unity"
 
     env = Environment(
         loader=FileSystemLoader(str(templates_dir)),

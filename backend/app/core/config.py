@@ -10,6 +10,11 @@ def get_repo_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
 
+def get_app_dir() -> Path:
+    """Return the path to the app directory (backend/app)."""
+    return Path(__file__).resolve().parent.parent
+
+
 def get_config_dir() -> Path:
     return get_repo_root() / "config"
 
@@ -69,7 +74,7 @@ def get_output_dir() -> Path:
 
 def get_templates_dir() -> Path:
     """Return the path to the backend C# templates directory."""
-    return get_repo_root() / "backend" / "templates" / "unity"
+    return get_app_dir() / "templates" / "unity"
 
 
 # ---------------------------------------------------------------------------
