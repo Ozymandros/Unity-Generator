@@ -5,10 +5,12 @@
     "private": true,
     "scripts": {
         "// --- Build & Distribution ---": "",
-        "build:backend": "powershell -ExecutionPolicy Bypass -File scripts/build_backend.ps1",
+        "build:backend": "cd backend && python -m pip install -e .",
         "build:frontend": "pnpm --dir frontend build",
         "package": "pnpm run build:backend && pnpm run tauri:build",
         "// --- Development ---": "",
+        "backend:dev": "cd backend && python -m uvicorn app.main:app --reload --port 8000",
+        "backend:debug": "cd backend && python -m debugpy --listen 0.0.0.0:5678 -m uvicorn app.main:app --reload --port 8000",
         "dev": "pnpm --dir frontend dev:tauri",
         "tauri": "pnpm --dir frontend tauri",
         "tauri:build": "pnpm --dir frontend tauri build",

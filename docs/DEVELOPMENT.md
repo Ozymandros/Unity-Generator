@@ -143,12 +143,47 @@ This starts the Tauri integration which handles the backend sidecar.
 
 ### Backend setup
 
+The project supports **Windows**, **Linux**, and **macOS**.
+
+#### Create and activate Python virtual environment
+
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\Activate.ps1
+```
+
+**On Linux/macOS:**
+```bash
+source .venv/bin/activate
+```
+
+**On Windows (Command Prompt):**
+```bash
+.venv\Scripts\activate.bat
+```
+
+**On Windows (PowerShell):**
+```bash
+.\.venv\Scripts\Activate.ps1
+```
+
+#### Install dependencies
+
+```bash
 pip install -r requirements.txt
+```
+
+#### Run the backend
+
+```bash
+# Option 1: Using pnpm (cross-platform, recommended)
+pnpm run backend:dev
+
+# Option 2: Directly with uvicorn (after venv activation)
 python -m uvicorn app.main:app --reload --port 8000
+
+# Option 3: With debugpy for remote debugging
+pnpm run backend:debug
 ```
 
 The backend serves on `http://127.0.0.1:8000` with CORS enabled.

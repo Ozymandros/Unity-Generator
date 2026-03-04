@@ -8,6 +8,7 @@ provider only requires a registry entry and (optionally) a ``base_url``.
 
 import logging
 import re
+from pathlib import Path
 from typing import Any, TYPE_CHECKING
 if TYPE_CHECKING:
     from semantic_kernel.connectors.ai.prompt_execution_settings import PromptExecutionSettings
@@ -180,7 +181,8 @@ class UnityAgent:
             or "You are a Unity Editor assistant. Use your tools to help the user with Unity tasks."
         )
         if project_path:
-            normalized_path = project_path.replace("\\", "/")
+            # Normalize path for cross-platform consistency
+            normalized_path = Path(project_path).as_posix()
             system_message += (
                 f" The Unity project root (projectPath) is: {normalized_path}. "
                 "For every tool call that creates or modifies files (scenes, materials, game objects, scripts, assets), "

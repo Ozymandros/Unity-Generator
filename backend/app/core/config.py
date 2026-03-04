@@ -78,8 +78,8 @@ def get_templates_dir() -> Path:
 
 _DEFAULT_UNITY_PATHS: dict[str, list] = {
     "Windows": [
-        r"C:\Program Files\Unity\Hub\Editor\*\Editor\Unity.exe",
-        r"C:\Program Files\Unity Hub\Editor\*\Editor\Unity.exe",
+        r"%ProgramFiles%/UnityHub/Editor/*/Editor/Unity.exe",
+        r"%ProgramFiles%/Unity Hub/Editor/*/Editor/Unity.exe",
     ],
     "Darwin": [
         "/Applications/Unity/Hub/Editor/*/Unity.app/Contents/MacOS/Unity",

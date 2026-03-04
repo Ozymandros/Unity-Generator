@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 from threading import Thread
 
 from fastapi import APIRouter
@@ -52,7 +53,8 @@ def _run_finalize_in_background(job_id: str, request: FinalizeProjectRequest) ->
         # project_path is always base_path (from settings DB) + project_name; never use project_name alone as path
         project_path_str = request.project_path
         if project_path_str and project_path_str.strip():
-            p = project_path_str.strip().replace("\\", "/")
+            # Normalize path for cross-platform consistency
+            p = Path(project_path_str.strip()).as_posix()
             if "/" not in p:
                 # Single segment = project name only → resolve to base_path + project_name
                 project_path_str = resolve_project_path(project_path_str.strip())
@@ -176,7 +178,6 @@ def _run_finalize_in_background(job_id: str, request: FinalizeProjectRequest) ->
 
         # I will stick to what main.py had.
 
-        from pathlib import Path
         result = run_finalize_job(
             project_path=Path(project_path_str),
             unity_path=unity_path,

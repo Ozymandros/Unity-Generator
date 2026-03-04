@@ -68,6 +68,42 @@ Unity Generator is optimized for development with **VS Code**:
 
 All contributions must follow the **SRP**, **KISS**, and **Clean Architecture** principles outlined in the development guide.
 
+## 🔥 Cross-Platform Support
+
+Unity Generator runs on **Windows**, **Linux**, and **macOS** with full feature parity.
+
+### Development Setup (All Platforms)
+
+```bash
+# Install dependencies (works on all platforms)
+pnpm run setup
+
+# Start backend (cross-platform)
+pnpm run backend:dev
+
+# Start frontend (cross-platform)
+pnpm run dev
+```
+
+### Containerized Development
+
+All platforms support Docker/Docker Compose:
+
+```bash
+docker-compose up
+```
+
+### Validation
+
+The project maintains cross-platform compatibility through:
+
+- **Automated CI**: Tests run on Ubuntu, Windows, and macOS on every PR
+- **Path Handling**: Uses `pathlib.Path` throughout for safe cross-platform file operations
+- **Shell Scripts**: Build and dev scripts use cross-platform npm/pnpm commands
+- **Configuration**: Platform-agnostic JSON/YAML configs (no hardcoded paths)
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for platform-specific development guidelines.
+
 ## Quick Start
 
 1. **Setup**: Install all dependencies (Backend & Frontend)

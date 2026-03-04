@@ -52,6 +52,6 @@ extraPaths = [".."]
 reportMissingImports = true
 reportGeneralTypeIssues = false
 pythonVersion = "3.10"
-pythonPlatform = "Windows"
+pythonPlatform = "Linux"
 
 

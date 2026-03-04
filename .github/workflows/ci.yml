@@ -12,8 +12,11 @@ concurrency:
 
 jobs:
   backend:
-    name: Backend
-    runs-on: ubuntu-latest
+    name: Backend (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     defaults:
       run:
         shell: bash
@@ -44,14 +47,12 @@ jobs:
         working-directory: backend
         run: pytest -c pytest.ini
 
-      - name: Build backend binary
-        run: |
-          chmod +x scripts/build_backend.sh
-          ./scripts/build_backend.sh
-
   frontend:
-    name: Frontend
-    runs-on: ubuntu-latest
+    name: Frontend (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     defaults:
       run:
         shell: bash
@@ -92,7 +93,7 @@ jobs:
         run: pnpm run build
 
   playwright:
-    name: Playwright E2E
+    name: Playwright E2E (Ubuntu)
     runs-on: ubuntu-latest
     needs: frontend
     defaults:
