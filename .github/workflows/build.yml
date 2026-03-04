@@ -40,7 +40,8 @@ jobs:
       - name: Ensure curl is available
         run: choco install curl -y
 
-      - name: Install dependencies
+      - name: Install dependencies (frontend)
+        working-directory: frontend
         run: pnpm install --no-frozen-lockfile
 
       - name: Get pnpm store path
@@ -58,9 +59,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-
 
-      - name: Build Package (Backend + Frontend)
+      - name: Build Package (frontend)
+        working-directory: frontend
         run: pnpm run package
-
+            
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
