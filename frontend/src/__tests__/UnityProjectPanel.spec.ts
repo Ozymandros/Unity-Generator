@@ -17,12 +17,38 @@ const emitUpdate = async (wrapper: VueWrapper<unknown>, label: string, value: un
   await (wrapper.vm as unknown as { $nextTick: () => Promise<void> }).$nextTick();
 };
 
+function getGenerateButton(wrapper: VueWrapper<unknown>) {
+  return wrapper.findAll("button").find((b) => b.text().includes("Generate Base Project"));
+}
+
+function getOpenFolderButton(wrapper: VueWrapper<unknown>) {
+  return wrapper.findAll("button").find((b) => b.text().includes("Open Folder"));
+}
+
+function getStatusText(wrapper: VueWrapper<unknown>): string {
+  const banner = wrapper.findComponent({ name: "StatusBanner" });
+  const prop = banner.exists() ? banner.props("status") : undefined;
+  if (prop != null && prop !== "") return String(prop);
+  return wrapper.text();
+}
+
 const SESSION_NAME_KEY = "unity_session_project_name";
 const SESSION_PATH_KEY = "unity_session_project_path";
 
 describe("UnityProjectPanel", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.mocked(client.getUnityVersions).mockResolvedValue({
+      success: true,
+      date: new Date().toISOString(),
+      error: null,
+      data: {
+        versions: [
+          { value: "6000.3.2f1", label: "6000.3.2f1" },
+          { value: "2022.3", label: "2022.3 LTS" },
+        ],
+      },
+    });
     (window as unknown as { __TAURI__?: unknown }).__TAURI__ = undefined;
     // Align with useSessionProject: default name so panel and finalize tests see "UnityProject"
     vi.stubGlobal("sessionStorage", {
@@ -42,6 +68,7 @@ describe("UnityProjectPanel", () => {
       stubs: {
         'v-expand-transition': { template: '<div><slot /></div>' },
         'v-fade-transition': { template: '<div><slot /></div>' },
+        'v-dialog': { template: '<div v-if="modelValue"><slot /></div>', props: ['modelValue'] },
         'status-banner': true
       }
     }
@@ -69,8 +96,8 @@ describe("UnityProjectPanel", () => {
     await emitUpdate(wrapper, 'Unity Version', "2022.3");
     await emitUpdate(wrapper, 'Target Platform', "windows");
 
-    // Click Generate Base Project (first button)
-    await wrapper.findAll("button")[0].trigger("click");
+    const generateBtn = getGenerateButton(wrapper);
+    await generateBtn!.trigger("click");
     await flushPromises();
 
     expect(client.generateUnityProject).toHaveBeenCalledWith({
@@ -94,7 +121,8 @@ describe("UnityProjectPanel", () => {
     await emitUpdate(wrapper, 'Unity Template', "3d");
     await emitUpdate(wrapper, 'Unity Version', "2022.3");
     await emitUpdate(wrapper, 'Target Platform', "windows");
-    await wrapper.findAll("button")[0].trigger("click");
+    const generateBtn = getGenerateButton(wrapper);
+    await generateBtn!.trigger("click");
     await flushPromises();
 
     const resultField = wrapper.findAllComponents(SmartField).find(f => f.props('label') === "Result (JSON)");
@@ -114,10 +142,11 @@ describe("UnityProjectPanel", () => {
     await emitUpdate(wrapper, 'Unity Template', "3d");
     await emitUpdate(wrapper, 'Unity Version', "2022.3");
     await emitUpdate(wrapper, 'Target Platform', "windows");
-    await wrapper.findAll("button")[0].trigger("click");
+    const generateBtn = getGenerateButton(wrapper);
+    await generateBtn!.trigger("click");
     await flushPromises();
 
-    expect(wrapper.find("status-banner-stub").attributes("status") || (wrapper.findComponent({ name: 'StatusBanner' }).props('status'))).toContain("Project generation failed");
+    expect(getStatusText(wrapper)).toContain("Project generation failed");
   });
 
   it("renders with default settings", () => {
@@ -141,19 +170,21 @@ describe("UnityProjectPanel", () => {
     };
 
     const wrapper = mountPanel();
+    await flushPromises();
     await emitUpdate(wrapper, 'Project Name', "TestProject");
     await emitUpdate(wrapper, 'Unity Template', "3d");
     await emitUpdate(wrapper, 'Unity Version', "2022.3");
     await emitUpdate(wrapper, 'Target Platform', "windows");
-    await wrapper.findAll("button")[0].trigger("click");
+    const generateBtn = getGenerateButton(wrapper);
+    await generateBtn!.trigger("click");
     await flushPromises();
 
-    // Secondary button is Open Folder (index 1)
-    await wrapper.findAll("button")[1].trigger("click");
+    const openFolderBtn = getOpenFolderButton(wrapper);
+    await openFolderBtn!.trigger("click");
     await flushPromises();
 
     expect(openMock).toHaveBeenCalledWith("C:/output/TestProject");
-    expect(wrapper.find("status-banner-stub").attributes("status")).toContain("Opened output folder.");
+    expect(getStatusText(wrapper)).toContain("Opened output folder.");
   });
 
   it("falls back to latest output when no project path exists", async () => {
@@ -170,12 +201,14 @@ describe("UnityProjectPanel", () => {
     };
 
     const wrapper = mountPanel();
-    await wrapper.findAll("button")[1].trigger("click");
+    await flushPromises();
+    const openFolderBtn = getOpenFolderButton(wrapper);
+    await openFolderBtn!.trigger("click");
     await flushPromises();
 
     expect(client.getLatestOutput).toHaveBeenCalled();
     expect(openMock).toHaveBeenCalledWith("C:/output/Latest");
-    expect(wrapper.find("status-banner-stub").attributes("status") || (wrapper.findComponent({ name: 'StatusBanner' }).props('status'))).toContain("Opened output folder.");
+    expect(getStatusText(wrapper)).toContain("Opened output folder.");
   });
 
   it("shows a fallback message when Tauri is unavailable", async () => {
@@ -190,10 +223,12 @@ describe("UnityProjectPanel", () => {
       undefined;
 
     const wrapper = mountPanel();
-    await wrapper.findAll("button")[1].trigger("click");
+    await flushPromises();
+    const openFolderBtn = getOpenFolderButton(wrapper);
+    await openFolderBtn!.trigger("click");
     await flushPromises();
 
-    expect(wrapper.find("status-banner-stub").attributes("status") || (wrapper.findComponent({ name: 'StatusBanner' }).props('status'))).toContain("Tauri not available in web build");
+    expect(getStatusText(wrapper)).toContain("Tauri not available in web build");
   });
 
   // -------------------------------------------------------------------

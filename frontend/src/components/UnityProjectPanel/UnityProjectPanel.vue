@@ -8,8 +8,15 @@ const {
   settings,
   finalize,
   UNITY_TEMPLATES,
-  UNITY_VERSIONS,
+  unityVersions,
   UNITY_PLATFORMS,
+  addVersionDialog,
+  newVersionId,
+  newVersionLabel,
+  addVersionError,
+  openAddVersionDialog,
+  closeAddVersionDialog,
+  submitAddVersion,
   status,
   tone,
   result,
@@ -52,10 +59,19 @@ const {
           label="Unity Version" 
           type="select" 
           v-model="settings.version" 
-          :options="UNITY_VERSIONS" 
+          :options="unityVersions" 
           placeholder="Select version..."
           required 
         />
+        <v-btn
+          variant="text"
+          size="small"
+          class="mt-1"
+          prepend-icon="mdi-plus"
+          @click="openAddVersionDialog"
+        >
+          Add version
+        </v-btn>
       </div>
       <div class="field-sm">
         <SmartField 
@@ -90,6 +106,32 @@ const {
         Open Folder
       </v-btn>
     </div>
+
+    <v-dialog v-model="addVersionDialog" max-width="400" persistent>
+      <v-card title="Add Unity Version" class="pa-4">
+        <v-card-text>
+          <SmartField
+            label="Version ID"
+            v-model="newVersionId"
+            placeholder="e.g. 6000.3.2f1"
+          />
+          <SmartField
+            label="Label (optional)"
+            v-model="newVersionLabel"
+            placeholder="Display name; defaults to ID"
+            class="mt-2"
+          />
+          <v-alert v-if="addVersionError" type="error" density="compact" class="mt-2">
+            {{ addVersionError }}
+          </v-alert>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="closeAddVersionDialog">Cancel</v-btn>
+          <v-btn color="primary" @click="submitAddVersion">Add</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <SmartField label="Result (JSON)" type="textarea" v-model="result" :rows="8" disabled />
 

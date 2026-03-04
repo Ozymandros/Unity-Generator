@@ -87,7 +87,7 @@ def health() -> dict[str, Any]:
     return {"status": "ok"}
 
 
-from app.routers import config, finalize, generation, prefs, projects, scenes, management
+from app.routers import config, finalize, generation, prefs, projects, scenes, management, unity_versions
 
 # Include routers
 logger.info("Including routers...")
@@ -98,6 +98,7 @@ app.include_router(projects.router)
 app.include_router(scenes.router)
 app.include_router(finalize.router)
 app.include_router(management.router)
+app.include_router(unity_versions.router)
 logger.info("Routers included.")
 
 # Uvicorn logging config (optional, for visibility)

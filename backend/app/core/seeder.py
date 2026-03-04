@@ -2,7 +2,7 @@ import logging
 import sqlite3
 import json
 from typing import Dict, List, Any
-from .db import get_all_prefs, set_pref, get_db_path # keep for legacy migration if needed
+from .db import get_all_prefs, set_pref, get_db_path, get_unity_versions, seed_unity_versions
 from ..repositories import (
     get_provider_repo,
     get_model_repo,
@@ -222,6 +222,11 @@ def seed_database():
         LOGGER.info("Seeding default system prompts...")
         for modality, content in DEFAULT_SYSTEM_PROMPTS.items():
             prompt_repo.save(modality, content)
+
+    # 2b. Seed Unity versions (initial default 6000.3.2f1; user can add more)
+    if not get_unity_versions():
+        LOGGER.info("Seeding default Unity version 6000.3.2f1...")
+        seed_unity_versions([{"value": "6000.3.2f1", "label": "6000.3.2f1"}])
 
     # 3. Migrate API keys from legacy storage
     existing_keys = api_key_repo.get_all()

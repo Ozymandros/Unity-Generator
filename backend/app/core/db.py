@@ -81,6 +81,14 @@ def init_db() -> None:
             )
             """
         )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS unity_versions (
+                id TEXT PRIMARY KEY,
+                label TEXT NOT NULL
+            )
+            """
+        )
         conn.commit()
     finally:
         conn.close()
@@ -269,6 +277,69 @@ def seed_default_models(defaults: dict[str, list[dict[str, str]]]) -> None:
                     """,
                     (provider.lower(), m["value"], m["label"]),
                 )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+# ---------------------------------------------------------------------------
+# Unity versions (label + id for dropdown)
+# ---------------------------------------------------------------------------
+
+
+def get_unity_versions() -> list[dict[str, str]]:
+    """
+    Return all Unity versions for dropdown (id = version string, label = display text).
+
+    Returns:
+        List of dicts with ``value`` (id) and ``label`` keys.
+    """
+    conn = sqlite3.connect(get_db_path())
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, label FROM unity_versions ORDER BY id")
+        return [{"value": row[0], "label": row[1]} for row in cursor.fetchall()]
+    finally:
+        conn.close()
+
+
+def add_unity_version(version_id: str, label: str) -> None:
+    """
+    Add a Unity version (id + label). Id is the version string (e.g. 6000.3.2f1).
+
+    Raises:
+        ValueError: If version_id or label is empty.
+    """
+    if not version_id or not version_id.strip():
+        raise ValueError("version_id must be non-empty")
+    if not label or not label.strip():
+        raise ValueError("label must be non-empty")
+    conn = sqlite3.connect(get_db_path())
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO unity_versions (id, label) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET label = excluded.label",
+            (version_id.strip(), label.strip()),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def seed_unity_versions(defaults: list[dict[str, str]]) -> None:
+    """
+    Seed unity_versions table if empty. Each item must have ``value`` (id) and ``label``.
+    """
+    if get_unity_versions():
+        return
+    conn = sqlite3.connect(get_db_path())
+    try:
+        cursor = conn.cursor()
+        for item in defaults:
+            cursor.execute(
+                "INSERT INTO unity_versions (id, label) VALUES (?, ?)",
+                (item["value"], item["label"]),
+            )
         conn.commit()
     finally:
         conn.close()

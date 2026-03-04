@@ -266,6 +266,34 @@ export async function getLatestOutput() {
   return (await response.json()) as GenerationResponse;
 }
 
+// ---------------------------------------------------------------------------
+// Unity versions (dropdown: label + id; user can add more)
+// ---------------------------------------------------------------------------
+
+export type UnityVersionOption = { value: string; label: string };
+
+export async function getUnityVersions(): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/unity-versions`, {
+    method: "GET",
+  });
+  return (await response.json()) as GenerationResponse;
+}
+
+export async function addUnityVersion(body: {
+  value: string;
+  label?: string;
+}): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/unity-versions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      value: body.value,
+      label: body.label ?? body.value,
+    }),
+  });
+  return (await response.json()) as GenerationResponse;
+}
+
 export async function healthCheck() {
   const response = await fetch(`${getBackendUrl()}/health`, {
     method: "GET",
