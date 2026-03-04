@@ -63,19 +63,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "25"
-          cache: "pnpm"
-          cache-dependency-path: pnpm-lock.yaml
-
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 10
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "25"
+          cache: "pnpm"
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
       - name: Install frontend dependencies
+        working-directory: frontend
         run: pnpm install --no-frozen-lockfile
 
       - name: Lint frontend
@@ -118,9 +119,10 @@ jobs:
         with:
           node-version: "25"
           cache: "pnpm"
-          cache-dependency-path: pnpm-lock.yaml
+          cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: Install frontend dependencies
+        working-directory: frontend
         run: pnpm install --no-frozen-lockfile
 
       - name: Install Playwright browsers
