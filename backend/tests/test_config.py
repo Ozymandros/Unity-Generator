@@ -1,21 +1,18 @@
 """Tests for config module."""
 
-
-import json
 from pathlib import Path
-from pyfakefs.fake_filesystem_unittest import patchfs
-from pyfakefs import fake_filesystem as fs
+
 import pytest
 
 from app.core import config
 
 
-def test_get_repo_root(fs: fs.FakeFilesystem) -> None:
-    """Test that get_repo_root returns a valid path."""
-    fs.create_dir('C:/Projects/Unity-Generator')
+def test_get_repo_root() -> None:
+    """Test that get_repo_root returns repo root (derived from config file location)."""
     root = config.get_repo_root()
     assert isinstance(root, Path)
-    assert root.exists()
+    # Structure: repo_root/backend/app/core/config.py => parents[3] = repo_root
+    assert config.get_app_dir() == root / "backend" / "app"
 
 
 def test_get_config_dir() -> None:
@@ -38,10 +35,10 @@ def test_get_logs_dir() -> None:
 
 
 def test_get_templates_dir() -> None:
-    """Test that get_templates_dir is under repo root."""
+    """Test that get_templates_dir is under app dir (backend/app/templates/unity)."""
     templates_dir = config.get_templates_dir()
     assert templates_dir.name == "unity"
-    assert templates_dir == config.get_repo_root() / "backend" / "templates" / "unity"
+    assert templates_dir == config.get_repo_root() / "backend" / "app" / "templates" / "unity"
 
 
 def test_get_db_dir_override(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

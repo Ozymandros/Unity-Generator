@@ -42,9 +42,9 @@ jobs:
         run: python -m compileall app
 
       - name: Lint backend
+        continue-on-error: true
         working-directory: backend
         run: ruff check app
-        continue-on-error: true
 
       - name: Backend tests
         working-directory: backend
@@ -78,9 +78,9 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Lint frontend
+        continue-on-error: true
         working-directory: frontend
         run: pnpm run lint:check
-        continue-on-error: true
 
       - name: Typecheck frontend
         working-directory: frontend
