@@ -68,4 +68,7 @@ reportGeneralTypeIssues = false
 pythonVersion = "3.10"
 pythonPlatform = "Linux"
 
+[project.optional-dependencies]
+dev = ["pyfakefs", "pytest", "ruff", "mypy"]
+
 
