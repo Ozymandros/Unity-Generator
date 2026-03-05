@@ -132,7 +132,7 @@ jobs:
       - name: Start Vite dev server
         working-directory: frontend
         run: |
-          pnpm run dev -- --host 127.0.0.1 --port 5173 --strictPort > /tmp/vite.log 2>&1 &
+          pnpm run dev -- --host 127.0.0.1 --port 5173 > /tmp/vite.log 2>&1 &
           echo "Waiting for Vite server to be ready..."
           sleep 8
           echo "Vite server should be running"
