@@ -1,17 +1,18 @@
 {
-    "version": "0.9.0",
+    "version": "0.9.1",
     "description": "Desktop app to generate Unity assets using AI (Tauri + FastAPI)",
     "name": "unity-generator",
     "private": true,
     "scripts": {
-        "// --- Build & Distribution ---": "",
-        "build:backend": "cd backend && python -m pip install -e .",
+        "// --- Build & Distribution (Requires Rust) ---": "",
+        "build:backend": "python scripts/build_backend.py",
         "build:frontend": "pnpm --dir frontend build",
         "package": "pnpm run build:backend && pnpm run tauri:build",
-        "// --- Development ---": "",
+        "// --- Development (No Rust Required) ---": "",
         "backend:dev": "cd backend && python -m uvicorn app.main:app --reload --port 8000",
         "backend:debug": "cd backend && python -m debugpy --listen 0.0.0.0:5678 -m uvicorn app.main:app --reload --port 8000",
         "dev": "pnpm --dir frontend dev:tauri",
+        "// --- Tauri Commands (Require Rust) ---": "",
         "tauri": "pnpm --dir frontend tauri",
         "tauri:build": "pnpm --dir frontend tauri build",
         "// --- Quality Control: Frontend & Backend ---": "",
@@ -33,6 +34,7 @@
         "setup": "pnpm install && pnpm --dir frontend install && pip install -r backend/requirements.txt"
     },
     "devDependencies": {
+        "@tauri-apps/cli": "^1.6.3",
         "@types/node": "^25.3.0",
         "@vitejs/plugin-vue": "^6.0.4",
         "@vitest/ui": "^4.0.18",

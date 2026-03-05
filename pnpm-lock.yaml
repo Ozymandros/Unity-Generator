@@ -11,6 +11,9 @@ importers:
 
   .:
     devDependencies:
+      '@tauri-apps/cli':
+        specifier: ^1.6.3
+        version: 1.6.3
       '@types/node':
         specifier: ^25.3.0
         version: 25.3.0

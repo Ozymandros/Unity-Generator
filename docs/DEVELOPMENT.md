@@ -8,9 +8,18 @@ Tauri + Vue frontend.
 - Python 3.11+
 - Node.js 20+
 - pnpm
-- Rust toolchain (for Tauri builds)
+- **Rust toolchain** (for Tauri builds: `tauri build`, `tauri dev`)
 - Docker (optional, for dev/CI workflows)
 - **VS Code** (recommended IDE) with **Volar** extension
+
+### Installing the Rust toolchain (Tauri)
+
+Tauri needs `cargo` and the Rust toolchain. If you see **"failed to get cargo metadata: program not found"** when running `tauri build` or `tauri dev`, install Rust:
+
+- **Windows**: Install [rustup](https://rustup.rs/) (run the installer from https://rustup.rs/ or `winget install Rustlang.Rustup`), then **restart your terminal** so `cargo` is on `PATH`.
+- **macOS / Linux**: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`, then restart the terminal or run `source "$HOME/.cargo/env"`.
+
+Verify with: `cargo --version`.
 
 ## Integrated Development Environment
 

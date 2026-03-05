@@ -1,14 +1,13 @@
-name: Build and Release
+name: Release
 
 on:
-  pull_request:
-    branches:
-      - main
-      - develop
+  push:
+    tags:
+      - 'v*.*.*'
 
 jobs:
-  build:
-    name: Build (${{ matrix.os }})
+  build-release:
+    name: Build Release (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -34,7 +33,7 @@ jobs:
         with:
           node-version: "25"
           cache: "pnpm"
-          cache-dependency-path: frontend/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -53,7 +52,6 @@ jobs:
             patchelf
 
       - name: Install frontend dependencies
-        working-directory: frontend
         run: pnpm install --no-frozen-lockfile
 
       - name: Build backend sidecar
@@ -76,15 +74,22 @@ jobs:
       - name: Build Package
         run: pnpm -w run tauri:build
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: Unity-Generator-${{ runner.os }}
-          path: frontend/src-tauri/target/release/bundle/**/*
-
-      - name: Upload SK Integration Docs
+      - name: Upload Release Assets (Windows)
         if: runner.os == 'Windows'
-        uses: actions/upload-artifact@v4
+        uses: softprops/action-gh-release@v1
         with:
-          name: SK-Integration-Docs
-          path: docs/UNITY_MCP_SK_*
+          files: frontend/src-tauri/target/release/bundle/msi/*.msi
+
+      - name: Upload Release Assets (Linux)
+        if: runner.os == 'Linux'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            frontend/src-tauri/target/release/bundle/appimage/*.AppImage
+            frontend/src-tauri/target/release/bundle/deb/*.deb
+
+      - name: Upload Release Assets (macOS)
+        if: runner.os == 'macOS'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: frontend/src-tauri/target/release/bundle/dmg/*.dmg

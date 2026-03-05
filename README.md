@@ -106,17 +106,45 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for platform-specific development guideli
 
 ## Quick Start
 
-1. **Setup**: Install all dependencies (Backend & Frontend)
+### For Development (No Rust Required)
 
+Most development doesn't require building the full installer:
+
+```bash
+# 1. Install dependencies
+pnpm run setup
+
+# 2. Start dev servers (backend + frontend with hot reload)
+pnpm run dev
+```
+
+This launches the app in Tauri dev mode with live reloading - **Rust is not required**.
+
+### For Local Packaging (Requires Rust)
+
+To build the full native installer locally:
+
+1. **Install Rust** (one-time setup):
+   - Windows: `winget install Rustlang.Rustup` or download from [rustup.rs](https://rustup.rs/)
+   - macOS/Linux: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+   - Restart your terminal after installation
+
+2. **Build the package**:
    ```bash
-   pnpm run setup
+   pnpm run package
    ```
+   This creates the native installer:
+   - **Windows**: `.msi` in `frontend/src-tauri/target/release/bundle/msi/`
+   - **Linux**: `.AppImage` and `.deb` in `frontend/src-tauri/target/release/bundle/`
+   - **macOS**: `.dmg` in `frontend/src-tauri/target/release/bundle/dmg/`
 
-2. **Run**: Start the Tauri development environment
+### For Production Releases (Automated)
 
-   ```bash
-   pnpm run dev
-   ```
+**You don't need to build installers manually.** CI automatically builds for all platforms:
+
+1. Tag a release: `git tag -a v1.0.0 -m "Release v1.0.0" && git push origin v1.0.0`
+2. GitHub Actions builds Windows/Linux/macOS installers
+3. Download from the [Releases page](https://github.com/Ozymandros/Unity-Generator/releases)
 
 ## How it works
 
@@ -295,3 +323,16 @@ Tauri app.
 ## Unity MCP Integration
 
 See [docs/UNITY_MCP_INTEGRATION.md](docs/UNITY_MCP_INTEGRATION.md) for details on the Semantic Kernel MCP integration, configuration, and usage.
+
+## Download
+
+You can download prebuilt packages from GitHub:
+
+- **Latest stable builds (recommended):**  
+  https://github.com/Ozymandros/Unity-Generator/releases
+
+- **CI artifacts from latest workflow runs:**  
+  https://github.com/Ozymandros/Unity-Generator/actions/workflows/build.yml
+
+> Note: GitHub Actions artifacts are tied to a workflow run and may expire.  
+> For permanent downloads, use **Releases**.

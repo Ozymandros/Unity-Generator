@@ -1,6 +1,6 @@
 {
   "name": "unity-generator-backend",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Backend for Unity Generator",
   "private": true,
   "scripts": {
@@ -10,7 +10,7 @@
     "format": "ruff format . --config pyproject.toml",
     "format:check": "ruff format . --config pyproject.toml --check",
     "test": "pytest -c pytest.ini",
-    "build": "pip install -r requirements.txt",
+    "build": "pip install -r requirements.txt --target dist && shx cp -r app dist/app",
     "start": "docker compose -f ../docker-compose.yml up --build",
     "dev": "python -m uvicorn app.main:app --reload --port 8000"
   }
