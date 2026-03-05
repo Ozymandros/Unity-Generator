@@ -129,9 +129,17 @@ jobs:
         working-directory: frontend
         run: npx playwright install --with-deps
 
+      - name: Start Vite dev server
+        working-directory: frontend
+        run: |
+          pnpm run dev -- --host 127.0.0.1 --port 5173 --strictPort > /tmp/vite.log 2>&1 &
+          echo "Waiting for Vite server to be ready..."
+          sleep 8
+          echo "Vite server should be running"
+
       - name: Run Playwright tests
         working-directory: frontend
         env:
-          CI: true
+          CI: false
           DEBUG: pw:webserver
         run: pnpm run test:e2e
