@@ -1,8 +1,20 @@
 # Unity Generator
 
+## 🏗️ Project Status
+
+[![Latest Release](https://img.shields.io/github/v/release/Ozymandros/Unity-Generator?display_name=tag)](https://github.com/Ozymandros/Unity-Generator/releases)
 [![CI](https://github.com/Ozymandros/Unity-Generator/actions/workflows/ci.yml/badge.svg)](https://github.com/Ozymandros/Unity-Generator/actions/workflows/ci.yml)
+[![Build](https://github.com/Ozymandros/Unity-Generator/actions/workflows/build.yml/badge.svg)](https://github.com/Ozymandros/Unity-Generator/actions/workflows/build.yml)
+[![Release](https://github.com/Ozymandros/Unity-Generator/actions/workflows/release.yml/badge.svg)](https://github.com/Ozymandros/Unity-Generator/actions/workflows/release.yml)
+
+## 🔒 Quality & Security
+
 [![CodeQL](https://github.com/Ozymandros/Unity-Generator/actions/workflows/codeql.yml/badge.svg)](https://github.com/Ozymandros/Unity-Generator/security/code-scanning)
 [![Dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot&logoColor=white)](https://github.com/Ozymandros/Unity-Generator/security/dependabot)
+[![Playwright](https://img.shields.io/badge/Playwright-45ba4b?logo=playwright&logoColor=white)](https://github.com/Ozymandros/Unity-Generator/actions/workflows/ci.yml)
+
+## 💻 Tech Stack
+
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
 ![Semantic Kernel](https://img.shields.io/badge/Semantic%20Kernel-512BD4)
@@ -11,18 +23,17 @@
 ![Tauri](https://img.shields.io/badge/Tauri-1.x-24C8DB?logo=tauri&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![pnpm](https://img.shields.io/badge/pnpm-F69220?logo=pnpm&logoColor=white)
-[![Playwright](https://img.shields.io/badge/Playwright-45ba4b?logo=playwright&logoColor=white)](https://github.com/Ozymandros/Unity-Generator/actions/workflows/ci.yml)
 
-Unity Generator is a lightweight desktop app for generating Unity C# code, text,
-images, and audio using cloud AI providers. It ships a Tauri + Vue UI with a
-local FastAPI backend orchestrated by Semantic Kernel. All API keys are provided
-by the user and stored locally.
+Unity Generator is a lightweight desktop app for generating Unity C# code and assets (text,
+images, and audio) using cloud AI providers. It ships a Tauri + Vue UI with a
+local FastAPI backend orchestrated by Semantic Kernel, including a custom plug-in: Unity MCP server. All API keys are provided
+by the user and stored locally. The app is designed to be a fast, local-first assistant for Unity developers, with a focus on incremental asset generation and seamless integration with active Unity projects.
 
 ## Why this exists
 
 Unity Generator is a small, local-first studio assistant. It keeps the UI fast,
 the backend lightweight, and prompts flexible so you can iterate on Unity code
-and assets without wiring multiple tools together.
+and assets without wiring multiple tools together. It’s not a full IDE or asset pipeline replacement - it’s just a quick way to generate and save Unity-ready code snippets, text, images, and audio assets using your choice of providers. It’s designed to slot into your existing workflow and let you iterate on generated assets in an active Unity project without friction.
 
 ## What it can do
 
@@ -34,6 +45,9 @@ and assets without wiring multiple tools together.
 - Save and reuse provider settings and preferences locally
 - Configure global and per-request system key prompts for tailored generation
 - Keep output structured so Unity can open it right away
+- Run on Windows, Linux, and macOS with full feature parity
+- Package as native installers with Tauri (no Docker dependency for end users)
+- Open-source and extensible with a modular architecture
 
 ## Workspace Structure
 
@@ -48,7 +62,7 @@ and assets without wiring multiple tools together.
 
 ## Status
 
-Scaffolded and functional. See docs for development and packaging details.
+Scaffolded and functional. See docs for development and packaging details. The project is in early stages and may have rough edges, but the core architecture is in place. Contributions are welcome!
 
 ## Documentation
 

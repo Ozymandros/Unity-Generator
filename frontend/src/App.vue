@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import ScenesPanel from "./components/ScenesPanel.vue";
 import SettingsPanel from "./components/SettingsPanel/SettingsPanel.vue";
 import CodePanel from "./components/CodePanel/CodePanel.vue";
 import TextPanel from "./components/TextPanel/TextPanel.vue";
@@ -10,6 +9,7 @@ import SpritesPanel from "./components/SpritesPanel/SpritesPanel.vue";
 import UnityProjectPanel from "./components/UnityProjectPanel/UnityProjectPanel.vue";
 import { useApp } from "./App";
 import { useSessionProject } from "./composables/useSessionProject";
+import ScenesPanel from "./components/ScenesPanel.vue";
 
 const { tabs, active, backendStatus, setActive } = useApp();
 const { projectName } = useSessionProject();
@@ -56,7 +56,8 @@ const getTabIcon = (tab: string) => {
 
       <v-list nav density="comfortable">
         <v-list-item v-for="tab in tabs.filter(t => t !== 'Management')" :key="tab" :active="tab === active"
-          :prepend-icon="getTabIcon(tab)" :title="tab" rounded="xl" class="mb-1 nav-item" @click="setActive(tab)"
+          :prepend-icon="getTabIcon(tab)" :title="tab" :data-testid="`nav-${tab.replace(/\s+/g, '-')}`"
+          rounded="xl" class="mb-1 nav-item" @click="setActive(tab)"
           color="primary"></v-list-item>
       </v-list>
 

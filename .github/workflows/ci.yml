@@ -137,7 +137,7 @@ jobs:
         env:
           VITE_PORT: ${{ env.VITE_PORT }}
         run: |
-          pnpm run dev -- --host 127.0.0.1 --port $VITE_PORT > /tmp/vite.log 2>&1 &
+          pnpm exec vite --host 127.0.0.1 --port $VITE_PORT > /tmp/vite.log 2>&1 &
           echo "Waiting for Vite server to be ready..."
           sleep 10
           echo "Vite server should be running"
@@ -147,4 +147,5 @@ jobs:
         env:
           CI: true
           PORT: ${{ env.VITE_PORT }}
+          VITE_PORT: ${{ env.VITE_PORT }}
         run: pnpm run test:e2e

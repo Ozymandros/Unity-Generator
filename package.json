@@ -22,6 +22,7 @@
         "lint:frontend:fix": "pnpm --dir frontend lint",
         "test:backend": "pnpm --dir backend test",
         "test:frontend": "pnpm --dir frontend test",
+        "test:frontend:e2e": "pnpm --dir frontend test:e2e",
         "typecheck:backend": "pnpm --dir backend typecheck",
         "typecheck:frontend": "pnpm --dir frontend typecheck",
         "// --- Quality Control: Unified ---": "",

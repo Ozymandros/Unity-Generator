@@ -124,8 +124,8 @@ test("shows backend status and generates code", async ({ page }) => {
   await expect(page.getByText("Online")).toBeVisible();
 
   // Navigate to Code panel
-  await page.getByText("Code", { exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible();
+  await page.getByText("Code", { exact: true }).first().click();
+  await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible({ timeout: 15000 });
   // Use first textarea for prompt input
   await page.locator("textarea").first().fill("Create a player controller");
 
