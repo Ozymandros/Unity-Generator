@@ -20,9 +20,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
-          cache: "pip"
-          cache-dependency-path: backend/requirements.txt
+          python-version: '3.11'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -32,14 +30,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "25"
-          cache: "pnpm"
-          cache-dependency-path: frontend/pnpm-lock.yaml
+          node-version: '25'
+          cache: 'pnpm'
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          components: rustfmt, clippy
+
+      - name: Add universe repo and update (Ubuntu only)
+        if: runner.os == 'Linux'
+        run: |
+          sudo add-apt-repository universe
+          sudo apt-get update
 
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
