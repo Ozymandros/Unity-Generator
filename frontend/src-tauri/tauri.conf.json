@@ -18,10 +18,6 @@
         "icons/128x128.png",
         "icons/icon.icns",
         "icons/icon.ico"
-      ],
-      "resources": [
-        "../../backend/dist/unity-generator-backend.exe",
-        "../../backend/dist/unity-generator-backend"
       ]
     },
     "windows": [
