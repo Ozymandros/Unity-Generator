@@ -129,17 +129,22 @@ jobs:
         working-directory: frontend
         run: npx playwright install --with-deps
 
+      - name: Set random port for Vite
+        run: echo "VITE_PORT=$(( 49152 + RANDOM % 16384 ))" >> $GITHUB_ENV
+
       - name: Start Vite dev server
         working-directory: frontend
+        env:
+          VITE_PORT: ${{ env.VITE_PORT }}
         run: |
-          pnpm run dev -- --host 127.0.0.1 --port 5173 > /tmp/vite.log 2>&1 &
+          pnpm run dev -- --host 127.0.0.1 --port $VITE_PORT > /tmp/vite.log 2>&1 &
           echo "Waiting for Vite server to be ready..."
-          sleep 8
+          sleep 10
           echo "Vite server should be running"
 
       - name: Run Playwright tests
         working-directory: frontend
         env:
-          CI: false
-          DEBUG: pw:webserver
+          CI: true
+          PORT: ${{ env.VITE_PORT }}
         run: pnpm run test:e2e
