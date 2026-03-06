@@ -30,7 +30,6 @@ Always adhere to these fundamental principles:
 - **apiClient**: Unified API wrapper in `src/api/client.ts` for all backend communication (generation, prefs, jobs).
 - **SmartField**: Versatile UI component in `src/components/generic/SmartField.vue` for consistent form inputs.
 - **StatusBanner**: Standardized status and error reporting component in `src/components/StatusBanner.vue`.
-- **TauriShell**: OS-level integration for opening files and folders via `@tauri-apps/api/shell`.
 
 ## Code Organization Guidelines
 

@@ -19,6 +19,7 @@ import {
 } from "@/constants/providers";
 import { FINALIZE_STATUS, UI_TONE } from "@/constants/finalize";
 import { UNITY_TEMPLATES, UNITY_PLATFORMS } from "@/constants/unity";
+import { shell } from "electron";
 
 const DEFAULT_UNITY_VERSIONS: UnityVersionOption[] = [
   { value: "6000.3.2f1", label: "6000.3.2f1" },
@@ -317,14 +318,11 @@ export function useUnityProjectPanel() {
       }
 
       try {
-        const opened = await openWithTauri(path);
-        if (opened) {
-          status.value = "Opened output folder.";
-        } else {
-          status.value = `Path: ${path} (Tauri not available in web build)`;
-        }
-      } catch (tauriError) {
-        status.value = `Path: ${path} (Failed to open in Tauri: ${String(tauriError)})`;
+        // Use Electron shell API to open folder
+        shell.openPath(path);
+        status.value = "Opened output folder.";
+      } catch (error) {
+        status.value = `Path: ${path} (Failed to open: ${String(error)})`;
       }
     } catch (error) {
       tone.value = UI_TONE.ERROR;

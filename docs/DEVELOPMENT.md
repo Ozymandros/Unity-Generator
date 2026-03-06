@@ -126,7 +126,6 @@ The following frontend modules provide standardized capabilities:
 - **apiClient**: Unified API wrapper in `src/api/client.ts` for generation, preferences, and finalization jobs.
 - **SmartField**: A versatile UI component (`src/components/generic/SmartField.vue`) that handles various input types and validation.
 - **StatusBanner**: Consistent UI for status updates and error reporting.
-- **TauriShell**: Secure OS integration via Tauri's shell API for file system interaction.
 
 Use these skills when appropriate according to the task context. Be smart, mutatis mutandis. See [agents/SKILLS_USAGE.md](../agents/SKILLS_USAGE.md) for detailed implementation.
 
