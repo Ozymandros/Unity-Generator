@@ -5,13 +5,29 @@ export type GenerationResponse = {
   data: Record<string, unknown> | null;
 };
 
+export type CreateSceneRequest = {
+  prompt: string;
+  provider?: string;
+  options?: Record<string, unknown>;
+  api_key?: string;
+  system_prompt?: string;
+  project_name?: string;  // backend always uses base_path + project_name
+  project_path?: string;  // ignored by backend
+};
+
+export function createScene(body: CreateSceneRequest) {
+    return post<GenerationResponse>("/api/scenes/create", body);
+}
+
 export type GenerationRequest = {
   prompt: string;
-  system_prompt?: string;
+  modality?: string;
   provider?: string;
   api_key?: string;
   options?: Record<string, unknown>;
-  project_path?: string;
+  system_prompt?: string;
+  project_name?: string;  // backend always uses base_path + project_name
+  project_path?: string;  // ignored by backend
 };
 
 function getBackendUrl(): string {
@@ -51,9 +67,10 @@ export type SpritesRequest = {
   provider?: string;
   api_key?: string;
   resolution: number;
-  system_prompt?: string;
   options?: Record<string, unknown>;
-  project_path?: string;
+  system_prompt?: string;
+  project_name?: string;  // backend always uses base_path + project_name
+  project_path?: string;  // ignored by backend
 };
 
 export function generateSprites(body: SpritesRequest) {
@@ -69,13 +86,24 @@ export async function saveApiKeys(keys: Record<string, string>) {
   return (await response.json()) as GenerationResponse;
 }
 
-export async function setPref(key: string, value: string) {
+export async function getApiKeys() {
+  const response = await fetch(`${getBackendUrl()}/config/keys`, {
+    method: "GET",
+  });
+  return (await response.json()) as GenerationResponse;
+}
+
+export async function setPref(key: string, value: string): Promise<GenerationResponse> {
   const response = await fetch(`${getBackendUrl()}/prefs`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ key, value }),
   });
-  return (await response.json()) as GenerationResponse;
+  const body = (await response.json()) as GenerationResponse & { detail?: string };
+  if (!response.ok) {
+    throw new Error(body.detail ?? body.error ?? `Request failed (${response.status})`);
+  }
+  return body as GenerationResponse;
 }
 
 export async function getPref(key: string) {
@@ -85,16 +113,136 @@ export async function getPref(key: string) {
   return (await response.json()) as GenerationResponse;
 }
 
+// ---------------------------------------------------------------------------
+// Provider model management
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Management API
+// ---------------------------------------------------------------------------
+
+export type ModelEntry = {
+  value: string;
+  label: string;
+  modality: string;
+};
+
+export type ProviderCapabilities = {
+  name: string;
+  api_key_name: string | null;
+  base_url: string | null;
+  openai_compatible: boolean;
+  requires_api_key: boolean;
+  supports_vision: boolean;
+  supports_streaming: boolean;
+  supports_function_calling: boolean;
+  supports_tool_use: boolean;
+  modalities: string[];
+  default_models: Record<string, string>;
+  extra: Record<string, unknown>;
+};
+
+export async function listProviders(): Promise<ProviderCapabilities[]> {
+  const response = await fetch(`${getBackendUrl()}/api/management/providers`);
+  return await response.json();
+}
+
+export async function saveProvider(provider: ProviderCapabilities & { api_key_value?: string }): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/api/management/providers`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(provider),
+  });
+  return await response.json();
+}
+
+export async function deleteProvider(name: string): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/api/management/providers/${name}`, {
+    method: "DELETE",
+  });
+  return await response.json();
+}
+
+export async function listModels(provider: string): Promise<ModelEntry[]> {
+  const response = await fetch(`${getBackendUrl()}/api/management/models/${provider}`);
+  return await response.json();
+}
+
+export async function addModel(provider: string, value: string, label: string, modality: string = "llm"): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/api/management/models`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ provider, value, label, modality }),
+  });
+  return await response.json();
+}
+
+export async function removeModel(provider: string, value: string): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/api/management/models/${provider}/${encodeURIComponent(value)}`, {
+    method: "DELETE",
+  });
+  return await response.json();
+}
+
+export async function listApiKeys(): Promise<Record<string, string>> {
+  const response = await fetch(`${getBackendUrl()}/api/management/keys`);
+  return await response.json();
+}
+
+export async function saveApiKey(service_name: string, key_value: string): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/api/management/keys`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ service_name, key_value }),
+  });
+  return await response.json();
+}
+
+export async function deleteApiKey(service_name: string): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/api/management/keys/${service_name}`, {
+    method: "DELETE",
+  });
+  return await response.json();
+}
+
+export async function listSystemPrompts(): Promise<Record<string, string>> {
+  const response = await fetch(`${getBackendUrl()}/api/management/prompts`);
+  return await response.json();
+}
+
+export async function saveSystemPrompt(modality: string, content: string): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/api/management/prompts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ modality, content }),
+  });
+  return await response.json();
+}
+
+export type DiscoveryResponse = {
+  providers: ProviderCapabilities[];
+  models: Record<string, ModelEntry[]>;
+  prompts: Record<string, string>;
+  keys: string[];
+  preferences: Record<string, string>;
+};
+
+export async function getAllConfig(): Promise<DiscoveryResponse> {
+  const response = await fetch(`${getBackendUrl()}/api/management/all`);
+  return await response.json();
+}
+
+export async function getApiKey(serviceName: string): Promise<string | null> {
+  const keys = await listApiKeys();
+  return keys[serviceName] || null;
+}
+
 export type UnityProjectRequest = {
   project_name: string;
   code_prompt?: string;
   text_prompt?: string;
   image_prompt?: string;
   audio_prompt?: string;
-  code_system_prompt?: string;
-  text_system_prompt?: string;
-  image_system_prompt?: string;
-  audio_system_prompt?: string;
   provider_overrides?: Record<string, string | undefined>;
   options?: Record<string, Record<string, unknown>>;
   unity_template?: string;
@@ -114,6 +262,34 @@ export async function generateUnityProject(body: UnityProjectRequest) {
 export async function getLatestOutput() {
   const response = await fetch(`${getBackendUrl()}/output/latest`, {
     method: "GET",
+  });
+  return (await response.json()) as GenerationResponse;
+}
+
+// ---------------------------------------------------------------------------
+// Unity versions (dropdown: label + id; user can add more)
+// ---------------------------------------------------------------------------
+
+export type UnityVersionOption = { value: string; label: string };
+
+export async function getUnityVersions(): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/unity-versions`, {
+    method: "GET",
+  });
+  return (await response.json()) as GenerationResponse;
+}
+
+export async function addUnityVersion(body: {
+  value: string;
+  label?: string;
+}): Promise<GenerationResponse> {
+  const response = await fetch(`${getBackendUrl()}/unity-versions`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      value: body.value,
+      label: body.label ?? body.value,
+    }),
   });
   return (await response.json()) as GenerationResponse;
 }
@@ -146,10 +322,6 @@ export type FinalizeProjectRequest = {
   text_prompt?: string;
   image_prompt?: string;
   audio_prompt?: string;
-  code_system_prompt?: string;
-  text_system_prompt?: string;
-  image_system_prompt?: string;
-  audio_system_prompt?: string;
   provider_overrides?: Record<string, string | undefined>;
   options?: Record<string, Record<string, unknown>>;
   unity_settings?: UnityEngineSettings;

@@ -7,10 +7,9 @@ export const UNITY_TEMPLATES = [
   { value: "vr", label: "VR" },
 ];
 
+/** Default fallback when API is unavailable. Initial backend seed is 6000.3.2f1 only. */
 export const UNITY_VERSIONS = [
-  { value: "2022.3", label: "2022.3 LTS" },
-  { value: "2021.3", label: "2021.3 LTS" },
-  { value: "2023.1", label: "2023.1" },
+  { value: "6000.3.2f1", label: "6000.3.2f1" },
 ];
 
 export const UNITY_PLATFORMS = [

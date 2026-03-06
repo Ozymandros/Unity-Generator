@@ -8,9 +8,18 @@ Tauri + Vue frontend.
 - Python 3.11+
 - Node.js 20+
 - pnpm
-- Rust toolchain (for Tauri builds)
+- **Rust toolchain** (for Tauri builds: `tauri build`, `tauri dev`)
 - Docker (optional, for dev/CI workflows)
 - **VS Code** (recommended IDE) with **Volar** extension
+
+### Installing the Rust toolchain (Tauri)
+
+Tauri needs `cargo` and the Rust toolchain. If you see **"failed to get cargo metadata: program not found"** when running `tauri build` or `tauri dev`, install Rust:
+
+- **Windows**: Install [rustup](https://rustup.rs/) (run the installer from https://rustup.rs/ or `winget install Rustlang.Rustup`), then **restart your terminal** so `cargo` is on `PATH`.
+- **macOS / Linux**: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`, then restart the terminal or run `source "$HOME/.cargo/env"`.
+
+Verify with: `cargo --version`.
 
 ## Integrated Development Environment
 
@@ -143,12 +152,47 @@ This starts the Tauri integration which handles the backend sidecar.
 
 ### Backend setup
 
+The project supports **Windows**, **Linux**, and **macOS**.
+
+#### Create and activate Python virtual environment
+
 ```bash
 cd backend
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\Activate.ps1
+```
+
+**On Linux/macOS:**
+```bash
+source .venv/bin/activate
+```
+
+**On Windows (Command Prompt):**
+```bash
+.venv\Scripts\activate.bat
+```
+
+**On Windows (PowerShell):**
+```bash
+.\.venv\Scripts\Activate.ps1
+```
+
+#### Install dependencies
+
+```bash
 pip install -r requirements.txt
+```
+
+#### Run the backend
+
+```bash
+# Option 1: Using pnpm (cross-platform, recommended)
+pnpm run backend:dev
+
+# Option 2: Directly with uvicorn (after venv activation)
 python -m uvicorn app.main:app --reload --port 8000
+
+# Option 3: With debugpy for remote debugging
+pnpm run backend:debug
 ```
 
 The backend serves on `http://127.0.0.1:8000` with CORS enabled.
@@ -298,6 +342,16 @@ Alternatively, set it in the UI Settings panel or via the preferences API.
 3. Click **Finalize with Unity Engine**.
 4. Watch the log viewer for real-time progress.
 5. On completion, download the `.zip` artifact.
+
+### Automation mode (batch vs MCP)
+
+Finalize supports two backends. In **Unity Engine Settings** (or the finalize request payload) you can set `unity_automation_mode`:
+
+- **`auto`** (default): Use the MCP-Unity plugin if configured and available; otherwise use batch mode (injected scripts and `-executeMethod`).
+- **`batch`**: Always use injected Editor scripts and Unity batch mode. Use this for CI or headless environments where no Editor window is running.
+- **`mcp`**: Always use the MCP-Unity (Semantic Kernel) plugin. Fails with a clear error if the plugin is not configured.
+
+To use MCP for local development, set **`UNITY_USE_MCP=1`** and either **`UNITY_MCP_SERVER_URL`** (HTTP) or ensure **`unity-mcp`** (or the command in **`UNITY_MCP_COMMAND`**) is on PATH for stdio. The backend connects via the MCP Python SDK and calls the Unity-MCP-Server contract tools. For CI pipelines, set `unity_automation_mode` to `"batch"` so finalize does not depend on MCP. See [Unity Engine Integration](UNITY_INTEGRATION.md) for the tool contract and configuration.
 
 ### Debugging Unity batch execution
 

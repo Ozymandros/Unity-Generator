@@ -28,5 +28,11 @@
   "vetur.config": {
     "tsconfig": "./frontend/tsconfig.json",
     "jsconfig": "./frontend/jsconfig.json"
+  },
+  "chat.tools.terminal.autoApprove": {
+    "/^pnpm --dir frontend test:e2e$/": {
+      "approve": true,
+      "matchCommandLine": true
+    }
   }
 }

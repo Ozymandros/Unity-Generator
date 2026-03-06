@@ -1,13 +1,17 @@
 import { computed, ref, watch, onMounted } from "vue";
-import { generateCode, getPref } from "@/api/client";
-import { TEXT_PROVIDERS, TEMPERATURE_PRESETS, LENGTH_PRESETS } from "@/constants/providers";
+import { generateCode } from "@/api/client";
+import { TEMPERATURE_PRESETS, LENGTH_PRESETS } from "@/constants/providers";
+import { useSessionProject } from "@/composables/useSessionProject";
 import { projectStore } from "@/store/projectStore";
+import { useIntelligenceStore } from "@/store/intelligenceStore";
 
 export function useCodePanel() {
+  const store = useIntelligenceStore();
+  const { projectName: sessionProjectName } = useSessionProject();
   const prompt = ref("");
   const provider = ref("");
   const model = ref("");
-  const temperature = ref(0.2); // Default for code
+  const temperature = ref(0.2);
   const maxTokens = ref(2048);
   const apiKey = ref("");
   const systemPrompt = ref("");
@@ -17,21 +21,40 @@ export function useCodePanel() {
   const activeProjectName = computed(() => projectStore.activeProjectName);
   const activeProjectPath = computed(() => projectStore.activeProjectPath);
 
+  // Discovery data from store
+  const providers = computed(() => store.getProvidersByModality("llm"));
+  const availableModels = computed(() => store.getModelsByProvider(provider.value, "llm"));
+  const showModelManager = ref(false);
+
   onMounted(async () => {
-    const pref = await getPref("default_code_system_prompt");
-    if (pref.success && pref.data?.value) {
-      defaultSystemPrompt.value = `Default: ${String(pref.data.value).substring(0, 50)}...`;
+    try {
+      await store.load();
+
+      // Auto-default to preferred engine (correct-on-read)
+      const preferred = store.getPreferredEngine("llm");
+      if (!provider.value) provider.value = preferred.provider;
+      if (!model.value) model.value = preferred.model;
+
+      const dbSysPrompt = store.getPreference("default_code_system_prompt");
+      if (dbSysPrompt) {
+        defaultSystemPrompt.value = `Default: ${dbSysPrompt.substring(0, 50)}...`;
+      }
+    } catch (e) {
+      console.error("Failed to load CodePanel state via store", e);
     }
   });
 
-  const availableModels = computed(() => {
-    const p = TEXT_PROVIDERS.find((x) => x.value === provider.value);
-    return p ? p.models || [] : [];
+  watch(provider, () => {
+    // Reset model if not in new provider's list
+    if (provider.value && !availableModels.value.some((m: { value: string }) => m.value === model.value)) {
+      model.value = "";
+    }
   });
 
-  watch(provider, () => {
-      model.value = "";
-  });
+  async function refreshModels() {
+    await store.load();
+  }
+
 
   const status = ref<string | null>(null);
   const tone = ref<"ok" | "error">("ok");
@@ -51,7 +74,7 @@ export function useCodePanel() {
           temperature: temperature.value,
           max_tokens: maxTokens.value,
         },
-        project_path: (autoSaveToProject.value && projectStore.activeProjectPath) || undefined
+        project_name: (autoSaveToProject.value && (projectStore.activeProjectName || sessionProjectName.value)) || undefined
       });
       if (!response.success) {
         tone.value = "error";
@@ -70,6 +93,7 @@ export function useCodePanel() {
     prompt,
     provider,
     model,
+    providers,
     temperature,
     maxTokens,
     apiKey,
@@ -79,11 +103,12 @@ export function useCodePanel() {
     activeProjectName,
     activeProjectPath,
     availableModels,
+    showModelManager,
+    refreshModels,
     status,
     tone,
     result,
     run,
-    TEXT_PROVIDERS,
     TEMPERATURE_PRESETS,
     LENGTH_PRESETS
   };

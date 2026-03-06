@@ -1,5 +1,6 @@
 .panel {
   max-width: 100%;
+  margin: 1rem;
 }
 .header {
     display: flex;
@@ -7,12 +8,14 @@
     gap: 12px;
 }
 .badge {
-    background: #e0f2fe;
-    color: #0369a1;
-    padding: 2px 8px;
+    background: #0c4a6e;
+    color: #7dd3fc;
+    padding: 2px 10px;
     border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 .content-grid {
     display: grid;
@@ -52,10 +55,6 @@
   margin-bottom: 5px;
 }
 .field-group {
-    background: #fff;
-    padding: 12px;
-    border-radius: 6px;
-    border: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
     gap: 12px;

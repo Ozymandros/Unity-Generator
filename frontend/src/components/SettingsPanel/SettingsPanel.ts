@@ -1,104 +1,77 @@
 import { onMounted, ref } from "vue";
-import { getPref, saveApiKeys, setPref } from "@/api/client";
-import { TEXT_PROVIDERS, IMAGE_PROVIDERS, AUDIO_PROVIDERS } from "@/constants/providers";
+import { getPref, setPref, listProviders, type ProviderCapabilities } from "@/api/client";
 
 export function useSettingsPanel() {
-  const backendUrl = ref(localStorage.getItem("backendUrl") || "http://127.0.0.1:8000");
-  const googleKey = ref("");
-  const anthropicKey = ref("");
-  const openaiKey = ref("");
-  const deepseekKey = ref("");
-  const openrouterKey = ref("");
-  const groqKey = ref("");
-  const stabilityKey = ref("");
-  const fluxKey = ref("");
-  const elevenlabsKey = ref("");
-  const playhtKey = ref("");
+  const backendUrl = ref(
+    localStorage.getItem("backendUrl") || "http://127.0.0.1:8000",
+  );
+
   const preferredLlm = ref("deepseek");
   const preferredImage = ref("stability");
-  const preferredAudio = ref("elevenlabs");
-  const defaultCodeSystemPrompt = ref("");
-  const defaultTextSystemPrompt = ref("");
-  const defaultImageSystemPrompt = ref("");
-  const defaultAudioSystemPrompt = ref("");
-  const defaultSpriteSystemPrompt = ref("");
+  const preferredAudio = ref("openai");
+  const preferredMusic = ref("replicate");
 
   const status = ref<string | null>(null);
+  const providers = ref<ProviderCapabilities[]>([]);
+
+  const openSections = ref<Record<string, boolean>>({
+    providers: true,
+  });
+
+  const toggleSection = (section: string) => {
+    openSections.value[section] = !openSections.value[section];
+  };
 
   onMounted(async () => {
+    try {
+      providers.value = await listProviders();
+    } catch (e) {
+      console.error("Failed to load providers", e);
+    }
+
     const llmPref = await getPref("preferred_llm_provider");
     const imagePref = await getPref("preferred_image_provider");
     const audioPref = await getPref("preferred_audio_provider");
-    const codePromptPref = await getPref("default_code_system_prompt");
-    const textPromptPref = await getPref("default_text_system_prompt");
-    const imagePromptPref = await getPref("default_image_system_prompt");
-    const audioPromptPref = await getPref("default_audio_system_prompt");
-    const spritePromptPref = await getPref("default_sprite_system_prompt");
+    const musicPref = await getPref("preferred_music_provider");
 
     preferredLlm.value = String(llmPref.data?.value || preferredLlm.value);
     preferredImage.value = String(imagePref.data?.value || preferredImage.value);
     preferredAudio.value = String(audioPref.data?.value || preferredAudio.value);
-    defaultCodeSystemPrompt.value = String(codePromptPref.data?.value || "");
-    defaultTextSystemPrompt.value = String(textPromptPref.data?.value || "");
-    defaultImageSystemPrompt.value = String(imagePromptPref.data?.value || "");
-    defaultAudioSystemPrompt.value = String(audioPromptPref.data?.value || "");
-    defaultSpriteSystemPrompt.value = String(spritePromptPref.data?.value || "");
+    preferredMusic.value = String(musicPref.data?.value || preferredMusic.value);
   });
 
   async function save() {
     localStorage.setItem("backendUrl", backendUrl.value);
-    const response = await saveApiKeys({
-      google_api_key: googleKey.value,
-      anthropic_api_key: anthropicKey.value,
-      openai_api_key: openaiKey.value,
-      deepseek_api_key: deepseekKey.value,
-      openrouter_api_key: openrouterKey.value,
-      groq_api_key: groqKey.value,
-      stability_api_key: stabilityKey.value,
-      flux_api_key: fluxKey.value,
-      elevenlabs_api_key: elevenlabsKey.value,
-      playht_api_key: playhtKey.value,
-    });
-    await setPref("preferred_llm_provider", preferredLlm.value);
-    await setPref("preferred_image_provider", preferredImage.value);
-    await setPref("preferred_audio_provider", preferredAudio.value);
-    await setPref("default_code_system_prompt", defaultCodeSystemPrompt.value);
-    await setPref("default_text_system_prompt", defaultTextSystemPrompt.value);
-    await setPref("default_image_system_prompt", defaultImageSystemPrompt.value);
-    await setPref("default_audio_system_prompt", defaultAudioSystemPrompt.value);
-    await setPref("default_sprite_system_prompt", defaultSpriteSystemPrompt.value);
 
-    if (!response.success) {
-      status.value = response.error || "Failed to save keys.";
-      return;
+    try {
+      const results = await Promise.all([
+        setPref("preferred_llm_provider", preferredLlm.value),
+        setPref("preferred_image_provider", preferredImage.value),
+        setPref("preferred_audio_provider", preferredAudio.value),
+        setPref("preferred_music_provider", preferredMusic.value),
+      ]);
+
+      const errorResult = results.find(r => r && !r.success);
+      if (errorResult) {
+        status.value = errorResult.error || "Save failed";
+      } else {
+        status.value = "Preferences saved locally.";
+      }
+    } catch {
+      status.value = "Network error";
     }
-    status.value = "Saved locally.";
   }
 
   return {
     backendUrl,
-    googleKey,
-    anthropicKey,
-    openaiKey,
-    deepseekKey,
-    openrouterKey,
-    groqKey,
-    stabilityKey,
-    fluxKey,
-    elevenlabsKey,
-    playhtKey,
     preferredLlm,
     preferredImage,
     preferredAudio,
-    defaultCodeSystemPrompt,
-    defaultTextSystemPrompt,
-    defaultImageSystemPrompt,
-    defaultAudioSystemPrompt,
-    defaultSpriteSystemPrompt,
+    preferredMusic,
     status,
     save,
-    TEXT_PROVIDERS,
-    IMAGE_PROVIDERS,
-    AUDIO_PROVIDERS
+    openSections,
+    toggleSection,
+    providers
   };
 }

@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from app.main import app as fastapi_app
@@ -6,8 +7,8 @@ from app.main import app as fastapi_app
 
 def test_generate_unity_project_schema(monkeypatch):
     # Patch AgentManager methods to return dummy data
-    from app.main import agent_manager
     from app.schemas import AgentResult
+    from app.services import agent_manager_instance as agent_manager
 
     monkeypatch.setattr(
         agent_manager,
@@ -37,53 +38,42 @@ def test_generate_unity_project_schema(monkeypatch):
         ),
     )
     # Mock _download to avoid real HTTP requests for audio
-    import app.unity_project
+    import app.services.unity_project as unity_project_mod
+    monkeypatch.setattr(unity_project_mod, "_download", lambda url: b"dummy audio bytes")
 
-    monkeypatch.setattr(
-        app.unity_project, "_download", lambda url: b"dummy audio bytes"
-    )
-    # Patch API key loading only for this test
-    import app.agent_manager
-    import app.config
+    # Patch API key repository
+    from app.repositories import get_api_key_repo
+    repo = get_api_key_repo()
+    dummy_keys = {"openai": "sk-test", "stability": "st-test"}
 
-    dummy_keys = {
-        "openai": "dummy-key",
-        "openai_api_key": "dummy-key",
-        "stable-diffusion": "dummy-key",
-        "stable_diffusion": "dummy-key",
-        "stable_diffusion_api_key": "dummy-key",
-        "elevenlabs": "dummy-key",
-        "elevenlabs_api_key": "dummy-key",
-    }
-    monkeypatch.setattr(app.config, "load_api_keys", lambda: dummy_keys)
-    monkeypatch.setattr(app.agent_manager, "load_api_keys", lambda: dummy_keys)
-    client = TestClient(fastapi_app)
-    payload = {
-        "project_name": "TestProject",
-        "code_prompt": "Player movement script",
-        "text_prompt": "Game intro text",
-        "image_prompt": "Player sprite",
-        "audio_prompt": "Jump sound",
-        "provider_overrides": {
-            "code": "openai",
-            "text": "openai",
-            "image": "stable-diffusion",
-            "audio": "elevenlabs",
-        },
-        "options": {
-            "code": {"temperature": 0.7, "max_tokens": 128},
-            "text": {"temperature": 0.7, "max_tokens": 128},
-            "image": {"aspect_ratio": "1:1", "quality": "standard"},
-            "audio": {"voice_id": "default", "stability": 0.5},
-        },
-        "unity_template": "3d",
-        "unity_version": "2022.3",
-        "unity_platform": "windows",
-    }
-    response = client.post("/generate/unity-project", json=payload)
-    assert response.status_code == 200
-    data = response.json()
-    assert data["success"]
+    with patch.object(repo, "get_all", return_value=dummy_keys):
+        client = TestClient(fastapi_app)
+        payload = {
+            "project_name": "TestProject",
+            "code_prompt": "Player movement script",
+            "text_prompt": "Game intro text",
+            "image_prompt": "Player sprite",
+            "audio_prompt": "Jump sound",
+            "provider_overrides": {
+                "code": "openai",
+                "text": "openai",
+                "image": "stable-diffusion",
+                "audio": "elevenlabs",
+            },
+            "options": {
+                "code": {"temperature": 0.7, "max_tokens": 128},
+                "text": {"temperature": 0.7, "max_tokens": 128},
+                "image": {"aspect_ratio": "1:1", "quality": "standard"},
+                "audio": {"voice": "default", "stability": 0.5},
+            },
+            "unity_template": "3d",
+            "unity_version": "2022.3",
+            "unity_platform": "windows",
+        }
+        response = client.post("/generate/unity-project", json=payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"]
     assert "project_path" in data["data"]
     assert data["data"]["project_path"]
 

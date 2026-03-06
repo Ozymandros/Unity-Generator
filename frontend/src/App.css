@@ -41,3 +41,30 @@ main {
   padding: 24px;
   background: #f8fafc;
 }
+
+/* Global icon button used next to provider selects */
+.icon-btn {
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 1rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: background 0.15s, border-color 0.15s;
+  align-self: flex-end;
+  margin-bottom: 2px;
+}
+.icon-btn:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #2563eb;
+  color: #2563eb;
+}
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.panel {
+    margin: 1rem;
+}

@@ -1,12 +1,16 @@
 import { defineConfig } from "vitest/config";
 import vue from "@vitejs/plugin-vue";
+import vuetify from "vite-plugin-vuetify";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    vuetify({ autoImport: true }),
+  ],
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
@@ -14,6 +18,7 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    strictPort: true,
   },
   build: {
     rollupOptions: {
@@ -24,8 +29,14 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     include: ["src/**/*.test.ts", "src/**/*.spec.ts"],
+    setupFiles: ["./src/test/setup.ts"],
     alias: {
       "@tauri-apps/api/shell": resolve(__dirname, "./src/__mocks__/tauri-shell.ts"),
+    },
+    server: {
+      deps: {
+        inline: ["vuetify"],
+      },
     },
     coverage: {
       provider: "istanbul",

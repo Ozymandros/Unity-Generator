@@ -1,16 +1,16 @@
-import { ref, computed, onUnmounted, reactive } from "vue";
+import { ref, computed, onUnmounted, onMounted, reactive } from "vue";
 import {
   generateUnityProject,
   getLatestOutput,
   finalizeProject,
   getFinalizeJobStatus,
   downloadFinalizedProject,
+  getUnityVersions,
+  addUnityVersion,
+  type UnityVersionOption,
 } from "@/api/client";
 import type { FinalizeJobStatusResponse } from "@/api/client";
 import { 
-  TEXT_PROVIDERS, 
-  IMAGE_PROVIDERS, 
-  AUDIO_PROVIDERS, 
   ASPECT_RATIOS, 
   QUALITY_OPTIONS, 
   TEMPERATURE_PRESETS, 
@@ -18,15 +18,16 @@ import {
   STABILITY_PRESETS 
 } from "@/constants/providers";
 import { FINALIZE_STATUS, UI_TONE } from "@/constants/finalize";
-import { 
-  UNITY_TEMPLATES, 
-  UNITY_VERSIONS, 
-  UNITY_PLATFORMS 
-} from "@/constants/unity";
+import { UNITY_TEMPLATES, UNITY_PLATFORMS } from "@/constants/unity";
+
+const DEFAULT_UNITY_VERSIONS: UnityVersionOption[] = [
+  { value: "6000.3.2f1", label: "6000.3.2f1" },
+];
 import { setActiveProject } from "@/store/projectStore";
+import { useSessionProject } from "@/composables/useSessionProject";
 
 export function useUnityProjectPanel() {
-  const projectName = ref("UnityProject");
+  const { projectName, projectPath, setProjectPath } = useSessionProject();
 
   // Unity Engine Settings
   const settings = reactive({
@@ -56,6 +57,67 @@ export function useUnityProjectPanel() {
   const tone = ref<"ok" | "error">(UI_TONE.OK);
   const result = ref("");
   const lastProjectPath = ref("");
+
+  // Unity versions from API (user can add more); fallback to default if empty
+  const unityVersions = ref<UnityVersionOption[]>(DEFAULT_UNITY_VERSIONS);
+  const addVersionDialog = ref(false);
+  const newVersionId = ref("");
+  const newVersionLabel = ref("");
+  const addVersionError = ref("");
+
+  async function loadUnityVersions() {
+    try {
+      const res = await getUnityVersions();
+      const list = (res.data as { versions?: UnityVersionOption[] } | null)?.versions;
+      if (res.success && Array.isArray(list)) {
+        unityVersions.value = list.length > 0 ? list : DEFAULT_UNITY_VERSIONS;
+      } else {
+        unityVersions.value = DEFAULT_UNITY_VERSIONS;
+      }
+    } catch {
+      unityVersions.value = DEFAULT_UNITY_VERSIONS;
+    }
+  }
+
+  function openAddVersionDialog() {
+    newVersionId.value = "";
+    newVersionLabel.value = "";
+    addVersionError.value = "";
+    addVersionDialog.value = true;
+  }
+
+  function closeAddVersionDialog() {
+    addVersionDialog.value = false;
+  }
+
+  async function submitAddVersion() {
+    const id = newVersionId.value.trim();
+    const label = newVersionLabel.value.trim() || id;
+    if (!id) {
+      addVersionError.value = "Version ID is required (e.g. 6000.3.2f1).";
+      return;
+    }
+    addVersionError.value = "";
+    try {
+      const res = await addUnityVersion({ value: id, label: label || id });
+      if (!res.success) {
+        addVersionError.value = res.error || "Failed to add version.";
+        return;
+      }
+      const list = (res.data as { versions?: UnityVersionOption[] } | null)?.versions;
+      if (Array.isArray(list)) {
+        unityVersions.value = list;
+        settings.version = id;
+      }
+      closeAddVersionDialog();
+    } catch (e) {
+      addVersionError.value = String(e);
+    }
+  }
+
+  onMounted(() => {
+    loadUnityVersions();
+  });
 
   const availableVoices = computed(() => {
     return [];
@@ -133,10 +195,12 @@ export function useUnityProjectPanel() {
       }
       status.value = "Unity project generated.";
       result.value = JSON.stringify(response.data || {}, null, 2);
-      lastProjectPath.value = String(response.data?.project_path || "");
-      if (lastProjectPath.value) {
-        setActiveProject(projectName.value, lastProjectPath.value);
-    }
+      const path = String(response.data?.project_path || "");
+      lastProjectPath.value = path;
+      if (path) {
+        setProjectPath(path);
+        setActiveProject(projectName.value, path);
+      }
     } catch (error) {
       tone.value = UI_TONE.ERROR;
       status.value = String(error);
@@ -159,7 +223,7 @@ export function useUnityProjectPanel() {
 
       const response = await finalizeProject({
         project_name: projectName.value,
-        project_path: lastProjectPath.value || undefined,
+        project_path: lastProjectPath.value || projectPath.value || undefined,
         unity_settings: {
           install_packages: settings.installPackages,
           generate_scene: settings.generateScene,
@@ -214,7 +278,9 @@ export function useUnityProjectPanel() {
         stopPolling();
         tone.value = UI_TONE.OK;
         status.value = "Finalization completed successfully!";
-        lastProjectPath.value = statusResp.project_path || "";
+        const path = statusResp.project_path || "";
+        lastProjectPath.value = path;
+        if (path) setProjectPath(path);
       } else if (statusResp.status === FINALIZE_STATUS.FAILED) {
         stopPolling();
         tone.value = UI_TONE.ERROR;
@@ -230,9 +296,10 @@ export function useUnityProjectPanel() {
 
   async function openOutputFolder() {
     try {
+      const pathForFolder = lastProjectPath.value || projectPath.value;
       const response: { success: boolean; data?: Record<string, unknown> | null; error?: string | null } =
-        lastProjectPath.value
-          ? { success: true, data: { path: lastProjectPath.value } }
+        pathForFolder
+          ? { success: true, data: { path: pathForFolder } }
           : await getLatestOutput();
 
       if (!response.success) {
@@ -274,8 +341,16 @@ export function useUnityProjectPanel() {
     settings,
     finalize,
     UNITY_TEMPLATES,
-    UNITY_VERSIONS,
+    unityVersions,
     UNITY_PLATFORMS,
+    loadUnityVersions,
+    addVersionDialog,
+    newVersionId,
+    newVersionLabel,
+    addVersionError,
+    openAddVersionDialog,
+    closeAddVersionDialog,
+    submitAddVersion,
     status,
     tone,
     result,
@@ -288,9 +363,6 @@ export function useUnityProjectPanel() {
     run,
     runFinalize,
     openOutputFolder,
-    TEXT_PROVIDERS,
-    IMAGE_PROVIDERS,
-    AUDIO_PROVIDERS,
     ASPECT_RATIOS,
     QUALITY_OPTIONS,
     TEMPERATURE_PRESETS,

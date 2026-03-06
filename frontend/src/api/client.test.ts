@@ -18,8 +18,10 @@ import {
 
 const mockFetch = vi.fn();
 
-function mockResponse(data: unknown) {
+function mockResponse(data: unknown, ok = true) {
   return Promise.resolve({
+    ok,
+    status: ok ? 200 : 400,
     json: () => Promise.resolve(data),
   });
 }
@@ -27,14 +29,15 @@ function mockResponse(data: unknown) {
 beforeEach(() => {
   mockFetch.mockReset();
   globalThis.fetch = mockFetch as unknown as typeof fetch;
-  globalThis.localStorage = {
+  // Use vi.stubGlobal to mock localStorage for Vitest compatibility
+  vi.stubGlobal('localStorage', {
     getItem: vi.fn(() => "http://127.0.0.1:8000"),
     setItem: vi.fn(),
     removeItem: vi.fn(),
     clear: vi.fn(),
     key: vi.fn(),
     length: 0,
-  };
+  });
 });
 
 describe("api client", () => {

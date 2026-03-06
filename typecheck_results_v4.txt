@@ -1,9 +1,0 @@
-
-> unity-generator@ typecheck:backend C:\Projects\Unity-Generator
-> pnpm --dir backend typecheck
-
-
-> unity-generator-backend@ typecheck C:\Projects\Unity-Generator\backend
-> pyright --project ..
-
-0 errors, 0 warnings, 0 informations

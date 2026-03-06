@@ -1,3 +1,17 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "unity-generator-backend"
+version = "0.9.1"
+description = "Unity project generation and finalization backend with AI integration"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+
+[tool.setuptools]
+packages = ["app"]
+
 [tool.ruff]
 # Target Python version
 target-version = "py310"
@@ -45,5 +59,23 @@ ignore_missing_imports = false
 [[tool.mypy.overrides]]
 module = "agents.*"
 ignore_missing_imports = false
+
+[tool.pyright]
+include = ["."]
+extraPaths = [".."]
+reportMissingImports = true
+reportGeneralTypeIssues = false
+pythonVersion = "3.10"
+# pythonPlatform = "Linux"  # Removed: auto-detect for cross-platform compatibility
+
+[project.optional-dependencies]
+dev = [
+    "pyfakefs",
+    "pytest",
+    "pytest-asyncio",
+    "anyio",
+    "ruff",
+    "mypy",
+]
 
 

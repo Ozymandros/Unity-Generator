@@ -1,0 +1,9 @@
+{
+  "tauri": {
+    "bundle": {
+      "resources": [
+        "../../backend/dist/unity-generator-backend.exe"
+      ]
+    }
+  }
+}

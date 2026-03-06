@@ -17,7 +17,7 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": ["vite/client"],
+    "types": ["vite/client", "vitest", "node"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },

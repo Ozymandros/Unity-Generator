@@ -485,3 +485,7 @@ When generating code, ensure:
 ---
 
 **Remember**: The goal is to write code that is clean, maintainable, scalable, and easy to understand. When in doubt, choose the simpler solution that follows these principles.
+
+Remove whitespace from blank lines. Always validate with `pnpm check:all` before finalizing any code changes.
+All import block must be sorted and grouped to ruff's satisfaction.
+All code must be formatted with `pnpm lint:all`.

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { StatusBanner } from "@/components/StatusBanner";
-import { SmartField } from "@/components/generic/SmartField";
+import { StatusBanner } from "../StatusBanner";
+import { SmartField } from "../generic/SmartField";
+import { ModelManagerModal } from "../generic/ModelManagerModal";
 import { useTextPanel } from "./TextPanel";
 
 const {
@@ -18,8 +19,10 @@ const {
   autoSaveToProject,
   activeProjectName,
   providerModels,
+  showModelManager,
+  refreshModels,
   run,
-  TEXT_PROVIDERS,
+  providers,
   TEMPERATURE_PRESETS,
   LENGTH_PRESETS
 } = useTextPanel();
@@ -45,7 +48,7 @@ const {
           label="Provider" 
           type="select" 
           v-model="provider" 
-          :options="TEXT_PROVIDERS" 
+          :options="providers.map(p => ({ value: p.name, label: p.name }))" 
           placeholder="Select Provider" 
         />
         <SmartField 
@@ -55,14 +58,18 @@ const {
           :options="providerModels" 
           placeholder="Select Model" 
         />
+        <v-btn
+          icon="mdi-plus"
+          size="small"
+          variant="tonal"
+          color="primary"
+          class="ml-2 mt-7"
+          @click="showModelManager = true"
+          :disabled="!provider"
+          title="Manage models"
+        ></v-btn>
       </div>
       <div class="row" style="margin-bottom: 12px;">
-         <SmartField 
-            label="API Key (Optional)" 
-            type="password" 
-            v-model="apiKey" 
-            placeholder="Override key..." 
-         />
       </div>
       <div class="row">
         <SmartField
@@ -80,22 +87,51 @@ const {
       </div>
     </div>
 
-    <details class="advanced-opts">
-      <summary>Advanced Options</summary>
-      <div class="opts-content">
-        <SmartField 
-          label="System Prompt Override" 
-          type="textarea" 
-          v-model="systemPrompt" 
-          :placeholder="defaultSystemPrompt" 
-          :rows="3"
-        />
-      </div>
-    </details>
+    <v-expansion-panels class="mb-6">
+      <v-expansion-panel
+        title="Advanced Options"
+        bg-color="surface"
+        class="border rounded-lg"
+        elevation="0"
+      >
+        <v-expansion-panel-text class="pa-4">
+          <SmartField 
+            label="API Key (Optional)" 
+            type="password" 
+            v-model="apiKey" 
+            placeholder="Override key..." 
+          />
+          <SmartField 
+            label="System Prompt Override" 
+            type="textarea" 
+            v-model="systemPrompt" 
+            :placeholder="defaultSystemPrompt" 
+            :rows="3"
+          />
+        </v-expansion-panel-text>
+      </v-expansion-panel>
+    </v-expansion-panels>
 
-    <button class="primary" @click="run">Generate</button>
+    <v-btn
+      color="primary"
+      size="large"
+      rounded="pill"
+      block
+      prepend-icon="mdi-auto-fix"
+      @click="run"
+      class="mb-6"
+    >
+      Generate Text
+    </v-btn>
 
     <SmartField label="Result" type="textarea" v-model="result" :rows="10" disabled />
+
+    <ModelManagerModal
+      v-if="showModelManager"
+      :provider="provider"
+      v-model="showModelManager"
+      @models-changed="refreshModels"
+    />
   </div>
 </template>
 

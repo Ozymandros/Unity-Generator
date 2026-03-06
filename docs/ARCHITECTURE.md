@@ -47,6 +47,11 @@ flowchart TD
 5. Provider responses are normalized into a common response shape.
 6. For Unity project requests, assets are written to `output/`.
 
+### Session project and scene creation
+- **Project path** comes from **session storage** (ProjectName and path; see `frontend/src/composables/useSessionProject.ts`). The app header shows an editable project name; the path is set when you generate or finalize a project in the Unity Project panel.
+- **Base path** (where generated projects are created) is **relative by default** (`./output`) and **customizable** in the Settings panel; it is stored in the DB preference `output_base_path`. The backend resolves it against the repo root (see `get_output_dir()` in `core/config.py`).
+- Scene creation (`POST /api/scenes/create`) accepts an optional `project_path`. The router resolves it from the request, then preference `active_unity_project_path`, then the latest project under the base path, and passes it to the Unity agent. The agent injects the normalized (forward-slash) path into the system prompt so MCP tools receive a consistent project path.
+
 ### Finalize flow (Unity Engine integration)
 
 1. UI sends a `POST /api/v1/project/finalize` request with prompts and Unity
@@ -79,14 +84,22 @@ flowchart TD
 ## Provider selection
 
 Providers are selected with a simple priority fallback when the request does not
-specify a provider. Priority is defined in each provider module:
+specify a provider. Priority is defined in the provider registry and in each provider module:
 
-- LLM: `deepseek`, `openrouter`, `openai`, `groq`
-- Image: `stability`, `flux`
-- Audio: `elevenlabs`, `playht`
+- LLM: `google`, `anthropic`, `deepseek`, `openrouter`, `openai`, `groq`, `huggingface`, `replicate`
+- Image: `stability`, `flux`, `openai`, `replicate`
+- Audio (Voice/TTS): `elevenlabs`, `playht`, `openai`, `google`
+- Audio (Music): `replicate`
 
 The selected provider is based on preference keys in the SQLite DB and available
-API keys in `config/api_keys.json`.
+API keys in the config (and provider rows in the DB).
+
+**Replicate LLM**: Chat for Replicate uses a custom Semantic Kernel adapter
+(`ReplicateChatCompletion` in `app/services/providers/connectors/replicate.py`)
+that calls the [Replicate predictions API](https://replicate.com/docs/reference/http)
+(create prediction, poll for output) instead of an OpenAI-compatible endpoint.
+Default model is `meta/llama-2-7b`. Image and audio for Replicate use the same
+predictions flow via `ReplicateTextToImage` and `ReplicateTextToAudio`.
 
 ## Storage and data locations
 

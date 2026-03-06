@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "unity-mcp-server": {
+      "type": "stdio",
+      "command": "unity-mcp",
+      "args": []
+    },
+    "hf-mcp-server": {
+      "url": "https://huggingface.co/mcp?login"
+    }
+  }
+}

@@ -1,5 +1,6 @@
 """Tests for /generate/sprites endpoint."""
 
+
 from unittest.mock import patch
 
 import pytest
@@ -16,10 +17,8 @@ def client() -> TestClient:
 
 def test_generate_sprites_success(client: TestClient) -> None:
     """Test successful sprite generation endpoint."""
-    with patch("services.sprite_service.generate_sprite") as mock_gen:
-        mock_gen.return_value = AgentResult(
-            image="fake-base64", provider="openai", raw={"resolution": 32}
-        )
+    with patch("app.services.sprite_service.generate_sprite") as mock_gen:
+        mock_gen.return_value = AgentResult(image="fake-base64", provider="openai", raw={"resolution": 32})
 
         response = client.post(
             "/generate/sprites",
@@ -39,7 +38,7 @@ def test_generate_sprites_success(client: TestClient) -> None:
 
 def test_generate_sprites_error_handling(client: TestClient) -> None:
     """Test error handling in sprites endpoint."""
-    with patch("services.sprite_service.generate_sprite") as mock_gen:
+    with patch("app.services.sprite_service.generate_sprite") as mock_gen:
         mock_gen.side_effect = ValueError("Processing failed")
 
         response = client.post("/generate/sprites", json={"prompt": "error prompt"})
@@ -52,9 +51,9 @@ def test_generate_sprites_error_handling(client: TestClient) -> None:
 
 def test_generate_sprites_uses_image_provider_preference(client: TestClient) -> None:
     """Test that sprites endpoint uses preferred_image_provider if none specified."""
-    with patch("services.sprite_service.generate_sprite") as mock_gen:
+    with patch("app.services.sprite_service.generate_sprite") as mock_gen:
         mock_gen.return_value = AgentResult(image="data", provider="stability")
-        with patch("app.main.get_pref", return_value="stability"):
+        with patch("app.routers.generation.get_pref", return_value="stability"):
             client.post("/generate/sprites", json={"prompt": "test"})
 
             # Check if it was called with "stability"

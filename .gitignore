@@ -13,6 +13,16 @@ pip-delete-this-directory.txt
 .coverage
 htmlcov/
 
+# Test outputs & artifacts (contain platform-specific absolute paths)
+*_test_*.txt
+*_test_*.json
+*_failure*.txt
+*_output*.txt
+*_results*.txt
+test_fail.json
+repro_failure.py
+temp_mcp_instructions/
+
 # Node
 node_modules/
 dist/
@@ -99,9 +109,13 @@ frontend/node_modules/
 .claude/
 .cursor/
 .qwen/
+.kiro/
 
 # Python cache directories at any level
 **/__pycache__/
 **/__pycache__/**
 /agents/__pycache__
 /backend/tests/__pycache__
+.vscode/mcp.json
+*.txt
+**/*.db

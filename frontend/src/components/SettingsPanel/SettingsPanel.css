@@ -1,27 +1,28 @@
-.panel {
-  max-width: 720px;
+.settings-shell {
+  background: #020617;
 }
-.field {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 10px;
+
+.border-bottom {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
-label {
-  font-weight: 600;
-  margin-bottom: 4px;
+
+.border-right {
+  border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
 }
-input,
-select {
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+
+:deep(.v-tab) {
+  letter-spacing: normal !important;
+  font-size: 0.95rem !important;
+  opacity: 0.75;
 }
-.primary {
-  margin-top: 12px;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 6px;
-  background: #2563eb;
-  color: white;
-  cursor: pointer;
+
+:deep(.v-tab--selected) {
+  opacity: 1;
+}
+
+.section-container {
+  max-width: 1200px;
+  width: 100%;
+  padding-top: 24px;
+  padding-bottom: 48px;
 }

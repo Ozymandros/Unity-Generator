@@ -1,9 +1,14 @@
-import { ref, computed, onMounted } from "vue";
-import { generateText, getPref } from "@/api/client";
-import { TEXT_PROVIDERS, TEMPERATURE_PRESETS, LENGTH_PRESETS } from "@/constants/providers";
+import { ref, computed, onMounted, watch } from "vue";
+import { generateText } from "@/api/client";
+import { TEMPERATURE_PRESETS, LENGTH_PRESETS } from "@/constants/providers";
+import { useSessionProject } from "@/composables/useSessionProject";
 import { projectStore } from "@/store/projectStore";
+import { useIntelligenceStore } from "@/store/intelligenceStore";
 
 export function useTextPanel() {
+  const store = useIntelligenceStore();
+  const { projectName: sessionProjectName } = useSessionProject();
+
   const prompt = ref("");
   const provider = ref("");
   const apiKey = ref("");
@@ -19,18 +24,40 @@ export function useTextPanel() {
 
   const activeProjectName = computed(() => projectStore.activeProjectName);
 
+  // Discovery data from store
+  const providers = computed(() => store.getProvidersByModality("llm"));
+  const providerModels = computed(() => store.getModelsByProvider(provider.value, "llm"));
+  const showModelManager = ref(false);
+
   onMounted(async () => {
-    const pref = await getPref("default_text_system_prompt");
-    if (pref.success && pref.data?.value) {
-      const val = String(pref.data.value);
-      defaultSystemPrompt.value = val ? `Default: ${val.substring(0, 50)}...` : defaultSystemPrompt.value;
+    try {
+      await store.load();
+
+      const preferred = store.getPreferredEngine("llm");
+      if (!provider.value) provider.value = preferred.provider;
+      if (!model.value) model.value = preferred.model;
+
+      const dbSysPrompt = store.getPreference("default_text_system_prompt");
+      if (dbSysPrompt) {
+        defaultSystemPrompt.value = `Default: ${dbSysPrompt.substring(0, 50)}...`;
+      }
+    } catch (e) {
+      console.error("Failed to load TextPanel state via store", e);
     }
   });
 
-  const providerModels = computed(() => {
-    const p = TEXT_PROVIDERS.find((x) => x.value === provider.value);
-    return p ? p.models || [] : [];
+  watch(provider, () => {
+    // Reset model when provider changes if not in discovery list
+    if (provider.value && !providerModels.value.some((m: { value: string }) => m.value === model.value)) {
+      model.value = "";
+    }
   });
+
+  async function refreshModels() {
+    // No-op or call store.refresh() if needed, but computed handled it
+    await store.load();
+  }
+
 
   async function run() {
     status.value = "Generating text...";
@@ -46,7 +73,7 @@ export function useTextPanel() {
           max_tokens: maxTokens.value,
           api_key: apiKey.value || undefined,
         },
-        project_path: (autoSaveToProject.value && projectStore.activeProjectPath) || undefined
+        project_name: (autoSaveToProject.value && (projectStore.activeProjectName || sessionProjectName.value)) || undefined
       });
       if (!response.success) {
         tone.value = "error";
@@ -76,8 +103,10 @@ export function useTextPanel() {
     autoSaveToProject,
     activeProjectName,
     providerModels,
+    providers,
+    showModelManager,
+    refreshModels,
     run,
-    TEXT_PROVIDERS,
     TEMPERATURE_PRESETS,
     LENGTH_PRESETS
   };

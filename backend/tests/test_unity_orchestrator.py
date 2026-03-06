@@ -1,4 +1,4 @@
-"""Tests for services.unity_orchestrator module."""
+"""Tests for app.services.unity_orchestrator module."""
 
 import subprocess
 
@@ -11,7 +11,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from services.unity_orchestrator import (
+from app.services.unity_orchestrator import (
+    BatchUnitySetupBackend,
     cleanup_injected_scripts,
     inject_editor_scripts,
     parse_editor_log,
@@ -33,18 +34,13 @@ class TestParseEditorLog:
         assert result["warnings"] == []
 
     def test_detects_cs_errors(self) -> None:
-        log = (
-            "Loading...\nAssets/Scripts/Foo.cs(10,5): error CS1002: ; expected\nDone.\n"
-        )
+        log = "Loading...\nAssets/Scripts/Foo.cs(10,5): error CS1002: ; expected\nDone.\n"
         result = parse_editor_log(log)
         assert len(result["errors"]) == 1
         assert "CS1002" in result["errors"][0]
 
     def test_detects_cs_warnings(self) -> None:
-        log = (
-            "Assets/Scripts/Bar.cs(3,1): warning CS0168: "
-            "Variable declared but never used\n"
-        )
+        log = "Assets/Scripts/Bar.cs(3,1): warning CS0168: Variable declared but never used\n"
         result = parse_editor_log(log)
         assert len(result["warnings"]) == 1
         assert "CS0168" in result["warnings"][0]
@@ -92,9 +88,7 @@ class TestScriptInjection:
         assert inject_dir.exists()
         assert (inject_dir / "Setup.cs").exists()
         assert (inject_dir / "Helper.cs").exists()
-        assert (inject_dir / "Setup.cs").read_text(encoding="utf-8") == scripts[
-            "Setup.cs"
-        ]
+        assert (inject_dir / "Setup.cs").read_text(encoding="utf-8") == scripts["Setup.cs"]
 
     def test_inject_directory_structure(self, tmp_path: Path) -> None:
         inject_dir = inject_editor_scripts(tmp_path, {"Test.cs": "content"})
@@ -117,14 +111,10 @@ class TestScriptInjection:
 
 
 class TestRunUnityBatch:
-    @patch("services.unity_orchestrator.subprocess.run")
-    @patch("services.unity_orchestrator._read_editor_log", return_value="")
-    def test_successful_run(
-        self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path
-    ) -> None:
-        mock_run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="OK", stderr=""
-        )
+    @patch("app.services.unity_orchestrator.subprocess.run")
+    @patch("app.services.unity_orchestrator._read_editor_log", return_value="")
+    def test_successful_run(self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=0, stdout="OK", stderr="")
         unity_path = tmp_path / "Unity.exe"
         unity_path.touch()
 
@@ -138,14 +128,10 @@ class TestRunUnityBatch:
         assert "-nographics" in cmd_args
         assert "-quit" in cmd_args
 
-    @patch("services.unity_orchestrator.subprocess.run")
-    @patch("services.unity_orchestrator._read_editor_log", return_value="")
-    def test_nonzero_exit(
-        self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path
-    ) -> None:
-        mock_run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=1, stdout="", stderr="Error occurred"
-        )
+    @patch("app.services.unity_orchestrator.subprocess.run")
+    @patch("app.services.unity_orchestrator._read_editor_log", return_value="")
+    def test_nonzero_exit(self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=1, stdout="", stderr="Error occurred")
         unity_path = tmp_path / "Unity.exe"
         unity_path.touch()
 
@@ -154,17 +140,13 @@ class TestRunUnityBatch:
         assert result.success is False
         assert result.exit_code == 1
 
-    @patch("services.unity_orchestrator.subprocess.run")
+    @patch("app.services.unity_orchestrator.subprocess.run")
     @patch(
-        "services.unity_orchestrator._read_editor_log",
+        "app.services.unity_orchestrator._read_editor_log",
         return_value="Assets/Bad.cs(1,1): error CS0001: fail",
     )
-    def test_log_errors_detected(
-        self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path
-    ) -> None:
-        mock_run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="", stderr=""
-        )
+    def test_log_errors_detected(self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
         unity_path = tmp_path / "Unity.exe"
         unity_path.touch()
 
@@ -175,13 +157,11 @@ class TestRunUnityBatch:
         assert len(result.errors) == 1
 
     @patch(
-        "services.unity_orchestrator.subprocess.run",
+        "app.services.unity_orchestrator.subprocess.run",
         side_effect=subprocess.TimeoutExpired(cmd="Unity", timeout=10),
     )
-    @patch("services.unity_orchestrator._read_editor_log", return_value="")
-    def test_timeout(
-        self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path
-    ) -> None:
+    @patch("app.services.unity_orchestrator._read_editor_log", return_value="")
+    def test_timeout(self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path) -> None:
         unity_path = tmp_path / "Unity.exe"
         unity_path.touch()
 
@@ -192,33 +172,25 @@ class TestRunUnityBatch:
         assert "timed out" in result.errors[0].lower()
 
     @patch(
-        "services.unity_orchestrator.subprocess.run",
+        "app.services.unity_orchestrator.subprocess.run",
         side_effect=FileNotFoundError("Not found"),
     )
-    @patch("services.unity_orchestrator._read_editor_log", return_value="")
-    def test_unity_not_found(
-        self, mock_run: MagicMock, mock_log: MagicMock, tmp_path: Path
-    ) -> None:
+    @patch("app.services.unity_orchestrator._read_editor_log", return_value="")
+    def test_unity_not_found(self, mock_run: MagicMock, mock_log: MagicMock, tmp_path: Path) -> None:
         result = run_unity_batch(Path("/nonexistent/Unity"), tmp_path)
 
         assert result.success is False
         assert result.exit_code == -1
         assert "not found" in result.errors[0].lower()
 
-    @patch("services.unity_orchestrator.subprocess.run")
-    @patch("services.unity_orchestrator._read_editor_log", return_value="")
-    def test_custom_execute_method(
-        self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path
-    ) -> None:
-        mock_run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="", stderr=""
-        )
+    @patch("app.services.unity_orchestrator.subprocess.run")
+    @patch("app.services.unity_orchestrator._read_editor_log", return_value="")
+    def test_custom_execute_method(self, mock_log: MagicMock, mock_run: MagicMock, tmp_path: Path) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
         unity_path = tmp_path / "Unity.exe"
         unity_path.touch()
 
-        run_unity_batch(
-            unity_path, tmp_path, execute_method="MyNamespace.MyClass.MyMethod"
-        )
+        run_unity_batch(unity_path, tmp_path, execute_method="MyNamespace.MyClass.MyMethod")
 
         cmd_args = mock_run.call_args[0][0]
         assert "-executeMethod" in cmd_args
@@ -315,11 +287,11 @@ class TestRenderTemplate:
 
 
 class TestRunFinalizeJob:
-    @patch("services.unity_orchestrator.render_template", return_value="render")
-    @patch("services.unity_orchestrator.inject_editor_scripts")
-    @patch("services.unity_orchestrator.run_unity_batch")
-    @patch("services.unity_orchestrator.zip_project")
-    @patch("services.unity_orchestrator.cleanup_injected_scripts")
+    @patch("app.services.unity_orchestrator.render_template", return_value="render")
+    @patch("app.services.unity_orchestrator.inject_editor_scripts")
+    @patch("app.services.unity_orchestrator.run_unity_batch")
+    @patch("app.services.unity_orchestrator.zip_project")
+    @patch("app.services.unity_orchestrator.cleanup_injected_scripts")
     def test_run_finalize_job_success(
         self,
         mock_cleanup: MagicMock,
@@ -329,11 +301,9 @@ class TestRunFinalizeJob:
         mock_render: MagicMock,
         tmp_path: Path,
     ) -> None:
-        from services.unity_orchestrator import UnityRunResult
+        from app.services.unity_orchestrator import UnityRunResult
 
-        mock_run.return_value = UnityRunResult(
-            success=True, exit_code=0, stdout="OK", errors=[], warnings=[]
-        )
+        mock_run.return_value = UnityRunResult(success=True, exit_code=0, stdout="OK", errors=[], warnings=[])
         mock_inject.return_value = tmp_path / "Assets" / "Editor" / "AutoGenerated"
         mock_zip.return_value = tmp_path / "Project.zip"
 
@@ -351,10 +321,10 @@ class TestRunFinalizeJob:
         mock_zip.assert_called_once()
         mock_cleanup.assert_called_once()
 
-    @patch("services.unity_orchestrator.render_template", return_value="render")
-    @patch("services.unity_orchestrator.inject_editor_scripts")
-    @patch("services.unity_orchestrator.run_unity_batch")
-    @patch("services.unity_orchestrator.cleanup_injected_scripts")
+    @patch("app.services.unity_orchestrator.render_template", return_value="render")
+    @patch("app.services.unity_orchestrator.inject_editor_scripts")
+    @patch("app.services.unity_orchestrator.run_unity_batch")
+    @patch("app.services.unity_orchestrator.cleanup_injected_scripts")
     def test_run_finalize_job_unity_failure(
         self,
         mock_cleanup: MagicMock,
@@ -363,11 +333,9 @@ class TestRunFinalizeJob:
         mock_render: MagicMock,
         tmp_path: Path,
     ) -> None:
-        from services.unity_orchestrator import UnityRunResult
+        from app.services.unity_orchestrator import UnityRunResult
 
-        mock_run.return_value = UnityRunResult(
-            success=False, exit_code=1, errors=["Compile Error"], warnings=[]
-        )
+        mock_run.return_value = UnityRunResult(success=False, exit_code=1, errors=["Compile Error"], warnings=[])
         mock_inject.return_value = tmp_path / "Assets" / "Editor" / "AutoGenerated"
 
         result = run_finalize_job(
@@ -381,10 +349,10 @@ class TestRunFinalizeJob:
         mock_cleanup.assert_called_once()
 
     @patch(
-        "services.unity_orchestrator.render_template",
+        "app.services.unity_orchestrator.render_template",
         side_effect=Exception("Render error"),
     )
-    @patch("services.unity_orchestrator.cleanup_injected_scripts")
+    @patch("app.services.unity_orchestrator.cleanup_injected_scripts")
     def test_run_finalize_job_exception_cleanup(
         self,
         mock_cleanup: MagicMock,
@@ -403,3 +371,209 @@ class TestRunFinalizeJob:
         # However, looking at the code, if inject_dir is None, cleanup is skipped.
         # Let's verify that behavior or mock it further if needed.
         assert mock_cleanup.call_count == 0
+
+    @patch("app.services.unity_orchestrator.render_template", return_value="render")
+    @patch("app.services.unity_orchestrator.inject_editor_scripts")
+    @patch("app.services.unity_orchestrator.run_unity_batch")
+    @patch("app.services.unity_orchestrator.zip_project")
+    @patch("app.services.unity_orchestrator.cleanup_injected_scripts")
+    def test_run_finalize_job_mode_batch_uses_batch_backend(
+        self,
+        mock_cleanup: MagicMock,
+        mock_zip: MagicMock,
+        mock_run: MagicMock,
+        mock_inject: MagicMock,
+        mock_render: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        from app.services.unity_orchestrator import UnityRunResult
+
+        mock_run.return_value = UnityRunResult(success=True, exit_code=0, stdout="", errors=[], warnings=[])
+        mock_inject.return_value = tmp_path / "Assets" / "Editor" / "AutoGenerated"
+        mock_zip.return_value = tmp_path / "Project.zip"
+
+        result = run_finalize_job(
+            project_path=tmp_path,
+            unity_path=Path("Unity.exe"),
+            templates_dir=tmp_path / "templates",
+            unity_automation_mode="batch",
+        )
+
+        assert result.success is True
+        mock_render.assert_called()
+        mock_run.assert_called_once()
+        mock_zip.assert_called_once()
+
+    def test_run_finalize_job_mode_mcp_returns_failure_when_not_configured(self, tmp_path: Path) -> None:
+        """With mode 'mcp' and no MCP server configured, setup fails with a clear message."""
+        result = run_finalize_job(
+            project_path=tmp_path,
+            unity_path=Path("Unity.exe"),
+            templates_dir=tmp_path / "templates",
+            unity_automation_mode="mcp",
+        )
+        assert result.success is False
+        assert any("MCP" in e or "mcp" in e.lower() for e in result.errors)
+
+    @patch("app.services.unity_orchestrator.render_template", return_value="render")
+    @patch("app.services.unity_orchestrator.inject_editor_scripts")
+    @patch("app.services.unity_orchestrator.run_unity_batch")
+    @patch("app.services.unity_orchestrator.zip_project")
+    @patch("app.services.unity_orchestrator.cleanup_injected_scripts")
+    def test_run_finalize_job_mode_auto_falls_back_to_batch(
+        self,
+        mock_cleanup: MagicMock,
+        mock_zip: MagicMock,
+        mock_run: MagicMock,
+        mock_inject: MagicMock,
+        mock_render: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """With mode 'auto' and MCP not available, batch backend is used."""
+        from app.services.unity_orchestrator import UnityRunResult
+
+        mock_run.return_value = UnityRunResult(success=True, exit_code=0, stdout="", errors=[], warnings=[])
+        mock_inject.return_value = tmp_path / "Assets" / "Editor" / "AutoGenerated"
+        mock_zip.return_value = tmp_path / "Project.zip"
+
+        result = run_finalize_job(
+            project_path=tmp_path,
+            unity_path=Path("Unity.exe"),
+            templates_dir=tmp_path / "templates",
+            unity_automation_mode="auto",
+        )
+
+        assert result.success is True
+        mock_run.assert_called_once()
+
+    @patch("app.services.unity_orchestrator.zip_project")
+    @patch("app.services.unity_orchestrator.run_unity_batch")
+    @patch("app.services.unity_orchestrator.render_template")
+    @patch("app.services.unity_mcp_client._call_tool")
+    @patch("app.services.unity_mcp_client.mcp_available", return_value=True)
+    def test_run_finalize_job_mode_auto_uses_mcp_when_available(
+        self,
+        mock_mcp_available: MagicMock,
+        mock_call_tool: MagicMock,
+        mock_render: MagicMock,
+        mock_run: MagicMock,
+        mock_zip: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """With mode 'auto' and MCP available (e.g. UNITY_USE_MCP=1), MCP backend is used."""
+        mock_call_tool.return_value = {"success": True, "error_count": 0, "warning_count": 0}
+        mock_zip.return_value = tmp_path / "Project.zip"
+
+        result = run_finalize_job(
+            project_path=tmp_path,
+            unity_path=Path("Unity.exe"),
+            templates_dir=tmp_path / "templates",
+            unity_automation_mode="auto",
+        )
+
+        assert result.success is True
+        mock_mcp_available.assert_called()
+        mock_call_tool.assert_called()
+        mock_run.assert_not_called()
+        mock_render.assert_not_called()
+        mock_zip.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# BatchUnitySetupBackend
+# ---------------------------------------------------------------------------
+
+
+class TestBatchUnitySetupBackend:
+    @patch("app.services.unity_orchestrator.run_unity_batch")
+    @patch("app.services.unity_orchestrator.inject_editor_scripts")
+    @patch("app.services.unity_orchestrator.render_template", return_value="cs")
+    def test_run_setup_success(
+        self,
+        mock_render: MagicMock,
+        mock_inject: MagicMock,
+        mock_run: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        from app.services.unity_orchestrator import UnityRunResult
+
+        mock_run.return_value = UnityRunResult(success=True, exit_code=0, stdout="", errors=[], warnings=[])
+        mock_inject.return_value = tmp_path / "Assets" / "Editor" / "AutoGenerated"
+
+        backend = BatchUnitySetupBackend(unity_path=Path("Unity.exe"), templates_dir=tmp_path / "templates")
+        result = backend.run_setup(tmp_path, install_packages=False, generate_scene=False, setup_urp=False)
+
+        assert result.success is True
+        assert result.errors == []
+        mock_render.assert_called()
+        mock_run.assert_called_once()
+
+    @patch("app.services.unity_orchestrator.run_unity_batch")
+    @patch("app.services.unity_orchestrator.inject_editor_scripts")
+    @patch("app.services.unity_orchestrator.render_template", return_value="cs")
+    def test_run_setup_unity_failure(
+        self,
+        mock_render: MagicMock,
+        mock_inject: MagicMock,
+        mock_run: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        from app.services.unity_orchestrator import UnityRunResult
+
+        mock_run.return_value = UnityRunResult(success=False, exit_code=1, errors=["CS0000: error"], warnings=[])
+        mock_inject.return_value = tmp_path / "Assets" / "Editor" / "AutoGenerated"
+
+        backend = BatchUnitySetupBackend(unity_path=Path("Unity.exe"), templates_dir=tmp_path / "templates")
+        result = backend.run_setup(tmp_path)
+
+        assert result.success is False
+        assert any("CS0000" in e or "error" in e for e in result.errors)
+
+
+# ---------------------------------------------------------------------------
+# McpUnitySetupBackend (mocked MCP client)
+# ---------------------------------------------------------------------------
+
+
+class TestMcpUnitySetupBackend:
+    @patch("app.services.unity_mcp_client._call_tool")
+    def test_run_setup_success_when_mcp_returns_ok(
+        self,
+        mock_call_tool: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """When MCP tools return success, McpUnitySetupBackend.run_setup succeeds."""
+        mock_call_tool.return_value = {"success": True}
+
+        from app.services.unity_mcp_client import McpUnitySetupBackend
+
+        backend = McpUnitySetupBackend()
+        result = backend.run_setup(
+            tmp_path,
+            install_packages=True,
+            packages=["com.unity.some-package"],
+            generate_scene=True,
+            scene_name="TestScene",
+            setup_urp=True,
+        )
+
+        assert result.success is True
+        assert result.errors == []
+        assert mock_call_tool.call_count >= 4  # packages, scene, urp, validate
+
+    @patch("app.services.unity_mcp_client._call_tool")
+    def test_run_setup_failure_when_mcp_tool_fails(
+        self,
+        mock_call_tool: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """When an MCP tool returns success: false, run_setup fails with that message."""
+        mock_call_tool.return_value = {"success": False, "message": "Package not found"}
+
+        from app.services.unity_mcp_client import McpUnitySetupBackend
+
+        backend = McpUnitySetupBackend()
+        result = backend.run_setup(tmp_path, install_packages=True, packages=["bad-package"])
+
+        assert result.success is False
+        assert "Package not found" in result.errors[0]

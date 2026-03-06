@@ -8,10 +8,8 @@ from app.main import app
 from app.schemas import AgentResult
 
 
-def test_unity_project_generation(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    from app import unity_project
+def test_unity_project_generation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from app.services import unity_project
 
     def fake_root() -> Path:
         return tmp_path
@@ -23,7 +21,7 @@ def test_unity_project_generation(
     mock_agent_manager.run_code.return_value = AgentResult(
         content="public class PlayerController {}", provider="openai"
     )
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.projects.agent_manager", mock_agent_manager)
 
     client = TestClient(app)
     response = client.post(

@@ -8,8 +8,9 @@ To set global default system prompts:
 
 1. Navigate to the **Settings** panel in the application.
 2. Scroll down to the **Default System Prompts (Global)** section.
-3. Enter your desired prompts for any or all generation types (Code, Text, Image, Audio, Sprites).
+3. Enter your desired prompts for any or all generation types (Code, Text, Image, Voice (TTS), Music, Sprites).
     * *Example (Code):* "You are a senior Unity developer who prefers composition over inheritance."
+    * *Example (Music):* "Epic orchestral soundtrack, intense, high quality."
     * *Example (Image):* "Professional concept art, vibrant colors, 4k resolution."
 4. Click **Save**.
 

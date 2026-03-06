@@ -1,44 +1,208 @@
 <script setup lang="ts">
-import { SettingsPanel } from "@/components/SettingsPanel";
-import { CodePanel } from "@/components/CodePanel";
-import { TextPanel } from "@/components/TextPanel";
-import { ImagePanel } from "@/components/ImagePanel";
-import { AudioPanel } from "@/components/AudioPanel";
-import { SpritesPanel } from "@/components/SpritesPanel";
-import { UnityProjectPanel } from "@/components/UnityProjectPanel";
-import { useApp } from "@/App";
+import { ref } from "vue";
+import SettingsPanel from "./components/SettingsPanel/SettingsPanel.vue";
+import CodePanel from "./components/CodePanel/CodePanel.vue";
+import TextPanel from "./components/TextPanel/TextPanel.vue";
+import ImagePanel from "./components/ImagePanel/ImagePanel.vue";
+import AudioPanel from "./components/AudioPanel/AudioPanel.vue";
+import SpritesPanel from "./components/SpritesPanel/SpritesPanel.vue";
+import UnityProjectPanel from "./components/UnityProjectPanel/UnityProjectPanel.vue";
+import { useApp } from "./App";
+import { useSessionProject } from "./composables/useSessionProject";
+import ScenesPanel from "./components/ScenesPanel.vue";
 
 const { tabs, active, backendStatus, setActive } = useApp();
+const { projectName } = useSessionProject();
+const drawer = ref(true);
+
+const getTabIcon = (tab: string) => {
+  switch (tab) {
+    case 'Settings': return 'mdi-cog-outline';
+    case 'Scenes': return 'mdi-view-dashboard-outline';
+    case 'Code': return 'mdi-xml';
+    case 'Text': return 'mdi-text-box-outline';
+    case 'Image': return 'mdi-image-outline';
+    case 'Sprites': return 'mdi-grid';
+    case 'Audio': return 'mdi-volume-high';
+    case 'Unity Project': return 'mdi-unity';
+    default: return 'mdi-circle-medium';
+  }
+};
 </script>
 
 <template>
-  <div class="layout">
-    <aside>
-      <h1>Unity Generator</h1>
-      <p class="status" :class="backendStatus">
-        Backend: {{ backendStatus }}
-      </p>
-      <nav>
-        <button
-          v-for="tab in tabs"
-          :key="tab"
-          :class="{ active: tab === active }"
-          @click="setActive(tab)"
-        >
-          {{ tab }}
-        </button>
-      </nav>
-    </aside>
-    <main>
-      <SettingsPanel v-if="active === 'Settings'" />
-      <CodePanel v-else-if="active === 'Code'" />
-      <TextPanel v-else-if="active === 'Text'" />
-      <ImagePanel v-else-if="active === 'Image'" />
-      <SpritesPanel v-else-if="active === 'Sprites'" />
-      <AudioPanel v-else-if="active === 'Audio'" />
-      <UnityProjectPanel v-else-if="active === 'Unity Project'" />
-    </main>
-  </div>
+  <v-app>
+    <!-- Navigation Drawer -->
+    <v-navigation-drawer v-model="drawer" permanent width="260" color="surface" border="0" class="app-sidebar">
+      <div class="pa-6 d-flex align-center">
+        <v-icon color="primary" size="32" class="mr-3">mdi-gravity</v-icon>
+        <div class="flex-grow-1 min-width-0">
+          <v-text-field
+            v-model="projectName"
+            variant="plain"
+            hide-details
+            density="compact"
+            class="project-name-field text-h6 font-weight-bold line-height-1"
+            placeholder="Project name"
+          />
+          <div class="d-flex align-center">
+            <v-badge dot :color="backendStatus === 'online' ? 'success' : 'error'" inline class="mr-2"></v-badge>
+            <span class="text-caption text-grey">{{ backendStatus === 'online' ? 'Online' : 'Offline' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <v-divider class="mx-4 mb-4" opacity="0.25"></v-divider>
+
+      <v-list nav density="comfortable">
+        <v-list-item v-for="tab in tabs.filter(t => t !== 'Management')" :key="tab" :active="tab === active"
+          :prepend-icon="getTabIcon(tab)" :title="tab" :data-testid="`nav-${tab.replace(/\s+/g, '-')}`"
+          rounded="xl" class="mb-1 nav-item" @click="setActive(tab)"
+          color="primary"></v-list-item>
+      </v-list>
+
+      <template v-slot:append>
+        <div class="pa-4">
+          <v-btn variant="tonal" block prepend-icon="mdi-github" size="small" class="text-none" rounded="lg"
+            href="https://github.com/Ozymandros/Unity-Generator" target="_blank">
+            Repository
+          </v-btn>
+        </div>
+      </template>
+    </v-navigation-drawer>
+
+    <!-- Main Content Area -->
+    <v-main class="app-main">
+      <v-container fluid class="pa-0 h-100">
+        <v-fade-transition hide-on-leave>
+          <div :key="active" class="content-wrapper">
+            <SettingsPanel v-if="active === 'Settings'" @switch-tab="setActive" />
+            <ScenesPanel v-else-if="active === 'Scenes'" />
+            <CodePanel v-else-if="active === 'Code'" />
+            <TextPanel v-else-if="active === 'Text'" />
+            <ImagePanel v-else-if="active === 'Image'" />
+            <SpritesPanel v-else-if="active === 'Sprites'" />
+            <AudioPanel v-else-if="active === 'Audio'" />
+            <UnityProjectPanel v-else-if="active === 'Unity Project'" />
+          </div>
+        </v-fade-transition>
+      </v-container>
+    </v-main>
+  </v-app>
 </template>
 
-<style scoped src="./App.css"></style>
+<style>
+/* Global App Styles */
+.line-height-1 {
+  line-height: 1;
+}
+
+/* Sidebar project name: borderless by default, border on hover/focus */
+.project-name-field :deep(.v-field__overlay) {
+  opacity: 0;
+}
+.project-name-field:hover :deep(.v-field__overlay),
+.project-name-field.v-field--focused :deep(.v-field__overlay) {
+  opacity: 1;
+}
+.project-name-field :deep(.v-field) {
+  --v-field-border-opacity: 0;
+}
+.project-name-field:hover :deep(.v-field),
+.project-name-field.v-field--focused :deep(.v-field) {
+  --v-field-border-opacity: 0.6;
+}
+
+.app-sidebar {
+  border-right: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.nav-item {
+  transition: all 0.2s ease;
+}
+
+.nav-item.v-list-item--active {
+  background: rgba(var(--v-theme-primary), 0.15) !important;
+}
+
+/* Increase contrast for outlined inputs */
+:deep(.v-field--variant-outlined) {
+  --v-field-border-opacity: 0.5 !important;
+}
+
+:deep(.v-field--focused.v-field--variant-outlined) {
+  --v-field-border-opacity: 1 !important;
+}
+
+:deep(.v-label.v-field-label) {
+  opacity: 0.9 !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+:deep(.v-field--focused .v-label.v-field-label) {
+  opacity: 1 !important;
+  color: var(--v-theme-primary) !important;
+}
+
+:deep(.v-field__input::placeholder) {
+  opacity: 0.5 !important;
+  color: #ffffff !important;
+}
+
+:deep(.v-checkbox .v-label) {
+  opacity: 1 !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+/* Global Data Table Adjustments */
+:deep(.v-data-table) {
+  background: transparent !important;
+}
+
+:deep(.v-data-table-header__content) {
+  font-weight: 800 !important;
+  color: #ffffff !important;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+
+.app-main {
+  background: transparent;
+}
+
+/* Ensure our dark theme stays consistent */
+.v-theme--unityDarkTheme .app-main {
+  background: #0f172a !important;
+}
+
+/* Global Scrollbar Styles */
+:root {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(var(--v-theme-primary), 0.2) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(var(--v-theme-primary), 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(var(--v-theme-primary), 0.4);
+}
+
+.content-wrapper {
+  height: 100%;
+  overflow-y: auto;
+}
+</style>

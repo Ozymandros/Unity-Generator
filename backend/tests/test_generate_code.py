@@ -1,5 +1,6 @@
 """Tests for /generate/code endpoint."""
 
+
 from unittest.mock import MagicMock
 
 import pytest
@@ -14,20 +15,14 @@ def client() -> TestClient:
     return TestClient(app)
 
 
-def test_generate_code_success(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_generate_code_success(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test successful code generation."""
     mock_agent_manager = MagicMock()
-    mock_agent_manager.run_code.return_value = AgentResult(
-        content="public class Test {}", provider="openai"
-    )
+    mock_agent_manager.run_code.return_value = AgentResult(content="public class Test {}", provider="openai")
 
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.generation.agent_manager", mock_agent_manager)
 
-    response = client.post(
-        "/generate/code", json={"prompt": "Create a test class", "provider": "openai"}
-    )
+    response = client.post("/generate/code", json={"prompt": "Create a test class", "provider": "openai"})
 
     assert response.status_code == 200
     payload = response.json()
@@ -36,17 +31,13 @@ def test_generate_code_success(
     mock_agent_manager.run_code.assert_called_once()
 
 
-def test_generate_code_uses_preference_fallback(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_generate_code_uses_preference_fallback(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that provider falls back to preference when not specified."""
     mock_agent_manager = MagicMock()
-    mock_agent_manager.run_code.return_value = AgentResult(
-        content="code", provider="deepseek"
-    )
+    mock_agent_manager.run_code.return_value = AgentResult(content="code", provider="deepseek")
 
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
-    monkeypatch.setattr("app.main.get_pref", lambda key: "deepseek")
+    monkeypatch.setattr("app.routers.generation.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.generation.get_pref", lambda key: "deepseek")
 
     response = client.post("/generate/code", json={"prompt": "Test prompt"})
 
@@ -56,14 +47,12 @@ def test_generate_code_uses_preference_fallback(
     assert call_args[0][1] == "deepseek"  # provider argument
 
 
-def test_generate_code_error_handling(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_generate_code_error_handling(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test error response when generation fails."""
     mock_agent_manager = MagicMock()
     mock_agent_manager.run_code.side_effect = RuntimeError("Agent not available")
 
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.generation.agent_manager", mock_agent_manager)
 
     response = client.post("/generate/code", json={"prompt": "Test prompt"})
 
@@ -73,16 +62,12 @@ def test_generate_code_error_handling(
     assert "Agent not available" in payload["error"]
 
 
-def test_generate_code_with_options(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_generate_code_with_options(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that options are passed through to agent."""
     mock_agent_manager = MagicMock()
-    mock_agent_manager.run_code.return_value = AgentResult(
-        content="code", provider="openai"
-    )
+    mock_agent_manager.run_code.return_value = AgentResult(content="code", provider="openai")
 
-    monkeypatch.setattr("app.main.agent_manager", mock_agent_manager)
+    monkeypatch.setattr("app.routers.generation.agent_manager", mock_agent_manager)
 
     response = client.post(
         "/generate/code",

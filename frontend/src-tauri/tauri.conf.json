@@ -7,14 +7,17 @@
   },
   "package": {
     "productName": "Unity Generator",
-    "version": "0.1.1"
+    "version": "0.9.1"
   },
   "tauri": {
     "bundle": {
       "active": true,
       "identifier": "com.unity.generator",
-      "externalBin": [
-        "../backend/dist/unity-generator-backend"
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
       ]
     },
     "windows": [

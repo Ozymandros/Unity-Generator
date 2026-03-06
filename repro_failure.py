@@ -1,9 +1,9 @@
 import logging
-import sys
 import os
+import sys
 
 # Add parent directory to sys.path to import agents.unity_skills
-sys.path.append(os.path.abspath('.'))
+sys.path.append(os.path.abspath("."))
 
 from agents.unity_skills import UnityCodeSkill
 
@@ -31,6 +31,6 @@ if not result:
     # Let's see which line caused it if we can
     for i, line in enumerate(valid_code.splitlines()):
         if line.count('"') % 2 != 0:
-            print(f"Line {i+1} has odd number of quotes: {line}")
+            print(f"Line {i + 1} has odd number of quotes: {line}")
 else:
     print("PASSED")

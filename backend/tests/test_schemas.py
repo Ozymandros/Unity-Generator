@@ -23,9 +23,7 @@ def test_generation_request_minimal() -> None:
 
 def test_generation_request_full() -> None:
     """Test GenerationRequest with all fields."""
-    req = GenerationRequest(
-        prompt="test", provider="openai", options={"model": "gpt-4o"}
-    )
+    req = GenerationRequest(prompt="test", provider="openai", options={"model": "gpt-4o"})
     assert req.prompt == "test"
     assert req.provider == "openai"
     # options is a dict, not a CodeOptions object
@@ -34,8 +32,8 @@ def test_generation_request_full() -> None:
 
 def test_api_keys_request() -> None:
     """Test ApiKeysRequest model."""
-    req = ApiKeysRequest(keys={"openai_api_key": "sk-test"})
-    assert req.keys == {"openai_api_key": "sk-test"}
+    req = ApiKeysRequest(keys={"openai": "sk-test"})
+    assert req.keys == {"openai": "sk-test"}
 
 
 def test_pref_request() -> None:
@@ -78,7 +76,7 @@ def test_ok_response_structure() -> None:
     assert response.success is True
     assert response.error is None
     # ok_response converts AgentResult to dict
-    assert response.data == {"content": "test", "provider": "test"}
+    assert response.data == {"content": "test", "provider": "test", "metadata": {}}
     assert response.date is not None
     # Verify date is valid ISO format
     datetime.fromisoformat(response.date.replace("Z", "+00:00"))
@@ -104,4 +102,4 @@ def test_generation_response_model() -> None:
         success=True, date="2024-01-01T00:00:00Z", error=None, data=result.model_dump(exclude_none=True)
     )
     assert response.success is True
-    assert response.data == {"content": "test", "provider": "test"}
+    assert response.data == {"content": "test", "provider": "test", "metadata": {}}

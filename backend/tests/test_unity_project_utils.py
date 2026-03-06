@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from app import unity_project
+from app.services import unity_project
 
 
 def test_safe_name_cleans_special_chars() -> None:
@@ -144,41 +144,44 @@ def test_save_audio_with_url(tmp_path: Path) -> None:
         mock_download.assert_called_once()
 
 
-def test_get_latest_project_path_empty(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_resolve_project_path(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """resolve_project_path returns base_path + safe(project_name) always."""
+    with patch.object(unity_project, "get_output_dir", return_value=tmp_path):
+        assert unity_project.resolve_project_path("MyGame") == str(tmp_path / "MyGame")
+        assert unity_project.resolve_project_path("My Project!") == str(tmp_path / "My_Project")
+        assert unity_project.resolve_project_path("") == str(tmp_path / "UnityProject")
+
+
+def test_get_latest_project_path_empty(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test get_latest_project_path returns None when no projects."""
-    monkeypatch.setattr(unity_project, "get_repo_root", lambda: tmp_path)
+    output_dir = tmp_path / "output"
+    output_dir.mkdir(exist_ok=True)
+    monkeypatch.setattr(unity_project, "get_output_dir", lambda: output_dir)
 
     result = unity_project.get_latest_project_path()
     assert result is None
 
 
-def test_get_latest_project_path_returns_latest(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_get_latest_project_path_returns_latest(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test get_latest_project_path returns most recent project."""
-    monkeypatch.setattr(unity_project, "get_repo_root", lambda: tmp_path)
-
     output_dir = tmp_path / "output"
-    output_dir.mkdir()
+    output_dir.mkdir(exist_ok=True)
+    monkeypatch.setattr(unity_project, "get_output_dir", lambda: output_dir)
 
     import time
 
-    (output_dir / "ProjectA").mkdir()
+    (output_dir / "ProjectA").mkdir(exist_ok=True)
     time.sleep(0.1)
-    (output_dir / "ProjectB").mkdir()
+    (output_dir / "ProjectB").mkdir(exist_ok=True)
 
     result = unity_project.get_latest_project_path()
     assert result is not None
     assert "ProjectB" in result
 
 
-def test_create_unity_project_structure(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_create_unity_project_structure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test create_unity_project creates expected folder structure."""
-    monkeypatch.setattr(unity_project, "get_repo_root", lambda: tmp_path)
+    monkeypatch.setattr(unity_project, "get_output_dir", lambda: tmp_path)
 
     result = unity_project.create_unity_project(
         "TestProject",

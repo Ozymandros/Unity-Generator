@@ -1,11 +1,17 @@
-import { ref, computed, onMounted } from "vue";
-import { generateImage, getPref } from "@/api/client";
-import { IMAGE_PROVIDERS, ASPECT_RATIOS, QUALITY_OPTIONS } from "@/constants/providers";
+import { ref, computed, onMounted, watch } from "vue";
+import { generateImage } from "@/api/client";
+import { ASPECT_RATIOS, QUALITY_OPTIONS } from "@/constants/providers";
+import { useSessionProject } from "@/composables/useSessionProject";
 import { projectStore } from "@/store/projectStore";
+import { useIntelligenceStore } from "@/store/intelligenceStore";
 
 export function useImagePanel() {
+  const store = useIntelligenceStore();
+  const { projectName: sessionProjectName } = useSessionProject();
+
   const prompt = ref("");
   const provider = ref("");
+  const model = ref("");
   const apiKey = ref("");
   const aspectRatio = ref("1:1");
   const quality = ref("standard");
@@ -18,13 +24,42 @@ export function useImagePanel() {
 
   const activeProjectName = computed(() => projectStore.activeProjectName);
 
+  // Discovery data from store
+  const providers = computed(() => store.getProvidersByModality("image"));
+  const providerOptions = computed(() =>
+    providers.value.map((p: { name: string }) => ({ value: p.name, label: p.name }))
+  );
+  const availableModels = computed(() => store.getModelsByProvider(provider.value, "image"));
+  const showModelManager = ref(false);
+
   onMounted(async () => {
-    const pref = await getPref("default_image_system_prompt");
-    if (pref.success && pref.data?.value) {
-      const val = String(pref.data.value);
-      defaultSystemPrompt.value = val ? `Default: ${val.substring(0, 50)}...` : defaultSystemPrompt.value;
+    try {
+      await store.load();
+
+      const preferred = store.getPreferredEngine("image");
+      if (!provider.value) provider.value = preferred.provider;
+      if (!model.value) model.value = preferred.model;
+
+      const dbSysPrompt = store.getPreference("default_image_system_prompt");
+      if (dbSysPrompt) {
+        defaultSystemPrompt.value = `Default: ${dbSysPrompt.substring(0, 50)}...`;
+      }
+    } catch (e) {
+      console.error("Failed to load ImagePanel state via store", e);
     }
   });
+
+  watch(provider, () => {
+    // Reset model if not in new provider's list
+    if (provider.value && !availableModels.value.some((m: { value: string }) => m.value === model.value)) {
+      model.value = "";
+    }
+  });
+
+  async function refreshModels() {
+    await store.load();
+  }
+
 
   async function run() {
     status.value = "Generating image...";
@@ -35,11 +70,12 @@ export function useImagePanel() {
         system_prompt: systemPrompt.value || undefined,
         provider: provider.value || undefined,
         options: { 
+          model: model.value || undefined,
           aspect_ratio: aspectRatio.value,
           quality: quality.value,
           api_key: apiKey.value || undefined,
         },
-        project_path: (autoSaveToProject.value && projectStore.activeProjectPath) || undefined
+        project_name: (autoSaveToProject.value && (projectStore.activeProjectName || sessionProjectName.value)) || undefined
       });
       if (!response.success) {
         tone.value = "error";
@@ -57,6 +93,9 @@ export function useImagePanel() {
   return {
     prompt,
     provider,
+    model,
+    providers,
+    providerOptions,
     apiKey,
     aspectRatio,
     quality,
@@ -67,8 +106,10 @@ export function useImagePanel() {
     defaultSystemPrompt,
     autoSaveToProject,
     activeProjectName,
+    availableModels,
+    showModelManager,
+    refreshModels,
     run,
-    IMAGE_PROVIDERS,
     ASPECT_RATIOS,
     QUALITY_OPTIONS
   };

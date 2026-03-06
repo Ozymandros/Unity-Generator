@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { StatusBanner } from "@/components/StatusBanner";
-import { SmartField } from "@/components/generic/SmartField";
+import { StatusBanner } from "../StatusBanner";
+import { SmartField } from "../generic/SmartField";
+import { ModelManagerModal } from "../generic/ModelManagerModal";
 import { useAudioPanel } from "./AudioPanel";
 
 const {
   prompt,
+  modality,
   provider,
   apiKey,
   voiceId,
+  musicModel,
+  availableModels,
   stability,
   status,
   tone,
@@ -17,8 +21,10 @@ const {
   autoSaveToProject,
   activeProjectName,
   availableVoices,
+  showModelManager,
+  refreshModels,
   run,
-  AUDIO_PROVIDERS
+  providers
 } = useAudioPanel();
 </script>
 
@@ -32,9 +38,25 @@ const {
         Auto-save to project
       </label>
     </div>
-    <h2>Audio Generation</h2>
+    <h2>Audio & Music Generation</h2>
     <StatusBanner :status="status" :tone="tone" />
-    <SmartField label="Prompt" type="textarea" v-model="prompt" :rows="6" />
+
+    <div class="mb-6">
+      <div class="text-overline mb-2 text-primary">Generation Type</div>
+      <v-btn-toggle
+        v-model="modality"
+        mandatory
+        color="primary"
+        variant="outlined"
+        rounded="pill"
+        class="w-100"
+      >
+        <v-btn value="audio" prepend-icon="mdi-account-voice" class="flex-grow-1">Speech (TTS)</v-btn>
+        <v-btn value="music" prepend-icon="mdi-music-note" class="flex-grow-1">Atmospheric Music</v-btn>
+      </v-btn-toggle>
+    </div>
+
+    <SmartField :label="modality === 'music' ? 'Music Description' : 'Speech Prompt'" type="textarea" v-model="prompt" :rows="6" />
 
     <div class="field-group">
       <div class="row">
@@ -42,23 +64,36 @@ const {
           label="Provider" 
           type="select" 
           v-model="provider" 
-          :options="AUDIO_PROVIDERS" 
+          :options="providers.map(p => ({ value: p.name, label: p.name }))" 
           placeholder="Select Provider" 
         />
-        <SmartField 
-          label="API Key (Optional)" 
-          type="password" 
-          v-model="apiKey" 
-          placeholder="Override key..." 
-        />
+        <v-btn
+          icon="mdi-plus"
+          size="small"
+          variant="tonal"
+          color="primary"
+          class="ml-2 mt-7"
+          @click="showModelManager = true"
+          :disabled="!provider"
+          title="Manage models"
+        ></v-btn>
       </div>
       <div class="row">
         <SmartField 
+          v-if="modality === 'audio'"
           label="Voice (optional)" 
           type="select" 
           v-model="voiceId" 
           :options="availableVoices" 
           placeholder="Select Voice" 
+        />
+        <SmartField 
+          v-if="modality === 'music'"
+          label="Music Model" 
+          type="select" 
+          v-model="musicModel" 
+          :options="availableModels" 
+          placeholder="Select Model" 
         />
         <SmartField
           label="Stability"
@@ -71,22 +106,51 @@ const {
       </div>
     </div>
 
-    <details class="advanced-opts">
-      <summary>Advanced Options</summary>
-      <div class="opts-content">
-        <SmartField 
-          label="System Prompt Override" 
-          type="textarea" 
-          v-model="systemPrompt" 
-          :placeholder="defaultSystemPrompt" 
-          :rows="3"
-        />
-      </div>
-    </details>
+    <v-expansion-panels class="mb-6">
+      <v-expansion-panel
+        title="Advanced Options"
+        bg-color="surface"
+        class="border rounded-lg"
+        elevation="0"
+      >
+        <v-expansion-panel-text class="pa-4">
+          <SmartField 
+            label="System Prompt Override" 
+            type="textarea" 
+            v-model="systemPrompt" 
+            :placeholder="defaultSystemPrompt" 
+            :rows="3"
+          />
+          <SmartField 
+            label="API Key (Optional)" 
+            type="password" 
+            v-model="apiKey" 
+            placeholder="Override key..." 
+          />
+        </v-expansion-panel-text>
+      </v-expansion-panel>
+    </v-expansion-panels>
 
-    <button class="primary" @click="run">Generate</button>
+    <v-btn
+      color="primary"
+      size="large"
+      rounded="pill"
+      block
+      prepend-icon="mdi-auto-fix"
+      @click="run"
+      class="mb-6"
+    >
+      Generate Audio
+    </v-btn>
 
     <SmartField label="Result (JSON)" type="textarea" v-model="result" :rows="10" disabled />
+
+    <ModelManagerModal
+      v-if="showModelManager"
+      :provider="provider"
+      v-model="showModelManager"
+      @models-changed="refreshModels"
+    />
   </div>
 </template>
 
