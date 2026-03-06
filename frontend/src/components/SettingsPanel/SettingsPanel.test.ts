@@ -7,9 +7,6 @@ import { createVuetify } from 'vuetify';
 const vuetify = createVuetify();
 
 vi.mock("../../api/client");
-vi.mock("@tauri-apps/api/shell", () => ({
-  open: vi.fn(),
-}));
 
 describe("SettingsPanel", () => {
   beforeEach(() => {

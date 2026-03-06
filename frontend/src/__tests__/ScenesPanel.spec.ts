@@ -21,27 +21,32 @@ beforeEach(() => {
         data: { key: "default_code_system_prompt", value: "Mock System Prompt" },
     });
     vi.spyOn(client, "getAllConfig").mockResolvedValue({
-        providers: [{
-            name: "openai",
-            modalities: ["llm", "image"],
-            api_key_name: "OPENAI_API_KEY",
-            base_url: "https://api.openai.com/v1",
-            openai_compatible: true,
-            requires_api_key: true,
-            supports_vision: false,
-            supports_streaming: false,
-            supports_function_calling: false,
-            supports_tool_use: false,
-            default_models: {},
-            extra: {}
-        }],
+        success: true,
+        date: new Date().toISOString(),
+        error: null,
+        providers: {
+            openai: {
+                name: "openai",
+                modalities: ["llm", "image"],
+                api_key_name: "OPENAI_API_KEY",
+                base_url: "https://api.openai.com/v1",
+                openai_compatible: true,
+                requires_api_key: true,
+                supports_vision: false,
+                supports_streaming: false,
+                supports_function_calling: false,
+                supports_tool_use: false,
+                default_models: {},
+                extra: {}
+            }
+        },
         models: { openai: [
             { value: "gpt-4o", modality: "llm", label: "GPT-4o" },
             { value: "sprite-model", modality: "image", label: "Sprite Model" }
         ] },
         prompts: {},
-        keys: [],
-        preferences: {},
+        keys: {} as Record<string, string>,
+        data: {}
     });
 });
 

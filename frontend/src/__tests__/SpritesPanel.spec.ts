@@ -20,20 +20,25 @@ describe("SpritesPanel", () => {
             data: { key: "test", value: null },
         });
         vi.spyOn(client, "getAllConfig").mockResolvedValue({
-            providers: [{
-                name: "openai",
-                api_key_name: null,
-                base_url: null,
-                openai_compatible: true,
-                requires_api_key: false,
-                supports_vision: true,
-                supports_streaming: true,
-                supports_function_calling: false,
-                supports_tool_use: false,
-                modalities: ["image", "llm"],
-                default_models: { image: "sprite-model", llm: "gpt-4o" },
-                extra: {}
-            }],
+            success: true,
+            date: new Date().toISOString(),
+            error: null,
+            providers: {
+                openai: {
+                    name: "openai",
+                    api_key_name: null,
+                    base_url: null,
+                    openai_compatible: true,
+                    requires_api_key: false,
+                    supports_vision: true,
+                    supports_streaming: true,
+                    supports_function_calling: false,
+                    supports_tool_use: false,
+                    modalities: ["image", "llm"],
+                    default_models: { image: "sprite-model", llm: "gpt-4o" },
+                    extra: {}
+                }
+            },
             models: {
                 openai: [
                     { value: "sprite-model", label: "Sprite Model", modality: "image" },
@@ -41,8 +46,8 @@ describe("SpritesPanel", () => {
                 ]
             },
             prompts: {},
-            keys: [],
-            preferences: {},
+            keys: {} as Record<string, string>,
+            data: {}
         });
     });
 

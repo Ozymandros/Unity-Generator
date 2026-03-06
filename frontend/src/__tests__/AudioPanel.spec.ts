@@ -23,12 +23,15 @@ describe("AudioPanel", () => {
 
     // Mock discovery API
     vi.mocked(client.getAllConfig).mockResolvedValue({
-      providers: [
-        { 
-          name: "elevenlabs", 
-          modalities: ["audio"], 
-          api_key_name: "elevenlabs_api_key", 
-          requires_api_key: true, 
+      success: true,
+      date: new Date().toISOString(),
+      error: null,
+      providers: {
+        elevenlabs: {
+          name: "elevenlabs",
+          modalities: ["audio"],
+          api_key_name: "elevenlabs_api_key",
+          requires_api_key: true,
           extra: {},
           base_url: null,
           openai_compatible: false,
@@ -37,14 +40,14 @@ describe("AudioPanel", () => {
           supports_function_calling: false,
           supports_tool_use: false,
           default_models: {}
-        } as ProviderCapabilities
-      ],
+        }
+      },
       models: {
         elevenlabs: [{ value: "Rachel", label: "Rachel", modality: "audio" }]
       },
       prompts: {},
-      keys: [],
-      preferences: {
+      keys: {} as Record<string, string>,
+      data: {
         preferred_audio_provider: "elevenlabs",
         preferred_audio_model: "Rachel"
       }

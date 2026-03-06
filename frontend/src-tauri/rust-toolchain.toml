@@ -1,0 +1,7 @@
+# Single source of truth for Rust version. Must support Cargo lockfile v4 (1.78+)
+# and Tauri 1.x. Kept at 1.81.x for compatibility across Windows/macOS/Linux CI.
+[toolchain]
+channel = "1.81.0"
+components = []
+targets = []
+profile = "minimal"
