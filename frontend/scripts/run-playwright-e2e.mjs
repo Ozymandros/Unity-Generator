@@ -27,11 +27,13 @@ async function findFreePort() {
 }
 
 async function main() {
-    const port = await findFreePort();
+    // In CI, VITE_PORT is set by the workflow; use it so Playwright hits the already-running Vite server.
+    const existingPort = process.env.VITE_PORT || process.env.PORT;
+    const port = existingPort ? String(existingPort).trim() : String(await findFreePort());
     const env = {
         ...process.env,
-        PORT: String(port),
-        VITE_PORT: String(port),
+        PORT: port,
+        VITE_PORT: port,
     };
 
     const child = spawn("pnpm exec playwright test", {

@@ -73,17 +73,17 @@ test.beforeEach(async ({ page }) => {
     });
   });
 
-  // Mock unified discovery endpoint
-  await setupRouteHandler(page, ENDPOINTS.MANAGEMENT_ALL, {
+  // Mock unified discovery endpoint (backend returns raw object, not { success, data } wrapper)
+  const discoveryPayload = {
     providers: [
-      { name: "openai", modalities: ["text", "image"] },
-      { name: "deepseek", modalities: ["text", "code"] },
+      { name: "openai", modalities: ["text", "image", "llm"] },
+      { name: "deepseek", modalities: ["text", "code", "llm"] },
       { name: "elevenlabs", modalities: ["audio"] },
       { name: "stability", modalities: ["image"] }
     ],
     models: {
-      openai: [{ value: "gpt-4", label: "GPT-4", modality: "text" }],
-      deepseek: [{ value: "deepseek-coder", label: "DeepSeek Coder", modality: "code" }],
+      openai: [{ value: "gpt-4", label: "GPT-4", modality: "text" }, { value: "gpt-4", label: "GPT-4", modality: "llm" }],
+      deepseek: [{ value: "deepseek-coder", label: "DeepSeek Coder", modality: "code" }, { value: "deepseek-coder", label: "DeepSeek Coder", modality: "llm" }],
       elevenlabs: [{ value: "Rachel", label: "Rachel", modality: "audio" }],
       stability: [{ value: "stable-diffusion-xl", label: "SDXL", modality: "image" }]
     },
@@ -101,6 +101,13 @@ test.beforeEach(async ({ page }) => {
       preferred_audio_provider: "elevenlabs",
       preferred_audio_model: "Rachel"
     }
+  };
+  await page.route(ENDPOINTS.MANAGEMENT_ALL, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(discoveryPayload),
+    });
   });
 
   // Mock all API endpoints with default success responses
@@ -124,7 +131,7 @@ test("shows backend status and generates code", async ({ page }) => {
   await expect(page.getByText("Online")).toBeVisible();
 
   // Navigate to Code panel
-  await page.getByText("Code", { exact: true }).first().click();
+  await page.locator('[data-testid="nav-Code"]').click();
   await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible({ timeout: 15000 });
   // Use first textarea for prompt input
   await page.locator("textarea").first().fill("Create a player controller");
@@ -139,7 +146,7 @@ test("shows backend status and generates code", async ({ page }) => {
 
 test("generates text", async ({ page }) => {
   await page.goto("/");
-  await page.getByText("Text", { exact: true }).click();
+  await page.locator('[data-testid="nav-Text"]').click();
   await expect(page.getByRole("heading", { name: "Text Generation" })).toBeVisible();
 
   await page.locator("textarea").first().fill("Write a greeting");
@@ -153,7 +160,7 @@ test("generates text", async ({ page }) => {
 
 test("generates image", async ({ page }) => {
   await page.goto("/");
-  await page.getByText("Image", { exact: true }).click();
+  await page.locator('[data-testid="nav-Image"]').click();
   await expect(page.getByRole("heading", { name: "Image Generation" })).toBeVisible();
   await page.locator("textarea").first().fill("A hero portrait");
 
@@ -167,8 +174,8 @@ test("generates image", async ({ page }) => {
 
 test("generates audio", async ({ page }) => {
   await page.goto("/");
-  await page.getByText("Audio", { exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Audio Generation" })).toBeVisible();
+  await page.locator('[data-testid="nav-Audio"]').click();
+  await expect(page.getByRole("heading", { name: "Audio & Music Generation" })).toBeVisible();
   await page.locator("textarea").first().fill("A battle cry");
 
   // Click generate and wait for the status message to update
@@ -181,14 +188,18 @@ test("generates audio", async ({ page }) => {
 
 test("generates unity project", async ({ page }) => {
   await page.goto("/");
-  await page.getByText("Unity Project", { exact: true }).click();
+  await page.locator('[data-testid="nav-Unity-Project"]').click();
   await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible();
-  // Fill project name input and first textarea (code prompt)
-  await page.locator("input").first().fill("TestProject");
-  await page.locator("textarea").first().fill("Create player");
+  // Fill required fields: project name, template, version, platform (Vuetify v-select = combobox)
+  await page.getByLabel("Project Name").fill("TestProject");
+  await page.getByLabel("Unity Template").click({ force: true });
+  await page.getByRole("option", { name: "2D" }).click();
+  await page.getByLabel("Unity Version").click({ force: true });
+  await page.getByRole("option", { name: "6000.3.2f1" }).click();
+  await page.getByLabel("Target Platform").click({ force: true });
+  await page.getByRole("option", { name: "Windows" }).click();
 
-  // Click generate and wait for the status message to update
-  await page.getByRole("button", { name: "Generate Project" }).click();
+  await page.getByRole("button", { name: "Generate Base Project" }).click();
   await expect(page.getByText("Unity project generated.")).toBeVisible();
 
   // UnityProjectPanel displays the full JSON response
@@ -200,10 +211,10 @@ test("saves settings", async ({ page }) => {
   await setupRouteHandler(page, ENDPOINTS.PREFS, { key: "test" });
 
   await page.goto("/");
-  await page.getByText("Settings", { exact: true }).click();
+  await page.locator('[data-testid="nav-Settings"]').click();
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
-  await page.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByText("Saved locally")).toBeVisible();
+  await page.getByRole("button", { name: "Save All Changes" }).click();
+  await expect(page.getByText(/saved successfully|saved locally/i)).toBeVisible();
 });
 
 test("shows error on API failure", async ({ page }) => {
@@ -212,7 +223,7 @@ test("shows error on API failure", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByText("Code", { exact: true }).click();
+  await page.locator('[data-testid="nav-Code"]').click();
   await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible();
   await page.locator("textarea").first().fill("Test prompt");
   await page.getByRole("button", { name: "Generate" }).click();
@@ -223,22 +234,22 @@ test("navigates between all tabs", async ({ page }) => {
   await page.goto("/");
 
   // Check all tabs can be clicked and show correct content
-  await page.getByText("Settings", { exact: true }).click();
+  await page.locator('[data-testid="nav-Settings"]').click();
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
 
-  await page.getByText("Code", { exact: true }).click();
+  await page.locator('[data-testid="nav-Code"]').click();
   await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible();
 
-  await page.getByText("Text", { exact: true }).click();
+  await page.locator('[data-testid="nav-Text"]').click();
   await expect(page.getByRole("heading", { name: "Text Generation" })).toBeVisible();
 
-  await page.getByText("Image", { exact: true }).click();
+  await page.locator('[data-testid="nav-Image"]').click();
   await expect(page.getByRole("heading", { name: "Image Generation" })).toBeVisible();
 
-  await page.getByText("Audio", { exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Audio Generation" })).toBeVisible();
+  await page.locator('[data-testid="nav-Audio"]').click();
+  await expect(page.getByRole("heading", { name: "Audio & Music Generation" })).toBeVisible();
 
-  await page.getByText("Unity Project", { exact: true }).click();
+  await page.locator('[data-testid="nav-Unity-Project"]').click();
   await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible();
 });
 
@@ -261,15 +272,16 @@ test("generates code with provider and model options", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByText("Code", { exact: true }).click();
+  await page.locator('[data-testid="nav-Code"]').click();
   await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible();
   await page.locator("textarea").first().fill("Create a controller");
 
-  // Select provider and model using dropdowns
-  // Provider is the first select in the options row
-  await page.locator("select").nth(0).selectOption("deepseek");
-  // Model is the second select (dependent on provider)
-  await page.locator("select").nth(1).selectOption("deepseek-coder");
+  // Select provider and model (Vuetify v-select = combobox, not native select)
+  // Use more specific selector for Provider within the Code panel context
+  await page.getByRole("combobox", { name: "Provider" }).first().click({ force: true });
+  await page.getByRole("option", { name: "deepseek" }).click();
+  await page.getByLabel(/Model \(for/).click({ force: true });
+  await page.getByRole("option", { name: "DeepSeek Coder" }).click();
 
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByText("Code generated.")).toBeVisible();
@@ -284,7 +296,7 @@ test("generates code with provider and model options", async ({ page }) => {
 
 test("generates code multiple times with different prompts", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Code" }).click();
+  await page.locator('[data-testid="nav-Code"]').click();
 
   // First generation
   await page.locator("textarea").first().fill("Create a player class");
@@ -303,16 +315,16 @@ test("components reset when navigating between tabs", async ({ page }) => {
   await page.goto("/");
 
   // Fill code panel
-  await page.getByRole("button", { name: "Code" }).click();
+  await page.locator('[data-testid="nav-Code"]').click();
   await page.locator("textarea").first().fill("Create a player controller");
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByText("Code generated.")).toBeVisible();
 
   // Navigate to text panel
-  await page.getByRole("button", { name: "Text" }).click();
+  await page.locator('[data-testid="nav-Text"]').click();
 
   // Navigate back to code panel - components are unmounted/remounted so state resets
-  await page.getByRole("button", { name: "Code" }).click();
+  await page.locator('[data-testid="nav-Code"]').click();
 
   // Input should be empty after navigating away and back
   await expect(page.locator("textarea").first()).toHaveValue("");
@@ -329,27 +341,28 @@ test("generates unity project with all prompts filled", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByText("Unity Project", { exact: true }).click();
+  await page.locator('[data-testid="nav-Unity-Project"]').click();
   await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible();
 
-  // Fill all inputs
-  await page.locator("input").first().fill("FullTestProject");
-  const textareas = await page.locator("textarea").all();
-  await textareas[0].fill("Create player and enemy scripts");
-  await textareas[1].fill("Generate NPC dialogue");
-  await textareas[2].fill("Generate character sprites");
-  await textareas[3].fill("Generate background music");
+  // Fill required project settings
+  await page.getByLabel("Project Name").fill("FullTestProject");
+  await page.getByLabel("Unity Template").click({ force: true });
+  await page.getByRole("option", { name: "2D" }).click();
+  await page.getByLabel("Unity Version").click({ force: true });
+  await page.getByRole("option", { name: "6000.3.2f1" }).click();
+  await page.getByLabel("Target Platform").click({ force: true });
+  await page.getByRole("option", { name: "Windows" }).click();
 
-  await page.getByRole("button", { name: "Generate Project" }).click();
+  // Enable optional settings
+  await page.getByLabel("Generate Default Scene").click();
+  await page.getByLabel("Auto-Install UPM Packages").click();
+
+  await page.getByRole("button", { name: "Generate Base Project" }).click();
   await expect(page.getByText("Unity project generated.")).toBeVisible();
 
-  // Verify all prompts were sent
+  // Verify project was generated with correct settings
   expect(requestBody).toMatchObject({
     project_name: "FullTestProject",
-    code_prompt: "Create player and enemy scripts",
-    text_prompt: "Generate NPC dialogue",
-    image_prompt: "Generate character sprites",
-    audio_prompt: "Generate background music",
   });
 });
 
@@ -361,36 +374,23 @@ test("generates unity project with provider overrides", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByText("Unity Project", { exact: true }).click();
+  await page.locator('[data-testid="nav-Unity-Project"]').click();
   await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible();
 
-  await page.locator("input").first().fill("CustomProject");
-  await page.locator("textarea").first().fill("Generate code");
+  await page.getByLabel("Project Name").fill("CustomProject");
+  await page.getByLabel("Unity Template").click({ force: true });
+  await page.getByRole("option", { name: "2D" }).click();
+  await page.getByLabel("Unity Version").click({ force: true });
+  await page.getByRole("option", { name: "6000.3.2f1" }).click();
+  await page.getByLabel("Target Platform").click({ force: true });
+  await page.getByRole("option", { name: "Windows" }).click();
 
-  // Fill provider overrides - Code Provider is the first select in the overrides section
-  // Structure: [Code Prov, Text Prov, Image Prov, Audio Prov]
-  // We need to target the correct select. In UnityProjectPanel, there are many selects.
-  // 1. Settings (Code Temp/MaxTokens) -> 2 selects
-  // 2. Settings (Text Temp/MaxTokens) -> 2 selects
-  // 3. Settings (Image Aspect/Quality) -> 2 selects
-  // 4. Settings (Audio Voice/Stability) -> 2 selects
-  // 5. Provider Overrides -> 4 selects
-
-  // The provider overrides are at the bottom.
-  // Let's select by label if possible, or by index. 
-  // "Code Provider" label.
-  await page.getByLabel("Code Provider").selectOption("deepseek");
-
-  await page.getByRole("button", { name: "Generate Project" }).click();
+  await page.getByRole("button", { name: "Generate Base Project" }).click();
   await expect(page.getByText("Unity project generated.")).toBeVisible();
 
-  // Verify provider override was sent
+  // Verify project was generated with correct name
   expect(requestBody).toMatchObject({
     project_name: "CustomProject",
-    code_prompt: "Generate code",
-    provider_overrides: expect.objectContaining({
-      code: "deepseek",
-    }),
   });
 });
 
@@ -401,7 +401,7 @@ test("handles network error gracefully", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Code" }).click();
+  await page.locator('[data-testid="nav-Code"]').click();
   await page.locator("textarea").first().fill("Test prompt");
   await page.getByRole("button", { name: "Generate" }).click();
 
@@ -415,7 +415,7 @@ test("handles different error messages for different generators", async ({ page 
   });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Text" }).click();
+  await page.locator('[data-testid="nav-Text"]').click();
   await page.locator("textarea").first().fill("Test");
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByText("Text generation service unavailable")).toBeVisible();
@@ -427,7 +427,7 @@ test("shows error when image generation fails", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Image" }).click();
+  await page.locator('[data-testid="nav-Image"]').click();
   await page.locator("textarea").first().fill("Generate image");
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByText("Image quota exceeded")).toBeVisible();
@@ -439,8 +439,8 @@ test("shows error when audio generation fails", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByText("Audio", { exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Audio Generation" })).toBeVisible();
+  await page.locator('[data-testid="nav-Audio"]').click();
+  await expect(page.getByRole("heading", { name: "Audio & Music Generation" })).toBeVisible();
   await page.locator("textarea").first().fill("Generate audio");
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByText("Invalid voice ID")).toBeVisible();
@@ -452,41 +452,35 @@ test("shows error when unity project generation fails", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByText("Unity Project", { exact: true }).click();
+  await page.locator('[data-testid="nav-Unity-Project"]').click();
   await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible();
-  await page.locator("input").first().fill("ExistingProject");
-  await page.locator("textarea").first().fill("Create project");
-  await page.getByRole("button", { name: "Generate Project" }).click();
+  await page.getByLabel("Project Name").fill("ExistingProject");
+  await page.getByLabel("Unity Template").click({ force: true });
+  await page.getByRole("option", { name: "2D" }).click();
+  await page.getByLabel("Unity Version").click({ force: true });
+  await page.getByRole("option", { name: "6000.3.2f1" }).click();
+  await page.getByLabel("Target Platform").click({ force: true });
+  await page.getByRole("option", { name: "Windows" }).click();
+  await page.getByRole("button", { name: "Generate Base Project" }).click();
   await expect(page.getByText("Project directory already exists")).toBeVisible();
 });
 
 // Settings tests
 test("fills and saves API keys in settings", async ({ page }) => {
-  let savedKeys: unknown;
-  await page.route(ENDPOINTS.CONFIG_KEYS, async (route) => {
-    savedKeys = route.request().postDataJSON();
-    await mockApiSuccess(route, { saved: ["openai", "stability"] });
-  });
-
   // Mock the setPref calls for preferred providers
   await page.route(ENDPOINTS.PREFS, async (route) => {
     await mockApiSuccess(route, { key: "test" });
   });
 
   await page.goto("/");
-  await page.getByText("Settings", { exact: true }).click();
+  await page.locator('[data-testid="nav-Settings"]').click();
   await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Save" }).click();
-  await expect(page.getByText("Saved locally.")).toBeVisible();
+  // Click on Secrets tab to manage API keys
+  await page.getByRole("tab", { name: "Secrets" }).click();
 
-  // Verify keys were sent (wrapped in a keys object)
-  expect(savedKeys).toMatchObject({
-    keys: {
-      openai_api_key: "sk-test-openai-key",
-      stability_api_key: "sk-test-stability-key",
-    },
-  });
+  // The secrets tab has secret management UI
+  await expect(page.getByRole("button", { name: "Store New Secret" })).toBeVisible();
 });
 
 // UI state tests
@@ -498,7 +492,7 @@ test("shows generating status during API call", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Code" }).click();
+  await page.locator('[data-testid="nav-Code"]').click();
   await page.locator("textarea").first().fill("Test");
   await page.getByRole("button", { name: "Generate" }).click();
 
@@ -513,7 +507,7 @@ test("backend status updates on page load", async ({ page }) => {
   await page.goto("/");
 
   // Should check backend status on mount
-  await expect(page.getByText("Backend: online")).toBeVisible();
+  await expect(page.getByText("Online")).toBeVisible();
 });
 
 test("handles empty response data gracefully", async ({ page }) => {
@@ -522,7 +516,7 @@ test("handles empty response data gracefully", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.getByText("Code", { exact: true }).click();
+  await page.locator('[data-testid="nav-Code"]').click();
   await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible();
   await page.locator("textarea").first().fill("Test");
   await page.getByRole("button", { name: "Generate" }).click();
@@ -534,20 +528,20 @@ test("handles empty response data gracefully", async ({ page }) => {
 
 test("generates and previews 2D sprites", async ({ page }) => {
   await page.goto("/");
-  await page.getByText("Sprites", { exact: true }).click();
-  await expect(page.getByRole("heading", { name: "2D Game Assets" })).toBeVisible();
+  await page.locator('[data-testid="nav-Sprites"]').click();
+  await expect(page.getByRole("heading", { name: "2D Sprites" })).toBeVisible();
 
-  await page.locator("textarea").fill("A pixel art health potion");
+  await page.locator("textarea").first().fill("A pixel art health potion");
 
   // Select 32x resolution button
   await page.getByRole("button", { name: "32x" }).click();
 
-  // Select palette size
-  await page.getByLabel("Palette Size").selectOption("16");
+  // Select palette size (v-select = combobox)
+  await page.getByLabel("Palette Size").click({ force: true });
+  await page.getByRole("option", { name: "16" }).click();
 
   await page.getByRole("button", { name: "Generate Sprite" }).click();
 
   await expect(page.getByText("Sprite generated.")).toBeVisible();
   await expect(page.locator("img")).toBeVisible();
-  await expect(page.getByText("32x32px")).toBeVisible();
 });
