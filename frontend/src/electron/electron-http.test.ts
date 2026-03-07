@@ -10,14 +10,14 @@
  * renderer with appropriate error context if the backend returns an error.
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 
 /**
  * Simulates an HTTP request to the backend
  */
-interface BackendResponse<T = any> {
+interface BackendResponse {
   ok: boolean;
-  data?: T;
+  data?: any;
   error?: {
     status: number;
     message: string;
@@ -38,13 +38,10 @@ class ApiClient {
   /**
    * Make HTTP request to backend
    */
-  async callBackend<T = any>(
+  async callBackend(
     endpoint: string,
-    method: string = 'GET',
-    data?: any
-  ): Promise<BackendResponse<T>> {
-    // Simulate network request
-    const url = `${this.backendUrl}${endpoint}`;
+    method: string = 'GET'
+  ): Promise<BackendResponse> {
     
     // Simulate successful response
     if (Math.random() > 0.1) {
@@ -92,8 +89,7 @@ describe("Property 2: HTTP Communication Reliability", () => {
     const apiClient = new ApiClient();
     
     // Mock the callBackend to return success
-    const originalCallBackend = apiClient.callBackend.bind(apiClient);
-    apiClient.callBackend = async (endpoint: string, method: string = 'GET', data?: any) => {
+    apiClient.callBackend = async (endpoint: string, method: string = 'GET'): Promise<BackendResponse> => {
       return {
         ok: true,
         data: { success: true, endpoint, method }

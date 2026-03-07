@@ -12,7 +12,7 @@
  * operation.
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 
 /**
  * Simulates the notification manager
@@ -126,7 +126,8 @@ describe("Property 6: Notification Delivery and Handling", () => {
       id: 'test-1',
       title: 'Test Notification',
       body: 'This is a test notification',
-      type: 'info'
+      type: 'info',
+      timestamp: Date.now()
     };
     
     const result = notificationManager.showNotification(notification);
@@ -142,6 +143,7 @@ describe("Property 6: Notification Delivery and Handling", () => {
       title: 'Test Notification',
       body: 'This is a test notification',
       type: 'info',
+      timestamp: Date.now(),
       action: {
         label: 'Click me',
         callback: () => { actionCalled = true; }
@@ -159,7 +161,8 @@ describe("Property 6: Notification Delivery and Handling", () => {
       id: 'backend-1',
       title: 'Backend Notification',
       body: 'Backend sent a notification',
-      type: 'info'
+      type: 'info',
+      timestamp: Date.now()
     };
     
     const result = notificationManager.forwardBackendNotification(notification);
@@ -174,7 +177,8 @@ describe("Property 6: Notification Delivery and Handling", () => {
       id: 'test-1',
       title: 'Test Notification',
       body: 'This should not be shown',
-      type: 'info'
+      type: 'info',
+      timestamp: Date.now()
     };
     
     const result = notificationManager.showNotification(notification);
@@ -187,7 +191,8 @@ describe("Property 6: Notification Delivery and Handling", () => {
         id: `notification-${i}`,
         title: `Notification ${i}`,
         body: `Body ${i}`,
-        type: 'info'
+        type: 'info',
+        timestamp: Date.now()
       });
     }
     
@@ -199,7 +204,8 @@ describe("Property 6: Notification Delivery and Handling", () => {
       id: 'test-1',
       title: 'Test',
       body: 'Body',
-      type: 'info'
+      type: 'info',
+      timestamp: Date.now()
     });
     
     notificationManager.clearNotifications();

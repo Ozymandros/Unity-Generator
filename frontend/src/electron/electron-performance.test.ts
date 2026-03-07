@@ -10,7 +10,7 @@
  * acceptable thresholds, the performance monitor shall log warnings.
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 
 /**
  * Simulates the performance monitor

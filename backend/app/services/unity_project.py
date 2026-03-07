@@ -8,7 +8,7 @@ from typing import Any
 
 import requests
 
-from ..core.config import get_output_dir, get_repo_root
+from ..core.config import get_output_dir
 
 
 def _safe_name(value: str) -> str:

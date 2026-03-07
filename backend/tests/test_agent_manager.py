@@ -1,7 +1,7 @@
 """Tests for agent_manager module."""
 import sys
 from pathlib import Path
-from unittest.mock import ANY, MagicMock, patch, AsyncMock
+from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 

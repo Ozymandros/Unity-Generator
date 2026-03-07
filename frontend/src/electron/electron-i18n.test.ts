@@ -11,7 +11,7 @@
  * manager shall ensure it uses the correct language strings.
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 
 /**
  * Simulates the internationalization manager

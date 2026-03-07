@@ -4,7 +4,7 @@ import { mount } from "@vue/test-utils";
 import { createVuetify } from "vuetify";
 import { createPinia, setActivePinia } from "pinia";
 import * as client from "@/api/client";
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { expect, it, beforeEach } from "vitest";
 
 vi.mock("@/api/client"); // Mock the entire client module
 
@@ -24,29 +24,27 @@ beforeEach(() => {
         success: true,
         date: new Date().toISOString(),
         error: null,
-        providers: {
-            openai: {
-                name: "openai",
-                modalities: ["llm", "image"],
-                api_key_name: "OPENAI_API_KEY",
-                base_url: "https://api.openai.com/v1",
-                openai_compatible: true,
-                requires_api_key: true,
-                supports_vision: false,
-                supports_streaming: false,
-                supports_function_calling: false,
-                supports_tool_use: false,
-                default_models: {},
-                extra: {}
-            }
-        },
+        providers: [{
+            name: "openai",
+            api_key_name: "OPENAI_API_KEY",
+            base_url: "https://api.openai.com/v1",
+            openai_compatible: true,
+            requires_api_key: true,
+            supports_vision: false,
+            supports_streaming: false,
+            supports_function_calling: false,
+            supports_tool_use: false,
+            modalities: ["llm", "image"],
+            default_models: {},
+            extra: {}
+        }],
         models: { openai: [
             { value: "gpt-4o", modality: "llm", label: "GPT-4o" },
             { value: "sprite-model", modality: "image", label: "Sprite Model" }
         ] },
         prompts: {},
         keys: {} as Record<string, string>,
-        data: {}
+        data: null
     });
 });
 

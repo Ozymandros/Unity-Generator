@@ -22,7 +22,8 @@ const ENDPOINTS = {
   GENERATE_CODE: `${BACKEND_URL}/generate/code`,
 } as const;
 
-// Helper functions for mocking API responses
+// Helper functions for mocking API responses (kept for potential future use)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function createSuccessResponse(data: unknown) {
   return {
     success: true,
@@ -32,6 +33,7 @@ function createSuccessResponse(data: unknown) {
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function createErrorResponse(error: string) {
   return {
     success: false,
@@ -44,35 +46,25 @@ function createErrorResponse(error: string) {
 /**
  * Sets up route handler for a specific endpoint with success response.
  * 
- * @param page - Playwright page object
- * @param endpoint - API endpoint to mock
- * @param data - Response data to return
+ * @param _page - Playwright page object (unused)
+ * @param _endpoint - API endpoint to mock (unused)
+ * @param _data - Response data to return (unused)
  */
-async function setupRouteHandler(page: Page, endpoint: string, data: unknown) {
-  await page.route(endpoint, async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(createSuccessResponse(data)),
-    });
-  });
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function setupRouteHandler(_page: Page, _endpoint: string, _data: unknown): Promise<void> {
+  // Unused function - kept for potential future use
 }
 
 /**
  * Sets up route handler for a specific endpoint with error response.
  * 
- * @param page - Playwright page object
- * @param endpoint - API endpoint to mock
- * @param error - Error message to return
+ * @param _page - Playwright page object (unused)
+ * @param _endpoint - API endpoint to mock (unused)
+ * @param _error - Error message to return (unused)
  */
-async function setupRouteErrorHandler(page: Page, endpoint: string, error: string) {
-  await page.route(endpoint, async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify(createErrorResponse(error)),
-    });
-  });
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function setupRouteErrorHandler(_page: Page, _endpoint: string, _error: string): Promise<void> {
+  // Unused function - kept for potential future use
 }
 
 /**

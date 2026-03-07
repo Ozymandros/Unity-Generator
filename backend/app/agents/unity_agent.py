@@ -9,16 +9,17 @@ provider only requires a registry entry and (optionally) a ``base_url``.
 import logging
 import re
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
 if TYPE_CHECKING:
-    from semantic_kernel.connectors.ai.prompt_execution_settings import PromptExecutionSettings
+    pass
 
 from semantic_kernel import Kernel
 from semantic_kernel.connectors.ai.chat_completion_client_base import ChatCompletionClientBase
 from semantic_kernel.connectors.ai.function_choice_behavior import FunctionChoiceBehavior
 
 from ..services.providers import provider_registry
-from ..services.providers.capabilities import Modality, ProviderCapabilities
+from ..services.providers.capabilities import Modality
 from .unity_mcp_plugin import create_unity_mcp_plugin, unity_mcp_plugin_available_for_writing
 
 LOGGER = logging.getLogger(__name__)
@@ -186,18 +187,24 @@ class UnityAgent:
             system_message += (
                 f" The Unity project root (projectPath) is: {normalized_path}. "
                 "For every tool call that creates or modifies files (scenes, materials, game objects, scripts, assets), "
-                "you must pass projectPath equal to this project root, and fileName (or folderName for folder/list tools) "
-                "as the path under the project (e.g. Assets/Scenes/MyScene.unity). Never pass only a relative path; always include projectPath. "
-                "Do not use the MCP server executable path or any NuGet/nupkg path. Do not ask the user for the path. "
-                "Tool parameters: unity_create_scene(projectPath, fileName); unity_create_material(projectPath, fileName, materialJson); "
-                "unity_add_gameobject(projectPath, fileName, gameObjectJson); unity_create_script(projectPath, fileName, scriptName, content?)."
+                "you must pass projectPath equal to this project root, and fileName "
+                "(or folderName for folder/list tools) as the path under the project "
+                "(e.g. Assets/Scenes/MyScene.unity). Never pass only a relative path; "
+                "always include projectPath. Do not use the MCP server executable path "
+                "or any NuGet/nupkg path. Do not ask the user for the path. "
+                "Tool parameters: unity_create_scene(projectPath, fileName); "
+                "unity_create_material(projectPath, fileName, materialJson); "
+                "unity_add_gameobject(projectPath, fileName, gameObjectJson); "
+                "unity_create_script(projectPath, fileName, scriptName, content?)."
             )
         if use_tools:
             # Only add tool-use instruction when we will register the MCP plugin
             system_message += (
-                " You must try to use available tools to create or modify content in the project. Do not reply with only text. "
-                "After any connectivity or project-info check, call the appropriate tools (e.g. unity_create_scene, unity_add_gameobject, "
-                "unity_create_script, unity_create_material) to fulfill the user's request. "
+                " You must try to use available tools to create or modify content "
+                "in the project. Do not reply with only text. "
+                "After any connectivity or project-info check, call the appropriate tools "
+                "(e.g. unity_create_scene, unity_add_gameobject, unity_create_script, "
+                "unity_create_material) to fulfill the user's request. "
                 "Continue calling tools until the requested scene, objects, or scripts are created."
             )
         else:
@@ -217,7 +224,7 @@ class UnityAgent:
             # Ensure model ID is explicitly set if the settings object supports it
             if hasattr(execution_settings, "ai_model_id"):
                 model_id = options.get("model") or caps.default_models.get(Modality.LLM)
-                setattr(execution_settings, "ai_model_id", model_id)
+                execution_settings.ai_model_id = model_id  # type: ignore
 
             if use_tools:
                 # Provider allows tool use and MCP is available — register plugin

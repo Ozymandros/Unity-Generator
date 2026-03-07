@@ -10,7 +10,7 @@ export type DiscoveryResponse = {
   date: string;
   error: string | null;
   data: Record<string, unknown> | null;
-  providers?: Record<string, unknown>;
+  providers?: ProviderCapabilities[];
   models?: Record<string, unknown>;
   keys?: Record<string, string>;
   prompts?: Record<string, string>;

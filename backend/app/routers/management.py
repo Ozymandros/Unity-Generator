@@ -1,19 +1,14 @@
 import logging
-from typing import Dict, List, Any, Optional
+from typing import Any
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from ..repositories import (
-    get_provider_repo,
-    get_model_repo,
-    get_api_key_repo,
-    get_system_prompt_repo
-)
-from ..schemas import ok_response
-from ..services.providers.capabilities import ProviderCapabilities, Modality
-from ..services.providers.registry import provider_registry
 
 from ..core.db import get_all_prefs
-
+from ..repositories import get_api_key_repo, get_model_repo, get_provider_repo, get_system_prompt_repo
+from ..schemas import ok_response
+from ..services.providers.capabilities import Modality, ProviderCapabilities
+from ..services.providers.registry import provider_registry
 
 router = APIRouter(prefix="/api/management", tags=["management"])
 LOGGER = logging.getLogger(__name__)
@@ -23,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 @router.get("/all")
 def get_all_config():
     """
-    Unified discovery endpoint that returns all providers, models, prompts, 
+    Unified discovery endpoint that returns all providers, models, prompts,
     key status, and user preferences in a single request.
     """
     provider_repo = get_provider_repo()
@@ -60,18 +55,18 @@ def get_all_config():
 
 class ProviderUpdate(BaseModel):
     name: str = Field(min_length=1)
-    api_key_name: Optional[str] = None
-    api_key_value: Optional[str] = None
-    base_url: Optional[str] = None
+    api_key_name: str | None = None
+    api_key_value: str | None = None
+    base_url: str | None = None
     openai_compatible: bool = False
     requires_api_key: bool = True
     supports_vision: bool = False
     supports_streaming: bool = False
     supports_function_calling: bool = False
     supports_tool_use: bool = False
-    modalities: List[str]
-    default_models: Dict[str, str]
-    extra: Dict[str, Any] = {}
+    modalities: list[str]
+    default_models: dict[str, str]
+    extra: dict[str, Any] = {}
 
 class ModelUpdate(BaseModel):
     provider: str = Field(min_length=1)
@@ -90,7 +85,7 @@ class SystemPromptUpdate(BaseModel):
 # --- Endpoints ---
 
 # Providers
-@router.get("/providers", response_model=List[ProviderCapabilities])
+@router.get("/providers", response_model=list[ProviderCapabilities])
 def list_providers():
     return get_provider_repo().get_all()
 

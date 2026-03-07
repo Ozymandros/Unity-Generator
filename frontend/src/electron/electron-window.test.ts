@@ -11,7 +11,7 @@
  * fails, the window manager shall log the error and attempt recovery.
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 
 /**
  * Simulates the window manager
@@ -21,6 +21,8 @@ interface WindowBounds {
   height: number;
   x?: number;
   y?: number;
+  minWidth?: number;
+  minHeight?: number;
 }
 
 interface WindowState {
@@ -73,7 +75,7 @@ class WindowManager {
       windowState.frontendLoaded = true;
       windowState.isLoaded = true;
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }

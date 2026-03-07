@@ -2,7 +2,6 @@ import logging
 import sys
 from typing import Any, cast
 
-
 from ..agents.base import AsyncAgent, SyncAgent
 from ..core.config import get_repo_root
 from ..schemas import (
@@ -13,7 +12,6 @@ from ..schemas import (
     TextOptions,
     VideoOptions,
 )
-from ..agents.unity_mcp_plugin import unity_mcp_plugin_available_for_writing
 from .asset_saver import save_asset_to_project
 from .providers import Modality, provider_registry
 
@@ -271,6 +269,7 @@ class AgentManager:
             ... # doctest: +SKIP
         """
         from services.video_provider import generate_video
+
         from ..repositories import get_api_key_repo, get_system_prompt_repo
 
         api_keys = cast(dict[str, str], get_api_key_repo().get_all())

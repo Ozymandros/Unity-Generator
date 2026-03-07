@@ -8,7 +8,6 @@ It uses SQLite for cross-platform compatibility and proper connection management
 import logging
 import sqlite3
 from pathlib import Path
-from typing import Optional
 
 from app.core.config import get_db_dir
 
@@ -34,11 +33,11 @@ def init_db() -> None:
     """
     db_dir = get_db_dir()
     db_dir.mkdir(parents=True, exist_ok=True)
-    
+
     conn = sqlite3.connect(get_db_path())
     try:
         cursor = conn.cursor()
-        
+
         # User preferences table
         cursor.execute(
             """
@@ -49,7 +48,7 @@ def init_db() -> None:
             )
             """
         )
-        
+
         # Providers table
         cursor.execute(
             """
@@ -70,7 +69,7 @@ def init_db() -> None:
             )
             """
         )
-        
+
         # Provider models table
         cursor.execute(
             """
@@ -84,13 +83,13 @@ def init_db() -> None:
             )
             """
         )
-        
+
         # Migration: Add modality column if it doesn't exist
         cursor.execute("PRAGMA table_info(provider_models)")
         columns = [column[1] for column in cursor.fetchall()]
         if "modality" not in columns:
             cursor.execute("ALTER TABLE provider_models ADD COLUMN modality TEXT DEFAULT 'llm'")
-        
+
         # API keys table
         cursor.execute(
             """
@@ -102,7 +101,7 @@ def init_db() -> None:
             )
             """
         )
-        
+
         # System prompts table
         cursor.execute(
             """
@@ -114,7 +113,7 @@ def init_db() -> None:
             )
             """
         )
-        
+
         # Unity versions table
         cursor.execute(
             """
@@ -124,7 +123,7 @@ def init_db() -> None:
             )
             """
         )
-        
+
         conn.commit()
         LOGGER.info("Database initialized successfully at %s", get_db_path())
     finally:
@@ -146,7 +145,7 @@ def set_pref(key: str, value: str) -> None:
         raise ValueError("key must be a non-empty string")
     if value is None:
         raise ValueError("value cannot be None")
-    
+
     conn = sqlite3.connect(get_db_path())
     try:
         cursor = conn.cursor()
@@ -163,7 +162,7 @@ def set_pref(key: str, value: str) -> None:
         conn.close()
 
 
-def get_pref(key: str) -> Optional[str]:
+def get_pref(key: str) -> str | None:
     """
     Get a user preference value.
 
@@ -175,7 +174,7 @@ def get_pref(key: str) -> Optional[str]:
     """
     if not key or not key.strip():
         raise ValueError("key must be a non-empty string")
-    
+
     conn = sqlite3.connect(get_db_path())
     try:
         cursor = conn.cursor()

@@ -7,9 +7,8 @@ It ensures cross-platform compatibility and graceful shutdown handling.
 
 import logging
 import sqlite3
-from pathlib import Path
-from typing import Optional
 from contextlib import contextmanager
+from pathlib import Path
 
 from app.core.config import get_db_dir
 
@@ -20,7 +19,7 @@ _POOL_SIZE = 5
 _POOL_TIMEOUT = 30.0
 
 # Global connection pool state
-_pool: Optional[sqlite3.Connection] = None
+_pool: sqlite3.Connection | None = None
 
 
 def get_db_path() -> Path:
@@ -42,11 +41,11 @@ def init_db() -> None:
     """
     db_dir = get_db_dir()
     db_dir.mkdir(parents=True, exist_ok=True)
-    
+
     conn = sqlite3.connect(get_db_path())
     try:
         cursor = conn.cursor()
-        
+
         # User preferences table
         cursor.execute(
             """
@@ -57,7 +56,7 @@ def init_db() -> None:
             )
             """
         )
-        
+
         # Providers table
         cursor.execute(
             """
@@ -78,7 +77,7 @@ def init_db() -> None:
             )
             """
         )
-        
+
         # Provider models table
         cursor.execute(
             """
@@ -92,13 +91,13 @@ def init_db() -> None:
             )
             """
         )
-        
+
         # Migration: Add modality column if it doesn't exist
         cursor.execute("PRAGMA table_info(provider_models)")
         columns = [column[1] for column in cursor.fetchall()]
         if "modality" not in columns:
             cursor.execute("ALTER TABLE provider_models ADD COLUMN modality TEXT DEFAULT 'llm'")
-        
+
         # API keys table
         cursor.execute(
             """
@@ -110,7 +109,7 @@ def init_db() -> None:
             )
             """
         )
-        
+
         # System prompts table
         cursor.execute(
             """
@@ -122,7 +121,7 @@ def init_db() -> None:
             )
             """
         )
-        
+
         # Unity versions table
         cursor.execute(
             """
@@ -132,7 +131,7 @@ def init_db() -> None:
             )
             """
         )
-        
+
         conn.commit()
         LOGGER.info("Database initialized successfully at %s", get_db_path())
     finally:
@@ -213,7 +212,7 @@ def set_pref(key: str, value: str) -> None:
         raise ValueError("key must be a non-empty string")
     if value is None:
         raise ValueError("value cannot be None")
-    
+
     with get_db_cursor() as cursor:
         cursor.execute(
             """
@@ -225,7 +224,7 @@ def set_pref(key: str, value: str) -> None:
         )
 
 
-def get_pref(key: str) -> Optional[str]:
+def get_pref(key: str) -> str | None:
     """
     Get a user preference value.
 
@@ -237,7 +236,7 @@ def get_pref(key: str) -> Optional[str]:
     """
     if not key or not key.strip():
         raise ValueError("key must be a non-empty string")
-    
+
     with get_db_cursor() as cursor:
         cursor.execute("SELECT value FROM user_prefs WHERE key = ?", (key,))
         row = cursor.fetchone()

@@ -4,7 +4,7 @@ Tests for AgentManager system-prompt fallback logic.
 Verifies that ``run_unity`` uses ``get_pref`` when no explicit system
 prompt is provided, and skips it when one is.
 """
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 

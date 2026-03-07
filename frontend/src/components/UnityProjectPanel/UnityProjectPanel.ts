@@ -148,16 +148,6 @@ export function useUnityProjectPanel() {
     return "";
   });
 
-  async function openWithTauri(path: string) {
-    const tauri = (window as unknown as { __TAURI__?: { shell?: { open: (path: string) => Promise<void> } } })
-      .__TAURI__;
-    if (!tauri?.shell?.open) {
-      return false;
-    }
-    await tauri.shell.open(path);
-    return true;
-  }
-
   async function run() {
     status.value = "Generating Unity project...";
     tone.value = UI_TONE.OK;

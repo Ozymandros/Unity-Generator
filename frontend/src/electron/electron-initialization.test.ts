@@ -11,7 +11,7 @@
  * and attempt graceful shutdown.
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 
 /**
  * Simulates the initialization manager
@@ -170,7 +170,6 @@ describe("Property 8: Initialization Order Enforcement", () => {
   it("should maintain step progression", async () => {
     await initializationManager.initialize();
     
-    const steps = Object.values(InitializationStep).filter(v => typeof v === 'number');
     const currentStep = initializationManager.getCurrentStep();
     
     expect(currentStep).toBeGreaterThan(InitializationStep.BackendSpawned);

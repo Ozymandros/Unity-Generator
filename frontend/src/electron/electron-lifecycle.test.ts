@@ -9,7 +9,7 @@
  * health check, and only then create the renderer window.
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 
 /**
  * Simulates the backend process lifecycle

@@ -10,7 +10,7 @@
  * shall have a clean dependency tree with no unused or redundant packages.
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 
 /**
  * Simulates the dependency manager
@@ -57,7 +57,7 @@ class DependencyManager {
       try {
         this.dependencies = this.dependencies.filter(d => d.name !== dep.name);
         removed.push(dep.name);
-      } catch (error) {
+      } catch {
         errors.push(`Failed to remove ${dep.name}`);
       }
     }
@@ -73,15 +73,6 @@ class DependencyManager {
    * Verify no Tauri code remains
    */
   verifyNoTauriCode(): boolean {
-    // Simulate code verification
-    const tauriPatterns = [
-      '@tauri-apps/api',
-      '@tauri-apps/cli',
-      'tauri://',
-      'invoke("tauri:',
-      'window.tauri'
-    ];
-    
     // In real implementation, this would scan the codebase
     return true;
   }

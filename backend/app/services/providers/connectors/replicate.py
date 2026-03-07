@@ -9,8 +9,8 @@ import requests
 from pydantic import ConfigDict
 from semantic_kernel.connectors.ai.chat_completion_client_base import ChatCompletionClientBase
 from semantic_kernel.connectors.ai.prompt_execution_settings import PromptExecutionSettings
-from semantic_kernel.connectors.ai.text_to_image_client_base import TextToImageClientBase
 from semantic_kernel.connectors.ai.text_to_audio_client_base import TextToAudioClientBase
+from semantic_kernel.connectors.ai.text_to_image_client_base import TextToImageClientBase
 from semantic_kernel.contents.audio_content import AudioContent
 from semantic_kernel.contents.chat_message_content import ChatMessageContent
 from semantic_kernel.contents.utils.author_role import AuthorRole
@@ -78,7 +78,7 @@ class ReplicateConnectorBase:
         raise TimeoutError("Replicate prediction timed out")
 
 
-def _chat_history_to_prompt(chat_history: "ChatHistory") -> str:
+def _chat_history_to_prompt(chat_history: ChatHistory) -> str:
     """Convert SK chat history to a single prompt string for Replicate LLaMA-style models."""
     if not chat_history.messages:
         return ""
@@ -110,7 +110,7 @@ class ReplicateChatCompletion(ChatCompletionClientBase, ReplicateConnectorBase):
 
     async def _inner_get_chat_message_contents(
         self,
-        chat_history: "ChatHistory",
+        chat_history: ChatHistory,
         settings: PromptExecutionSettings,
     ) -> list[ChatMessageContent]:
         prompt = _chat_history_to_prompt(chat_history)
@@ -149,7 +149,7 @@ class ReplicateChatCompletion(ChatCompletionClientBase, ReplicateConnectorBase):
 
     async def _inner_get_streaming_chat_message_contents(
         self,
-        chat_history: "ChatHistory",
+        chat_history: ChatHistory,
         settings: PromptExecutionSettings,
         function_invoke_attempt: int = 0,
     ):  # noqa: ARG002

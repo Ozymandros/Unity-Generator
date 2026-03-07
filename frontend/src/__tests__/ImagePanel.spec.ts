@@ -158,4 +158,4 @@ describe("ImagePanel", () => {
     expect(wrapper.text()).toContain("Image generation failed");
   });
 });
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, expect, it, beforeEach } from "vitest";

@@ -6,10 +6,8 @@
  * Validates: Requirements 9.3, 3.5
  */
 
-import { describe, expect, it, beforeEach } from 'vitest';
-
-// Import the module
-const { formatBackendError, formatProcessError, getUserFriendlyErrorMessage } = await import('main/errors');
+import { describe, expect, it, beforeEach, vi } from 'vitest';
+import { formatBackendError, formatProcessError, getUserFriendlyErrorMessage } from 'main/errors';
 
 describe('Error Formatting Unit Tests', () => {
   beforeEach(() => {

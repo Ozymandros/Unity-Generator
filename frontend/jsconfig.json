@@ -5,6 +5,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../main/errors.d.ts"],
   "exclude": ["node_modules"]
 }

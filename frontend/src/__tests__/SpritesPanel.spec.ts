@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
 import { SpritesPanel } from "@/components/SpritesPanel";
 import * as client from "@/api/client";
@@ -23,22 +23,20 @@ describe("SpritesPanel", () => {
             success: true,
             date: new Date().toISOString(),
             error: null,
-            providers: {
-                openai: {
-                    name: "openai",
-                    api_key_name: null,
-                    base_url: null,
-                    openai_compatible: true,
-                    requires_api_key: false,
-                    supports_vision: true,
-                    supports_streaming: true,
-                    supports_function_calling: false,
-                    supports_tool_use: false,
-                    modalities: ["image", "llm"],
-                    default_models: { image: "sprite-model", llm: "gpt-4o" },
-                    extra: {}
-                }
-            },
+            providers: [{
+                name: "openai",
+                api_key_name: null,
+                base_url: null,
+                openai_compatible: true,
+                requires_api_key: false,
+                supports_vision: true,
+                supports_streaming: true,
+                supports_function_calling: false,
+                supports_tool_use: false,
+                modalities: ["image", "llm"],
+                default_models: { image: "sprite-model", llm: "gpt-4o" },
+                extra: {}
+            }],
             models: {
                 openai: [
                     { value: "sprite-model", label: "Sprite Model", modality: "image" },
@@ -47,7 +45,7 @@ describe("SpritesPanel", () => {
             },
             prompts: {},
             keys: {} as Record<string, string>,
-            data: {}
+            data: null
         });
     });
 

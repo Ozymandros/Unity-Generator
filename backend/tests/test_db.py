@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from app.core import db, config
+from app.core import config, db
 
 
 @pytest.fixture
@@ -36,8 +36,6 @@ def test_init_db_creates_table(db_setup: Path) -> None:
 
 def test_set_and_get_pref(db_setup: Path) -> None:
     """Test set_pref and get_pref roundtrip."""
-    tmp_path = db_setup
-
     db.init_db()
     db.set_pref("test_key", "test_value")
 
@@ -47,8 +45,6 @@ def test_set_and_get_pref(db_setup: Path) -> None:
 
 def test_get_pref_returns_none_for_missing_key(db_setup: Path) -> None:
     """Test get_pref returns None when key doesn't exist."""
-    tmp_path = db_setup
-
     db.init_db()
 
     value = db.get_pref("nonexistent_key")
@@ -57,8 +53,6 @@ def test_get_pref_returns_none_for_missing_key(db_setup: Path) -> None:
 
 def test_set_pref_upsert_behavior(db_setup: Path) -> None:
     """Test that set_pref overwrites existing values."""
-    tmp_path = db_setup
-
     db.init_db()
 
     db.set_pref("key", "first_value")
@@ -70,8 +64,6 @@ def test_set_pref_upsert_behavior(db_setup: Path) -> None:
 
 def test_multiple_prefs(db_setup: Path) -> None:
     """Test storing multiple preferences."""
-    tmp_path = db_setup
-
     db.init_db()
 
     db.set_pref("key1", "value1")

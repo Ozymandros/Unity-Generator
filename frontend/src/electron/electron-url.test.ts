@@ -11,7 +11,7 @@
  * and continue with default behavior.
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 
 /**
  * Simulates the URL handler
@@ -81,7 +81,7 @@ class URLHandler {
         params,
         original: url
       };
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -103,7 +103,7 @@ class URLHandler {
     const actions: URLProcessingResult['actions'] = {
       forwardToBackend: this.shouldForwardToBackend(parsed),
       forwardToFrontend: this.shouldForwardToFrontend(parsed),
-      showWindow: this.shouldShowWindow(parsed)
+      showWindow: this.shouldShowWindow()
     };
     
     return {
@@ -134,7 +134,7 @@ class URLHandler {
   /**
    * Check if window should be shown
    */
-  private shouldShowWindow(parsed: ParsedURL): boolean {
+  private shouldShowWindow(): boolean {
     // Always show window for valid URLs
     return true;
   }
@@ -231,6 +231,16 @@ describe("Property 9: URL Parsing and Parameter Handling", () => {
       expect(backendParams).toBeDefined();
       expect(backendParams?.action).toBe('generate');
       expect(backendParams?.prompt).toBe('test');
+    }
+  });
+  
+  it("should parse URL and extract parameters", () => {
+    const url = 'unitygen://generate?prompt=test&provider=openai';
+    const result = urlHandler.parseURL(url);
+    
+    if (result) {
+      expect(result.params.prompt).toBe('test');
+      expect(result.params.provider).toBe('openai');
     }
   });
   

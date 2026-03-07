@@ -10,7 +10,7 @@ from typing import Any
 from app.core.config import get_logs_dir
 from app.core.logging import setup_logging
 
-setup_logging(get_logs_dir()) 
+setup_logging(get_logs_dir())
 
 # Configure logging early: root logger so all app loggers (e.g. app.agents.unity_agent) emit
 _root = logging.getLogger()
@@ -23,6 +23,7 @@ if not _root.handlers:
 logger = logging.getLogger("unity_generator")
 logger.setLevel(logging.INFO)
 logger.propagate = True
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -34,9 +35,13 @@ from app.routers import config, finalize, generation, prefs, projects, scenes
 # Initialize database
 logger.info("Initializing database...")
 init_db()
+
 from app.core.seeder import seed_database
+
 seed_database()
+
 from app.services.providers.registry import provider_registry
+
 provider_registry.load_from_db()
 logger.info("Database initialized, seeded, and registry loaded.")
 
@@ -61,11 +66,8 @@ app.add_middleware(
 @app.get("/debug/sys")
 def debug_sys() -> dict[str, Any]:
     logger.info("/debug/sys endpoint called.")
-    import sys
     import os
-    # Assuming ProviderRegistry needs to be imported for this line to work
-    # from app.core.registry import ProviderRegistry # This line would be needed if ProviderRegistry was used
-    # reg = ProviderRegistry() # This line is commented out as ProviderRegistry is not imported in the original file
+    import sys
     return {
         "sys_path": sys.path,
         "cwd": os.getcwd(),
@@ -87,7 +89,7 @@ def health() -> dict[str, Any]:
     return {"status": "ok"}
 
 
-from app.routers import config, finalize, generation, prefs, projects, scenes, management, unity_versions
+from app.routers import management, unity_versions
 
 # Include routers
 logger.info("Including routers...")
@@ -99,8 +101,3 @@ app.include_router(scenes.router)
 app.include_router(finalize.router)
 app.include_router(management.router)
 app.include_router(unity_versions.router)
-logger.info("Routers included.")
-
-# Uvicorn logging config (optional, for visibility)
-logging.getLogger("uvicorn.error").setLevel(logging.INFO)
-logging.getLogger("uvicorn.access").setLevel(logging.INFO)

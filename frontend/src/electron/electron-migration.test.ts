@@ -11,7 +11,7 @@
  * fails, the application shall log the error and continue with default settings.
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 
 /**
  * Simulates the data migration manager
@@ -75,7 +75,7 @@ class MigrationManager {
         migrated: Object.keys(tauriData).length,
         errors: []
       };
-    } catch (error) {
+    } catch {
       this.migrationFailed = true;
       return {
         migrated: 0,
@@ -149,7 +149,7 @@ describe("Property 4: User Data Migration Integrity", () => {
   
   it("should use default settings on migration failure", () => {
     // Simulate migration failure with invalid data
-    const result = migrationManager.migrateToElectron(null);
+    const result = migrationManager.migrateToElectron(null as any);
     
     expect(result.migrated).toBe(0);
     expect(result.errors.length).toBeGreaterThan(0);

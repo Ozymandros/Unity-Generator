@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { mount, flushPromises, VueWrapper } from "@vue/test-utils";
 import UnityProjectPanel from "@/components/UnityProjectPanel";
 import { SmartField } from "@/components/generic/SmartField";

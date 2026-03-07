@@ -10,7 +10,7 @@
  * without crashing the application.
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 
 /**
  * Simulates the error handling manager

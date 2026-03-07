@@ -1,20 +1,15 @@
+import json
 import logging
 import sqlite3
-import json
-from typing import Dict, List, Any
-from .db import get_all_prefs, set_pref, get_db_path, get_unity_versions, seed_unity_versions
-from ..repositories import (
-    get_provider_repo,
-    get_model_repo,
-    get_api_key_repo,
-    get_system_prompt_repo
-)
-from ..services.providers.capabilities import ProviderCapabilities, Modality
+
+from ..repositories import get_api_key_repo, get_model_repo, get_provider_repo, get_system_prompt_repo
+from ..services.providers.capabilities import Modality, ProviderCapabilities
+from .db import get_all_prefs, get_db_path, get_unity_versions, seed_unity_versions
 
 LOGGER = logging.getLogger(__name__)
 
 
-def _default_providers() -> List[ProviderCapabilities]:
+def _default_providers() -> list[ProviderCapabilities]:
     """Default provider capabilities for initial DB seed. api_key_name = provider name for all."""
     return [
         ProviderCapabilities(
@@ -199,7 +194,6 @@ def seed_database():
     Seed providers, models, keys, and prompts if the database is empty.
     """
     provider_repo = get_provider_repo()
-    model_repo = get_model_repo()
     api_key_repo = get_api_key_repo()
     prompt_repo = get_system_prompt_repo()
 
@@ -212,7 +206,7 @@ def seed_database():
             for modality, model_id in caps.default_models.items():
                 try:
                     label = model_id.split("/")[-1].replace("-", " ").title()
-                    model_repo.add(caps.name, model_id, label, modality.value)
+                    get_model_repo().add(caps.name, model_id, label, modality.value)
                 except Exception:
                     pass
 
@@ -249,7 +243,7 @@ def seed_database():
         if config_path.exists():
             try:
                 LOGGER.info(f"Found legacy api_keys.json at {config_path}. Migrating...")
-                with open(config_path, "r", encoding="utf-8") as f:
+                with open(config_path, encoding="utf-8") as f:
                     legacy_data = json.load(f)
                     for k, v in legacy_data.items():
                         if v:
@@ -279,7 +273,6 @@ def migrate_modalities():
     Infers and updates modalities for models that are stuck on the default 'llm'.
     """
     provider_repo = get_provider_repo()
-    model_repo = get_model_repo()
     conn = sqlite3.connect(get_db_path())
 
     try:
@@ -294,10 +287,10 @@ def migrate_modalities():
         LOGGER.info(f"Checking {len(llm_models)} models for modality migration...")
 
         # Cache provider capabilities to avoid repeated repo calls
-        provider_caps: Dict[str, ProviderCapabilities] = {p.name: p for p in provider_repo.get_all()}
+        provider_caps: dict[str, ProviderCapabilities] = {p.name: p for p in provider_repo.get_all()}
 
         updates = []
-        for row_id, provider_name, model_value, current_modality in llm_models:
+        for row_id, provider_name, model_value, _current_modality in llm_models:
             caps = provider_caps.get(provider_name)
             if not caps:
                 continue

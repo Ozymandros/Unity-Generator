@@ -14,6 +14,7 @@ from app.schemas import GenerationRequest
 from app.services.agent_manager import AgentManager
 from app.services.prompts import DEFAULT_CODE_SYSTEM_PROMPT
 
+
 # Mock generate_text at the agent level to prevent real API calls
 @pytest.fixture(autouse=True)
 def mock_llm_generate():

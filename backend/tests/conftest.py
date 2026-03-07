@@ -1,10 +1,11 @@
 
-import pytest
 import os
-import shutil
-from pathlib import Path
-from app.core.db import init_db
+
 import pyfakefs.fake_filesystem_unittest
+import pytest
+
+from app.core.db import init_db
+
 
 @pytest.fixture(autouse=True)
 def setup_test_env(tmp_path):
@@ -16,10 +17,10 @@ def setup_test_env(tmp_path):
     # Since sqlite3 bypasses pyfakefs, it needs the directories to exist on the real OS
     db_path = tmp_path / "db"
     db_path.mkdir(parents=True, exist_ok=True)
-    
+
     logs_path = tmp_path / "logs"
     logs_path.mkdir(parents=True, exist_ok=True)
-    
+
     output_path = tmp_path / "output"
     output_path.mkdir(parents=True, exist_ok=True)
 
@@ -28,9 +29,9 @@ def setup_test_env(tmp_path):
     fs_patcher.setUp()
 
     # Map the real tmp_path into the fake filesystem so it's accessible to both patched and unpatched code
-    if not fs_patcher.fs: 
+    if not fs_patcher.fs:
         raise Exception("fs_patcher.fs is None")
-    
+
     fs_patcher.fs.add_real_directory(str(tmp_path))
 
     # Override environment variables for config.py

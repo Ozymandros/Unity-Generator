@@ -18,9 +18,9 @@ from ..schemas import (
 from ..services import agent_manager_instance as agent_manager
 from ..services import create_unity_project
 from ..services import finalize_store_instance as finalize_store
-from ..services.unity_project import resolve_project_path
 from ..services.finalize_store import JobStatus
 from ..services.unity_orchestrator import run_finalize_job
+from ..services.unity_project import resolve_project_path
 
 LOGGER = logging.getLogger(__name__)
 

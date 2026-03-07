@@ -10,7 +10,7 @@
  * The backend shall only accept connections from localhost.
  */
 
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 
 /**
  * Simulates the security manager
@@ -60,7 +60,7 @@ class SecurityManager {
         valid: false,
         reason: 'URL not allowed'
       };
-    } catch (error) {
+    } catch {
       return {
         valid: false,
         reason: 'Invalid URL format'

@@ -31,7 +31,10 @@ select = [
     "C4",  # flake8-comprehensions
     "UP",  # pyupgrade
 ]
-ignore = []
+ignore = [
+    "E501",  # Line too long (style warning)
+    "E402",  # Module level import not at top of file (style warning)
+]
 
 # Allow fix for all enabled rules (when `--fix`)
 fixable = ["ALL"]

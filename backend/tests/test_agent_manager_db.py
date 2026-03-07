@@ -1,8 +1,10 @@
-import pytest
 import os
+
+import pytest
+
 from app.core.db import init_db
-from app.services.agent_manager import AgentManager
 from app.repositories import get_api_key_repo, get_system_prompt_repo
+
 
 @pytest.fixture(autouse=True)
 def setup_test_db(tmp_path):
@@ -20,16 +22,13 @@ def test_agent_manager_uses_db_keys():
     # AgentManager.run_text calls self.kernel.get_service("openai") which needs a key
     # Since we replaced load_api_keys with repo call, we check if it picks it up.
 
-    manager = AgentManager()
     # Mocking or checking internal state if possible, or just verifying no crash if key is present
     # For now, we trust the repo.get_all() call in AgentManager works.
-    pass
 
 def test_agent_manager_uses_db_prompts():
     prompt_repo = get_system_prompt_repo()
     prompt_repo.save("code", "Custom DB Prompt")
 
-    manager = AgentManager()
     # In run_code, it should pick up "Custom DB Prompt" if system_prompt=None
     # Let's verify our seeder works first
     from app.core.seeder import seed_database
