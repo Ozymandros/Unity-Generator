@@ -114,3 +114,4 @@ frontend/node_modules/
 .vscode/mcp.json
 *.txt
 **/*.db
+out

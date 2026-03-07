@@ -13,6 +13,14 @@
  * - Installer configuration for all platforms
  */
 
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJson = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf8'));
+
 /** @type {import('@electron-forge/shared-types').ForgeConfig} */
 const config = {
   packagerConfig: {
@@ -23,6 +31,12 @@ const config = {
     asar: true,
     
     /**
+     * Use locally installed Electron instead of downloading
+     * @type {string}
+     */
+    electronVersion: packageJson.devDependencies.electron.replace('^', ''),
+    
+    /**
      * Application icon path (without extension, platform-specific extensions will be used)
      * @type {string}
      */
@@ -30,12 +44,11 @@ const config = {
     
     /**
      * Extra resources to include in the packaged application
-     * Includes Python backend and requirements for runtime
+     * Includes Python backend executable only
      * @type {string[]}
      */
     extraResource: [
-      './backend',
-      './backend/requirements.txt'
+      './backend/dist/unity-generator-backend.exe'
     ],
     
     /**
@@ -44,9 +57,8 @@ const config = {
      * @type {string[]}
      */
     ignore: [
-      '/node_modules/.cache',
-      '/node_modules/.vite',
-      '/node_modules/.vitest',
+      '/node_modules',
+      '/frontend',
       '/.git',
       '/.github',
       '/.vscode',
@@ -89,7 +101,21 @@ const config = {
       '/.pytest_cache',
       '/.ruff_cache',
       '/.devcontainer',
-      '/.claude'
+      '/.claude',
+      '/backend/app',
+      '/backend/agents',
+      '/backend/tests',
+      '/backend/node_modules',
+      '/backend/__pycache__',
+      '/backend/.pytest_cache',
+      '/backend/.mypy_cache',
+      '/backend/.ruff_cache',
+      '/backend/*.py',
+      '/backend/*.txt',
+      '/vite.*.config.mjs',
+      '/forge.config.js',
+      '/.npmrc',
+      '/app-icon-*.png'
     ],
     
     /**
@@ -254,6 +280,7 @@ const config = {
       name: '@electron-forge/maker-squirrel',
       config: {
         name: 'unity_generator',
+        authors: 'Unity Generator Team',
         icon: './app-icon.ico',
         setupExe: 'UnityGeneratorSetup.exe',
         setupIcon: './app-icon.ico',
@@ -360,23 +387,28 @@ const config = {
     }
   ],
   plugins: [
-    ['@electron-forge/plugin-vite', {
-      build: ['frontend'],
-      dev: ['frontend'],
-      /**
-       * Vite dev server configuration for Electron hot reloading
-       * @type {object}
-       */
-      devServer: {
-        port: 5173,
-        strictPort: true,
-        host: '0.0.0.0',
-        hmr: {
-          protocol: 'ws',
-          port: 5173
-        }
-      }
-    }]
+    {
+      name: '@electron-forge/plugin-vite',
+      config: {
+        // `build` can specify multiple entry builds, which can be Main process, Preload scripts, Worker process, etc.
+        build: [
+          {
+            entry: 'main.js',
+            config: 'vite.main.config.mjs',
+          },
+          {
+            entry: 'preload.js',
+            config: 'vite.preload.config.mjs',
+          },
+        ],
+        renderer: [
+          {
+            name: 'main_window',
+            config: 'vite.renderer.config.mjs',
+          },
+        ],
+      },
+    }
   ]
 };
 

@@ -3,7 +3,7 @@
     "description": "Desktop app to generate Unity assets using AI (Electron + FastAPI)",
     "name": "unity-generator",
     "private": true,
-    "main": "main.js",
+    "main": ".vite/build/main.js",
     "scripts": {
         "// --- Build & Distribution (Electron) ---": "",
         "build:backend": "python scripts/build_backend.py",
@@ -35,11 +35,11 @@
         "test:all": "pnpm test:backend && pnpm test:frontend",
         "typecheck:all": "pnpm typecheck:backend && pnpm typecheck:frontend",
         "// --- Project Lifecycle & Utilities ---": "",
-        "setup": "pnpm install && pnpm --dir frontend install && pip install -r backend/requirements.txt"
+        "setup": "pnpm install && pnpm --dir frontend install && pip install -r backend/requirements.txt",
+        "generate:icons": "node scripts/generate-icons.js"
     },
     "dependencies": {
-        "axios": "^1.6.0",
-        "electron": "^28.0.0"
+        "axios": "^1.6.0"
     },
     "devDependencies": {
         "@electron-forge/cli": "^7.0.0",
@@ -47,6 +47,8 @@
         "@electron-forge/maker-dmg": "^7.0.0",
         "@electron-forge/maker-squirrel": "^7.0.0",
         "@electron-forge/maker-zip": "^7.0.0",
+        "@electron-forge/plugin-vite": "^7.0.0",
+        "electron": "^28.0.0",
         "@types/node": "^25.3.0",
         "@vitejs/plugin-vue": "^6.0.4",
         "@vitest/ui": "^4.0.18",
@@ -54,6 +56,8 @@
         "concurrently": "^8.2.0",
         "jsdom": "^28.1.0",
         "pinia": "~2.3.1",
+        "png-to-ico": "^3.0.1",
+        "sharp": "^0.34.5",
         "vite": "^7.3.1",
         "vitest": "^4.0.18",
         "vuetify": "~3.12.1"

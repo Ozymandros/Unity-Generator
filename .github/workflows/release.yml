@@ -55,12 +55,18 @@ jobs:
             pkg-config \
             patchelf
 
+      - name: Install root dependencies
+        run: pnpm install --no-frozen-lockfile
+
       - name: Install frontend dependencies
         working-directory: frontend
         run: pnpm install --no-frozen-lockfile
 
+      - name: Generate icons
+        run: pnpm run generate:icons
+
       - name: Build backend sidecar
-        run: pnpm -w run build:backend
+        run: pnpm run build:backend
 
       - name: Verify backend sidecar exists (Windows)
         if: runner.os == 'Windows'
@@ -77,7 +83,7 @@ jobs:
           test -f backend/dist/unity-generator-backend || (echo "Missing backend/dist/unity-generator-backend" && exit 1)
 
       - name: Build Package
-        run: pnpm -w run electron:build
+        run: pnpm run electron:build
 
       - name: Upload Release Assets (Windows)
         if: runner.os == 'Windows'
@@ -85,7 +91,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: out/make/squirrel.windows/**/*.exe
+          files: |
+            out/make/squirrel.windows/**/*.exe
+            out/make/squirrel.windows/**/*.nupkg
 
       - name: Upload Release Assets (Linux)
         if: runner.os == 'Linux'
@@ -103,4 +111,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: out/make/zip/**/*.zip
+          files: |
+            out/make/dmg/**/*.dmg
+            out/make/zip/**/*.zip

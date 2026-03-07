@@ -53,12 +53,18 @@ jobs:
             pkg-config \
             patchelf
 
+      - name: Install root dependencies
+        run: pnpm install --no-frozen-lockfile
+
       - name: Install frontend dependencies
         working-directory: frontend
         run: pnpm install --no-frozen-lockfile
 
+      - name: Generate icons
+        run: pnpm run generate:icons
+
       - name: Build backend sidecar
-        run: pnpm -w run build:backend
+        run: pnpm run build:backend
 
       - name: Verify backend sidecar exists (Windows)
         if: runner.os == 'Windows'
@@ -75,13 +81,34 @@ jobs:
           test -f backend/dist/unity-generator-backend || (echo "Missing backend/dist/unity-generator-backend" && exit 1)
 
       - name: Build Package
-        run: pnpm -w run electron:build
+        run: pnpm run electron:build
 
-      - name: Upload Artifacts
+      - name: Upload Artifacts (Windows)
+        if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
         with:
           name: Unity-Generator-${{ matrix.os }}
-          path: out/make/**/*
+          path: |
+            out/make/squirrel.windows/**/*.exe
+            out/make/squirrel.windows/**/*.nupkg
+
+      - name: Upload Artifacts (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Unity-Generator-${{ matrix.os }}
+          path: |
+            out/make/deb/**/*.deb
+            out/make/zip/**/*.zip
+
+      - name: Upload Artifacts (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Unity-Generator-${{ matrix.os }}
+          path: |
+            out/make/dmg/**/*.dmg
+            out/make/zip/**/*.zip
 
       - name: Upload SK Integration Docs
         if: runner.os == 'Windows'
