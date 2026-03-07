@@ -1,6 +1,6 @@
 # GitHub Copilot Custom Instructions
 
-This file provides comprehensive guidance for GitHub Copilot to generate code that follows modern best practices, clean architecture principles, and project-specific conventions for both backend (Python/FastAPI) and frontend (TypeScript/Vue/Tauri) components.
+This file provides comprehensive guidance for GitHub Copilot to generate code that follows modern best practices, clean architecture principles, and project-specific conventions for both backend (Python/FastAPI) and frontend (TypeScript/Vue/Electron) components.
 
 ## Core Principles
 
@@ -251,7 +251,7 @@ async def generate_code_endpoint(request: GenerateRequest) -> GenerationResponse
         return error_response("Internal server error")
 ```
 
-## Frontend Guidelines (TypeScript/Vue/Tauri)
+## Frontend Guidelines (TypeScript/Vue/Electron)
 
 ### Architecture Patterns
 

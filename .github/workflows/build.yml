@@ -39,17 +39,12 @@ jobs:
           cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
 
-      - name: Setup Rust
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          rust-src-dir: frontend/src-tauri
-
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            ${{ matrix.webkit }} \
+            libwebkit2gtk-4.0-dev \
             libjavascriptcoregtk-4.0-dev \
             libgtk-3-dev \
             libayatana-appindicator3-dev \
@@ -57,12 +52,6 @@ jobs:
             libsoup2.4-dev \
             pkg-config \
             patchelf
-          
-          # Verify pkg-config can find required libraries
-          pkg-config --modversion libsoup-2.4
-          pkg-config --cflags --libs libsoup-2.4
-          pkg-config --modversion javascriptcoregtk-4.0
-          pkg-config --cflags --libs javascriptcoregtk-4.0
 
       - name: Install frontend dependencies
         working-directory: frontend
@@ -86,13 +75,13 @@ jobs:
           test -f backend/dist/unity-generator-backend || (echo "Missing backend/dist/unity-generator-backend" && exit 1)
 
       - name: Build Package
-        run: pnpm -w run tauri:build
+        run: pnpm -w run electron:build
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Unity-Generator-${{ matrix.os }}
-          path: frontend/src-tauri/target/release/bundle/**/*
+          path: out/make/**/*
 
       - name: Upload SK Integration Docs
         if: runner.os == 'Windows'

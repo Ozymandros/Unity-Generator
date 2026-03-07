@@ -6,7 +6,7 @@ cd /d "%~dp0\.."
 
 echo Starting development servers...
 start "Unity Generator - Backend" cmd /k "cd backend && python -m uvicorn app.main:app --reload --port 8000"
-start "Unity Generator - Frontend" cmd /k "cd frontend && pnpm dev:tauri"
+start "Unity Generator - Frontend" cmd /k "cd frontend && pnpm dev"
 
 echo.
 echo Development servers started in separate windows.

@@ -20,12 +20,12 @@
 ![Semantic Kernel](https://img.shields.io/badge/Semantic%20Kernel-512BD4)
 ![Vue](https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
-![Tauri](https://img.shields.io/badge/Tauri-1.x-24C8DB?logo=tauri&logoColor=white)
+![Electron](https://img.shields.io/badge/Electron-28.0.0-47848F?logo=electron&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![pnpm](https://img.shields.io/badge/pnpm-F69220?logo=pnpm&logoColor=white)
 
 Unity Generator is a lightweight desktop app for generating Unity C# code and assets (text,
-images, and audio) using cloud AI providers. It ships a Tauri + Vue UI with a
+images, and audio) using cloud AI providers. It ships an Electron + Vue UI with a
 local FastAPI backend orchestrated by Semantic Kernel, including a custom plug-in: Unity MCP server. All API keys are provided
 by the user and stored locally. The app is designed to be a fast, local-first assistant for Unity developers, with a focus on incremental asset generation and seamless integration with active Unity projects.
 
@@ -46,12 +46,12 @@ and assets without wiring multiple tools together. It’s not a full IDE or asse
 - Configure global and per-request system key prompts for tailored generation
 - Keep output structured so Unity can open it right away
 - Run on Windows, Linux, and macOS with full feature parity
-- Package as native installers with Tauri (no Docker dependency for end users)
+- Package as native installers with Electron (no Docker dependency for end users)
 - Open-source and extensible with a modular architecture
 
 ## Workspace Structure
 
-- `frontend/` - Tauri + Vue UI
+- `frontend/` - Electron + Vue UI
 - `backend/` - FastAPI + Semantic Kernel backend
 - `config/` - Local API key storage
 - `agents/` - Modular Semantic Kernel agents
@@ -78,7 +78,7 @@ Unity Generator is optimized for development with **VS Code**:
 - **Native Workflow**: Use the `Dev: Backend + Frontend` launch configuration to debug both stacks simultaneously.
 - **Docker Support**: Integrated tasks for `docker-compose` and remote machine debugging are provided for isolated testing.
 - **Editor Setup**: Configured for **Volar (Vue 3)** and **TypeScript**, with type checking mapped to internal monorepo paths.
-- **Architecture**: While Docker is used for dev/CI, the final product uses the **Tauri Sidecar pattern** (NOT Docker) for a zero-dependency installation experience.
+- **Architecture**: While Docker is used for dev/CI, the final product uses the **Electron** framework for a zero-dependency installation experience.
 
 All contributions must follow the **SRP**, **KISS**, and **Clean Architecture** principles outlined in the development guide.
 
@@ -120,7 +120,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for platform-specific development guideli
 
 ## Quick Start
 
-### For Development (No Rust Required)
+### For Development
 
 Most development doesn't require building the full installer:
 
@@ -132,25 +132,20 @@ pnpm run setup
 pnpm run dev
 ```
 
-This launches the app in Tauri dev mode with live reloading - **Rust is not required**.
+This launches the app in development mode with live reloading.
 
-### For Local Packaging (Requires Rust)
+### For Local Packaging
 
 To build the full native installer locally:
 
-1. **Install Rust** (one-time setup):
-   - Windows: `winget install Rustlang.Rustup` or download from [rustup.rs](https://rustup.rs/)
-   - macOS/Linux: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
-   - Restart your terminal after installation
-
-2. **Build the package**:
+1. **Build the package**:
    ```bash
    pnpm run package
    ```
-   This creates the native installer:
-   - **Windows**: `.msi` in `frontend/src-tauri/target/release/bundle/msi/`
-   - **Linux**: `.AppImage` and `.deb` in `frontend/src-tauri/target/release/bundle/`
-   - **macOS**: `.dmg` in `frontend/src-tauri/target/release/bundle/dmg/`
+   This creates the native installer using Electron Forge:
+   - **Windows**: `.exe` installer
+   - **Linux**: `.deb` and `.AppImage` packages
+   - **macOS**: `.dmg` installer
 
 ### For Production Releases (Automated)
 
@@ -162,7 +157,7 @@ To build the full native installer locally:
 
 ## How it works
 
-1. The Vue + Tauri UI collects prompts and settings.
+1. The Vue + Electron UI collects prompts and settings.
 2. The FastAPI backend routes each request to an agent.
 3. Agents call provider wrappers (LLM, image, audio) using your keys.
 4. Responses are normalized and returned to the UI.
@@ -321,7 +316,7 @@ pnpm run test:e2e
 ## Packaging
 
 See `docs/PACKAGING.md` for bundling the backend sidecar and building the
-Tauri app.
+Electron app.
 
 ## Docker
 

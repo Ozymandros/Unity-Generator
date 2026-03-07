@@ -1,6 +1,6 @@
 # Packaging
 
-Unity Generator bundles the Python backend as a Tauri sidecar. The expected
+Unity Generator bundles the Python backend with the Electron application. The expected
 backend binary names are:
 
 - `backend/dist/unity-generator-backend` (macOS/Linux)
@@ -24,12 +24,12 @@ pnpm run build:backend
 
 The script places the executable in `backend/dist/`.
 
-## Build the Tauri app (Installer)
+## Build the Electron app (Installer)
 
-To build the complete Tauri desktop application:
+To build the complete Electron desktop application:
 
 ```bash
-pnpm run tauri:build
+pnpm run electron:build
 ```
 
 ## Complete Packaging
@@ -69,4 +69,4 @@ Dockerfiles:
 - Update dependencies in `frontend/package.json` and `backend/requirements.txt`.
 - Run tests for backend and frontend.
 - Build the backend sidecar and verify the binary exists in `backend/dist/`.
-- Build the Tauri app and run it once to validate sidecar startup.
+- Build the Electron app and run it once to validate backend startup.

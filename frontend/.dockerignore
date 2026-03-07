@@ -26,9 +26,9 @@ coverage/
 playwright-report/
 test-results/
 
-# Tauri / Rust build output
-src-tauri/target/
-src-tauri/.tauri/
+# Electron build output
+dist/
+out/
 
 # VCS and editor files
 .git/

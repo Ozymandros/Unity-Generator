@@ -3,20 +3,20 @@ import { mount, flushPromises, VueWrapper } from "@vue/test-utils";
 import UnityProjectPanel from "@/components/UnityProjectPanel";
 import { SmartField } from "@/components/generic/SmartField";
 import * as client from "@/api/client";
+import * as electronShellModule from "@/services/electronShell";
 import { createVuetify } from 'vuetify';
 
 const vuetify = createVuetify();
 
 vi.mock("@/api/client");
-vi.mock("electron", () => ({
-  shell: {
+vi.mock("@/services/electronShell", () => ({
+  electronShell: {
     openPath: vi.fn(),
   },
 }));
 
-// Import the mocked module to get the shell object
-const electronModule = await import("electron");
-const { shell } = electronModule as unknown as { shell: any };
+// Import the mocked module to get the electronShell object
+const { electronShell } = electronShellModule as unknown as { electronShell: { openPath: ReturnType<typeof vi.fn> } };
 
 const emitUpdate = async (wrapper: VueWrapper<unknown>, label: string, value: unknown) => {
   const fields = wrapper.findAllComponents(SmartField);
@@ -58,7 +58,10 @@ describe("UnityProjectPanel", () => {
         ],
       },
     });
-    (window as unknown as { __TAURI__?: unknown }).__TAURI__ = undefined;
+    // Default mock for electronShell.openPath
+    vi.mocked(electronShell.openPath).mockResolvedValue({
+      success: true,
+    });
     // Align with useSessionProject: default name so panel and finalize tests see "UnityProject"
     vi.stubGlobal("sessionStorage", {
       getItem: (k: string) =>
@@ -187,7 +190,7 @@ describe("UnityProjectPanel", () => {
     await openFolderBtn!.trigger("click");
     await flushPromises();
 
-    expect(shell.openPath).toHaveBeenCalledWith("C:/output/TestProject");
+    expect(electronShell.openPath).toHaveBeenCalledWith("C:/output/TestProject");
     expect(getStatusText(wrapper)).toContain("Opened output folder.");
   });
 
@@ -199,6 +202,10 @@ describe("UnityProjectPanel", () => {
       data: { path: "C:/output/Latest" },
     });
 
+    vi.mocked(electronShell.openPath).mockResolvedValue({
+      success: true,
+    });
+
     const wrapper = mountPanel();
     await flushPromises();
     const openFolderBtn = getOpenFolderButton(wrapper);
@@ -206,7 +213,7 @@ describe("UnityProjectPanel", () => {
     await flushPromises();
 
     expect(client.getLatestOutput).toHaveBeenCalled();
-    expect(shell.openPath).toHaveBeenCalledWith("C:/output/Latest");
+    expect(electronShell.openPath).toHaveBeenCalledWith("C:/output/Latest");
     expect(getStatusText(wrapper)).toContain("Opened output folder.");
   });
 
@@ -218,9 +225,10 @@ describe("UnityProjectPanel", () => {
       data: { path: "C:/output/Latest" },
     });
 
-    // Set up shell to throw an error
-    shell.openPath.mockImplementation(() => {
-      throw new Error("Shell not available");
+    // Set up shell to return error
+    vi.mocked(electronShell.openPath).mockResolvedValue({
+      success: false,
+      error: "Shell not available",
     });
 
     const wrapper = mountPanel();
@@ -229,7 +237,7 @@ describe("UnityProjectPanel", () => {
     await openFolderBtn!.trigger("click");
     await flushPromises();
 
-    expect(getStatusText(wrapper)).toContain("Failed to open:");
+    expect(getStatusText(wrapper)).toContain("Failed to open folder:");
   });
 
   // -------------------------------------------------------------------

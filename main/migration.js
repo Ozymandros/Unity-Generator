@@ -1,9 +1,9 @@
 /**
  * Data Migration Utility
  * 
- * Handles migration of user data from Tauri data location to Electron's
+ * Handles migration of user data from legacy application data location to Electron's
  * standard data location. This ensures user settings and data persist
- * during migration from the Tauri-wrapped application to the Electron version.
+ * during migration from the previous application version to the Electron version.
  */
 
 const { app } = require('electron');
@@ -11,16 +11,16 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * Get Tauri data location
+ * Get legacy data location
  * 
- * Tauri stores data in platform-specific locations:
+ * Legacy application stores data in platform-specific locations:
  * - Windows: %APPDATA%/{app_name}
  * - macOS: ~/Library/Application Support/{app_name}
  * - Linux: ~/.local/share/{app_name}
  * 
- * @returns {string} Path to Tauri data directory
+ * @returns {string} Path to legacy data directory
  */
-function getTauriDataLocation() {
+function getLegacyDataLocation() {
   const appName = 'unity-generator';
   
   switch (process.platform) {
@@ -50,34 +50,34 @@ function getElectronDataLocation() {
 }
 
 /**
- * Extract data from Tauri data location
+ * Extract data from legacy data location
  * 
- * Reads all files and directories from the Tauri data location
+ * Reads all files and directories from the legacy data location
  * and returns them as a structured object.
  * 
- * @param {string} tauriPath - Path to Tauri data directory
+ * @param {string} legacyPath - Path to legacy data directory
  * @returns {Object} Object containing file paths and their contents
- * @throws {Error} If Tauri data location doesn't exist or can't be read
+ * @throws {Error} If legacy data location doesn't exist or can't be read
  * 
  * @example
  * ```javascript
- * const tauriData = extractTauriData();
- * console.log(tauriData.files); // { 'settings.json': '{"theme":"dark"}', ... }
+ * const legacyData = extractLegacyData();
+ * console.log(legacyData.files); // { 'settings.json': '{"theme":"dark"}', ... }
  * ```
  */
-function extractTauriData(tauriPath = getTauriDataLocation()) {
+function extractLegacyData(legacyPath = getLegacyDataLocation()) {
   // Validate input
-  if (!tauriPath || typeof tauriPath !== 'string') {
-    throw new Error('tauriPath must be a non-empty string');
+  if (!legacyPath || typeof legacyPath !== 'string') {
+    throw new Error('legacyPath must be a non-empty string');
   }
 
-  // Check if Tauri data location exists
-  if (!fs.existsSync(tauriPath)) {
+  // Check if legacy data location exists
+  if (!fs.existsSync(legacyPath)) {
     return {
       exists: false,
       files: {},
       directories: [],
-      message: 'Tauri data location does not exist'
+      message: 'Legacy data location does not exist'
     };
   }
 
@@ -111,13 +111,13 @@ function extractTauriData(tauriPath = getTauriDataLocation()) {
     }
   }
 
-  readDirectory(tauriPath);
+  readDirectory(legacyPath);
 
   return {
     exists: true,
     files,
     directories,
-    tauriPath,
+    legacyPath,
     count: Object.keys(files).length
   };
 }
@@ -125,26 +125,26 @@ function extractTauriData(tauriPath = getTauriDataLocation()) {
 /**
  * Migrate data to Electron data location
  * 
- * Copies data from the extracted Tauri data to Electron's userData directory.
+ * Copies data from the extracted legacy data to Electron's userData directory.
  * Creates the Electron data directory if it doesn't exist.
  * 
- * @param {Object} tauriData - Object containing extracted Tauri data
+ * @param {Object} legacyData - Object containing extracted legacy data
  * @param {string} electronPath - Path to Electron userData directory
  * @returns {Object} Migration result with counts and any errors
  * @throws {Error} If migration fails due to permission or I/O errors
  * 
  * @example
  * ```javascript
- * const tauriData = extractTauriData();
- * const result = migrateToElectron(tauriData);
+ * const legacyData = extractLegacyData();
+ * const result = migrateToElectron(legacyData);
  * console.log(result.migrated); // Number of files migrated
  * console.log(result.errors);   // Array of any errors encountered
  * ```
  */
-function migrateToElectron(tauriData, electronPath = getElectronDataLocation()) {
+function migrateToElectron(legacyData, electronPath = getElectronDataLocation()) {
   // Validate inputs
-  if (!tauriData || typeof tauriData !== 'object') {
-    throw new Error('tauriData must be an object');
+  if (!legacyData || typeof legacyData !== 'object') {
+    throw new Error('legacyData must be an object');
   }
 
   if (!electronPath || typeof electronPath !== 'string') {
@@ -171,15 +171,15 @@ function migrateToElectron(tauriData, electronPath = getElectronDataLocation()) 
     return result;
   }
 
-  // If Tauri data doesn't exist, nothing to migrate
-  if (!tauriData.exists) {
+  // If legacy data doesn't exist, nothing to migrate
+  if (!legacyData.exists) {
     result.skipped = 0;
-    result.message = 'No Tauri data to migrate';
+    result.message = 'No legacy data to migrate';
     return result;
   }
 
-  // Copy each file from Tauri data to Electron data
-  for (const [relativePath, content] of Object.entries(tauriData.files)) {
+  // Copy each file from legacy data to Electron data
+  for (const [relativePath, content] of Object.entries(legacyData.files)) {
     try {
       const targetPath = path.join(electronPath, relativePath);
       const targetDir = path.dirname(targetPath);
@@ -202,7 +202,7 @@ function migrateToElectron(tauriData, electronPath = getElectronDataLocation()) 
   }
 
   // Copy directories (create empty directories for structure)
-  for (const dir of tauriData.directories) {
+  for (const dir of legacyData.directories) {
     try {
       const targetDir = path.join(electronPath, dir);
       if (!fs.existsSync(targetDir)) {
@@ -221,9 +221,9 @@ function migrateToElectron(tauriData, electronPath = getElectronDataLocation()) 
 }
 
 /**
- * Perform complete data migration from Tauri to Electron
+ * Perform complete data migration from legacy application to Electron
  * 
- * Convenience function that combines extractTauriData() and migrateToElectron()
+ * Convenience function that combines extractLegacyData() and migrateToElectron()
  * into a single operation.
  * 
  * @returns {Object} Migration result
@@ -237,31 +237,31 @@ function migrateToElectron(tauriData, electronPath = getElectronDataLocation()) 
  * ```
  */
 function performMigration() {
-  const tauriPath = getTauriDataLocation();
+  const legacyPath = getLegacyDataLocation();
   const electronPath = getElectronDataLocation();
 
-  console.log(`Tauri data location: ${tauriPath}`);
+  console.log(`Legacy data location: ${legacyPath}`);
   console.log(`Electron data location: ${electronPath}`);
 
-  // Extract data from Tauri
-  const tauriData = extractTauriData(tauriPath);
+  // Extract data from legacy application
+  const legacyData = extractLegacyData(legacyPath);
 
-  if (!tauriData.exists) {
-    console.log('No Tauri data found to migrate');
+  if (!legacyData.exists) {
+    console.log('No legacy data found to migrate');
     return {
       success: true,
       migrated: 0,
       skipped: 0,
-      message: 'No Tauri data found',
-      tauriPath,
+      message: 'No legacy data found',
+      legacyPath,
       electronPath
     };
   }
 
-  console.log(`Found ${tauriData.count} files in Tauri data location`);
+  console.log(`Found ${legacyData.count} files in legacy data location`);
 
   // Migrate to Electron
-  const result = migrateToElectron(tauriData, electronPath);
+  const result = migrateToElectron(legacyData, electronPath);
 
   // Log results
   if (result.errors.length > 0) {
@@ -278,15 +278,15 @@ function performMigration() {
     migrated: result.migrated,
     skipped: result.skipped,
     errors: result.errors,
-    tauriPath,
+    legacyPath,
     electronPath
   };
 }
 
 module.exports = {
-  getTauriDataLocation,
+  getLegacyDataLocation,
   getElectronDataLocation,
-  extractTauriData,
+  extractLegacyData,
   migrateToElectron,
   performMigration
 };

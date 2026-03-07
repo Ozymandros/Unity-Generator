@@ -19,13 +19,13 @@ import {
 } from "@/constants/providers";
 import { FINALIZE_STATUS, UI_TONE } from "@/constants/finalize";
 import { UNITY_TEMPLATES, UNITY_PLATFORMS } from "@/constants/unity";
-import { shell } from "electron";
+import { electronShell } from "@/services/electronShell";
+import { setActiveProject } from "@/store/projectStore";
+import { useSessionProject } from "@/composables/useSessionProject";
 
 const DEFAULT_UNITY_VERSIONS: UnityVersionOption[] = [
   { value: "6000.3.2f1", label: "6000.3.2f1" },
 ];
-import { setActiveProject } from "@/store/projectStore";
-import { useSessionProject } from "@/composables/useSessionProject";
 
 export function useUnityProjectPanel() {
   const { projectName, projectPath, setProjectPath } = useSessionProject();
@@ -285,7 +285,19 @@ export function useUnityProjectPanel() {
     }
   }
 
-  async function openOutputFolder() {
+  /**
+   * Open the output folder in the system's default file explorer.
+   *
+   * Attempts to open the last project path or fetches the latest output path
+   * from the backend, then uses Electron IPC to open it safely.
+   *
+   * @example
+   * ```typescript
+   * await openOutputFolder();
+   * // Updates status.value based on success or failure
+   * ```
+   */
+  async function openOutputFolder(): Promise<void> {
     try {
       const pathForFolder = lastProjectPath.value || projectPath.value;
       const response: { success: boolean; data?: Record<string, unknown> | null; error?: string | null } =
@@ -308,10 +320,17 @@ export function useUnityProjectPanel() {
       }
 
       try {
-        // Use Electron shell API to open folder
-        shell.openPath(path);
-        status.value = "Opened output folder.";
+        // Use Electron shell service via IPC to open folder
+        const result = await electronShell.openPath(path);
+        if (result.success) {
+          status.value = "Opened output folder.";
+          tone.value = UI_TONE.OK;
+        } else {
+          tone.value = UI_TONE.ERROR;
+          status.value = `Failed to open folder: ${result.error || 'Unknown error'}`;
+        }
       } catch (error) {
+        tone.value = UI_TONE.ERROR;
         status.value = `Path: ${path} (Failed to open: ${String(error)})`;
       }
     } catch (error) {

@@ -80,11 +80,6 @@ coverage/
 playwright-report/
 test-results/
 
-# Tauri / Rust
-src-tauri/target/
-src-tauri/.tauri/
-target/
-
 # Local data
 config/api_keys.json
 db/*.db

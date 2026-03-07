@@ -18,6 +18,7 @@ const { showNotification, requestPermissions } = require('./main/notification');
 const { validateInput, handleCSPViolation, configureCSP } = require('./main/security');
 const { loadLanguageResources, translateText } = require('./main/i18n');
 const { performMigration } = require('./main/migration');
+
 const { enableAutoUpdates } = require('./main/updater');
 const { registerURLScheme, processURL, forwardToBackend, forwardToFrontend } = require('./main/url');
 
@@ -30,12 +31,13 @@ let isQuitting = false;
  * Initialize the application
  * 
  * 1. Configure accessibility support
- * 2. Perform data migration from Tauri to Electron
+ * 2. Perform data migration from legacy application to Electron
  * 3. Register URL scheme
  * 4. Start Python backend
  * 5. Wait for backend to be ready
- * 6. Create main window
- * 7. Load Vue frontend
+ * 6. Enable auto-updates
+ * 7. Create main window
+ * 8. Load Vue frontend
  */
 async function initializeApp() {
   try {
@@ -45,12 +47,12 @@ async function initializeApp() {
     logMainProcess('Configuring accessibility support...');
     configureAccessibility();
     
-    // Step 2: Perform data migration from Tauri to Electron
+    // Step 2: Perform data migration from legacy application to Electron
     logMainProcess('Checking for data migration...');
     const migrationResult = performMigration();
     
     if (migrationResult.migrated > 0) {
-      logMainProcess(`Migrated ${migrationResult.migrated} files from Tauri to Electron`);
+      logMainProcess(`Migrated ${migrationResult.migrated} files from legacy application to Electron`);
     }
     
     if (migrationResult.errors.length > 0) {
@@ -113,76 +115,7 @@ async function initializeApp() {
   }
 }
 
-/**
- * Create the main application window
- * 
- * @returns {BrowserWindow} The created window
- */
-function createMainWindow() {
-  const window = new BrowserWindow({
-    width: 1200,
-    height: 800,
-    minWidth: 800,
-    minHeight: 600,
-    title: 'Unity Generator',
-    icon: path.join(__dirname, 'app-icon.png'),
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: false,
-      contextIsolation: true,
-      enableRemoteModule: false,
-      sandbox: true,
-      additionalArguments: [
-        `--content-security-policy=${configureCSP()}`
-      ]
-    },
-    autoHideMenuBar: true,
-    titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 16, y: 16 }
-  });
 
-  // Handle window close
-  window.on('closed', () => {
-    handleWindowClose(window);
-  });
-
-  return window;
-}
-
-/**
- * Load Vue frontend into window
- * 
- * @param {BrowserWindow} window - The window to load frontend into
- */
-function loadFrontend(window) {
-  // Load the built Vue frontend
-  const frontendPath = path.join(__dirname, 'frontend', 'dist', 'index.html');
-  
-  if (fs.existsSync(frontendPath)) {
-    window.loadFile(frontendPath);
-  } else {
-    // In development, load from Vite dev server
-    window.loadURL('http://localhost:5173');
-  }
-}
-
-/**
- * Handle window close event
- * 
- * @param {BrowserWindow} window - The window being closed
- */
-function handleWindowClose(window) {
-  if (window === mainWindow) {
-    mainWindow = null;
-    
-    if (!isQuitting) {
-      // If this is the last window, quit the app
-      if (process.platform !== 'darwin') {
-        app.quit();
-      }
-    }
-  }
-}
 
 /**
  * IPC Handlers for renderer process communication
@@ -248,6 +181,12 @@ ipcMain.handle('i18n:load', async (event, language) => {
   return loadLanguageResources(language);
 });
 
+// Get available languages
+ipcMain.handle('i18n:available-languages', async () => {
+  const { getAvailableLanguages } = require('./main/i18n');
+  return getAvailableLanguages();
+});
+
 // Input validation
 ipcMain.handle('security:validate', async (event, input) => {
   return validateInput(input);
@@ -256,6 +195,92 @@ ipcMain.handle('security:validate', async (event, input) => {
 // Handle CSP violation
 ipcMain.handle('security:csp-violation', async (event, violation) => {
   return handleCSPViolation(violation);
+});
+
+// Migration functionality
+/**
+ * Get migration status including legacy and Electron data locations.
+ * 
+ * Returns information about legacy and Electron data directories including
+ * their paths and whether they exist on the filesystem.
+ * 
+ * @returns {Object} Migration status object with:
+ *   - legacyPath: Path to legacy data directory
+ *   - electronPath: Path to Electron userData directory  
+ *   - legacyExists: Boolean indicating if legacy data directory exists
+ *   - electronExists: Boolean indicating if Electron data directory exists
+ * 
+ * @example
+ * ```javascript
+ * const status = await ipcRenderer.invoke('migration:status');
+ * console.log(`Legacy path: ${status.legacyPath}, exists: ${status.legacyExists}`);
+ * ```
+ */
+ipcMain.handle('migration:status', async () => {
+  const { getLegacyDataLocation, getElectronDataLocation } = require('./main/migration');
+  const legacyPath = getLegacyDataLocation();
+  const electronPath = getElectronDataLocation();
+  
+  return {
+    legacyPath,
+    electronPath,
+    legacyExists: require('fs').existsSync(legacyPath),
+    electronExists: require('fs').existsSync(electronPath)
+  };
+});
+
+/**
+ * Perform complete data migration from legacy application to Electron.
+ * 
+ * Executes the full migration process including:
+ * 1. Extracting data from legacy data location
+ * 2. Migrating files to Electron userData directory
+ * 3. Returning migration results with counts and any errors
+ * 
+ * @returns {Object} Migration result with:
+ *   - success: Boolean indicating if migration completed without errors
+ *   - migrated: Number of files successfully migrated
+ *   - skipped: Number of files skipped
+ *   - errors: Array of any errors encountered during migration
+ *   - legacyPath: Path to legacy data directory
+ *   - electronPath: Path to Electron userData directory
+ * 
+ * @example
+ * ```javascript
+ * const result = await ipcRenderer.invoke('migration:perform');
+ * if (result.migrated > 0) {
+ *   console.log(`Migrated ${result.migrated} files successfully`);
+ * }
+ * ```
+ */
+ipcMain.handle('migration:perform', async () => {
+  const { performMigration } = require('./main/migration');
+  return performMigration();
+});
+
+/**
+ * Extract data from legacy data location without migrating.
+ * 
+ * Reads all files and directories from the legacy data location
+ * and returns them as a structured object. Useful for previewing
+ * what data would be migrated.
+ * 
+ * @returns {Object} Extracted legacy data with:
+ *   - exists: Boolean indicating if legacy data location exists
+ *   - files: Object mapping relative file paths to file contents
+ *   - directories: Array of directory paths in legacy data location
+ *   - legacyPath: Path to legacy data directory
+ *   - count: Number of files found
+ * 
+ * @example
+ * ```javascript
+ * const data = await ipcRenderer.invoke('migration:extract-data');
+ * console.log(`Found ${data.count} files in legacy data location`);
+ * ```
+ */
+ipcMain.handle('migration:extract-data', async () => {
+  const { extractLegacyData } = require('./main/migration');
+  return extractLegacyData();
 });
 
 // File dialog for opening files
@@ -320,29 +345,46 @@ ipcMain.handle('dialog:question', async (event, options) => {
   return result;
 });
 
-// Get Tauri data location
-ipcMain.handle('migration:tauri-path', async () => {
-  return require('./main/migration').getTauriDataLocation();
+// Shell operations
+/**
+ * Open a file or folder in the system's default application.
+ *
+ * @param filePath - Path to file or folder to open
+ * @returns Object with success status and optional error message
+ *
+ * @example
+ * ```javascript
+ * const result = await ipcRenderer.invoke('shell:open-path', '/path/to/folder');
+ * if (result.success) {
+ *   console.log('Folder opened successfully');
+ * }
+ * ```
+ */
+ipcMain.handle('shell:open-path', async (_event, filePath) => {
+  if (!filePath || typeof filePath !== 'string') {
+    return {
+      success: false,
+      error: 'File path must be a non-empty string'
+    };
+  }
+
+  try {
+    const { shell } = require('electron');
+    await shell.openPath(filePath);
+    return { success: true };
+  } catch (error) {
+    logMainProcess(`Shell open-path error: ${formatError(error)}`);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to open path'
+    };
+  }
 });
 
-// Get Electron data location
-ipcMain.handle('migration:electron-path', async () => {
-  return require('./main/migration').getElectronDataLocation();
-});
-
-// Perform migration
-ipcMain.handle('migration:perform', async () => {
-  return require('./main/migration').performMigration();
-});
-
-// Extract Tauri data
-ipcMain.handle('migration:extract', async () => {
-  return require('./main/migration').extractTauriData();
-});
-
-// Migrate to Electron
-ipcMain.handle('migration:migrate', async (event, tauriData) => {
-  return require('./main/migration').migrateToElectron(tauriData);
+// Process URL scheme
+ipcMain.handle('url:process', async (event, url) => {
+  const { processURL } = require('./main/url');
+  return processURL(url);
 });
 
 // Check for updates

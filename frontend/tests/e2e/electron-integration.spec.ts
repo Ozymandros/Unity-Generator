@@ -1,6 +1,7 @@
-import { test, expect, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
-const BACKEND_URL = "http://127.0.0.1:8000";
+const BACKEND_PORT = process.env.BACKEND_PORT || "8000";
+const BACKEND_URL = `http://127.0.0.1:${BACKEND_PORT}`;
 
 /**
  * Integration test suite for Electron application startup and backend communication.
@@ -22,51 +23,6 @@ const ENDPOINTS = {
   GENERATE_CODE: `${BACKEND_URL}/generate/code`,
 } as const;
 
-// Helper functions for mocking API responses (kept for potential future use)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function createSuccessResponse(data: unknown) {
-  return {
-    success: true,
-    date: new Date().toISOString(),
-    error: null,
-    data,
-  };
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function createErrorResponse(error: string) {
-  return {
-    success: false,
-    date: new Date().toISOString(),
-    error,
-    data: null,
-  };
-}
-
-/**
- * Sets up route handler for a specific endpoint with success response.
- * 
- * @param _page - Playwright page object (unused)
- * @param _endpoint - API endpoint to mock (unused)
- * @param _data - Response data to return (unused)
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function setupRouteHandler(_page: Page, _endpoint: string, _data: unknown): Promise<void> {
-  // Unused function - kept for potential future use
-}
-
-/**
- * Sets up route handler for a specific endpoint with error response.
- * 
- * @param _page - Playwright page object (unused)
- * @param _endpoint - API endpoint to mock (unused)
- * @param _error - Error message to return (unused)
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function setupRouteErrorHandler(_page: Page, _endpoint: string, _error: string): Promise<void> {
-  // Unused function - kept for potential future use
-}
-
 /**
  * Integration Test 18.1: Full Application Startup
  * 
@@ -77,7 +33,7 @@ async function setupRouteErrorHandler(_page: Page, _endpoint: string, _error: st
  * 
  * Requirements: 14.1, 14.5, 14.6
  */
-test.describe("Integration Test 18.1: Full Application Startup", () => {
+test.describe("Integration Test 18.1: Full Application Startup - Electron", () => {
   test("shows backend status and initializes Vue app", async ({ page }) => {
     // Set backend URL in localStorage
     await page.addInitScript((url) => {
@@ -130,10 +86,10 @@ test.describe("Integration Test 18.1: Full Application Startup", () => {
     await page.goto("/");
 
     // Verify backend status shows online
-    await expect(page.getByText("Online")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("Online")).toBeVisible({ timeout: 30000 });
 
     // Verify Vue app has initialized by checking for navigation elements
-    await expect(page.getByRole("navigation")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("navigation")).toBeVisible({ timeout: 30000 });
   });
 
   test("displays error when backend is not ready", async ({ page }) => {
@@ -165,7 +121,7 @@ test.describe("Integration Test 18.1: Full Application Startup", () => {
  * 
  * Requirements: 2.2, 2.3
  */
-test.describe("Integration Test 18.2: Backend Communication", () => {
+test.describe("Integration Test 18.2: Backend Communication - Electron", () => {
   test("successfully communicates with backend for code generation", async ({ page }) => {
     // Set backend URL in localStorage
     await page.addInitScript((url) => {

@@ -1,25 +1,15 @@
 # Development Workflow
 
 This guide covers local development for both the FastAPI backend and the
-Tauri + Vue frontend.
+Electron + Vue frontend.
 
 ## Prerequisites
 
 - Python 3.11+
 - Node.js 20+
 - pnpm
-- **Rust toolchain** (for Tauri builds: `tauri build`, `tauri dev`)
 - Docker (optional, for dev/CI workflows)
 - **VS Code** (recommended IDE) with **Volar** extension
-
-### Installing the Rust toolchain (Tauri)
-
-Tauri needs `cargo` and the Rust toolchain. If you see **"failed to get cargo metadata: program not found"** when running `tauri build` or `tauri dev`, install Rust:
-
-- **Windows**: Install [rustup](https://rustup.rs/) (run the installer from https://rustup.rs/ or `winget install Rustlang.Rustup`), then **restart your terminal** so `cargo` is on `PATH`.
-- **macOS / Linux**: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`, then restart the terminal or run `source "$HOME/.cargo/env"`.
-
-Verify with: `cargo --version`.
 
 ## Integrated Development Environment
 
@@ -55,12 +45,12 @@ Several convenience tasks are available via `Ctrl+Shift+P` -> `Tasks: Run Task`:
 - **Vue 3 Support**: The project is optimized for **Volar**. Default formatters and type checking are configured to prioritize Vue 3 + TypeScript.
 - **TypeScript Mapping**: The TypeScript SDK is specifically mapped to `frontend/node_modules` to ensure consistent type checking across the internal monorepo structure.
 
-### Architecture Note: Sidecar vs. Docker
+### Architecture Note: Electron Backend Integration
 
 It is critical to distinguish between the development environment and the final product:
 
 - **Docker**: Used primarily for testing, CI, and isolated debugging sessions.
-- **Tauri Sidecar**: The final distributed application uses the **Tauri Sidecar pattern**. The Python backend is compiled into a standalone binary via `scripts/build_backend.ps1` and bundled into the native installer. **The production app does NOT require Docker.**
+- **Electron Backend**: The final distributed application uses the **Electron main process** to manage the Python backend. The Python backend is compiled into a standalone binary via `scripts/build_backend.ps1` and spawned by the Electron main process. **The production app does NOT require Docker.**
 
 ### Unified Quality Control
 
@@ -139,13 +129,13 @@ pnpm run setup
 
 ## Running the app
 
-To start the Tauri development environment:
+To start the Electron development environment:
 
 ```bash
 pnpm run dev
 ```
 
-This starts the Tauri integration which handles the backend sidecar.
+This starts the Electron app with the backend and frontend.
 
 ## Manual individual setup (Optional)
 

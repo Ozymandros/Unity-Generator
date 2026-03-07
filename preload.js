@@ -56,6 +56,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     process: (url) => ipcRenderer.invoke('url:process', url)
   },
 
+  // Shell operations
+  shell: {
+    openPath: (filePath) => ipcRenderer.invoke('shell:open-path', filePath)
+  },
+
+  // Migration functionality
+  migration: {
+    status: () => ipcRenderer.invoke('migration:status'),
+    perform: () => ipcRenderer.invoke('migration:perform'),
+    extractData: () => ipcRenderer.invoke('migration:extract-data')
+  },
+
   // Listen for events from main process
   onBackendStatus: (callback) => {
     const subscription = ipcRenderer.on('backend:status', (_event, status) => {
