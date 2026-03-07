@@ -8,6 +8,15 @@ import { createVuetify } from 'vuetify';
 const vuetify = createVuetify();
 
 vi.mock("@/api/client");
+vi.mock("electron", () => ({
+  shell: {
+    openPath: vi.fn(),
+  },
+}));
+
+// Import the mocked module to get the shell object
+const electronModule = await import("electron");
+const { shell } = electronModule as unknown as { shell: any };
 
 const emitUpdate = async (wrapper: VueWrapper<unknown>, label: string, value: unknown) => {
   const fields = wrapper.findAllComponents(SmartField);
@@ -156,18 +165,13 @@ describe("UnityProjectPanel", () => {
     expect(vm.settings.installPackages).toBe(false);
   });
 
-  it("opens the output folder with Tauri when available", async () => {
+  it("opens the output folder with Electron when available", async () => {
     vi.mocked(client.generateUnityProject).mockResolvedValue({
       success: true,
       date: new Date().toISOString(),
       error: null,
       data: { project_path: "C:/output/TestProject" },
     });
-
-    const openMock = vi.fn().mockResolvedValue(undefined);
-    (window as unknown as { __TAURI__?: { shell?: { open: (path: string) => Promise<void> } } }).__TAURI__ = {
-      shell: { open: openMock },
-    };
 
     const wrapper = mountPanel();
     await flushPromises();
@@ -183,7 +187,7 @@ describe("UnityProjectPanel", () => {
     await openFolderBtn!.trigger("click");
     await flushPromises();
 
-    expect(openMock).toHaveBeenCalledWith("C:/output/TestProject");
+    expect(shell.openPath).toHaveBeenCalledWith("C:/output/TestProject");
     expect(getStatusText(wrapper)).toContain("Opened output folder.");
   });
 
@@ -195,11 +199,6 @@ describe("UnityProjectPanel", () => {
       data: { path: "C:/output/Latest" },
     });
 
-    const openMock = vi.fn().mockResolvedValue(undefined);
-    (window as unknown as { __TAURI__?: { shell?: { open: (path: string) => Promise<void> } } }).__TAURI__ = {
-      shell: { open: openMock },
-    };
-
     const wrapper = mountPanel();
     await flushPromises();
     const openFolderBtn = getOpenFolderButton(wrapper);
@@ -207,11 +206,11 @@ describe("UnityProjectPanel", () => {
     await flushPromises();
 
     expect(client.getLatestOutput).toHaveBeenCalled();
-    expect(openMock).toHaveBeenCalledWith("C:/output/Latest");
+    expect(shell.openPath).toHaveBeenCalledWith("C:/output/Latest");
     expect(getStatusText(wrapper)).toContain("Opened output folder.");
   });
 
-  it("shows a fallback message when Tauri is unavailable", async () => {
+  it("shows a fallback message when shell fails", async () => {
     vi.mocked(client.getLatestOutput).mockResolvedValue({
       success: true,
       date: new Date().toISOString(),
@@ -219,8 +218,10 @@ describe("UnityProjectPanel", () => {
       data: { path: "C:/output/Latest" },
     });
 
-    (window as unknown as { __TAURI__?: { shell?: { open: (path: string) => Promise<void> } } }).__TAURI__ =
-      undefined;
+    // Set up shell to throw an error
+    shell.openPath.mockImplementation(() => {
+      throw new Error("Shell not available");
+    });
 
     const wrapper = mountPanel();
     await flushPromises();
@@ -228,7 +229,7 @@ describe("UnityProjectPanel", () => {
     await openFolderBtn!.trigger("click");
     await flushPromises();
 
-    expect(getStatusText(wrapper)).toContain("Tauri not available in web build");
+    expect(getStatusText(wrapper)).toContain("Failed to open:");
   });
 
   // -------------------------------------------------------------------

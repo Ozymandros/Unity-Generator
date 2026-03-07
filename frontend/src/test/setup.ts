@@ -119,5 +119,12 @@ const localStorageMock = (function () {
 
 Object.defineProperty(globalThis, "localStorage", { value: localStorageMock });
 
+// Mock Electron shell for tests
+vi.mock("electron", () => ({
+  shell: {
+    openPath: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
 // Optionally, mock fetch to throw if not handled by msw (defensive)
 // Already enforced above

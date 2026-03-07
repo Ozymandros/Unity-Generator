@@ -7,12 +7,12 @@ from app.main import app
 
 
 def test_get_latest_output(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from app.services import unity_project
+    from app.core import config
 
     def fake_root() -> Path:
         return tmp_path
 
-    monkeypatch.setattr(unity_project, "get_repo_root", fake_root)
+    monkeypatch.setattr(config, "get_repo_root", fake_root)
     output_dir = tmp_path / "output"
     output_dir.mkdir(parents=True, exist_ok=True)
     (output_dir / "ProjectA").mkdir()
