@@ -44,7 +44,13 @@ async function main() {
         BACKEND_PORT: backendPort,
     };
 
-    const child = spawn("pnpm exec playwright test", {
+    // Get test file pattern from command line args (e.g., "smoke.spec.ts")
+    const testPattern = process.argv[2] || "";
+    const playwrightCmd = testPattern 
+        ? `pnpm exec playwright test ${testPattern}`
+        : "pnpm exec playwright test";
+
+    const child = spawn(playwrightCmd, {
         cwd: process.cwd(),
         stdio: "inherit",
         env,

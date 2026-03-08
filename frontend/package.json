@@ -14,7 +14,9 @@
     "test": "cross-env NODE_OPTIONS=--no-webstorage vitest run",
     "test:watch": "cross-env NODE_OPTIONS=--no-webstorage vitest",
     "test:coverage": "cross-env NODE_OPTIONS=--no-webstorage vitest run --coverage",
-    "test:e2e": "node scripts/run-playwright-e2e.mjs"
+    "test:e2e": "node scripts/run-playwright-e2e.mjs",
+    "test:smoke": "node scripts/run-playwright-e2e.mjs smoke.spec.ts",
+    "test:packaged": "node scripts/run-playwright-e2e.mjs packaged-app.spec.ts"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",

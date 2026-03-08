@@ -95,7 +95,8 @@ function createMainWindow() {
       titleBarStyle: 'hiddenInset',
       trafficLightPosition: { x: 16, y: 16 }
     });
-    window.setAccessibilityTitle('Unity Generator Application');
+    // Note: Electron uses the window title for accessibility automatically
+    // No need to call setAccessibilityTitle() - it doesn't exist in Electron's API
     return window;
   } catch (e) {
     logMainProcess(`Create window: ${formatError(e)}`);
@@ -113,13 +114,30 @@ function loadFrontend(window) {
       window.loadURL('http://localhost:5173');
       return;
     }
-    // When packaged, __dirname is inside app.asar
-    const frontendPath = path.join(__dirname, 'frontend', 'dist', 'index.html');
+    // When packaged, use app.getAppPath() to get the correct base path
+    // This resolves to the app.asar location
+    const appPath = app.getAppPath();
+    const frontendPath = path.join(appPath, 'frontend', 'dist', 'index.html');
+    
+    logMainProcess(`App path: ${appPath}`);
     logMainProcess(`Loading frontend from: ${frontendPath}`);
+    logMainProcess(`Frontend exists: ${safeExistsSync(frontendPath)}`);
+    
     if (safeExistsSync(frontendPath)) {
       window.loadFile(frontendPath);
+      logMainProcess('Frontend loaded successfully');
     } else {
-      throw new Error(`Frontend not found: ${frontendPath}`);
+      // Try alternative path (in case structure is different)
+      const altPath = path.join(__dirname, 'frontend', 'dist', 'index.html');
+      logMainProcess(`Trying alternative path: ${altPath}`);
+      logMainProcess(`Alternative exists: ${safeExistsSync(altPath)}`);
+      
+      if (safeExistsSync(altPath)) {
+        window.loadFile(altPath);
+        logMainProcess('Frontend loaded from alternative path');
+      } else {
+        throw new Error(`Frontend not found at: ${frontendPath} or ${altPath}`);
+      }
     }
   } catch (e) {
     logMainProcess(`Load frontend: ${formatError(e)}`);
@@ -132,23 +150,59 @@ const BACKEND_PORT = 8000, BACKEND_HOST = '127.0.0.1', HEALTH_ENDPOINT = '/healt
 const MAX_RETRIES = 30, RETRY_INTERVAL = 1000;
 
 async function startPythonBackend() {
-  const pythonPath = process.platform === 'win32' ? 'python.exe' : 'python';
   const isDev = process.env.NODE_ENV === 'development';
-  const backendPath = isDev 
-    ? path.join(__dirname, '..', 'backend')
-    : path.join(process.resourcesPath, 'backend');
   
-  if (!safeExistsSync(backendPath)) throw new Error(`Backend directory not found: ${backendPath}`);
-  const backend = spawn(pythonPath, ['-m', 'uvicorn', 'app.main:app', '--host', BACKEND_HOST, '--port', String(BACKEND_PORT), '--reload'], {
-    cwd: backendPath,
-    env: { ...process.env, PYTHONPATH: backendPath },
-    stdio: ['pipe', 'pipe', 'pipe']
-  });
-  backend.stdout.on('data', d => logMainProcess(`Backend: ${d.toString()}`));
-  backend.stderr.on('data', d => logMainProcess(`Backend stderr: ${d.toString()}`));
-  backend.on('close', code => logMainProcess(`Backend exited: ${code}`));
-  backend.on('error', e => logMainProcess(`Backend error: ${formatError(e)}`));
-  return backend;
+  logMainProcess(`Starting backend in ${isDev ? 'development' : 'production'} mode`);
+  
+  if (isDev) {
+    // Development: Run Python with uvicorn
+    const pythonPath = process.platform === 'win32' ? 'python.exe' : 'python';
+    const backendPath = path.join(__dirname, '..', 'backend');
+    
+    logMainProcess(`Backend path (dev): ${backendPath}`);
+    
+    if (!safeExistsSync(backendPath)) {
+      throw new Error(`Backend directory not found: ${backendPath}`);
+    }
+    
+    const backend = spawn(pythonPath, ['-m', 'uvicorn', 'app.main:app', '--host', BACKEND_HOST, '--port', String(BACKEND_PORT), '--reload'], {
+      cwd: backendPath,
+      env: { ...process.env, PYTHONPATH: backendPath },
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
+    
+    backend.stdout.on('data', d => logMainProcess(`Backend: ${d.toString()}`));
+    backend.stderr.on('data', d => logMainProcess(`Backend stderr: ${d.toString()}`));
+    backend.on('close', code => logMainProcess(`Backend exited: ${code}`));
+    backend.on('error', e => logMainProcess(`Backend error: ${formatError(e)}`));
+    
+    return backend;
+  } else {
+    // Production: Run standalone executable
+    const backendExeName = process.platform === 'win32' ? 'unity-generator-backend.exe' : 'unity-generator-backend';
+    const backendExePath = path.join(process.resourcesPath, 'backend', backendExeName);
+    
+    logMainProcess(`Backend executable path: ${backendExePath}`);
+    logMainProcess(`Backend executable exists: ${safeExistsSync(backendExePath)}`);
+    logMainProcess(`process.resourcesPath: ${process.resourcesPath}`);
+    
+    if (!safeExistsSync(backendExePath)) {
+      throw new Error(`Backend executable not found: ${backendExePath}`);
+    }
+    
+    // Run the standalone backend executable
+    const backend = spawn(backendExePath, [], {
+      env: { ...process.env, PORT: String(BACKEND_PORT), HOST: BACKEND_HOST },
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
+    
+    backend.stdout.on('data', d => logMainProcess(`Backend: ${d.toString()}`));
+    backend.stderr.on('data', d => logMainProcess(`Backend stderr: ${d.toString()}`));
+    backend.on('close', code => logMainProcess(`Backend exited: ${code}`));
+    backend.on('error', e => logMainProcess(`Backend error: ${formatError(e)}`));
+    
+    return backend;
+  }
 }
 
 async function waitForBackendReady(backend) {
@@ -414,26 +468,59 @@ let isQuitting = false;
 async function initializeApp() {
   try {
     logMainProcess('Initializing application...');
+    logMainProcess(`Platform: ${process.platform}, Arch: ${process.arch}`);
+    logMainProcess(`__dirname: ${__dirname}`);
+    logMainProcess(`process.resourcesPath: ${process.resourcesPath}`);
+    logMainProcess(`NODE_ENV: ${process.env.NODE_ENV || 'production'}`);
+    
     configureAccessibility();
+    
     const migrationResult = performMigration();
     if (migrationResult.migrated > 0) logMainProcess(`Migrated ${migrationResult.migrated} files`);
+    
     registerURLScheme();
+    
+    logMainProcess('Starting Python backend...');
     backendProcess = await startPythonBackend();
+    
+    logMainProcess('Waiting for backend to be ready...');
     const backendReady = await waitForBackendReady(backendProcess);
+    
     if (!backendReady) {
+      logMainProcess('ERROR: Backend failed to start');
       await showNotification({ title: 'Backend Error', body: 'Failed to start Python backend. Check logs.', type: 'error' });
+      dialog.showErrorBox('Backend Error', `Failed to start Python backend.\n\nCheck logs at: ${logFilePath}`);
       app.quit();
       return;
     }
+    
+    logMainProcess('Backend is ready');
     enableAutoUpdates();
+    
+    logMainProcess('Creating main window...');
     mainWindow = createMainWindow();
     global.mainWindow = mainWindow;
+    
     mainWindow.on('closed', () => handleWindowClose(mainWindow));
+    
+    // Add error handlers for the window
+    mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+      logMainProcess(`Window failed to load: ${errorCode} - ${errorDescription}`);
+    });
+    
+    mainWindow.webContents.on('crashed', (event, killed) => {
+      logMainProcess(`Window crashed: killed=${killed}`);
+    });
+    
+    logMainProcess('Loading frontend...');
     loadFrontend(mainWindow);
-    logMainProcess('Application initialized');
+    
+    logMainProcess('Application initialized successfully');
   } catch (e) {
+    console.error('FATAL ERROR in initializeApp:', e);
     logMainProcess(`Init error: ${formatError(e)}`);
     await showNotification({ title: 'Initialization Error', body: 'Failed to initialize. Check logs.', type: 'error' });
+    dialog.showErrorBox('Initialization Error', `Failed to initialize application:\n\n${e.message}\n\nCheck logs at: ${logFilePath}`);
     app.quit();
   }
 }
@@ -493,7 +580,18 @@ ipcMain.handle('updater:status', () => getUpdateStatus());
 
 // --- App lifecycle ---
 app.on('ready', async () => {
-  try { await initializeApp(); } catch (e) { logMainProcess(`Ready error: ${formatError(e)}`); app.quit(); }
+  try {
+    // Initialize logger first so we can capture all logs
+    initLogger(process.env.LOG_LEVEL || 'info');
+    logMainProcess('App ready event fired');
+    await initializeApp();
+  } catch (e) {
+    console.error('FATAL ERROR during app initialization:', e);
+    logMainProcess(`Ready error: ${formatError(e)}`);
+    // Show error dialog before quitting
+    dialog.showErrorBox('Initialization Error', `Failed to start application:\n\n${e.message}\n\nCheck logs at: ${logFilePath || 'unknown'}`);
+    app.quit();
+  }
 });
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
