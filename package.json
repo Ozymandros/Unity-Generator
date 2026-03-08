@@ -1,14 +1,18 @@
 {
-    "version": "0.9.1",
+    "version": "0.10.0",
     "description": "Desktop app to generate Unity assets using AI (Electron + FastAPI)",
     "name": "unity-generator",
     "private": true,
-    "main": ".vite/build/main.js",
+    "main": "main.js",
     "scripts": {
         "// --- Build & Distribution (Electron) ---": "",
         "build:backend": "python scripts/build_backend.py",
         "build:frontend": "pnpm --dir frontend build",
-        "package": "pnpm run build:backend && pnpm run electron:build",
+        "package": "pnpm run build:backend && pnpm run build:frontend && electron-builder",
+        "dist": "pnpm run build:backend && pnpm run build:frontend && electron-builder",
+        "dist:win": "pnpm run build:backend && pnpm run build:frontend && electron-builder --win",
+        "dist:mac": "pnpm run build:backend && pnpm run build:frontend && electron-builder --mac",
+        "dist:linux": "pnpm run build:backend && pnpm run build:frontend && electron-builder --linux",
         "// --- Development ---": "",
         "dev:backend": "cd backend && python -m uvicorn app.main:app --reload --port 8000",
         "dev:frontend": "pnpm --dir frontend dev",
@@ -17,7 +21,6 @@
         "// --- Electron Commands ---": "",
         "electron": "electron .",
         "electron:dev": "electron .",
-        "electron:build": "electron-forge make",
         "// --- Quality Control: Frontend & Backend ---": "",
         "lint:backend": "pnpm --dir backend lint",
         "lint:backend:fix": "pnpm --dir backend lint:fix",
@@ -39,21 +42,18 @@
         "generate:icons": "node scripts/generate-icons.js"
     },
     "dependencies": {
-        "axios": "^1.6.0"
+        "axios": "^1.6.0",
+        "electron-squirrel-startup": "^1.0.1"
     },
     "devDependencies": {
-        "@electron-forge/cli": "^7.0.0",
-        "@electron-forge/maker-deb": "^7.0.0",
-        "@electron-forge/maker-dmg": "^7.0.0",
-        "@electron-forge/maker-squirrel": "^7.0.0",
-        "@electron-forge/maker-zip": "^7.0.0",
-        "@electron-forge/plugin-vite": "^7.0.0",
-        "electron": "^28.0.0",
+        "@rollup/plugin-commonjs": "^29.0.2",
         "@types/node": "^25.3.0",
         "@vitejs/plugin-vue": "^6.0.4",
         "@vitest/ui": "^4.0.18",
         "@vue/test-utils": "~2.4.6",
         "concurrently": "^8.2.0",
+        "electron": "^28.0.0",
+        "electron-builder": "^26.8.1",
         "jsdom": "^28.1.0",
         "pinia": "~2.3.1",
         "png-to-ico": "^3.0.1",
@@ -61,5 +61,41 @@
         "vite": "^7.3.1",
         "vitest": "^4.0.18",
         "vuetify": "~3.12.1"
+    },
+    "build": {
+        "appId": "com.unitygenerator.app",
+        "productName": "Unity Generator",
+        "files": [
+            "main.js",
+            "preload.js",
+            "main/**/*",
+            "frontend/dist/**/*",
+            "app-icon.*"
+        ],
+        "extraResources": [
+            {
+                "from": "backend/dist",
+                "to": "backend",
+                "filter": ["**/*"]
+            }
+        ],
+        "win": {
+            "target": ["nsis", "portable"],
+            "icon": "app-icon.ico",
+            "signAndEditExecutable": false
+        },
+        "mac": {
+            "target": ["dmg", "zip"],
+            "icon": "app-icon.icns",
+            "category": "public.app-category.developer-tools"
+        },
+        "linux": {
+            "target": ["deb", "AppImage"],
+            "icon": "app-icon.png",
+            "category": "Development"
+        },
+        "directories": {
+            "output": "dist-electron"
+        }
     }
 }

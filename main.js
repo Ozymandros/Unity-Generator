@@ -1,548 +1,546 @@
 /**
- * Electron Main Process Entry Point
- * 
- * Initializes the Electron application, manages lifecycle, and coordinates
- * all components including the Python backend, window management, and IPC.
+ * Electron Main Process — single entry (no runtime require of local files).
+ * Bundled by Forge+Vite to .vite/build/main.js; __dirname at runtime is .vite/build.
  */
 
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Notification, nativeTheme, shell, autoUpdater } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const { configureAccessibility } = require('./main/window');
+const { spawn } = require('child_process');
+const axios = require('axios');
+const os = require('os');
 
-// Import main process modules
-const { startPythonBackend, waitForBackendReady, gracefulShutdown } = require('./main/lifecycle');
-const { createMainWindow, handleWindowClose, loadFrontend } = require('./main/window');
-const { logMainProcess, formatError } = require('./main/logger');
-const { showNotification, requestPermissions } = require('./main/notification');
-const { validateInput, handleCSPViolation, configureCSP } = require('./main/security');
-const { loadLanguageResources, translateText } = require('./main/i18n');
-const { performMigration } = require('./main/migration');
+// --- safeExistsSync (avoids DEP0187) ---
+function safeExistsSync(p) {
+  return typeof p === 'string' && p.length > 0 && fs.existsSync(p);
+}
 
-const { enableAutoUpdates } = require('./main/updater');
-const { registerURLScheme, processURL, forwardToBackend, forwardToFrontend } = require('./main/url');
+// --- Logger ---
+const LOG_LEVELS = { DEBUG: 0, INFO: 1, WARN: 2, ERROR: 3 };
+let currentLogLevel = process.env.NODE_ENV === 'development' ? LOG_LEVELS.DEBUG : LOG_LEVELS.INFO;
+let logFilePath = null;
 
-// Application state
+function formatLogEntry(level, message, context = {}) {
+  const timestamp = new Date().toISOString();
+  const processName = process.type === 'browser' ? 'main' : 'renderer';
+  return JSON.stringify({ timestamp, level, process: processName, message, context });
+}
+
+function writeLogToFile(entry) {
+  if (!logFilePath) return;
+  try { fs.appendFileSync(logFilePath, entry + '\n'); } catch (e) { console.error('Write log failed', e); }
+}
+
+function logMainProcess(message, context = {}) {
+  if (currentLogLevel > LOG_LEVELS.INFO) return;
+  const entry = formatLogEntry('INFO', message, context);
+  console.log(entry);
+  writeLogToFile(entry);
+}
+
+function formatError(error) {
+  if (error instanceof Error) return { name: error.name, message: error.message, stack: error.stack, code: error.code };
+  if (typeof error === 'string') return error;
+  return JSON.stringify(error);
+}
+
+function initLogger(logLevel = 'info') {
+  try {
+    const level = (logLevel || 'info').toUpperCase();
+    if (LOG_LEVELS[level] !== undefined) currentLogLevel = LOG_LEVELS[level];
+    const userDataPath = app.getPath('userData');
+    logFilePath = path.join(userDataPath, 'app.log');
+    const logDir = path.dirname(logFilePath);
+    if (!safeExistsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
+  } catch (e) { console.error('Init logger failed', e); }
+}
+
+function readRecentLogs(lines = 100) {
+  if (!safeExistsSync(logFilePath)) return [];
+  try {
+    const content = fs.readFileSync(logFilePath, 'utf8');
+    return content.split('\n').filter(l => l.trim()).slice(-lines);
+  } catch (e) { return []; }
+}
+
+// --- Window ---
+const WINDOW_WIDTH = 1200, WINDOW_HEIGHT = 800, WINDOW_MIN_WIDTH = 800, WINDOW_MIN_HEIGHT = 600;
+
+function configureAccessibility() {
+  try {
+    app.commandLine.appendSwitch('force-renderer-accessibility', 'true');
+    app.accessibilitySupport = true;
+    nativeTheme.on('updated', () => {});
+  } catch (e) { logMainProcess(`Accessibility: ${formatError(e)}`); }
+}
+
+function createMainWindow() {
+  try {
+    const window = new BrowserWindow({
+      width: WINDOW_WIDTH,
+      height: WINDOW_HEIGHT,
+      minWidth: WINDOW_MIN_WIDTH,
+      minHeight: WINDOW_MIN_HEIGHT,
+      title: 'Unity Generator',
+      icon: path.join(__dirname, 'app-icon.png'),
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+        nodeIntegration: false,
+        contextIsolation: true,
+        sandbox: true,
+        accessibilitySupport: true,
+        webSecurity: true
+      },
+      autoHideMenuBar: true,
+      titleBarStyle: 'hiddenInset',
+      trafficLightPosition: { x: 16, y: 16 }
+    });
+    window.setAccessibilityTitle('Unity Generator Application');
+    return window;
+  } catch (e) {
+    logMainProcess(`Create window: ${formatError(e)}`);
+    throw e;
+  }
+}
+
+function handleWindowClose(window) {
+  if (window === global.mainWindow) global.mainWindow = null;
+}
+
+function loadFrontend(window) {
+  try {
+    if (process.env.NODE_ENV === 'development') {
+      window.loadURL('http://localhost:5173');
+      return;
+    }
+    // When packaged, __dirname is inside app.asar
+    const frontendPath = path.join(__dirname, 'frontend', 'dist', 'index.html');
+    logMainProcess(`Loading frontend from: ${frontendPath}`);
+    if (safeExistsSync(frontendPath)) {
+      window.loadFile(frontendPath);
+    } else {
+      throw new Error(`Frontend not found: ${frontendPath}`);
+    }
+  } catch (e) {
+    logMainProcess(`Load frontend: ${formatError(e)}`);
+    throw e;
+  }
+}
+
+// --- Lifecycle (backend spawn) ---
+const BACKEND_PORT = 8000, BACKEND_HOST = '127.0.0.1', HEALTH_ENDPOINT = '/health';
+const MAX_RETRIES = 30, RETRY_INTERVAL = 1000;
+
+async function startPythonBackend() {
+  const pythonPath = process.platform === 'win32' ? 'python.exe' : 'python';
+  const isDev = process.env.NODE_ENV === 'development';
+  const backendPath = isDev 
+    ? path.join(__dirname, '..', 'backend')
+    : path.join(process.resourcesPath, 'backend');
+  
+  if (!safeExistsSync(backendPath)) throw new Error(`Backend directory not found: ${backendPath}`);
+  const backend = spawn(pythonPath, ['-m', 'uvicorn', 'app.main:app', '--host', BACKEND_HOST, '--port', String(BACKEND_PORT), '--reload'], {
+    cwd: backendPath,
+    env: { ...process.env, PYTHONPATH: backendPath },
+    stdio: ['pipe', 'pipe', 'pipe']
+  });
+  backend.stdout.on('data', d => logMainProcess(`Backend: ${d.toString()}`));
+  backend.stderr.on('data', d => logMainProcess(`Backend stderr: ${d.toString()}`));
+  backend.on('close', code => logMainProcess(`Backend exited: ${code}`));
+  backend.on('error', e => logMainProcess(`Backend error: ${formatError(e)}`));
+  return backend;
+}
+
+async function waitForBackendReady(backend) {
+  for (let i = 0; i < MAX_RETRIES; i++) {
+    try {
+      const r = await axios.get(`http://${BACKEND_HOST}:${BACKEND_PORT}${HEALTH_ENDPOINT}`, { timeout: 5000 });
+      if (r.status === 200) return true;
+    } catch (_) {}
+    await new Promise(r => setTimeout(r, RETRY_INTERVAL));
+  }
+  return false;
+}
+
+// --- Notification ---
+let permissionsGranted = false;
+
+function requestPermissions() {
+  try {
+    if (process.platform === 'darwin') {
+      const n = new Notification({ title: 'Notification Test', body: 'Test', silent: true });
+      n.show();
+      setTimeout(() => { permissionsGranted = true; }, 100);
+    } else {
+      permissionsGranted = true;
+    }
+    return permissionsGranted;
+  } catch (e) {
+    permissionsGranted = false;
+    return false;
+  }
+}
+
+function getNotificationIcon() {
+  const iconPath = path.join(__dirname, 'app-icon.png');
+  return safeExistsSync(iconPath) ? iconPath : undefined;
+}
+
+async function showNotification(notification) {
+  if (!notification || typeof notification.title !== 'string' || !notification.title.trim()) return;
+  if (!permissionsGranted) return;
+  try {
+    const n = new Notification({
+      title: notification.title.trim(),
+      body: (notification.body || '').trim(),
+      icon: getNotificationIcon(),
+      silent: false
+    });
+    const actions = notification.actions;
+    if (actions && typeof actions.onClick === 'function') n.on('click', () => { try { actions.onClick(); } catch (e) { logMainProcess(`Notification click: ${formatError(e)}`); } });
+    n.show();
+  } catch (e) { logMainProcess(`Notification: ${formatError(e)}`); }
+}
+
+// --- Security ---
+function validateInput(input) {
+  if (typeof input !== 'string') return { valid: false, error: 'Input must be a string' };
+  if (input.trim().length === 0) return { valid: false, error: 'Input cannot be empty' };
+  if (input.length > 10000) return { valid: false, error: 'Input too long' };
+  const sanitized = input.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+  return { valid: true, sanitized };
+}
+
+function handleCSPViolation(violation) {
+  logMainProcess('CSP violation', { url: violation?.url });
+  return { blocked: true, reason: 'CSP violation' };
+}
+
+const DEFAULT_CSP_STRING = "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' http://127.0.0.1:8000; style-src 'self' 'unsafe-inline' http://127.0.0.1:8000; img-src 'self' data: http://127.0.0.1:8000; connect-src 'self' http://127.0.0.1:8000; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';";
+
+function configureCSP() {
+  return DEFAULT_CSP_STRING;
+}
+
+// --- i18n ---
+const DEFAULT_LANGUAGE = 'en';
+let currentLanguage = DEFAULT_LANGUAGE;
+const languageResources = {};
+
+function loadLanguageResources(language) {
+  if (!language || typeof language !== 'string') throw new Error('language must be non-empty string');
+  const trimmed = language.trim();
+  if (!trimmed) throw new Error('language cannot be empty');
+  try {
+    const resourcesPath = path.join(__dirname, '..', 'resources', 'locales', `${trimmed}.json`);
+    if (!safeExistsSync(resourcesPath)) return loadLanguageResources(DEFAULT_LANGUAGE);
+    const content = fs.readFileSync(resourcesPath, 'utf8');
+    const resources = JSON.parse(content);
+    if (!resources || typeof resources !== 'object') throw new Error('Invalid JSON');
+    languageResources[trimmed] = resources;
+    currentLanguage = trimmed;
+    return true;
+  } catch (e) {
+    logMainProcess(`i18n load ${language}: ${formatError(e)}`);
+    return false;
+  }
+}
+
+function translateText(key, params = {}) {
+  if (!key || typeof key !== 'string') throw new Error('key must be non-empty string');
+  const trimmed = key.trim();
+  if (!trimmed) return key;
+  const resources = languageResources[currentLanguage] || languageResources[DEFAULT_LANGUAGE];
+  let translation = resources?.[trimmed];
+  if (!translation) return trimmed;
+  if (Object.keys(params).length > 0) {
+    Object.keys(params).forEach(k => { translation = translation.replace(`{${k}}`, params[k] != null ? String(params[k]) : ''); });
+  }
+  return translation;
+}
+
+function getAvailableLanguages() {
+  try {
+    const localesPath = path.join(__dirname, '..', 'resources', 'locales');
+    if (!safeExistsSync(localesPath)) return [DEFAULT_LANGUAGE];
+    return fs.readdirSync(localesPath).filter(f => f.endsWith('.json')).map(f => f.replace('.json', '')).sort();
+  } catch (e) { return [DEFAULT_LANGUAGE]; }
+}
+
+// --- Migration ---
+function getLegacyDataLocation() {
+  const appName = 'unity-generator';
+  switch (process.platform) {
+    case 'win32': return path.join(process.env.APPDATA || '', appName);
+    case 'darwin': return path.join(os.homedir(), 'Library', 'Application Support', appName);
+    case 'linux': return path.join(os.homedir(), '.local', 'share', appName);
+    default: return path.join(os.homedir(), '.config', appName);
+  }
+}
+
+function getElectronDataLocation() {
+  return app.getPath('userData');
+}
+
+function extractLegacyData(legacyPath = getLegacyDataLocation()) {
+  if (!legacyPath || typeof legacyPath !== 'string') throw new Error('legacyPath must be non-empty string');
+  if (!safeExistsSync(legacyPath)) return { exists: false, files: {}, directories: [], message: 'Legacy data location does not exist' };
+  const files = {}, directories = [];
+  function readDir(dirPath, basePath = '') {
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry.name);
+      const rel = basePath ? path.join(basePath, entry.name) : entry.name;
+      if (entry.isDirectory()) { directories.push(rel); readDir(fullPath, rel); }
+      else if (entry.isFile()) { try { files[rel] = fs.readFileSync(fullPath, 'utf8'); } catch (_) {} }
+    }
+  }
+  readDir(legacyPath);
+  return { exists: true, files, directories, legacyPath, count: Object.keys(files).length };
+}
+
+function migrateToElectron(legacyData, electronPath = getElectronDataLocation()) {
+  if (!legacyData || typeof legacyData !== 'object') throw new Error('legacyData must be object');
+  if (!electronPath || typeof electronPath !== 'string') throw new Error('electronPath must be non-empty string');
+  const result = { migrated: 0, skipped: 0, errors: [], electronPath };
+  try {
+    if (!safeExistsSync(electronPath)) fs.mkdirSync(electronPath, { recursive: true });
+  } catch (e) { result.errors.push({ type: 'directory_creation', message: e.message }); return result; }
+  if (!legacyData.exists) { result.message = 'No legacy data to migrate'; return result; }
+  for (const [rel, content] of Object.entries(legacyData.files)) {
+    try {
+      const targetPath = path.join(electronPath, rel);
+      const targetDir = path.dirname(targetPath);
+      if (!safeExistsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+      fs.writeFileSync(targetPath, content, 'utf8');
+      result.migrated++;
+    } catch (e) { result.errors.push({ file: rel, type: 'file_write', message: e.message }); }
+  }
+  for (const dir of legacyData.directories || []) {
+    try {
+      const targetDir = path.join(electronPath, dir);
+      if (!safeExistsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+    } catch (e) { result.errors.push({ directory: dir, type: 'directory_creation', message: e.message }); }
+  }
+  return result;
+}
+
+function performMigration() {
+  const legacyPath = getLegacyDataLocation();
+  const electronPath = getElectronDataLocation();
+  const legacyData = extractLegacyData(legacyPath);
+  if (!legacyData.exists) return { success: true, migrated: 0, skipped: 0, message: 'No legacy data found', legacyPath, electronPath };
+  const result = migrateToElectron(legacyData, electronPath);
+  return { success: result.errors.length === 0, migrated: result.migrated, skipped: result.skipped, errors: result.errors, legacyPath, electronPath };
+}
+
+// --- Updater ---
+const UPDATE_CHECK_INTERVAL = 24 * 60 * 60 * 1000;
+const UPDATE_SERVER_URL = process.env.UPDATE_SERVER_URL || 'https://updates.unitygenerator.com';
+let lastUpdateCheck = 0;
+
+function configureAutoUpdater() {
+  try {
+    autoUpdater.setFeedURL({ url: `${UPDATE_SERVER_URL}/update/${process.platform}-${process.arch}/${app.getVersion()}`, provider: 'generic' });
+    autoUpdater.on('checking-for-update', () => logMainProcess('Checking for updates...'));
+    autoUpdater.on('update-available', info => showNotification({ title: 'Update Available', body: `Version ${info.version} available. Downloading...`, type: 'info' }));
+    autoUpdater.on('update-not-available', () => {});
+    autoUpdater.on('update-downloaded', info => {
+      showNotification({ title: 'Update Downloaded', body: `Version ${info.version} downloaded. Restart to install.`, type: 'success' });
+      showNotification({ title: 'Restart to Update', body: 'Click to restart and install', type: 'info', actions: { onClick: () => setImmediate(() => autoUpdater.quitAndInstall()) } });
+    });
+    autoUpdater.on('error', e => showNotification({ title: 'Update Error', body: e.message, type: 'error' }));
+  } catch (e) { logMainProcess(`Updater config: ${formatError(e)}`); }
+}
+
+async function checkForUpdates() {
+  try { await autoUpdater.checkForUpdates(); return true; } catch (e) { return false; }
+}
+
+function enableAutoUpdates() {
+  configureAutoUpdater();
+  checkForUpdates();
+  setInterval(() => { const now = Date.now(); if (now - lastUpdateCheck > UPDATE_CHECK_INTERVAL) { checkForUpdates(); lastUpdateCheck = now; } }, UPDATE_CHECK_INTERVAL);
+}
+
+function getUpdateStatus() {
+  return { autoUpdateEnabled: true, lastCheck: lastUpdateCheck, updateServer: UPDATE_SERVER_URL };
+}
+
+// --- URL scheme ---
+function registerURLScheme() {
+  return ['win32', 'darwin', 'linux'].includes(process.platform);
+}
+
+function parseURL(url) {
+  if (!url || typeof url !== 'string') return null;
+  try {
+    const urlObj = new URL(url);
+    const scheme = urlObj.protocol.replace(':', '');
+    if (scheme !== 'unitygen') return null;
+    const params = {}; for (const [k, v] of urlObj.searchParams.entries()) params[k] = v;
+    return { scheme, host: urlObj.hostname || 'default', params, original: url };
+  } catch (e) { return null; }
+}
+
+function processURL(url) {
+  if (!url || typeof url !== 'string') return { success: false, error: 'URL must be non-empty string' };
+  const parsed = parseURL(url);
+  if (!parsed) return { success: false, error: 'Failed to parse URL' };
+  return {
+    success: true,
+    parsed,
+    actions: { forwardToBackend: parsed.host === 'generate' || parsed.host === 'open', forwardToFrontend: true, showWindow: true }
+  };
+}
+
+function forwardToBackend(parsedURL) {
+  if (!parsedURL || parsedURL.scheme !== 'unitygen') return null;
+  return { action: parsedURL.host, parameters: parsedURL.params, timestamp: Date.now() };
+}
+
+function forwardToFrontend(parsedURL) {
+  if (!parsedURL || parsedURL.scheme !== 'unitygen') return '';
+  const params = new URLSearchParams();
+  for (const [k, v] of Object.entries(parsedURL.params || {})) if (v != null) params.set(k, v);
+  const q = params.toString(); return q ? `?${q}` : '';
+}
+
+// --- App state ---
 let mainWindow = null;
 let backendProcess = null;
 let isQuitting = false;
 
-/**
- * Initialize the application
- * 
- * 1. Configure accessibility support
- * 2. Perform data migration from legacy application to Electron
- * 3. Register URL scheme
- * 4. Start Python backend
- * 5. Wait for backend to be ready
- * 6. Enable auto-updates
- * 7. Create main window
- * 8. Load Vue frontend
- */
 async function initializeApp() {
   try {
     logMainProcess('Initializing application...');
-    
-    // Step 1: Configure accessibility support
-    logMainProcess('Configuring accessibility support...');
     configureAccessibility();
-    
-    // Step 2: Perform data migration from legacy application to Electron
-    logMainProcess('Checking for data migration...');
     const migrationResult = performMigration();
-    
-    if (migrationResult.migrated > 0) {
-      logMainProcess(`Migrated ${migrationResult.migrated} files from legacy application to Electron`);
-    }
-    
-    if (migrationResult.errors.length > 0) {
-      logMainProcess(`Migration completed with ${migrationResult.errors.length} errors`);
-    }
-    
-    // Step 3: Register URL scheme
-    logMainProcess('Registering URL scheme...');
-    const urlSchemeRegistered = registerURLScheme();
-    
-    if (urlSchemeRegistered) {
-      logMainProcess('URL scheme registered successfully');
-    } else {
-      logMainProcess('URL scheme registration skipped or failed');
-    }
-    
-    // Step 4: Start Python backend
-    logMainProcess('Starting Python FastAPI backend...');
+    if (migrationResult.migrated > 0) logMainProcess(`Migrated ${migrationResult.migrated} files`);
+    registerURLScheme();
     backendProcess = await startPythonBackend();
-    
-    // Step 5: Wait for backend to be ready
-    logMainProcess('Waiting for backend to be ready...');
     const backendReady = await waitForBackendReady(backendProcess);
-    
     if (!backendReady) {
-      logMainProcess('Backend failed to start, showing error...');
-      await showNotification({
-        title: 'Backend Error',
-        body: 'Failed to start Python FastAPI backend. Please check logs.',
-        type: 'error'
-      });
+      await showNotification({ title: 'Backend Error', body: 'Failed to start Python backend. Check logs.', type: 'error' });
       app.quit();
       return;
     }
-    
-    logMainProcess('Backend is ready');
-    
-    // Step 6: Enable auto-updates
-    logMainProcess('Enabling auto-updates...');
     enableAutoUpdates();
-    
-    // Step 7: Create main window
-    logMainProcess('Creating main window...');
     mainWindow = createMainWindow();
-    
-    // Step 8: Load Vue frontend
-    logMainProcess('Loading Vue frontend...');
+    global.mainWindow = mainWindow;
+    mainWindow.on('closed', () => handleWindowClose(mainWindow));
     loadFrontend(mainWindow);
-    
-    logMainProcess('Application initialized successfully');
-    
-  } catch (error) {
-    logMainProcess(`Initialization error: ${formatError(error)}`);
-    await showNotification({
-      title: 'Initialization Error',
-      body: 'Failed to initialize application. Please check logs.',
-      type: 'error'
-    });
+    logMainProcess('Application initialized');
+  } catch (e) {
+    logMainProcess(`Init error: ${formatError(e)}`);
+    await showNotification({ title: 'Initialization Error', body: 'Failed to initialize. Check logs.', type: 'error' });
     app.quit();
   }
 }
 
+// --- IPC ---
+ipcMain.handle('backend:status', async () => ({
+  isRunning: !!backendProcess,
+  health: backendProcess ? 'healthy' : 'stopped',
+  port: BACKEND_PORT
+}));
 
-
-/**
- * IPC Handlers for renderer process communication
- */
-
-// Backend status
-ipcMain.handle('backend:status', async () => {
-  if (!backendProcess) {
-    return { isRunning: false, health: 'stopped' };
-  }
-  
-  return {
-    isRunning: true,
-    health: 'healthy',
-    port: 8000
-  };
-});
-
-// Backend restart
 ipcMain.handle('backend:restart', async () => {
   try {
-    if (backendProcess) {
-      backendProcess.kill('SIGTERM');
-    }
-    
+    if (backendProcess) backendProcess.kill('SIGTERM');
     backendProcess = await startPythonBackend();
     const ready = await waitForBackendReady(backendProcess);
-    
-    return {
-      isRunning: ready,
-      health: ready ? 'healthy' : 'unhealthy',
-      port: 8000
-    };
-  } catch (error) {
-    logMainProcess(`Backend restart error: ${formatError(error)}`);
-    return { isRunning: false, health: 'unhealthy', error: error.message };
+    return { isRunning: ready, health: ready ? 'healthy' : 'unhealthy', port: BACKEND_PORT };
+  } catch (e) {
+    return { isRunning: false, health: 'unhealthy', error: e.message };
   }
 });
 
-// Notification show
-ipcMain.handle('notification:show', async (event, notification) => {
-  return showNotification(notification);
-});
+ipcMain.handle('notification:show', async (e, notification) => showNotification(notification));
+ipcMain.handle('logger:error', async (e, err) => { logMainProcess(formatError(err)); return true; });
+ipcMain.handle('notification:request-permissions', () => requestPermissions());
+ipcMain.handle('i18n:translate', async (e, key, params) => translateText(key, params));
+ipcMain.handle('i18n:load', async (e, language) => loadLanguageResources(language));
+ipcMain.handle('i18n:available-languages', () => getAvailableLanguages());
+ipcMain.handle('migration:status', () => ({
+  legacyPath: getLegacyDataLocation(),
+  electronPath: getElectronDataLocation(),
+  legacyExists: safeExistsSync(getLegacyDataLocation()),
+  electronExists: safeExistsSync(getElectronDataLocation())
+}));
+ipcMain.handle('migration:perform', () => performMigration());
+ipcMain.handle('migration:extract-data', () => extractLegacyData());
+ipcMain.handle('dialog:open-file', async (e, options) => dialog.showOpenDialog(options));
+ipcMain.handle('dialog:save-file', async (e, options) => dialog.showSaveDialog(options));
+ipcMain.handle('dialog:error', async (e, options) => dialog.showMessageBox({ type: 'error', title: options?.title || 'Error', message: options?.message, detail: options?.detail, buttons: options?.buttons || ['OK'] }));
+ipcMain.handle('dialog:info', async (e, options) => dialog.showMessageBox({ type: 'info', title: options?.title || 'Information', message: options?.message, detail: options?.detail, buttons: options?.buttons || ['OK'] }));
+ipcMain.handle('dialog:warning', async (e, options) => dialog.showMessageBox({ type: 'warning', title: options?.title || 'Warning', message: options?.message, detail: options?.detail, buttons: options?.buttons || ['OK'] }));
+ipcMain.handle('dialog:question', async (e, options) => dialog.showMessageBox({ type: 'question', title: options?.title || 'Question', message: options?.message, detail: options?.detail, buttons: options?.buttons || ['Yes', 'No'], defaultId: options?.defaultId ?? 1, cancelId: options?.cancelId ?? 1 }));
 
-// Logger error
-ipcMain.handle('logger:error', async (event, error) => {
-  logMainProcess(formatError(error));
-  return true;
-});
-
-// Request notification permissions
-ipcMain.handle('notification:request-permissions', async () => {
-  return requestPermissions();
-});
-
-// Translate text
-ipcMain.handle('i18n:translate', async (event, key, params) => {
-  return translateText(key, params);
-});
-
-// Load language resources
-ipcMain.handle('i18n:load', async (event, language) => {
-  return loadLanguageResources(language);
-});
-
-// Get available languages
-ipcMain.handle('i18n:available-languages', async () => {
-  const { getAvailableLanguages } = require('./main/i18n');
-  return getAvailableLanguages();
-});
-
-// Input validation
-ipcMain.handle('security:validate', async (event, input) => {
-  return validateInput(input);
-});
-
-// Handle CSP violation
-ipcMain.handle('security:csp-violation', async (event, violation) => {
-  return handleCSPViolation(violation);
-});
-
-// Migration functionality
-/**
- * Get migration status including legacy and Electron data locations.
- * 
- * Returns information about legacy and Electron data directories including
- * their paths and whether they exist on the filesystem.
- * 
- * @returns {Object} Migration status object with:
- *   - legacyPath: Path to legacy data directory
- *   - electronPath: Path to Electron userData directory  
- *   - legacyExists: Boolean indicating if legacy data directory exists
- *   - electronExists: Boolean indicating if Electron data directory exists
- * 
- * @example
- * ```javascript
- * const status = await ipcRenderer.invoke('migration:status');
- * console.log(`Legacy path: ${status.legacyPath}, exists: ${status.legacyExists}`);
- * ```
- */
-ipcMain.handle('migration:status', async () => {
-  const { getLegacyDataLocation, getElectronDataLocation } = require('./main/migration');
-  const legacyPath = getLegacyDataLocation();
-  const electronPath = getElectronDataLocation();
-  
-  return {
-    legacyPath,
-    electronPath,
-    legacyExists: require('fs').existsSync(legacyPath),
-    electronExists: require('fs').existsSync(electronPath)
-  };
-});
-
-/**
- * Perform complete data migration from legacy application to Electron.
- * 
- * Executes the full migration process including:
- * 1. Extracting data from legacy data location
- * 2. Migrating files to Electron userData directory
- * 3. Returning migration results with counts and any errors
- * 
- * @returns {Object} Migration result with:
- *   - success: Boolean indicating if migration completed without errors
- *   - migrated: Number of files successfully migrated
- *   - skipped: Number of files skipped
- *   - errors: Array of any errors encountered during migration
- *   - legacyPath: Path to legacy data directory
- *   - electronPath: Path to Electron userData directory
- * 
- * @example
- * ```javascript
- * const result = await ipcRenderer.invoke('migration:perform');
- * if (result.migrated > 0) {
- *   console.log(`Migrated ${result.migrated} files successfully`);
- * }
- * ```
- */
-ipcMain.handle('migration:perform', async () => {
-  const { performMigration } = require('./main/migration');
-  return performMigration();
-});
-
-/**
- * Extract data from legacy data location without migrating.
- * 
- * Reads all files and directories from the legacy data location
- * and returns them as a structured object. Useful for previewing
- * what data would be migrated.
- * 
- * @returns {Object} Extracted legacy data with:
- *   - exists: Boolean indicating if legacy data location exists
- *   - files: Object mapping relative file paths to file contents
- *   - directories: Array of directory paths in legacy data location
- *   - legacyPath: Path to legacy data directory
- *   - count: Number of files found
- * 
- * @example
- * ```javascript
- * const data = await ipcRenderer.invoke('migration:extract-data');
- * console.log(`Found ${data.count} files in legacy data location`);
- * ```
- */
-ipcMain.handle('migration:extract-data', async () => {
-  const { extractLegacyData } = require('./main/migration');
-  return extractLegacyData();
-});
-
-// File dialog for opening files
-ipcMain.handle('dialog:open-file', async (event, options) => {
-  const result = await dialog.showOpenDialog(options);
-  return result;
-});
-
-// File dialog for saving files
-ipcMain.handle('dialog:save-file', async (event, options) => {
-  const result = await dialog.showSaveDialog(options);
-  return result;
-});
-
-// Show error dialog
-ipcMain.handle('dialog:error', async (event, options) => {
-  const result = await dialog.showMessageBox({
-    type: 'error',
-    title: options.title || 'Error',
-    message: options.message,
-    detail: options.detail,
-    buttons: options.buttons || ['OK']
-  });
-  return result;
-});
-
-// Show info dialog
-ipcMain.handle('dialog:info', async (event, options) => {
-  const result = await dialog.showMessageBox({
-    type: 'info',
-    title: options.title || 'Information',
-    message: options.message,
-    detail: options.detail,
-    buttons: options.buttons || ['OK']
-  });
-  return result;
-});
-
-// Show warning dialog
-ipcMain.handle('dialog:warning', async (event, options) => {
-  const result = await dialog.showMessageBox({
-    type: 'warning',
-    title: options.title || 'Warning',
-    message: options.message,
-    detail: options.detail,
-    buttons: options.buttons || ['OK']
-  });
-  return result;
-});
-
-// Show question dialog
-ipcMain.handle('dialog:question', async (event, options) => {
-  const result = await dialog.showMessageBox({
-    type: 'question',
-    title: options.title || 'Question',
-    message: options.message,
-    detail: options.detail,
-    buttons: options.buttons || ['Yes', 'No'],
-    defaultId: options.defaultId || 1,
-    cancelId: options.cancelId || 1
-  });
-  return result;
-});
-
-// Shell operations
-/**
- * Open a file or folder in the system's default application.
- *
- * @param filePath - Path to file or folder to open
- * @returns Object with success status and optional error message
- *
- * @example
- * ```javascript
- * const result = await ipcRenderer.invoke('shell:open-path', '/path/to/folder');
- * if (result.success) {
- *   console.log('Folder opened successfully');
- * }
- * ```
- */
-ipcMain.handle('shell:open-path', async (_event, filePath) => {
-  if (!filePath || typeof filePath !== 'string') {
-    return {
-      success: false,
-      error: 'File path must be a non-empty string'
-    };
-  }
-
+ipcMain.handle('shell:open-path', async (_e, filePath) => {
+  if (!filePath || typeof filePath !== 'string') return { success: false, error: 'File path must be a non-empty string' };
   try {
-    const { shell } = require('electron');
     await shell.openPath(filePath);
     return { success: true };
-  } catch (error) {
-    logMainProcess(`Shell open-path error: ${formatError(error)}`);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to open path'
-    };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : 'Failed to open path' };
   }
 });
 
-// Process URL scheme
-ipcMain.handle('url:process', async (event, url) => {
-  const { processURL } = require('./main/url');
-  return processURL(url);
-});
+ipcMain.handle('url:process', async (e, url) => processURL(url));
+ipcMain.handle('updater:check', () => checkForUpdates());
+ipcMain.handle('updater:status', () => getUpdateStatus());
 
-// Check for updates
-ipcMain.handle('updater:check', async () => {
-  const { checkForUpdates } = require('./main/updater');
-  return await checkForUpdates();
-});
-
-// Get update status
-ipcMain.handle('updater:status', async () => {
-  const { getUpdateStatus } = require('./main/updater');
-  return getUpdateStatus();
-});
-
-// Application lifecycle events
+// --- App lifecycle ---
 app.on('ready', async () => {
-  try {
-    await initializeApp();
-  } catch (error) {
-    logMainProcess(`Ready error: ${formatError(error)}`);
-    app.quit();
-  }
+  try { await initializeApp(); } catch (e) { logMainProcess(`Ready error: ${formatError(e)}`); app.quit(); }
 });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
-});
+app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 
-app.on('before-quit', async () => {
+app.on('before-quit', () => {
   isQuitting = true;
-  
-  if (backendProcess) {
-    logMainProcess('Stopping Python backend before quit...');
-    try {
-      backendProcess.kill('SIGTERM');
-    } catch (error) {
-      logMainProcess(`Backend stop error: ${formatError(error)}`);
-    }
-  }
+  if (backendProcess) { try { backendProcess.kill('SIGTERM'); } catch (_) {} }
 });
 
-app.on('quit', () => {
-  logMainProcess('Application quit');
-});
+app.on('quit', () => logMainProcess('Application quit'));
 
-app.on('activate', () => {
-  // On macOS, recreate window when dock icon is clicked
-  if (BrowserWindow.getAllWindows().length === 0) {
-    initializeApp();
-  }
-});
+app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) initializeApp(); });
 
-// Handle Squirrel.Windows events (Windows installer)
-if (require('electron-squirrel-startup')) {
-  app.quit();
-}
+// Squirrel.Windows: handle installer/update events (must be bundled via vite.main.config.mjs, not external)
+if (require('electron-squirrel-startup')) app.quit();
 
-// Handle URL scheme (Windows/Linux)
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   app.quit();
 } else {
-  app.on('second-instance', (event, commandLine, workingDirectory) => {
-    // Someone tried to run a second instance, we should focus our window
-    if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
-    }
-    
-    // Handle URL scheme if provided
-    if (commandLine.length > 1) {
-      const url = commandLine[commandLine.length - 1];
-      if (url.startsWith('unitygen://')) {
-        logMainProcess(`URL scheme received: ${url}`);
-        
-        // Process the URL
-        const result = processURL(url);
-        
-        if (result.success) {
-          logMainProcess(`URL processed: action=${result.parsed.host}`);
-          
-          // Forward to backend if needed
-          if (result.actions.forwardToBackend) {
-            const backendParams = forwardToBackend(result.parsed);
-            if (backendParams) {
-              logMainProcess(`Forwarding to backend: ${JSON.stringify(backendParams)}`);
-              // Backend will handle the action via HTTP API
-            }
-          }
-          
-          // Forward to frontend if needed
-          if (result.actions.forwardToFrontend) {
-            const queryString = forwardToFrontend(result.parsed);
-            if (queryString && mainWindow) {
-              const currentURL = mainWindow.webContents.getURL();
-              const newURL = currentURL.includes('?') 
-                ? currentURL.split('?')[0] + queryString
-                : currentURL + queryString;
-              mainWindow.loadURL(newURL);
-              logMainProcess(`Forwarded to frontend: ${newURL}`);
-            }
-          }
-          
-          // Show window if needed
-          if (result.actions.showWindow && mainWindow) {
-            if (mainWindow.isMinimized()) mainWindow.restore();
-            mainWindow.focus();
-          }
-        } else {
-          logMainProcess(`URL processing failed: ${result.error}`);
+  app.on('second-instance', (event, commandLine) => {
+    if (mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.focus(); }
+    const url = commandLine?.[commandLine.length - 1];
+    if (url && url.startsWith('unitygen://')) {
+      const result = processURL(url);
+      if (result.success) {
+        if (result.actions.forwardToBackend) forwardToBackend(result.parsed);
+        if (result.actions.forwardToFrontend && mainWindow) {
+          const q = forwardToFrontend(result.parsed);
+          if (q) { const cur = mainWindow.webContents.getURL(); mainWindow.loadURL(cur.includes('?') ? cur.split('?')[0] + q : cur + q); }
         }
+        if (result.actions.showWindow && mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.focus(); }
       }
     }
   });
 }
 
-// Handle URL scheme (macOS)
 app.on('open-url', (event, url) => {
   event.preventDefault();
-  logMainProcess(`URL scheme received: ${url}`);
-  
-  // Process the URL
   const result = processURL(url);
-  
   if (result.success) {
-    logMainProcess(`URL processed: action=${result.parsed.host}`);
-    
-    // Forward to backend if needed
-    if (result.actions.forwardToBackend) {
-      const backendParams = forwardToBackend(result.parsed);
-      if (backendParams) {
-        logMainProcess(`Forwarding to backend: ${JSON.stringify(backendParams)}`);
-        // Backend will handle the action via HTTP API
-      }
+    if (result.actions.forwardToBackend) forwardToBackend(result.parsed);
+    if (result.actions.forwardToFrontend && mainWindow) {
+      const q = forwardToFrontend(result.parsed);
+      if (q) { const cur = mainWindow.webContents.getURL(); mainWindow.loadURL(cur.includes('?') ? cur.split('?')[0] + q : cur + q); }
     }
-    
-    // Forward to frontend if needed
-    if (result.actions.forwardToFrontend) {
-      const queryString = forwardToFrontend(result.parsed);
-      if (queryString && mainWindow) {
-        const currentURL = mainWindow.webContents.getURL();
-        const newURL = currentURL.includes('?') 
-          ? currentURL.split('?')[0] + queryString
-          : currentURL + queryString;
-        mainWindow.loadURL(newURL);
-        logMainProcess(`Forwarded to frontend: ${newURL}`);
-      }
-    }
-    
-    // Show window if needed
-    if (result.actions.showWindow && mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore();
-      mainWindow.focus();
-    }
-  } else {
-    logMainProcess(`URL processing failed: ${result.error}`);
+    if (result.actions.showWindow && mainWindow) { if (mainWindow.isMinimized()) mainWindow.restore(); mainWindow.focus(); }
   }
 });
 

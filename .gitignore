@@ -115,3 +115,10 @@ frontend/node_modules/
 *.txt
 **/*.db
 out
+
+# Build status documentation
+BUILD_STATUS.md
+
+# Electron build outputs
+dist-electron/
+out/

@@ -7,7 +7,7 @@
  */
 
 import { describe, expect, it, beforeEach, vi } from 'vitest';
-import { formatBackendError, formatProcessError, getUserFriendlyErrorMessage } from 'main/errors';
+import { formatBackendError, formatProcessError, getUserFriendlyErrorMessage } from './errors';
 
 describe('Error Formatting Unit Tests', () => {
   beforeEach(() => {
@@ -64,16 +64,16 @@ describe('Error Formatting Unit Tests', () => {
     });
 
     it('should throw TypeError for invalid backendError', () => {
-      expect(() => formatBackendError(null)).toThrow('backendError must be an object');
-      expect(() => formatBackendError('invalid')).toThrow('backendError must be an object');
+      expect(() => formatBackendError(null as any)).toThrow('backendError must be an object');
+      expect(() => formatBackendError('invalid' as any)).toThrow('backendError must be an object');
     });
 
     it('should throw Error for missing status', () => {
-      expect(() => formatBackendError({ message: 'Error' })).toThrow('backendError must have a status property');
+      expect(() => formatBackendError({ message: 'Error' } as any)).toThrow('backendError must have a status property');
     });
 
     it('should throw Error for invalid message', () => {
-      expect(() => formatBackendError({ status: 500, message: 123 })).toThrow('backendError must have a valid message string');
+      expect(() => formatBackendError({ status: 500, message: 123 as any })).toThrow('backendError must have a valid message string');
     });
   });
 
@@ -128,7 +128,7 @@ describe('Error Formatting Unit Tests', () => {
     });
 
     it('should throw TypeError for invalid processError', () => {
-      expect(() => formatProcessError(null, 'Process')).toThrow('processError must be an object');
+      expect(() => formatProcessError(null as any, 'Process')).toThrow('processError must be an object');
     });
 
     it('should throw TypeError for invalid processName', () => {

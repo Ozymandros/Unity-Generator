@@ -82,8 +82,17 @@ jobs:
         run: |
           test -f backend/dist/unity-generator-backend || (echo "Missing backend/dist/unity-generator-backend" && exit 1)
 
-      - name: Build Package
-        run: pnpm run electron:build
+      - name: Build Package (Windows)
+        if: runner.os == 'Windows'
+        run: pnpm run dist:win
+
+      - name: Build Package (macOS)
+        if: runner.os == 'macOS'
+        run: pnpm run dist:mac
+
+      - name: Build Package (Linux)
+        if: runner.os == 'Linux'
+        run: pnpm run dist:linux
 
       - name: Upload Release Assets (Windows)
         if: runner.os == 'Windows'
@@ -92,8 +101,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: |
-            out/make/squirrel.windows/**/*.exe
-            out/make/squirrel.windows/**/*.nupkg
+            dist-electron/*.exe
+            dist-electron/*.nsis.*
 
       - name: Upload Release Assets (Linux)
         if: runner.os == 'Linux'
@@ -102,8 +111,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: |
-            out/make/deb/**/*.deb
-            out/make/zip/**/*.zip
+            dist-electron/*.deb
+            dist-electron/*.AppImage
 
       - name: Upload Release Assets (macOS)
         if: runner.os == 'macOS'
@@ -112,5 +121,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: |
-            out/make/dmg/**/*.dmg
-            out/make/zip/**/*.zip
+            dist-electron/*.dmg
+            dist-electron/*.zip
