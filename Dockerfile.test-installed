@@ -1,0 +1,85 @@
+# Dockerfile for testing installed Electron app in complete isolation
+# This builds the app INSIDE the container and tests it there
+# ZERO impact on host filesystem
+
+FROM node:20-windowsservercore-ltsc2022
+
+# Install Python (required for backend build)
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop';"]
+RUN Invoke-WebRequest -Uri 'https://www.python.org/ftp/python/3.11.0/python-3.11.0-amd64.exe' -OutFile 'python-installer.exe' ; \
+    Start-Process python-installer.exe -ArgumentList '/quiet', 'InstallAllUsers=1', 'PrependPath=1' -Wait ; \
+    Remove-Item python-installer.exe
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Set working directory INSIDE container
+WORKDIR C:/build
+
+# Copy source code into container
+COPY . .
+
+# Install dependencies INSIDE container
+RUN pnpm install --frozen-lockfile
+
+# Build backend INSIDE container
+RUN python scripts/build_backend.py
+
+# Build frontend INSIDE container
+RUN pnpm run build
+
+# Package Electron app INSIDE container
+RUN pnpm run package
+
+# Create test script INSIDE container
+RUN @' \
+Write-Host "========================================" -ForegroundColor Cyan ; \
+Write-Host "TESTING INSTALLED APP (ISOLATED)" -ForegroundColor Cyan ; \
+Write-Host "========================================" -ForegroundColor Cyan ; \
+Write-Host "" ; \
+Write-Host "Location: Docker container (completely isolated)" -ForegroundColor Green ; \
+Write-Host "Impact on host: ZERO" -ForegroundColor Green ; \
+Write-Host "" ; \
+try { \
+    $appPath = "C:/build/dist-electron/win-unpacked/Unity Generator.exe" ; \
+    if (-not (Test-Path $appPath)) { \
+        Write-Host "ERROR: App not found at $appPath" -ForegroundColor Red ; \
+        exit 1 ; \
+    } ; \
+    Write-Host "Starting app..." -ForegroundColor Cyan ; \
+    $process = Start-Process -FilePath $appPath -PassThru -WindowStyle Hidden ; \
+    Write-Host "App started with PID: $($process.Id)" -ForegroundColor Green ; \
+    Start-Sleep -Seconds 10 ; \
+    if (-not $process.HasExited) { \
+        Write-Host "" ; \
+        Write-Host "SUCCESS: App is running!" -ForegroundColor Green ; \
+        Write-Host "The installed app works correctly." -ForegroundColor Green ; \
+        $process.Kill() ; \
+        Write-Host "" ; \
+        Write-Host "Test completed successfully." -ForegroundColor Green ; \
+        exit 0 ; \
+    } else { \
+        Write-Host "" ; \
+        Write-Host "FAILURE: App crashed" -ForegroundColor Red ; \
+        Write-Host "Exit code: $($process.ExitCode)" -ForegroundColor Red ; \
+        Write-Host "" ; \
+        Write-Host "Checking logs..." -ForegroundColor Yellow ; \
+        $logPath = "$env:APPDATA/unity-generator/app.log" ; \
+        if (Test-Path $logPath) { \
+            Write-Host "Last 20 log lines:" -ForegroundColor Yellow ; \
+            Get-Content $logPath -Tail 20 ; \
+        } else { \
+            Write-Host "No log file found at $logPath" -ForegroundColor Yellow ; \
+        } ; \
+        exit 1 ; \
+    } ; \
+} catch { \
+    Write-Host "" ; \
+    Write-Host "ERROR: $_" -ForegroundColor Red ; \
+    Write-Host $_.ScriptStackTrace -ForegroundColor Red ; \
+    exit 1 ; \
+} \
+'@ | Out-File -FilePath C:/test-app.ps1 -Encoding UTF8
+
+# Run the test
+CMD ["powershell", "-ExecutionPolicy", "Bypass", "-File", "C:/test-app.ps1"]

@@ -38,6 +38,12 @@ export default defineConfig({
       port: 5173,
     },
   },
+  /**
+   * CRITICAL for Electron: Use relative paths for assets.
+   * Without this, assets will have absolute paths like /assets/...
+   * which don't work with file:// protocol in Electron.
+   */
+  base: "./",
   build: {
     /**
      * Configure output directory for Electron bundling.

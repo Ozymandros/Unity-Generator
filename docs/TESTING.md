@@ -41,41 +41,9 @@ pnpm --dir frontend test:smoke
 **Duration**: ~30 seconds  
 **When to run**: Before every commit, in CI pipelines
 
-**⚠️ IMPORTANT**: These tests run in development mode (`electron .` with source files), not the packaged app!
+**⚠️ IMPORTANT**: All tests run in isolated development mode only. Tests do NOT test production/installed apps.
 
-### 3. Packaged App Tests (E2E - Production)
-**Location**: `frontend/tests/e2e/packaged-app.spec.ts`  
-**Framework**: Playwright + Electron  
-**Purpose**: Verify the **PACKAGED/BUILT** application works correctly
-
-**What they test:**
-- ✅ Packaged app launches without crashing
-- ✅ Window appears and stays open
-- ✅ Frontend loads from packaged files
-- ✅ Backend process starts correctly
-- ✅ API communication works in production
-- ✅ App remains stable (doesn't crash)
-- ✅ Resource paths are correct (frontend, backend, icons)
-
-**Run packaged app tests:**
-```bash
-# First, build the app
-pnpm run package
-
-# Then run the tests
-pnpm --dir frontend test:packaged
-```
-
-**Duration**: ~2-3 minutes  
-**When to run**: After building, before releasing
-
-**⚠️ CRITICAL**: These tests catch issues that only appear in production builds:
-- Path resolution problems
-- Missing resources
-- Backend startup failures
-- Frontend loading issues
-
-### 4. Full E2E Tests
+### 3. Full E2E Tests
 **Location**: `frontend/tests/e2e/app.spec.ts`  
 **Framework**: Playwright  
 **Purpose**: Comprehensive feature testing
