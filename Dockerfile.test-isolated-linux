@@ -1,0 +1,104 @@
+# syntax=docker/dockerfile:1
+# Dockerfile for testing Electron app in COMPLETE ISOLATION using Linux
+# Single-stage: electronuserland/builder is for packaging Electron apps and includes runtime libs (libgbm, Xvfb, etc.)
+# Requires BuildKit (DOCKER_BUILDKIT=1) for cache mounts
+
+# Node 20 required: Vite 7 / @vitejs/plugin-vue use crypto.hash (Node 20.12+)
+FROM electronuserland/builder:20
+
+# pnpm for monorepo (image is yarn-oriented by default)
+RUN npm install -g pnpm
+
+# Python 3 + pip/venv for backend PyInstaller build (image has Python for node-gyp; ensure pip/venv)
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    python3-venv \
+    build-essential \
+    libx11-xcb1 \
+    libxcb-dri3-0 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxi6 \
+    libxtst6 \
+    libnss3 \
+    libcups2 \
+    libxss1 \
+    libxrandr2 \
+    libasound2 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libpangocairo-1.0-0 \
+    libgtk-3-0 \
+    xvfb \
+    libgbm1 \
+    libnspr4  \
+    && rm -rf /var/lib/apt/lists/*
+RUN ln -sf /usr/bin/python3 /usr/bin/python
+
+WORKDIR /build
+COPY . .
+
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
+
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    cd frontend && pnpm install --frozen-lockfile
+
+RUN --mount=type=cache,id=pip-cache,target=/root/.cache/pip \
+    pnpm run build:backend
+
+RUN pnpm run build:frontend
+
+RUN pnpm exec electron-builder --linux --dir
+
+# Test script: run the built app under Xvfb and check it stays alive
+RUN echo '#!/bin/bash\n\
+set -e\n\
+echo "========================================"\n\
+echo "TESTING INSTALLED APP (ISOLATED)"\n\
+echo "========================================"\n\
+echo ""\n\
+echo "Location: Docker Linux container (electronuserland/builder)"\n\
+echo "Impact on host: ZERO"\n\
+echo ""\n\
+if [ -f "/build/dist-electron/linux-unpacked/unity-generator" ]; then\n\
+  APP_PATH="/build/dist-electron/linux-unpacked/unity-generator"\n\
+elif [ -f "/build/dist-electron/linux-unpacked/Unity Generator" ]; then\n\
+  APP_PATH="/build/dist-electron/linux-unpacked/Unity Generator"\n\
+else\n\
+  echo "ERROR: Electron app not found"\n\
+  ls -la /build/dist-electron/linux-unpacked/ || true\n\
+  exit 1\n\
+fi\n\
+echo "Found app at: $APP_PATH"\n\
+echo ""\n\
+echo "Starting virtual display..."\n\
+Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &\n\
+XVFB_PID=$!\n\
+export DISPLAY=:99\n\
+sleep 2\n\
+echo "Launching Electron app..."\n\
+timeout 10s "$APP_PATH" --no-sandbox > /tmp/app.log 2>&1 &\n\
+APP_PID=$!\n\
+sleep 5\n\
+if ps -p $APP_PID > /dev/null 2>&1; then\n\
+  echo ""\n\
+  echo "========================================"\n\
+  echo "SUCCESS: App is running!"\n\
+  echo "========================================"\n\
+  kill $APP_PID 2>/dev/null || true\n\
+  kill $XVFB_PID 2>/dev/null || true\n\
+  exit 0\n\
+else\n\
+  echo ""\n\
+  echo "========================================"\n\
+  echo "FAILURE: App crashed"\n\
+  echo "========================================"\n\
+  echo "App logs:"\n\
+  cat /tmp/app.log 2>/dev/null || echo "No logs found"\n\
+  kill $XVFB_PID 2>/dev/null || true\n\
+  exit 1\n\
+fi\n' > /test-app.sh && chmod +x /test-app.sh
+
+CMD ["/test-app.sh"]

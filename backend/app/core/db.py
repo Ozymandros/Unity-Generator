@@ -1,21 +1,44 @@
+"""
+Database module for user preferences and application data.
+
+This module provides database operations for the Unity Generator backend.
+It uses SQLite for cross-platform compatibility and proper connection management.
+"""
+
+import logging
 import sqlite3
 from pathlib import Path
 
+from app.core.config import get_db_dir
 
+LOGGER = logging.getLogger(__name__)
 
 
 def get_db_path() -> Path:
-    from .config import get_db_dir
+    """
+    Get the path to the SQLite database file.
+
+    Returns:
+        Path to the user_prefs.db file in the database directory.
+    """
     return get_db_dir() / "user_prefs.db"
 
 
 def init_db() -> None:
-    from .config import get_db_dir
+    """
+    Initialize the database with required tables.
+
+    Creates the database directory if it doesn't exist and initializes
+    all required tables for user preferences, providers, and models.
+    """
     db_dir = get_db_dir()
     db_dir.mkdir(parents=True, exist_ok=True)
+
     conn = sqlite3.connect(get_db_path())
     try:
         cursor = conn.cursor()
+
+        # User preferences table
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS user_prefs (
@@ -25,6 +48,8 @@ def init_db() -> None:
             )
             """
         )
+
+        # Providers table
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS providers (
@@ -38,12 +63,14 @@ def init_db() -> None:
                 supports_streaming BOOLEAN DEFAULT 0,
                 supports_function_calling BOOLEAN DEFAULT 0,
                 supports_tool_use BOOLEAN DEFAULT 0,
-                modalities TEXT NOT NULL, -- JSON array of strings
-                default_models TEXT NOT NULL, -- JSON object: modality -> model_id
-                extra TEXT -- JSON extra metadata
+                modalities TEXT NOT NULL,
+                default_models TEXT NOT NULL,
+                extra TEXT
             )
             """
         )
+
+        # Provider models table
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS provider_models (
@@ -56,11 +83,14 @@ def init_db() -> None:
             )
             """
         )
+
         # Migration: Add modality column if it doesn't exist
         cursor.execute("PRAGMA table_info(provider_models)")
         columns = [column[1] for column in cursor.fetchall()]
         if "modality" not in columns:
             cursor.execute("ALTER TABLE provider_models ADD COLUMN modality TEXT DEFAULT 'llm'")
+
+        # API keys table
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS api_keys (
@@ -71,16 +101,20 @@ def init_db() -> None:
             )
             """
         )
+
+        # System prompts table
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS system_prompts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                modality TEXT UNIQUE NOT NULL, -- code, text, image, audio, music, video, sprite
+                modality TEXT UNIQUE NOT NULL,
                 content TEXT NOT NULL,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
             """
         )
+
+        # Unity versions table
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS unity_versions (
@@ -89,12 +123,29 @@ def init_db() -> None:
             )
             """
         )
+
         conn.commit()
+        LOGGER.info("Database initialized successfully at %s", get_db_path())
     finally:
         conn.close()
 
 
 def set_pref(key: str, value: str) -> None:
+    """
+    Set a user preference value.
+
+    Args:
+        key: The preference key.
+        value: The preference value.
+
+    Raises:
+        ValueError: If key or value is empty.
+    """
+    if not key or not key.strip():
+        raise ValueError("key must be a non-empty string")
+    if value is None:
+        raise ValueError("value cannot be None")
+
     conn = sqlite3.connect(get_db_path())
     try:
         cursor = conn.cursor()
@@ -104,7 +155,7 @@ def set_pref(key: str, value: str) -> None:
             VALUES (?, ?)
             ON CONFLICT(key) DO UPDATE SET value = excluded.value
             """,
-            (key, value),
+            (key, str(value)),
         )
         conn.commit()
     finally:
@@ -112,6 +163,18 @@ def set_pref(key: str, value: str) -> None:
 
 
 def get_pref(key: str) -> str | None:
+    """
+    Get a user preference value.
+
+    Args:
+        key: The preference key.
+
+    Returns:
+        The preference value, or None if not found.
+    """
+    if not key or not key.strip():
+        raise ValueError("key must be a non-empty string")
+
     conn = sqlite3.connect(get_db_path())
     try:
         cursor = conn.cursor()
@@ -123,6 +186,12 @@ def get_pref(key: str) -> str | None:
 
 
 def get_all_prefs() -> dict[str, str]:
+    """
+    Get all user preferences.
+
+    Returns:
+        Dictionary mapping preference keys to values.
+    """
     conn = sqlite3.connect(get_db_path())
     try:
         cursor = conn.cursor()

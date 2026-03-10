@@ -13,7 +13,6 @@ from typing import Any
 
 import nest_asyncio
 from semantic_kernel import Kernel
-from semantic_kernel.connectors.ai.open_ai import OpenAIChatPromptExecutionSettings
 from semantic_kernel.contents import ChatHistory
 
 from ..schemas import AgentResult, CodeOptions, TextOptions
@@ -46,8 +45,8 @@ def generate_text(
 
     # Create SK service
     service = provider_registry.create_chat_service(
-        selected, 
-        api_key, 
+        selected,
+        api_key,
         model_id=opts.get("model"),
         service_id=selected
     )

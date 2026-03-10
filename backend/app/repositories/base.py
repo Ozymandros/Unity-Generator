@@ -1,14 +1,15 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Dict, Optional
-from ..services.providers.capabilities import ProviderCapabilities, Modality
+
+from ..services.providers.capabilities import ProviderCapabilities
+
 
 class IProviderRepository(ABC):
     @abstractmethod
-    def get_all(self) -> List[ProviderCapabilities]:
+    def get_all(self) -> list[ProviderCapabilities]:
         pass
 
     @abstractmethod
-    def get_by_name(self, name: str) -> Optional[ProviderCapabilities]:
+    def get_by_name(self, name: str) -> ProviderCapabilities | None:
         pass
 
     @abstractmethod
@@ -21,7 +22,7 @@ class IProviderRepository(ABC):
 
 class IModelRepository(ABC):
     @abstractmethod
-    def get_by_provider(self, provider: str) -> List[Dict[str, str]]:
+    def get_by_provider(self, provider: str) -> list[dict[str, str]]:
         pass
 
     @abstractmethod
@@ -34,11 +35,11 @@ class IModelRepository(ABC):
 
 class IApiKeyRepository(ABC):
     @abstractmethod
-    def get_all(self) -> Dict[str, str]:
+    def get_all(self) -> dict[str, str]:
         pass
 
     @abstractmethod
-    def get_by_service(self, service_name: str) -> Optional[str]:
+    def get_by_service(self, service_name: str) -> str | None:
         pass
 
     @abstractmethod
@@ -50,17 +51,17 @@ class IApiKeyRepository(ABC):
         pass
 
     @abstractmethod
-    def get(self, service_name: str) -> Optional[str]:
+    def get(self, service_name: str) -> str | None:
         """Alias for get_by_service."""
         pass
 
 class ISystemPromptRepository(ABC):
     @abstractmethod
-    def get_all(self) -> Dict[str, str]:
+    def get_all(self) -> dict[str, str]:
         pass
 
     @abstractmethod
-    def get_by_modality(self, modality: str) -> Optional[str]:
+    def get_by_modality(self, modality: str) -> str | None:
         pass
 
     @abstractmethod
@@ -68,6 +69,6 @@ class ISystemPromptRepository(ABC):
         pass
 
     @abstractmethod
-    def get(self, modality: str) -> Optional[str]:
+    def get(self, modality: str) -> str | None:
         """Alias for get_by_modality."""
         pass

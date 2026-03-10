@@ -1,25 +1,15 @@
 # Development Workflow
 
 This guide covers local development for both the FastAPI backend and the
-Tauri + Vue frontend.
+Electron + Vue frontend.
 
 ## Prerequisites
 
 - Python 3.11+
 - Node.js 20+
 - pnpm
-- **Rust toolchain** (for Tauri builds: `tauri build`, `tauri dev`)
 - Docker (optional, for dev/CI workflows)
 - **VS Code** (recommended IDE) with **Volar** extension
-
-### Installing the Rust toolchain (Tauri)
-
-Tauri needs `cargo` and the Rust toolchain. If you see **"failed to get cargo metadata: program not found"** when running `tauri build` or `tauri dev`, install Rust:
-
-- **Windows**: Install [rustup](https://rustup.rs/) (run the installer from https://rustup.rs/ or `winget install Rustlang.Rustup`), then **restart your terminal** so `cargo` is on `PATH`.
-- **macOS / Linux**: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`, then restart the terminal or run `source "$HOME/.cargo/env"`.
-
-Verify with: `cargo --version`.
 
 ## Integrated Development Environment
 
@@ -55,12 +45,12 @@ Several convenience tasks are available via `Ctrl+Shift+P` -> `Tasks: Run Task`:
 - **Vue 3 Support**: The project is optimized for **Volar**. Default formatters and type checking are configured to prioritize Vue 3 + TypeScript.
 - **TypeScript Mapping**: The TypeScript SDK is specifically mapped to `frontend/node_modules` to ensure consistent type checking across the internal monorepo structure.
 
-### Architecture Note: Sidecar vs. Docker
+### Architecture Note: Electron Backend Integration
 
 It is critical to distinguish between the development environment and the final product:
 
 - **Docker**: Used primarily for testing, CI, and isolated debugging sessions.
-- **Tauri Sidecar**: The final distributed application uses the **Tauri Sidecar pattern**. The Python backend is compiled into a standalone binary via `scripts/build_backend.ps1` and bundled into the native installer. **The production app does NOT require Docker.**
+- **Electron Backend**: The final distributed application uses the **Electron main process** to manage the Python backend. The Python backend is compiled into a standalone binary via `scripts/build_backend.ps1` and spawned by the Electron main process. **The production app does NOT require Docker.**
 
 ### Unified Quality Control
 
@@ -126,7 +116,6 @@ The following frontend modules provide standardized capabilities:
 - **apiClient**: Unified API wrapper in `src/api/client.ts` for generation, preferences, and finalization jobs.
 - **SmartField**: A versatile UI component (`src/components/generic/SmartField.vue`) that handles various input types and validation.
 - **StatusBanner**: Consistent UI for status updates and error reporting.
-- **TauriShell**: Secure OS integration via Tauri's shell API for file system interaction.
 
 Use these skills when appropriate according to the task context. Be smart, mutatis mutandis. See [agents/SKILLS_USAGE.md](../agents/SKILLS_USAGE.md) for detailed implementation.
 
@@ -140,13 +129,13 @@ pnpm run setup
 
 ## Running the app
 
-To start the Tauri development environment:
+To start the Electron development environment:
 
 ```bash
 pnpm run dev
 ```
 
-This starts the Tauri integration which handles the backend sidecar.
+This starts the Electron app with the backend and frontend.
 
 ## Manual individual setup (Optional)
 
@@ -189,13 +178,13 @@ pip install -r requirements.txt
 pnpm run backend:dev
 
 # Option 2: Directly with uvicorn (after venv activation)
-python -m uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --port 35421
 
 # Option 3: With debugpy for remote debugging
 pnpm run backend:debug
 ```
 
-The backend serves on `http://127.0.0.1:8000` with CORS enabled.
+The backend serves on `http://127.0.0.1:35421` with CORS enabled.
 
 ### Frontend setup
 
@@ -234,7 +223,7 @@ Provider preferences are stored in `db/user_prefs.db` with keys:
 ## Backend endpoints (dev sanity)
 
 ```bash
-curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:35421/health
 ```
 
 ## Tests
@@ -376,7 +365,7 @@ Editor automation scripts are generated from Jinja2 templates in
 
 ## Common issues
 
-- Backend not reachable: confirm port 8000 is free and the backend is running.
+- Backend not reachable: confirm port 35421 is free and the backend is running.
 - Provider failures: verify `config/api_keys.json` and check `logs/`.
 - Unity output missing: confirm `output/` exists and requests include prompts.
 - Frontend build issues: delete `node_modules/` and reinstall with pnpm.

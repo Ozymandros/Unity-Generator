@@ -1,13 +1,22 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { mount, flushPromises, VueWrapper } from "@vue/test-utils";
 import UnityProjectPanel from "@/components/UnityProjectPanel";
 import { SmartField } from "@/components/generic/SmartField";
 import * as client from "@/api/client";
+import * as electronShellModule from "@/services/electronShell";
 import { createVuetify } from 'vuetify';
 
 const vuetify = createVuetify();
 
 vi.mock("@/api/client");
+vi.mock("@/services/electronShell", () => ({
+  electronShell: {
+    openPath: vi.fn(),
+  },
+}));
+
+// Import the mocked module to get the electronShell object
+const { electronShell } = electronShellModule as unknown as { electronShell: { openPath: ReturnType<typeof vi.fn> } };
 
 const emitUpdate = async (wrapper: VueWrapper<unknown>, label: string, value: unknown) => {
   const fields = wrapper.findAllComponents(SmartField);
@@ -49,7 +58,10 @@ describe("UnityProjectPanel", () => {
         ],
       },
     });
-    (window as unknown as { __TAURI__?: unknown }).__TAURI__ = undefined;
+    // Default mock for electronShell.openPath
+    vi.mocked(electronShell.openPath).mockResolvedValue({
+      success: true,
+    });
     // Align with useSessionProject: default name so panel and finalize tests see "UnityProject"
     vi.stubGlobal("sessionStorage", {
       getItem: (k: string) =>
@@ -156,18 +168,13 @@ describe("UnityProjectPanel", () => {
     expect(vm.settings.installPackages).toBe(false);
   });
 
-  it("opens the output folder with Tauri when available", async () => {
+  it("opens the output folder with Electron when available", async () => {
     vi.mocked(client.generateUnityProject).mockResolvedValue({
       success: true,
       date: new Date().toISOString(),
       error: null,
       data: { project_path: "C:/output/TestProject" },
     });
-
-    const openMock = vi.fn().mockResolvedValue(undefined);
-    (window as unknown as { __TAURI__?: { shell?: { open: (path: string) => Promise<void> } } }).__TAURI__ = {
-      shell: { open: openMock },
-    };
 
     const wrapper = mountPanel();
     await flushPromises();
@@ -183,7 +190,7 @@ describe("UnityProjectPanel", () => {
     await openFolderBtn!.trigger("click");
     await flushPromises();
 
-    expect(openMock).toHaveBeenCalledWith("C:/output/TestProject");
+    expect(electronShell.openPath).toHaveBeenCalledWith("C:/output/TestProject");
     expect(getStatusText(wrapper)).toContain("Opened output folder.");
   });
 
@@ -195,10 +202,9 @@ describe("UnityProjectPanel", () => {
       data: { path: "C:/output/Latest" },
     });
 
-    const openMock = vi.fn().mockResolvedValue(undefined);
-    (window as unknown as { __TAURI__?: { shell?: { open: (path: string) => Promise<void> } } }).__TAURI__ = {
-      shell: { open: openMock },
-    };
+    vi.mocked(electronShell.openPath).mockResolvedValue({
+      success: true,
+    });
 
     const wrapper = mountPanel();
     await flushPromises();
@@ -207,11 +213,11 @@ describe("UnityProjectPanel", () => {
     await flushPromises();
 
     expect(client.getLatestOutput).toHaveBeenCalled();
-    expect(openMock).toHaveBeenCalledWith("C:/output/Latest");
+    expect(electronShell.openPath).toHaveBeenCalledWith("C:/output/Latest");
     expect(getStatusText(wrapper)).toContain("Opened output folder.");
   });
 
-  it("shows a fallback message when Tauri is unavailable", async () => {
+  it("shows a fallback message when shell fails", async () => {
     vi.mocked(client.getLatestOutput).mockResolvedValue({
       success: true,
       date: new Date().toISOString(),
@@ -219,8 +225,11 @@ describe("UnityProjectPanel", () => {
       data: { path: "C:/output/Latest" },
     });
 
-    (window as unknown as { __TAURI__?: { shell?: { open: (path: string) => Promise<void> } } }).__TAURI__ =
-      undefined;
+    // Set up shell to return error
+    vi.mocked(electronShell.openPath).mockResolvedValue({
+      success: false,
+      error: "Shell not available",
+    });
 
     const wrapper = mountPanel();
     await flushPromises();
@@ -228,7 +237,7 @@ describe("UnityProjectPanel", () => {
     await openFolderBtn!.trigger("click");
     await flushPromises();
 
-    expect(getStatusText(wrapper)).toContain("Tauri not available in web build");
+    expect(getStatusText(wrapper)).toContain("Failed to open folder:");
   });
 
   // -------------------------------------------------------------------

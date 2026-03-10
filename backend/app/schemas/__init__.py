@@ -218,7 +218,10 @@ class UnityEngineSettings(BaseModel):
     timeout: int = Field(default=300, ge=30, le=1800)
     unity_automation_mode: Literal["batch", "mcp", "auto"] = Field(
         default="auto",
-        description="Use 'batch' for script injection, 'mcp' for MCP-Unity plugin, 'auto' to prefer MCP when available.",
+        description=(
+            "Use 'batch' for script injection, 'mcp' for MCP-Unity plugin, "
+            "'auto' to prefer MCP when available."
+        ),
     )
 
 

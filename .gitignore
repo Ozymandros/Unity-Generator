@@ -22,6 +22,7 @@ htmlcov/
 test_fail.json
 repro_failure.py
 temp_mcp_instructions/
+temp_extracted_asar/
 
 # Node
 node_modules/
@@ -80,11 +81,6 @@ coverage/
 playwright-report/
 test-results/
 
-# Tauri / Rust
-src-tauri/target/
-src-tauri/.tauri/
-target/
-
 # Local data
 config/api_keys.json
 db/*.db
@@ -119,3 +115,11 @@ frontend/node_modules/
 .vscode/mcp.json
 *.txt
 **/*.db
+out
+
+# Build status documentation
+BUILD_STATUS.md
+
+# Electron build outputs
+dist-electron/
+out/

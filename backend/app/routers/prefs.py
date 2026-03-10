@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from ..core.db import get_pref, set_pref, get_models
+from ..core.db import get_models, get_pref, set_pref
 from ..schemas import (
     GenerationResponse,
     PrefRequest,

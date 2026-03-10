@@ -1,16 +1,21 @@
-import sqlite3
 import json
-from typing import List, Dict, Optional
+import sqlite3
+
 from ..core.db import get_db_path
-from .base import IProviderRepository, IModelRepository, IApiKeyRepository, ISystemPromptRepository
-from ..services.providers.capabilities import ProviderCapabilities, Modality
+from ..services.providers.capabilities import Modality, ProviderCapabilities
+from .base import IApiKeyRepository, IModelRepository, IProviderRepository, ISystemPromptRepository
+
 
 class SqliteProviderRepository(IProviderRepository):
-    def get_all(self) -> List[ProviderCapabilities]:
+    def get_all(self) -> list[ProviderCapabilities]:
         conn = sqlite3.connect(get_db_path())
         try:
             cursor = conn.cursor()
-            cursor.execute("SELECT name, api_key_name, base_url, openai_compatible, requires_api_key, supports_vision, supports_streaming, supports_function_calling, supports_tool_use, modalities, default_models, extra FROM providers")
+            cursor.execute(
+                "SELECT name, api_key_name, base_url, openai_compatible, requires_api_key, "
+                "supports_vision, supports_streaming, supports_function_calling, "
+                "supports_tool_use, modalities, default_models, extra FROM providers"
+            )
             providers = []
             for row in cursor.fetchall():
                 providers.append(self._row_to_caps(row))
@@ -18,11 +23,16 @@ class SqliteProviderRepository(IProviderRepository):
         finally:
             conn.close()
 
-    def get_by_name(self, name: str) -> Optional[ProviderCapabilities]:
+    def get_by_name(self, name: str) -> ProviderCapabilities | None:
         conn = sqlite3.connect(get_db_path())
         try:
             cursor = conn.cursor()
-            cursor.execute("SELECT name, api_key_name, base_url, openai_compatible, requires_api_key, supports_vision, supports_streaming, supports_function_calling, supports_tool_use, modalities, default_models, extra FROM providers WHERE name = ?", (name.lower(),))
+            cursor.execute(
+                "SELECT name, api_key_name, base_url, openai_compatible, requires_api_key, "
+                "supports_vision, supports_streaming, supports_function_calling, "
+                "supports_tool_use, modalities, default_models, extra FROM providers "
+                "WHERE name = ?", (name.lower(),)
+            )
             row = cursor.fetchone()
             return self._row_to_caps(row) if row else None
         finally:
@@ -61,7 +71,7 @@ class SqliteProviderRepository(IProviderRepository):
                     1 if capabilities.supports_tool_use else 0,
                     json.dumps([m.value for m in capabilities.modalities]),
                     json.dumps({m.value: model for m, model in capabilities.default_models.items()}),
-                    json.dumps(capabilities.extra)
+                    json.dumps(capabilities.extra),
                 ),
             )
             conn.commit()
@@ -103,11 +113,14 @@ class SqliteProviderRepository(IProviderRepository):
         )
 
 class SqliteModelRepository(IModelRepository):
-    def get_by_provider(self, provider: str) -> List[Dict[str, str]]:
+    def get_by_provider(self, provider: str) -> list[dict[str, str]]:
         conn = sqlite3.connect(get_db_path())
         try:
             cursor = conn.cursor()
-            cursor.execute("SELECT model_value, model_label, modality FROM provider_models WHERE provider = ?", (provider.lower(),))
+            cursor.execute(
+                "SELECT model_value, model_label, modality FROM provider_models "
+                "WHERE provider = ?", (provider.lower(),)
+            )
             return [{"value": row[0], "label": row[1], "modality": row[2]} for row in cursor.fetchall()]
         finally:
             conn.close()
@@ -116,7 +129,10 @@ class SqliteModelRepository(IModelRepository):
         conn = sqlite3.connect(get_db_path())
         try:
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO provider_models (provider, model_value, model_label, modality) VALUES (?, ?, ?, ?)", (provider.lower(), value, label, modality.lower()))
+            cursor.execute(
+                "INSERT INTO provider_models (provider, model_value, model_label, modality) "
+                "VALUES (?, ?, ?, ?)", (provider.lower(), value, label, modality.lower())
+            )
             conn.commit()
         finally:
             conn.close()
@@ -125,14 +141,17 @@ class SqliteModelRepository(IModelRepository):
         conn = sqlite3.connect(get_db_path())
         try:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM provider_models WHERE provider = ? AND model_value = ?", (provider.lower(), value))
+            cursor.execute(
+                "DELETE FROM provider_models WHERE provider = ? AND model_value = ?",
+                (provider.lower(), value)
+            )
             conn.commit()
             return cursor.rowcount > 0
         finally:
             conn.close()
 
 class SqliteApiKeyRepository(IApiKeyRepository):
-    def get_all(self) -> Dict[str, str]:
+    def get_all(self) -> dict[str, str]:
         conn = sqlite3.connect(get_db_path())
         try:
             cursor = conn.cursor()
@@ -141,7 +160,7 @@ class SqliteApiKeyRepository(IApiKeyRepository):
         finally:
             conn.close()
 
-    def get_by_service(self, service_name: str) -> Optional[str]:
+    def get_by_service(self, service_name: str) -> str | None:
         conn = sqlite3.connect(get_db_path())
         try:
             cursor = conn.cursor()
@@ -155,7 +174,12 @@ class SqliteApiKeyRepository(IApiKeyRepository):
         conn = sqlite3.connect(get_db_path())
         try:
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO api_keys (service_name, key_value) VALUES (?, ?) ON CONFLICT(service_name) DO UPDATE SET key_value = excluded.key_value, updated_at = CURRENT_TIMESTAMP", (service_name, key_value))
+            cursor.execute(
+                "INSERT INTO api_keys (service_name, key_value) VALUES (?, ?) "
+                "ON CONFLICT(service_name) DO UPDATE SET "
+                "key_value = excluded.key_value, updated_at = CURRENT_TIMESTAMP",
+                (service_name, key_value)
+            )
             conn.commit()
         finally:
             conn.close()
@@ -170,11 +194,11 @@ class SqliteApiKeyRepository(IApiKeyRepository):
         finally:
             conn.close()
 
-    def get(self, service_name: str) -> Optional[str]:
+    def get(self, service_name: str) -> str | None:
         return self.get_by_service(service_name)
 
 class SqliteSystemPromptRepository(ISystemPromptRepository):
-    def get_all(self) -> Dict[str, str]:
+    def get_all(self) -> dict[str, str]:
         conn = sqlite3.connect(get_db_path())
         try:
             cursor = conn.cursor()
@@ -183,7 +207,7 @@ class SqliteSystemPromptRepository(ISystemPromptRepository):
         finally:
             conn.close()
 
-    def get_by_modality(self, modality: str) -> Optional[str]:
+    def get_by_modality(self, modality: str) -> str | None:
         conn = sqlite3.connect(get_db_path())
         try:
             cursor = conn.cursor()
@@ -197,10 +221,14 @@ class SqliteSystemPromptRepository(ISystemPromptRepository):
         conn = sqlite3.connect(get_db_path())
         try:
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO system_prompts (modality, content) VALUES (?, ?) ON CONFLICT(modality) DO UPDATE SET content = excluded.content, updated_at = CURRENT_TIMESTAMP", (modality, content))
+            cursor.execute(
+                "INSERT INTO system_prompts (modality, content) VALUES (?, ?) "
+                "ON CONFLICT(modality) DO UPDATE SET content = excluded.content, updated_at = CURRENT_TIMESTAMP",
+                (modality, content)
+            )
             conn.commit()
         finally:
             conn.close()
 
-    def get(self, modality: str) -> Optional[str]:
+    def get(self, modality: str) -> str | None:
         return self.get_by_modality(modality)

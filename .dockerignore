@@ -12,6 +12,10 @@ Thumbs.db
 README.md
 node_modules
 .pytest_cache
+.ruff_cache
+.mypy_cache
+.coverage
+
 **/__pycache__/
 **/__pycache__/**
 *.pyc
@@ -24,6 +28,20 @@ logs
 .coverage
 htmlcov
 
+# Build artifacts - exclude from Docker build context to keep it fast
+dist-electron
+frontend/dist
+backend/dist
+temp_extracted_asar
+output
+build
+dist
+tests
+
+# Large local-only data / tooling directories that are not needed in the isolated Docker test
+agent-transcripts
+mcps
+
 # AI Agents / UI Editors
 .agents/
 .agent/
@@ -31,3 +49,4 @@ htmlcov
 .cursor/
 .qwen/
 .kiro/
+temp_extracted_asar

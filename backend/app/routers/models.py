@@ -14,9 +14,8 @@ from ..core.db import add_model, get_all_models, get_models, remove_model
 from ..schemas import (
     AddModelRequest,
     GenerationResponse,
-    ModelEntry,
-    ok_response,
     error_response,
+    ok_response,
 )
 
 router = APIRouter(prefix="/api/models", tags=["models"])
@@ -73,11 +72,11 @@ def create_model(provider: str, request: AddModelRequest) -> GenerationResponse:
         add_model(provider, request.value, request.label)
         logger.info("Added model '%s' to provider '%s'", request.value, provider)
         return ok_response({"provider": provider, "model": request.value})
-    except sqlite3.IntegrityError:
+    except sqlite3.IntegrityError as exc:
         raise HTTPException(
             status_code=409,
             detail=f"Model '{request.value}' already exists for provider '{provider}'",
-        )
+        ) from exc
     except ValueError as exc:
         return error_response(str(exc))
 

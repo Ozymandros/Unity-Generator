@@ -42,8 +42,8 @@ def generate_image(
 
     # Create SK service
     service = provider_registry.create_text_to_image_service(
-        selected, 
-        api_key, 
+        selected,
+        api_key,
         model_id=opts.get("model")
     )
 

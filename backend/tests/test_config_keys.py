@@ -8,9 +8,7 @@ from app.main import app
 
 
 def test_get_api_keys(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    from app.core import config
-
-    from app.core import db
+    from app.core import config, db
     monkeypatch.setattr(config, "get_repo_root", lambda: tmp_path)
     (tmp_path / "db").mkdir(parents=True, exist_ok=True)
     db.init_db()
@@ -32,8 +30,7 @@ def test_get_api_keys(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 
 
 def test_post_api_keys(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    from app.core import config
-    from app.core import db
+    from app.core import config, db
 
     monkeypatch.setattr(config, "get_repo_root", lambda: tmp_path)
     (tmp_path / "db").mkdir(parents=True, exist_ok=True)

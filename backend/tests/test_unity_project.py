@@ -9,12 +9,12 @@ from app.schemas import AgentResult
 
 
 def test_unity_project_generation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    from app.services import unity_project
+    from app.core import config
 
     def fake_root() -> Path:
         return tmp_path
 
-    monkeypatch.setattr(unity_project, "get_repo_root", fake_root)
+    monkeypatch.setattr(config, "get_repo_root", fake_root)
 
     # Mock agent_manager to return generated code
     mock_agent_manager = MagicMock()

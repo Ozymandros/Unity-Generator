@@ -3,6 +3,7 @@ import { spawn } from "node:child_process";
 import process from "node:process";
 
 const START_PORT = 5173;
+const BACKEND_START_PORT = 35421;
 const MAX_ATTEMPTS = 200;
 
 function canListen(port) {
@@ -16,27 +17,40 @@ function canListen(port) {
     });
 }
 
-async function findFreePort() {
+async function findFreePort(startPort) {
     for (let offset = 0; offset < MAX_ATTEMPTS; offset += 1) {
-        const port = START_PORT + offset;
+        const port = startPort + offset;
         if (await canListen(port)) {
             return port;
         }
     }
-    throw new Error(`No free port found between ${START_PORT} and ${START_PORT + MAX_ATTEMPTS - 1}`);
+    throw new Error(`No free port found between ${startPort} and ${startPort + MAX_ATTEMPTS - 1}`);
 }
 
 async function main() {
     // In CI, VITE_PORT is set by the workflow; use it so Playwright hits the already-running Vite server.
     const existingPort = process.env.VITE_PORT || process.env.PORT;
-    const port = existingPort ? String(existingPort).trim() : String(await findFreePort());
+    const port = existingPort ? String(existingPort).trim() : String(await findFreePort(START_PORT));
+    
+    const existingBackendPort = process.env.BACKEND_PORT;
+    const backendPort = existingBackendPort ? String(existingBackendPort).trim() : String(await findFreePort(BACKEND_START_PORT));
+    
+    console.log(`Using frontend port: ${port}, backend port: ${backendPort}`);
+    
     const env = {
         ...process.env,
         PORT: port,
         VITE_PORT: port,
+        BACKEND_PORT: backendPort,
     };
 
-    const child = spawn("pnpm exec playwright test", {
+    // Get test file pattern from command line args (e.g., "smoke.spec.ts")
+    const testPattern = process.argv[2] || "";
+    const playwrightCmd = testPattern 
+        ? `pnpm exec playwright test ${testPattern}`
+        : "pnpm exec playwright test";
+
+    const child = spawn(playwrightCmd, {
         cwd: process.cwd(),
         stdio: "inherit",
         env,

@@ -1,8 +1,8 @@
-from .base import IProviderRepository, IModelRepository, IApiKeyRepository, ISystemPromptRepository
+from .base import IApiKeyRepository, IModelRepository, IProviderRepository, ISystemPromptRepository
 from .sqlite_repository import (
-    SqliteProviderRepository,
-    SqliteModelRepository,
     SqliteApiKeyRepository,
+    SqliteModelRepository,
+    SqliteProviderRepository,
     SqliteSystemPromptRepository,
 )
 

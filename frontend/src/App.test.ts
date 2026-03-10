@@ -91,7 +91,7 @@ function createMockIntelligenceStore() {
     getProvidersByModality: vi.fn((modality: string) =>
       providers.filter((p) => p.modalities.includes(modality)),
     ),
-    getModelsByProvider: vi.fn((_provider: string, _modality?: string) =>
+    getModelsByProvider: vi.fn(() =>
       models.openai ?? [],
     ),
     isKeyConfigured: vi.fn(() => false),

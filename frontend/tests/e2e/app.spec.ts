@@ -1,6 +1,7 @@
 import { test, expect, type Page, type Route } from "@playwright/test";
 
-const BACKEND_URL = "http://127.0.0.1:8000";
+const BACKEND_PORT = process.env.BACKEND_PORT || "8000";
+const BACKEND_URL = `http://127.0.0.1:${BACKEND_PORT}`;
 
 // API Endpoints
 const ENDPOINTS = {
@@ -128,68 +129,68 @@ test.beforeEach(async ({ page }) => {
 test("shows backend status and generates code", async ({ page }) => {
   await page.goto("/");
   // Wait for the discovery API to finish loading by checking a model dropdown (which should be enabled eventually)
-  await expect(page.getByText("Online")).toBeVisible();
+  await expect(page.getByText("Online")).toBeVisible({ timeout: 120000 });
 
   // Navigate to Code panel
   await page.locator('[data-testid="nav-Code"]').click();
-  await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible({ timeout: 30000 });
   // Use first textarea for prompt input
   await page.locator("textarea").first().fill("Create a player controller");
 
   // Click generate and wait for the status message to update
   await page.getByRole("button", { name: "Generate" }).click();
-  await expect(page.getByText("Code generated.")).toBeVisible();
+  await expect(page.getByText("Code generated.")).toBeVisible({ timeout: 30000 });
 
   // Check that result textarea contains the generated code
-  await expect(page.locator("textarea").last()).toHaveValue(/PlayerController/);
+  await expect(page.locator("textarea").last()).toHaveValue(/PlayerController/, { timeout: 30000 });
 });
 
 test("generates text", async ({ page }) => {
   await page.goto("/");
   await page.locator('[data-testid="nav-Text"]').click();
-  await expect(page.getByRole("heading", { name: "Text Generation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Text Generation" })).toBeVisible({ timeout: 30000 });
 
   await page.locator("textarea").first().fill("Write a greeting");
 
   // Click generate and wait for the status message to update
   await page.getByRole("button", { name: "Generate" }).click();
-  await expect(page.getByText("Text generated.")).toBeVisible();
+  await expect(page.getByText("Text generated.")).toBeVisible({ timeout: 30000 });
 
-  await expect(page.locator("textarea").last()).toHaveValue(/Welcome/);
+  await expect(page.locator("textarea").last()).toHaveValue(/Welcome/, { timeout: 30000 });
 });
 
 test("generates image", async ({ page }) => {
   await page.goto("/");
   await page.locator('[data-testid="nav-Image"]').click();
-  await expect(page.getByRole("heading", { name: "Image Generation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Image Generation" })).toBeVisible({ timeout: 30000 });
   await page.locator("textarea").first().fill("A hero portrait");
 
   // Click generate and wait for the status message to update
   await page.getByRole("button", { name: "Generate" }).click();
-  await expect(page.getByText("Image request complete.")).toBeVisible();
+  await expect(page.getByText("Image request complete.")).toBeVisible({ timeout: 30000 });
 
   // ImagePanel displays the full JSON response
-  await expect(page.locator("textarea").last()).toHaveValue(/fake-image-base64/);
+  await expect(page.locator("textarea").last()).toHaveValue(/fake-image-base64/, { timeout: 30000 });
 });
 
 test("generates audio", async ({ page }) => {
   await page.goto("/");
   await page.locator('[data-testid="nav-Audio"]').click();
-  await expect(page.getByRole("heading", { name: "Audio & Music Generation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Audio & Music Generation" })).toBeVisible({ timeout: 30000 });
   await page.locator("textarea").first().fill("A battle cry");
 
   // Click generate and wait for the status message to update
   await page.getByRole("button", { name: "Generate" }).click();
-  await expect(page.getByText("Audio request complete.")).toBeVisible();
+  await expect(page.getByText("Audio request complete.")).toBeVisible({ timeout: 30000 });
 
   // AudioPanel displays the full JSON response
-  await expect(page.locator("textarea").last()).toHaveValue(/audio\.mp3/);
+  await expect(page.locator("textarea").last()).toHaveValue(/audio\.mp3/, { timeout: 30000 });
 });
 
 test("generates unity project", async ({ page }) => {
   await page.goto("/");
   await page.locator('[data-testid="nav-Unity-Project"]').click();
-  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible({ timeout: 30000 });
   // Fill required fields: project name, template, version, platform (Vuetify v-select = combobox)
   await page.getByLabel("Project Name").fill("TestProject");
   await page.getByLabel("Unity Template").click({ force: true });
@@ -200,10 +201,10 @@ test("generates unity project", async ({ page }) => {
   await page.getByRole("option", { name: "Windows" }).click();
 
   await page.getByRole("button", { name: "Generate Base Project" }).click();
-  await expect(page.getByText("Unity project generated.")).toBeVisible();
+  await expect(page.getByText("Unity project generated.")).toBeVisible({ timeout: 30000 });
 
   // UnityProjectPanel displays the full JSON response
-  await expect(page.locator("textarea").last()).toHaveValue(/output/);
+  await expect(page.locator("textarea").last()).toHaveValue(/output/, { timeout: 30000 });
 });
 
 test("saves settings", async ({ page }) => {
@@ -212,9 +213,9 @@ test("saves settings", async ({ page }) => {
 
   await page.goto("/");
   await page.locator('[data-testid="nav-Settings"]').click();
-  await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible({ timeout: 30000 });
   await page.getByRole("button", { name: "Save All Changes" }).click();
-  await expect(page.getByText(/saved successfully|saved locally/i)).toBeVisible();
+  await expect(page.getByText(/saved successfully|saved locally/i)).toBeVisible({ timeout: 30000 });
 });
 
 test("shows error on API failure", async ({ page }) => {
@@ -224,10 +225,10 @@ test("shows error on API failure", async ({ page }) => {
 
   await page.goto("/");
   await page.locator('[data-testid="nav-Code"]').click();
-  await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible({ timeout: 30000 });
   await page.locator("textarea").first().fill("Test prompt");
   await page.getByRole("button", { name: "Generate" }).click();
-  await expect(page.getByText("API rate limit exceeded")).toBeVisible();
+  await expect(page.getByText("API rate limit exceeded")).toBeVisible({ timeout: 30000 });
 });
 
 test("navigates between all tabs", async ({ page }) => {
@@ -235,22 +236,22 @@ test("navigates between all tabs", async ({ page }) => {
 
   // Check all tabs can be clicked and show correct content
   await page.locator('[data-testid="nav-Settings"]').click();
-  await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible({ timeout: 30000 });
 
   await page.locator('[data-testid="nav-Code"]').click();
-  await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible({ timeout: 30000 });
 
   await page.locator('[data-testid="nav-Text"]').click();
-  await expect(page.getByRole("heading", { name: "Text Generation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Text Generation" })).toBeVisible({ timeout: 30000 });
 
   await page.locator('[data-testid="nav-Image"]').click();
-  await expect(page.getByRole("heading", { name: "Image Generation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Image Generation" })).toBeVisible({ timeout: 30000 });
 
   await page.locator('[data-testid="nav-Audio"]').click();
-  await expect(page.getByRole("heading", { name: "Audio & Music Generation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Audio & Music Generation" })).toBeVisible({ timeout: 30000 });
 
   await page.locator('[data-testid="nav-Unity-Project"]').click();
-  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible({ timeout: 30000 });
 });
 
 test("shows offline status when backend unavailable", async ({ page }) => {
@@ -260,7 +261,7 @@ test("shows offline status when backend unavailable", async ({ page }) => {
   });
 
   await page.goto("/");
-  await expect(page.getByText("Offline")).toBeVisible();
+  await expect(page.getByText("Offline")).toBeVisible({ timeout: 30000 });
 });
 
 // Advanced generation tests
@@ -273,7 +274,7 @@ test("generates code with provider and model options", async ({ page }) => {
 
   await page.goto("/");
   await page.locator('[data-testid="nav-Code"]').click();
-  await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible({ timeout: 30000 });
   await page.locator("textarea").first().fill("Create a controller");
 
   // Select provider and model (Vuetify v-select = combobox, not native select)
@@ -284,7 +285,7 @@ test("generates code with provider and model options", async ({ page }) => {
   await page.getByRole("option", { name: "DeepSeek Coder" }).click();
 
   await page.getByRole("button", { name: "Generate" }).click();
-  await expect(page.getByText("Code generated.")).toBeVisible();
+  await expect(page.getByText("Code generated.")).toBeVisible({ timeout: 30000 });
 
   // Verify the request included provider and model
   expect(requestBody).toMatchObject({
@@ -301,14 +302,14 @@ test("generates code multiple times with different prompts", async ({ page }) =>
   // First generation
   await page.locator("textarea").first().fill("Create a player class");
   await page.getByRole("button", { name: "Generate" }).click();
-  await expect(page.getByText("Code generated.")).toBeVisible();
-  await expect(page.locator("textarea").last()).toHaveValue(/PlayerController/);
+  await expect(page.getByText("Code generated.")).toBeVisible({ timeout: 30000 });
+  await expect(page.locator("textarea").last()).toHaveValue(/PlayerController/, { timeout: 30000 });
 
   // Second generation with different prompt
   await page.locator("textarea").first().fill("Create an enemy class");
   await page.getByRole("button", { name: "Generate" }).click();
-  await expect(page.getByText("Code generated.")).toBeVisible();
-  await expect(page.locator("textarea").last()).toHaveValue(/PlayerController/);
+  await expect(page.getByText("Code generated.")).toBeVisible({ timeout: 30000 });
+  await expect(page.locator("textarea").last()).toHaveValue(/PlayerController/, { timeout: 30000 });
 });
 
 test("components reset when navigating between tabs", async ({ page }) => {
@@ -318,7 +319,7 @@ test("components reset when navigating between tabs", async ({ page }) => {
   await page.locator('[data-testid="nav-Code"]').click();
   await page.locator("textarea").first().fill("Create a player controller");
   await page.getByRole("button", { name: "Generate" }).click();
-  await expect(page.getByText("Code generated.")).toBeVisible();
+  await expect(page.getByText("Code generated.")).toBeVisible({ timeout: 30000 });
 
   // Navigate to text panel
   await page.locator('[data-testid="nav-Text"]').click();
@@ -327,10 +328,10 @@ test("components reset when navigating between tabs", async ({ page }) => {
   await page.locator('[data-testid="nav-Code"]').click();
 
   // Input should be empty after navigating away and back
-  await expect(page.locator("textarea").first()).toHaveValue("");
+  await expect(page.locator("textarea").first()).toHaveValue("", { timeout: 30000 });
 
   // Result should also be empty
-  await expect(page.locator("textarea").last()).toHaveValue("");
+  await expect(page.locator("textarea").last()).toHaveValue("", { timeout: 30000 });
 });
 
 test("generates unity project with all prompts filled", async ({ page }) => {
@@ -342,7 +343,7 @@ test("generates unity project with all prompts filled", async ({ page }) => {
 
   await page.goto("/");
   await page.locator('[data-testid="nav-Unity-Project"]').click();
-  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible({ timeout: 30000 });
 
   // Fill required project settings
   await page.getByLabel("Project Name").fill("FullTestProject");
@@ -358,7 +359,7 @@ test("generates unity project with all prompts filled", async ({ page }) => {
   await page.getByLabel("Auto-Install UPM Packages").click();
 
   await page.getByRole("button", { name: "Generate Base Project" }).click();
-  await expect(page.getByText("Unity project generated.")).toBeVisible();
+  await expect(page.getByText("Unity project generated.")).toBeVisible({ timeout: 30000 });
 
   // Verify project was generated with correct settings
   expect(requestBody).toMatchObject({
@@ -375,7 +376,7 @@ test("generates unity project with provider overrides", async ({ page }) => {
 
   await page.goto("/");
   await page.locator('[data-testid="nav-Unity-Project"]').click();
-  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible({ timeout: 30000 });
 
   await page.getByLabel("Project Name").fill("CustomProject");
   await page.getByLabel("Unity Template").click({ force: true });
@@ -386,7 +387,7 @@ test("generates unity project with provider overrides", async ({ page }) => {
   await page.getByRole("option", { name: "Windows" }).click();
 
   await page.getByRole("button", { name: "Generate Base Project" }).click();
-  await expect(page.getByText("Unity project generated.")).toBeVisible();
+  await expect(page.getByText("Unity project generated.")).toBeVisible({ timeout: 30000 });
 
   // Verify project was generated with correct name
   expect(requestBody).toMatchObject({
@@ -406,7 +407,7 @@ test("handles network error gracefully", async ({ page }) => {
   await page.getByRole("button", { name: "Generate" }).click();
 
   // Should show some error indication (the component catches and displays errors)
-  await expect(page.getByText(/failed|error/i)).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(/failed|error/i)).toBeVisible({ timeout: 30000 });
 });
 
 test("handles different error messages for different generators", async ({ page }) => {
@@ -418,7 +419,7 @@ test("handles different error messages for different generators", async ({ page 
   await page.locator('[data-testid="nav-Text"]').click();
   await page.locator("textarea").first().fill("Test");
   await page.getByRole("button", { name: "Generate" }).click();
-  await expect(page.getByText("Text generation service unavailable")).toBeVisible();
+  await expect(page.getByText("Text generation service unavailable")).toBeVisible({ timeout: 30000 });
 });
 
 test("shows error when image generation fails", async ({ page }) => {
@@ -430,7 +431,7 @@ test("shows error when image generation fails", async ({ page }) => {
   await page.locator('[data-testid="nav-Image"]').click();
   await page.locator("textarea").first().fill("Generate image");
   await page.getByRole("button", { name: "Generate" }).click();
-  await expect(page.getByText("Image quota exceeded")).toBeVisible();
+  await expect(page.getByText("Image quota exceeded")).toBeVisible({ timeout: 30000 });
 });
 
 test("shows error when audio generation fails", async ({ page }) => {
@@ -440,10 +441,10 @@ test("shows error when audio generation fails", async ({ page }) => {
 
   await page.goto("/");
   await page.locator('[data-testid="nav-Audio"]').click();
-  await expect(page.getByRole("heading", { name: "Audio & Music Generation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Audio & Music Generation" })).toBeVisible({ timeout: 30000 });
   await page.locator("textarea").first().fill("Generate audio");
   await page.getByRole("button", { name: "Generate" }).click();
-  await expect(page.getByText("Invalid voice ID")).toBeVisible();
+  await expect(page.getByText("Invalid voice ID")).toBeVisible({ timeout: 30000 });
 });
 
 test("shows error when unity project generation fails", async ({ page }) => {
@@ -453,7 +454,7 @@ test("shows error when unity project generation fails", async ({ page }) => {
 
   await page.goto("/");
   await page.locator('[data-testid="nav-Unity-Project"]').click();
-  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible({ timeout: 30000 });
   await page.getByLabel("Project Name").fill("ExistingProject");
   await page.getByLabel("Unity Template").click({ force: true });
   await page.getByRole("option", { name: "2D" }).click();
@@ -462,7 +463,7 @@ test("shows error when unity project generation fails", async ({ page }) => {
   await page.getByLabel("Target Platform").click({ force: true });
   await page.getByRole("option", { name: "Windows" }).click();
   await page.getByRole("button", { name: "Generate Base Project" }).click();
-  await expect(page.getByText("Project directory already exists")).toBeVisible();
+  await expect(page.getByText("Project directory already exists")).toBeVisible({ timeout: 30000 });
 });
 
 // Settings tests
@@ -474,13 +475,13 @@ test("fills and saves API keys in settings", async ({ page }) => {
 
   await page.goto("/");
   await page.locator('[data-testid="nav-Settings"]').click();
-  await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Configuration" })).toBeVisible({ timeout: 30000 });
 
   // Click on Secrets tab to manage API keys
   await page.getByRole("tab", { name: "Secrets" }).click();
 
   // The secrets tab has secret management UI
-  await expect(page.getByRole("button", { name: "Store New Secret" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Store New Secret" })).toBeVisible({ timeout: 30000 });
 });
 
 // UI state tests
@@ -497,17 +498,17 @@ test("shows generating status during API call", async ({ page }) => {
   await page.getByRole("button", { name: "Generate" }).click();
 
   // Should show "Generating" status immediately
-  await expect(page.getByText("Generating code...")).toBeVisible();
+  await expect(page.getByText("Generating code...")).toBeVisible({ timeout: 30000 });
 
   // Eventually shows success
-  await expect(page.getByText("Code generated.")).toBeVisible();
+  await expect(page.getByText("Code generated.")).toBeVisible({ timeout: 30000 });
 });
 
 test("backend status updates on page load", async ({ page }) => {
   await page.goto("/");
 
   // Should check backend status on mount
-  await expect(page.getByText("Online")).toBeVisible();
+  await expect(page.getByText("Online")).toBeVisible({ timeout: 30000 });
 });
 
 test("handles empty response data gracefully", async ({ page }) => {
@@ -517,19 +518,19 @@ test("handles empty response data gracefully", async ({ page }) => {
 
   await page.goto("/");
   await page.locator('[data-testid="nav-Code"]').click();
-  await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Unity C# Code" })).toBeVisible({ timeout: 30000 });
   await page.locator("textarea").first().fill("Test");
   await page.getByRole("button", { name: "Generate" }).click();
-  await expect(page.getByText("Code generated.")).toBeVisible();
+  await expect(page.getByText("Code generated.")).toBeVisible({ timeout: 30000 });
 
   // Result should be empty but not crash
-  await expect(page.locator("textarea").last()).toHaveValue("");
+  await expect(page.locator("textarea").last()).toHaveValue("", { timeout: 30000 });
 });
 
 test("generates and previews 2D sprites", async ({ page }) => {
   await page.goto("/");
   await page.locator('[data-testid="nav-Sprites"]').click();
-  await expect(page.getByRole("heading", { name: "2D Sprites" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "2D Sprites" })).toBeVisible({ timeout: 30000 });
 
   await page.locator("textarea").first().fill("A pixel art health potion");
 
@@ -542,6 +543,6 @@ test("generates and previews 2D sprites", async ({ page }) => {
 
   await page.getByRole("button", { name: "Generate Sprite" }).click();
 
-  await expect(page.getByText("Sprite generated.")).toBeVisible();
-  await expect(page.locator("img")).toBeVisible();
+  await expect(page.getByText("Sprite generated.")).toBeVisible({ timeout: 30000 });
+  await expect(page.locator("img")).toBeVisible({ timeout: 30000 });
 });

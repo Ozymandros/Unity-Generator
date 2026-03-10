@@ -52,6 +52,10 @@ describe("CodePanel", () => {
       data: { key: "default_code_system_prompt", value: "Mock System Prompt" },
     });
     vi.spyOn(client, "getAllConfig").mockResolvedValue({
+      success: true,
+      date: new Date().toISOString(),
+      error: null,
+      data: null,
       providers: [
         {
           name: "openai",
@@ -75,8 +79,7 @@ describe("CodePanel", () => {
         ],
       },
       prompts: {},
-      keys: [],
-      preferences: {},
+      keys: {} as Record<string, string>,
     });
   });
 

@@ -1,6 +1,6 @@
 # GitHub Copilot Custom Instructions
 
-This file provides comprehensive guidance for GitHub Copilot to generate code that follows modern best practices, clean architecture principles, and project-specific conventions for both backend (Python/FastAPI) and frontend (TypeScript/Vue/Tauri) components.
+This file provides comprehensive guidance for GitHub Copilot to generate code that follows modern best practices, clean architecture principles, and project-specific conventions for both backend (Python/FastAPI) and frontend (TypeScript/Vue/Electron) components.
 
 ## Core Principles
 
@@ -30,7 +30,6 @@ Always adhere to these fundamental principles:
 - **apiClient**: Unified API wrapper in `src/api/client.ts` for all backend communication (generation, prefs, jobs).
 - **SmartField**: Versatile UI component in `src/components/generic/SmartField.vue` for consistent form inputs.
 - **StatusBanner**: Standardized status and error reporting component in `src/components/StatusBanner.vue`.
-- **TauriShell**: OS-level integration for opening files and folders via `@tauri-apps/api/shell`.
 
 ## Code Organization Guidelines
 
@@ -252,7 +251,7 @@ async def generate_code_endpoint(request: GenerateRequest) -> GenerationResponse
         return error_response("Internal server error")
 ```
 
-## Frontend Guidelines (TypeScript/Vue/Tauri)
+## Frontend Guidelines (TypeScript/Vue/Electron)
 
 ### Architecture Patterns
 
@@ -417,7 +416,7 @@ onMounted(() => {
 - **Panel Components**: Each generation type (Code, Text, Image, Audio) should have its own panel component
 - **Status Banner**: Use `StatusBanner` component for consistent status/error display
 - **API Client**: All backend communication goes through `api/client.ts` functions
-- **Backend URL**: Store backend URL in localStorage with fallback to `http://127.0.0.1:8000`
+- **Backend URL**: Store backend URL in localStorage with fallback to `http://127.0.0.1:35421`
 
 ### Testing
 

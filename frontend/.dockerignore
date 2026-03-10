@@ -25,10 +25,12 @@ build/
 coverage/
 playwright-report/
 test-results/
+temp_extracted_asar
+temp_mcp_instructions
 
-# Tauri / Rust build output
-src-tauri/target/
-src-tauri/.tauri/
+# Electron build output
+dist/
+out/
 
 # VCS and editor files
 .git/

@@ -1,14 +1,11 @@
-import pytest
-import sqlite3
 import os
-from app.core.db import get_db_path, init_db
-from app.repositories import (
-    get_provider_repo,
-    get_model_repo,
-    get_api_key_repo,
-    get_system_prompt_repo
-)
-from app.services.providers.capabilities import ProviderCapabilities, Modality
+
+import pytest
+
+from app.core.db import init_db
+from app.repositories import get_api_key_repo, get_model_repo, get_provider_repo, get_system_prompt_repo
+from app.services.providers.capabilities import Modality, ProviderCapabilities
+
 
 @pytest.fixture(autouse=True)
 def setup_test_db(tmp_path):

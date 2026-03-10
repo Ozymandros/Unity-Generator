@@ -477,12 +477,16 @@ class BatchUnitySetupBackend:
             if install_packages and packages:
                 scripts["PackageSetup.cs"] = render_template("PackageSetup.cs.j2", template_context, self.templates_dir)
             if generate_scene:
-                scripts["ScenePrefabSetup.cs"] = render_template("ScenePrefabSetup.cs.j2", template_context, self.templates_dir)
+                scripts["ScenePrefabSetup.cs"] = render_template(
+                    "ScenePrefabSetup.cs.j2", template_context, self.templates_dir
+                )
             if setup_urp:
                 scripts["ProjectSettingsSetup.cs"] = render_template(
                     "ProjectSettingsSetup.cs.j2", template_context, self.templates_dir
                 )
-            scripts["ImportValidation.cs"] = render_template("ImportValidation.cs.j2", template_context, self.templates_dir)
+            scripts["ImportValidation.cs"] = render_template(
+                "ImportValidation.cs.j2", template_context, self.templates_dir
+            )
 
             _progress("inject", 20, "Injecting Editor scripts into project...")
             inject_dir = inject_editor_scripts(project_path, scripts)

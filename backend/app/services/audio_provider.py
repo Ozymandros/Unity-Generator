@@ -15,6 +15,7 @@ from typing import Any
 import nest_asyncio
 
 LOGGER = logging.getLogger(__name__)
+
 from semantic_kernel import Kernel
 
 from ..schemas import AgentResult, AudioOptions
@@ -45,8 +46,8 @@ def generate_audio(
 
     # Create SK service
     service = provider_registry.create_text_to_audio_service(
-        selected, 
-        api_key, 
+        selected,
+        api_key,
         model_id=opts.get("model")
     )
 
@@ -66,7 +67,7 @@ def generate_audio(
 
         try:
             if hasattr(settings, "voice") and voice_to_set:
-                # Some settings (OpenAI) have strict literals. 
+                # Some settings (OpenAI) have strict literals.
                 # We try to set it, if it fails validation, we fallback.
                 try:
                     settings.voice = voice_to_set

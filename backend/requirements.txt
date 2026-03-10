@@ -4,15 +4,7 @@ mcp[cli]
 semantic-kernel[mcp]>=1.15.0
 pydantic
 requests
-pytest
-debugpy
-ruff
-pyright
 Pillow
-numpy
 jinja2
-google-generativeai
 google-genai
 anthropic
-transformers
-torch

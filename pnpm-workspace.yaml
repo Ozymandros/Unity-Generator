@@ -1,9 +1,18 @@
-ignoredBuiltDependencies:
-  - esbuild
-
-overrides:
-  minimatch@<10.2.1: '>=10.2.1'
-
 packages:
   - frontend
   - backend
+
+ignoredBuiltDependencies:
+  - esbuild
+
+onlyBuiltDependencies:
+  - electron
+  - electron-winstaller
+  - msw
+  - sharp
+  - vue-demi
+
+overrides:
+  minimatch@<10.2.1: '>=10.2.1'
+  minimatch@>=10.0.0 <10.2.3: '>=10.2.3'
+  rollup@>=4.0.0 <4.59.0: '>=4.59.0'

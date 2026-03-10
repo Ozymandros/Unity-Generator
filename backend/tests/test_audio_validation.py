@@ -1,11 +1,12 @@
-import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
-from app.services.audio_provider import generate_audio
+from unittest.mock import AsyncMock, MagicMock, patch
+
 from app.schemas import AudioOptions
+from app.services.audio_provider import generate_audio
+
 
 def test_generate_audio_voice_validation_fix():
     """
-    Test that generate_audio handles invalid voices gracefully 
+    Test that generate_audio handles invalid voices gracefully
     without crashing due to OpenAI's strict validation.
     """
     # Mock api_keys

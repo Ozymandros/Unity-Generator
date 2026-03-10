@@ -10,12 +10,17 @@ def run_command(command: list[str], cwd: Path) -> None:
     subprocess.run(command, cwd=cwd, check=True)
 
 
+def run_pip_command(command: list[str], cwd: Path) -> None:
+    """Run pip command with --break-system-packages flag for Docker/CI environments."""
+    subprocess.run(command, cwd=cwd, check=True)
+
+
 def main() -> int:
     repo_root = Path(__file__).resolve().parent.parent
     backend_dir = repo_root / "backend"
 
-    run_command([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], backend_dir)
-    run_command([sys.executable, "-m", "pip", "install", "pyinstaller"], backend_dir)
+    run_pip_command([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], backend_dir)
+    run_pip_command([sys.executable, "-m", "pip", "install", "pyinstaller"], backend_dir)
     run_command(
         [
             sys.executable,
@@ -25,6 +30,18 @@ def main() -> int:
             "--onefile",
             "--name",
             "unity-generator-backend",
+            "--hidden-import=app",
+            "--hidden-import=app.main",
+            "--hidden-import=uvicorn.logging",
+            "--hidden-import=uvicorn.loops",
+            "--hidden-import=uvicorn.loops.auto",
+            "--hidden-import=uvicorn.protocols",
+            "--hidden-import=uvicorn.protocols.http",
+            "--hidden-import=uvicorn.protocols.http.auto",
+            "--hidden-import=uvicorn.protocols.websockets",
+            "--hidden-import=uvicorn.protocols.websockets.auto",
+            "--hidden-import=uvicorn.lifespan",
+            "--hidden-import=uvicorn.lifespan.on",
             "app/entrypoint.py",
         ],
         backend_dir,

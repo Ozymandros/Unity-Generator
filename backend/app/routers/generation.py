@@ -4,7 +4,6 @@ from typing import Any
 
 from fastapi import APIRouter
 
-from ..core.db import get_pref
 from app.schemas import (
     AudioOptions,
     CodeOptions,
@@ -17,6 +16,8 @@ from app.schemas import (
     error_response,
     ok_response,
 )
+
+from ..core.db import get_pref
 from ..services import agent_manager_instance as agent_manager
 from ..services import sprite_service
 from ..services.unity_project import resolve_project_path

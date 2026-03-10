@@ -1,8 +1,7 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 import { shallowMount, flushPromises, VueWrapper } from "@vue/test-utils";
 import AudioPanel from "@/components/AudioPanel";
 import * as client from "@/api/client";
-import { type ProviderCapabilities } from "@/api/client";
 import { createPinia, setActivePinia, type Pinia } from "pinia";
 
 vi.mock("@/api/client");
@@ -23,28 +22,29 @@ describe("AudioPanel", () => {
 
     // Mock discovery API
     vi.mocked(client.getAllConfig).mockResolvedValue({
-      providers: [
-        { 
-          name: "elevenlabs", 
-          modalities: ["audio"], 
-          api_key_name: "elevenlabs_api_key", 
-          requires_api_key: true, 
-          extra: {},
-          base_url: null,
-          openai_compatible: false,
-          supports_vision: false,
-          supports_streaming: false,
-          supports_function_calling: false,
-          supports_tool_use: false,
-          default_models: {}
-        } as ProviderCapabilities
-      ],
+      success: true,
+      date: new Date().toISOString(),
+      error: null,
+      providers: [{
+        name: "elevenlabs",
+        api_key_name: "elevenlabs_api_key",
+        base_url: null,
+        openai_compatible: false,
+        requires_api_key: true,
+        supports_vision: false,
+        supports_streaming: false,
+        supports_function_calling: false,
+        supports_tool_use: false,
+        modalities: ["audio"],
+        default_models: {},
+        extra: {}
+      }],
       models: {
         elevenlabs: [{ value: "Rachel", label: "Rachel", modality: "audio" }]
       },
       prompts: {},
-      keys: [],
-      preferences: {
+      keys: {} as Record<string, string>,
+      data: {
         preferred_audio_provider: "elevenlabs",
         preferred_audio_model: "Rachel"
       }

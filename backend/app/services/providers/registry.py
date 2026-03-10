@@ -11,16 +11,16 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterable
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
 if TYPE_CHECKING:
-    from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion
+    pass
 
 
+from .capabilities import Modality, ProviderCapabilities
 from .connectors.elevenlabs import ElevenLabsTextToAudio
 from .connectors.google_custom import GoogleTextToAudio, GoogleTextToImage
 from .connectors.stability import StabilityTextToImage
-
-from .capabilities import Modality, ProviderCapabilities
 from .errors import ProviderNotAvailableError, ProviderNotSupportedError
 
 LOGGER = logging.getLogger(__name__)
@@ -298,13 +298,12 @@ class ProviderRegistry:
         from semantic_kernel.connectors.ai.anthropic import AnthropicChatCompletion
         from semantic_kernel.connectors.ai.google import GoogleAIChatCompletion
         from semantic_kernel.connectors.ai.open_ai import (
-            OpenAIChatCompletion,
             AzureChatCompletion,
+            OpenAIChatCompletion,
         )
+
         from .connectors.replicate import (
             ReplicateChatCompletion,
-            ReplicateTextToAudio,
-            ReplicateTextToImage,
         )
         caps = self.get(provider)
         target_model = model_id or caps.default_models[Modality.LLM]
@@ -362,9 +361,10 @@ class ProviderRegistry:
 
         if provider == "huggingface":
             # If it's not marked as openai_compatible, use native HF connector
-            from semantic_kernel.connectors.ai.hugging_face import HuggingFaceTextCompletion
             # Ensure we pass the api_key if needed
             import os
+
+            from semantic_kernel.connectors.ai.hugging_face import HuggingFaceTextCompletion
             if api_key:
                 os.environ["HUGGING_FACE_HUB_TOKEN"] = api_key
             else:

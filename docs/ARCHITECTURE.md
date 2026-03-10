@@ -1,12 +1,12 @@
 # Architecture Overview
 
-Unity Generator is a local-first desktop application that pairs a Tauri + Vue UI
+Unity Generator is a local-first desktop application that pairs an Electron + Vue UI
 with a FastAPI backend. The backend orchestrates modular agents that call cloud
 AI providers using user-supplied API keys.
 
 ```mermaid
 flowchart TD
-  UI[Tauri + Vue UI] -->|HTTP| API[FastAPI Backend]
+  UI[Electron + Vue UI] -->|HTTP| API[FastAPI Backend]
   API --> SK[Semantic Kernel]
   SK --> NP[Native Plugins]
   SK --> SF[Semantic Functions]
@@ -29,7 +29,7 @@ flowchart TD
 
 ## High-level components
 
-- UI: Tauri desktop shell with a Vue frontend for prompts and settings.
+- UI: Electron desktop shell with a Vue frontend for prompts and settings.
 - Backend API: FastAPI app that exposes generation endpoints and preferences.
 - Semantic Kernel: Core orchestration engine that manages agents, native plugins, and semantic functions.
 - Native Plugins: Python-based logic for system operations (UnityProjectPlugin, MemoryPrefsPlugin, ProviderOrchestratorPlugin).

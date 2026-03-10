@@ -2,8 +2,8 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 
-from semantic_kernel.connectors.mcp import MCPStdioPlugin
 from semantic_kernel import Kernel
+from semantic_kernel.connectors.mcp import MCPStdioPlugin
 
 LOGGER = logging.getLogger("unity_mcp_plugin")
 

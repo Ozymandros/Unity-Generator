@@ -20,8 +20,8 @@ def client_with_openai(tmp_path):
     """Client with a DB that has provider 'openai' so add/list/delete model tests can run."""
     os.environ["DATABASE_DIR"] = str(tmp_path)
     from app.core.db import init_db
-    from app.repositories import get_provider_repo, get_model_repo
-    from app.services.providers.capabilities import ProviderCapabilities, Modality
+    from app.repositories import get_provider_repo
+    from app.services.providers.capabilities import Modality, ProviderCapabilities
 
     init_db()
     caps = ProviderCapabilities(

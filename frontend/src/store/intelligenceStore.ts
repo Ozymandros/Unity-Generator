@@ -6,7 +6,7 @@ export const useIntelligenceStore = defineStore("intelligence", {
     providers: [] as ProviderCapabilities[],
     models: {} as Record<string, ModelEntry[]>,
     prompts: {} as Record<string, string>,
-    keys: [] as string[],
+    keys: {} as Record<string, string>,
     preferences: {} as Record<string, string>,
     isLoaded: false,
     loading: false,
@@ -41,7 +41,7 @@ export const useIntelligenceStore = defineStore("intelligence", {
       return { provider, model: allowed.length ? allowed[0].value : "" };
     },
     isKeyConfigured: (state) => (serviceName: string) => {
-      return state.keys.includes(serviceName);
+      return !!state.keys[serviceName];
     }
   },
 
@@ -53,11 +53,11 @@ export const useIntelligenceStore = defineStore("intelligence", {
       this.error = null;
       try {
         const data = await getAllConfig();
-        this.providers = data.providers;
-        this.models = data.models;
-        this.prompts = data.prompts;
-        this.keys = data.keys;
-        this.preferences = data.preferences;
+        this.providers = data.providers || [];
+        this.models = (data.models as Record<string, ModelEntry[]>) || {};
+        this.prompts = (data.prompts as Record<string, string>) || {};
+        this.keys = (data.keys as Record<string, string>) || {};
+        this.preferences = (data.preferences as Record<string, string>) || {};
         this.isLoaded = true;
       } catch (e: unknown) {
         this.error = (e as Error).message || "Failed to load intelligence configuration";

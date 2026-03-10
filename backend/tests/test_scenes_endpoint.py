@@ -30,7 +30,7 @@ def test_create_scene_success():
             json={
                 "prompt": "Create a red cube",
                 "system_prompt": "Fast mode",
-                "options": {"model": "gpt-4"} # Must provide model now
+                "options": {"model": "gpt-4"}  # Must provide model now
             }
         )
 
@@ -168,7 +168,10 @@ def test_create_scene_agent_returns_error_in_raw():
             return AgentResult(
                 content="Failed to execute Unity task: 1 validation error for KernelParameterMetadata...",
                 provider="openai",
-                raw={"content": "Failed to execute Unity task: ...", "error": "1 validation error for KernelParameterMetadata"},
+                raw={
+                    "content": "Failed to execute Unity task: ...",
+                    "error": "1 validation error for KernelParameterMetadata"
+                },
             )
         mock_agent_manager.run_unity.side_effect = mock_run
 

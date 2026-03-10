@@ -1,49 +1,116 @@
 {
-    "version": "0.9.1",
-    "description": "Desktop app to generate Unity assets using AI (Tauri + FastAPI)",
-    "name": "unity-generator",
-    "private": true,
-    "scripts": {
-        "// --- Build & Distribution (Requires Rust) ---": "",
-        "build:backend": "python scripts/build_backend.py",
-        "build:frontend": "pnpm --dir frontend build",
-        "package": "pnpm run build:backend && pnpm run tauri:build",
-        "// --- Development (No Rust Required) ---": "",
-        "backend:dev": "cd backend && python -m uvicorn app.main:app --reload --port 8000",
-        "backend:debug": "cd backend && python -m debugpy --listen 0.0.0.0:5678 -m uvicorn app.main:app --reload --port 8000",
-        "dev": "pnpm --dir frontend dev:tauri",
-        "// --- Tauri Commands (Require Rust) ---": "",
-        "tauri": "pnpm --dir frontend tauri",
-        "tauri:build": "pnpm --dir frontend tauri build",
-        "// --- Quality Control: Frontend & Backend ---": "",
-        "lint:backend": "pnpm --dir backend lint",
-        "lint:backend:fix": "pnpm --dir backend lint:fix",
-        "lint:frontend": "pnpm --dir frontend lint",
-        "lint:frontend:fix": "pnpm --dir frontend lint",
-        "test:backend": "pnpm --dir backend test",
-        "test:frontend": "pnpm --dir frontend test",
-        "test:frontend:e2e": "pnpm --dir frontend test:e2e",
-        "typecheck:backend": "pnpm --dir backend typecheck",
-        "typecheck:frontend": "pnpm --dir frontend typecheck",
-        "// --- Quality Control: Unified ---": "",
-        "check:all": "pnpm lint:all && pnpm typecheck:all && pnpm test:all",
-        "check:all:e2e": "pnpm lint:all && pnpm typecheck:all && pnpm test:all && pnpm --dir frontend test:e2e",
-        "lint:all": "pnpm lint:backend && pnpm lint:frontend",
-        "test:all": "pnpm test:backend && pnpm test:frontend",
-        "typecheck:all": "pnpm typecheck:backend && pnpm typecheck:frontend",
-        "// --- Project Lifecycle & Utilities ---": "",
-        "setup": "pnpm install && pnpm --dir frontend install && pip install -r backend/requirements.txt"
+  "version": "0.10.0",
+  "description": "Desktop app to generate Unity assets using AI (Electron + FastAPI)",
+  "name": "unity-generator",
+  "private": true,
+  "author": {
+    "name": "Ozymandros",
+    "email": "andreu.amv@gmail.com"
+  },
+  "main": "main.js",
+  "scripts": {
+    "// --- Build & Distribution (Electron) ---": "",
+    "build:backend": "python scripts/build_backend.py",
+    "build:frontend": "pnpm --dir frontend build",
+    "package": "pnpm run build:backend && pnpm run build:frontend && electron-builder",
+    "dist": "pnpm run build:backend && pnpm run build:frontend && electron-builder",
+    "dist:win": "pnpm run build:backend && pnpm run build:frontend && electron-builder --win",
+    "dist:mac": "pnpm run build:backend && pnpm run build:frontend && electron-builder --mac",
+    "dist:linux": "pnpm run build:backend && pnpm run build:frontend && electron-builder --linux",
+    "// --- Development ---": "",
+    "dev:backend": "cd backend && python -m uvicorn app.main:app --reload --port 35421",
+    "dev:frontend": "pnpm --dir frontend dev",
+    "dev:electron": "electron .",
+    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\" \"pnpm run dev:electron\"",
+    "// --- Electron Commands ---": "",
+    "electron": "electron .",
+    "electron:dev": "electron .",
+    "// --- Quality Control: Frontend & Backend ---": "",
+    "lint:backend": "pnpm --dir backend lint",
+    "lint:backend:fix": "pnpm --dir backend lint:fix",
+    "lint:frontend": "pnpm --dir frontend lint",
+    "lint:frontend:fix": "pnpm --dir frontend lint",
+    "test:backend": "pnpm --dir backend test",
+    "test:frontend": "pnpm --dir frontend test",
+    "test:frontend:e2e": "pnpm --dir frontend test:e2e",
+    "typecheck:backend": "pnpm --dir backend typecheck",
+    "typecheck:frontend": "pnpm --dir frontend typecheck",
+    "// --- Quality Control: Unified ---": "",
+    "check:all": "pnpm lint:all && pnpm typecheck:all && pnpm test:all",
+    "check:all:e2e": "pnpm lint:all && pnpm typecheck:all && pnpm test:all && pnpm --dir frontend test:e2e",
+    "lint:all": "pnpm lint:backend && pnpm lint:frontend",
+    "test:all": "pnpm test:backend && pnpm test:frontend",
+    "typecheck:all": "pnpm typecheck:backend && pnpm typecheck:frontend",
+    "// --- Project Lifecycle & Utilities ---": "",
+    "setup": "pnpm install && pnpm --dir frontend install && pip install -r backend/requirements.txt",
+    "generate:icons": "node scripts/generate-icons.js"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "electron-squirrel-startup": "^1.0.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.2",
+    "@types/node": "^25.3.0",
+    "@vitejs/plugin-vue": "^6.0.4",
+    "@vitest/ui": "^4.0.18",
+    "@vue/test-utils": "~2.4.6",
+    "concurrently": "^8.2.0",
+    "electron": "^40.8.0",
+    "electron-builder": "^26.8.1",
+    "jsdom": "^28.1.0",
+    "pinia": "~2.3.1",
+    "png-to-ico": "^3.0.1",
+    "sharp": "^0.34.5",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18",
+    "vuetify": "~3.12.1"
+  },
+  "build": {
+    "appId": "com.unitygenerator.app",
+    "productName": "Unity Generator",
+    "files": [
+      "main.js",
+      "preload.js",
+      "main/**/*",
+      "frontend/dist/**/*",
+      "app-icon.*"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/dist",
+        "to": "backend",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "app-icon.ico",
+      "signAndEditExecutable": false
     },
-    "devDependencies": {
-        "@tauri-apps/cli": "^1.6.3",
-        "@types/node": "^25.3.0",
-        "@vitejs/plugin-vue": "^6.0.4",
-        "@vitest/ui": "^4.0.18",
-        "@vue/test-utils": "~2.4.6",
-        "jsdom": "^28.1.0",
-        "pinia": "~2.3.1",
-        "vite": "^7.3.1",
-        "vitest": "^4.0.18",
-        "vuetify": "~3.12.1"
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "app-icon.icns",
+      "category": "public.app-category.developer-tools"
+    },
+    "linux": {
+      "target": [
+        "deb",
+        "AppImage"
+      ],
+      "icon": "app-icon.png",
+      "category": "Development"
+    },
+    "directories": {
+      "output": "dist-electron"
     }
+  }
 }

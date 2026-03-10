@@ -24,17 +24,14 @@ describe("IntelligenceStore", () => {
 
   it("loads configuration from API", async () => {
     const mockData = {
+      success: true,
+      date: new Date().toISOString(),
+      error: null,
+      preferences: { "preferred_llm_provider": "openai" },
       providers: [{ name: "openai", modalities: ["llm"] }],
       models: { openai: [{ value: "gpt-4", label: "GPT-4", modality: "llm" }] },
       prompts: { "default": "You are a bot" },
-      keys: ["openai"],
-      preferences: { "preferred_llm_provider": "openai" },
-      // ...other properties
-      getModelsByProvider: vi.fn().mockReturnValue([{ value: "gpt-4", label: "GPT-4", modality: "llm" }]),
-      getProvidersByModality: vi.fn().mockReturnValue([{ name: "openai", modalities: ["llm"] }]),
-      getPreference: vi.fn().mockReturnValue("mocked preference"),
-      isKeyConfigured: vi.fn().mockReturnValue(true),
-      
+      keys: { "openai": "sk-test-key" },
     };
 
     vi.mocked(client.getAllConfig).mockResolvedValue(mockData as unknown as DiscoveryResponse);
@@ -50,14 +47,17 @@ describe("IntelligenceStore", () => {
 
   it("filters providers by modality", async () => {
     const mockData = {
+      success: true,
+      date: new Date().toISOString(),
+      error: null,
+      data: {},
       providers: [
         { name: "openai", modalities: ["llm"] },
         { name: "stability", modalities: ["image"] },
       ],
       models: {},
       prompts: {},
-      keys: [],
-      preferences: {},
+      keys: {},
     };
 
     vi.mocked(client.getAllConfig).mockResolvedValue(mockData as unknown as DiscoveryResponse);
@@ -92,6 +92,13 @@ describe("IntelligenceStore", () => {
 
   it("getPreferredEngine returns provider and model with correct-on-read", async () => {
     const mockData = {
+      success: true,
+      date: new Date().toISOString(),
+      error: null,
+      preferences: {
+        preferred_llm_provider: "openai",
+        preferred_llm_model: "gpt-4",
+      },
       providers: [{ name: "openai", modalities: ["llm"] }],
       models: {
         openai: [
@@ -100,11 +107,7 @@ describe("IntelligenceStore", () => {
         ],
       },
       prompts: {},
-      keys: [],
-      preferences: {
-        preferred_llm_provider: "openai",
-        preferred_llm_model: "gpt-4",
-      },
+      keys: {},
     };
     vi.mocked(client.getAllConfig).mockResolvedValue(mockData as unknown as DiscoveryResponse);
 

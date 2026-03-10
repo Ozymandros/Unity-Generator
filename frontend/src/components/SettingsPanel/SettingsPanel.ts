@@ -1,9 +1,10 @@
 import { onMounted, ref } from "vue";
 import { getPref, setPref, listProviders, type ProviderCapabilities } from "@/api/client";
+import { getDefaultBackendUrl } from "@/api/constants";
 
 export function useSettingsPanel() {
   const backendUrl = ref(
-    localStorage.getItem("backendUrl") || "http://127.0.0.1:8000",
+    localStorage.getItem("backendUrl") || getDefaultBackendUrl(),
   );
 
   const preferredLlm = ref("deepseek");

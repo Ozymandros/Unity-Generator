@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach } from "vitest";
 import { mount, flushPromises } from "@vue/test-utils";
 import { SpritesPanel } from "@/components/SpritesPanel";
 import * as client from "@/api/client";
@@ -20,6 +20,9 @@ describe("SpritesPanel", () => {
             data: { key: "test", value: null },
         });
         vi.spyOn(client, "getAllConfig").mockResolvedValue({
+            success: true,
+            date: new Date().toISOString(),
+            error: null,
             providers: [{
                 name: "openai",
                 api_key_name: null,
@@ -41,8 +44,8 @@ describe("SpritesPanel", () => {
                 ]
             },
             prompts: {},
-            keys: [],
-            preferences: {},
+            keys: {} as Record<string, string>,
+            data: null
         });
     });
 

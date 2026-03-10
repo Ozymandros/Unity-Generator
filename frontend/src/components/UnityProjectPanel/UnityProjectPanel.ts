@@ -19,12 +19,13 @@ import {
 } from "@/constants/providers";
 import { FINALIZE_STATUS, UI_TONE } from "@/constants/finalize";
 import { UNITY_TEMPLATES, UNITY_PLATFORMS } from "@/constants/unity";
+import { electronShell } from "@/services/electronShell";
+import { setActiveProject } from "@/store/projectStore";
+import { useSessionProject } from "@/composables/useSessionProject";
 
 const DEFAULT_UNITY_VERSIONS: UnityVersionOption[] = [
   { value: "6000.3.2f1", label: "6000.3.2f1" },
 ];
-import { setActiveProject } from "@/store/projectStore";
-import { useSessionProject } from "@/composables/useSessionProject";
 
 export function useUnityProjectPanel() {
   const { projectName, projectPath, setProjectPath } = useSessionProject();
@@ -146,16 +147,6 @@ export function useUnityProjectPanel() {
     }
     return "";
   });
-
-  async function openWithTauri(path: string) {
-    const tauri = (window as unknown as { __TAURI__?: { shell?: { open: (path: string) => Promise<void> } } })
-      .__TAURI__;
-    if (!tauri?.shell?.open) {
-      return false;
-    }
-    await tauri.shell.open(path);
-    return true;
-  }
 
   async function run() {
     status.value = "Generating Unity project...";
@@ -294,7 +285,19 @@ export function useUnityProjectPanel() {
     }
   }
 
-  async function openOutputFolder() {
+  /**
+   * Open the output folder in the system's default file explorer.
+   *
+   * Attempts to open the last project path or fetches the latest output path
+   * from the backend, then uses Electron IPC to open it safely.
+   *
+   * @example
+   * ```typescript
+   * await openOutputFolder();
+   * // Updates status.value based on success or failure
+   * ```
+   */
+  async function openOutputFolder(): Promise<void> {
     try {
       const pathForFolder = lastProjectPath.value || projectPath.value;
       const response: { success: boolean; data?: Record<string, unknown> | null; error?: string | null } =
@@ -317,14 +320,18 @@ export function useUnityProjectPanel() {
       }
 
       try {
-        const opened = await openWithTauri(path);
-        if (opened) {
+        // Use Electron shell service via IPC to open folder
+        const result = await electronShell.openPath(path);
+        if (result.success) {
           status.value = "Opened output folder.";
+          tone.value = UI_TONE.OK;
         } else {
-          status.value = `Path: ${path} (Tauri not available in web build)`;
+          tone.value = UI_TONE.ERROR;
+          status.value = `Failed to open folder: ${result.error || 'Unknown error'}`;
         }
-      } catch (tauriError) {
-        status.value = `Path: ${path} (Failed to open in Tauri: ${String(tauriError)})`;
+      } catch (error) {
+        tone.value = UI_TONE.ERROR;
+        status.value = `Path: ${path} (Failed to open: ${String(error)})`;
       }
     } catch (error) {
       tone.value = UI_TONE.ERROR;

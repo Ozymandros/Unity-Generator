@@ -10,7 +10,7 @@
         "app.main:app",
         "--reload",
         "--port",
-        "8000"
+        "35421"
       ],
       "cwd": "${workspaceFolder}/backend",
       "env": {
@@ -36,11 +36,11 @@
     //   }
     // },
     {
-      "name": "Tauri App",
+      "name": "Electron App",
       "type": "node-terminal",
       "request": "launch",
-      "command": "pnpm tauri dev",
-      "cwd": "${workspaceFolder}/frontend"
+      "command": "pnpm dev:electron; Read-Host 'Press Enter to close'",
+      "cwd": "${workspaceFolder}"
     }
   ],
   "compounds": [
@@ -49,7 +49,7 @@
       "configurations": [
         "Backend (FastAPI)",
         "Frontend (Vite Server)",
-        "Tauri App"
+        "Electron App"
       ],
       "stopAll": true
     }

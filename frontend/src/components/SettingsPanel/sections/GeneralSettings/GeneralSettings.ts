@@ -1,29 +1,39 @@
 import { onMounted, ref, computed } from "vue";
 import { setPref } from "@/api/client";
+import { getDefaultBackendUrl } from "@/api/constants";
 import { useIntelligenceStore } from "@/store/intelligenceStore";
 
 export function useGeneralSettings() {
   const store = useIntelligenceStore();
 
   const backendUrl = ref(
-    localStorage.getItem("backendUrl") || "http://127.0.0.1:8000",
+    localStorage.getItem("backendUrl") || getDefaultBackendUrl(),
   );
 
-  /** Base path for generated Unity projects (relative, e.g. ./output). Stored in DB. */
-  const outputBasePath = ref("./output");
+  // Helper: writable computed bound to a store preference key.
+  // Both the v-select items (from store.providers / store.models) and
+  // these v-model values derive from the same Pinia state, so they
+  // always update in the same Vue render cycle — no timing race.
+  function prefComputed(key: string, fallback = "") {
+    return computed({
+      get: () => store.getPreference(key) || fallback,
+      set: (v: string) => store.setPreference(key, v),
+    });
+  }
 
-  // Selection refs (staged for saving)
-  const preferredLlm = ref("");
-  const preferredLlmModel = ref("");
+  const outputBasePath = prefComputed("output_base_path", "./output");
 
-  const preferredImage = ref("");
-  const preferredImageModel = ref("");
+  const preferredLlm = prefComputed("preferred_llm_provider");
+  const preferredLlmModel = prefComputed("preferred_llm_model");
 
-  const preferredAudio = ref("");
-  const preferredAudioModel = ref("");
+  const preferredImage = prefComputed("preferred_image_provider");
+  const preferredImageModel = prefComputed("preferred_image_model");
 
-  const preferredMusic = ref("");
-  const preferredMusicModel = ref("");
+  const preferredAudio = prefComputed("preferred_audio_provider");
+  const preferredAudioModel = prefComputed("preferred_audio_model");
+
+  const preferredMusic = prefComputed("preferred_music_provider");
+  const preferredMusicModel = prefComputed("preferred_music_model");
 
   const status = ref<string | null>(null);
   const statusType = ref<"success" | "error" | "info" | null>(null);
@@ -43,32 +53,8 @@ export function useGeneralSettings() {
   const musicProviders = computed(() => store.getProvidersByModality("music"));
   const musicModels = computed(() => store.getModelsByProvider(preferredMusic.value, "music"));
 
-  onMounted(async () => {
-    try {
-      await store.load();
-
-      // Initialize from store (correct-on-read via getPreferredEngine)
-      const llm = store.getPreferredEngine("llm");
-      preferredLlm.value = llm.provider;
-      preferredLlmModel.value = llm.model;
-
-      const image = store.getPreferredEngine("image");
-      preferredImage.value = image.provider;
-      preferredImageModel.value = image.model;
-
-      const audio = store.getPreferredEngine("audio");
-      preferredAudio.value = audio.provider;
-      preferredAudioModel.value = audio.model;
-
-      const music = store.getPreferredEngine("music");
-      preferredMusic.value = music.provider;
-      preferredMusicModel.value = music.model;
-
-      const basePath = store.getPreference("output_base_path");
-      if (basePath) outputBasePath.value = basePath;
-    } catch (e) {
-      console.error("Failed to load settings via store", e);
-    }
+  onMounted(() => {
+    store.load(true);
   });
 
   async function save() {
@@ -121,6 +107,7 @@ export function useGeneralSettings() {
 
   return {
     backendUrl,
+    defaultBackendUrl: getDefaultBackendUrl(),
     outputBasePath,
     providers,
     llmProviders,

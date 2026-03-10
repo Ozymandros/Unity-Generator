@@ -21,8 +21,8 @@ def test_set_preferred_model_invalid_400(tmp_path) -> None:
     import os
     os.environ["DATABASE_DIR"] = str(tmp_path)
     from app.core.db import init_db
-    from app.repositories import get_provider_repo, get_model_repo
-    from app.services.providers.capabilities import ProviderCapabilities, Modality
+    from app.repositories import get_model_repo, get_provider_repo
+    from app.services.providers.capabilities import Modality, ProviderCapabilities
 
     init_db()
     caps = ProviderCapabilities(
