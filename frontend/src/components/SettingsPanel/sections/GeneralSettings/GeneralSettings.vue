@@ -3,6 +3,7 @@ import { useGeneralSettings } from "./GeneralSettings";
 
 const {
   backendUrl,
+  defaultBackendUrl,
   outputBasePath,
   providers,
   preferredLlm,
@@ -45,7 +46,7 @@ const {
       <v-text-field
         v-model="backendUrl"
         label="Backend URL"
-        placeholder="http://127.0.0.1:8000"
+        :placeholder="defaultBackendUrl"
         variant="outlined"
         persistent-hint
         hint="The address of your Unity Generator backend service"

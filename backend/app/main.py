@@ -5,6 +5,7 @@ This module defines the API application and includes routers for various feature
 """
 
 import logging
+import os
 from typing import Any
 
 from app.core.config import get_logs_dir
@@ -49,12 +50,25 @@ logger.info("Database initialized, seeded, and registry loaded.")
 app = FastAPI()
 logger.info("FastAPI app instance created.")
 
+# CORS: The port is configured via PORT env var (from entrypoint.py DEFAULT_PORT = 35421).
+# This ensures CORS allows the backend's own origin regardless of what port it runs on.
+_default_port = "35421"
+_backend_port = os.environ.get("PORT", _default_port)
+
+_cors_origins: list[str] = [
+    # Vite dev server
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    # Backend's own origin (matches the port it's actually running on)
+    f"http://localhost:{_backend_port}",
+    f"http://127.0.0.1:{_backend_port}",
+    # Electron file:// origin
+    "null",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

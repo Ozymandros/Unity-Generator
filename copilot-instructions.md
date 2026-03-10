@@ -416,7 +416,7 @@ onMounted(() => {
 - **Panel Components**: Each generation type (Code, Text, Image, Audio) should have its own panel component
 - **Status Banner**: Use `StatusBanner` component for consistent status/error display
 - **API Client**: All backend communication goes through `api/client.ts` functions
-- **Backend URL**: Store backend URL in localStorage with fallback to `http://127.0.0.1:8000`
+- **Backend URL**: Store backend URL in localStorage with fallback to `http://127.0.0.1:35421`
 
 ### Testing
 

@@ -50,7 +50,7 @@ docker-compose up --build
 
 This starts:
 
-- Backend at `http://localhost:8000`
+- Backend at `http://localhost:35421`
 - Frontend dev server at `http://localhost:5173`
 
 Dockerfiles:

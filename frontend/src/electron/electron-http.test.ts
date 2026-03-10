@@ -31,7 +31,7 @@ interface BackendResponse {
 class ApiClient {
   private backendUrl: string;
   
-  constructor(backendUrl: string = 'http://127.0.0.1:8000') {
+  constructor(backendUrl: string = 'http://127.0.0.1:35421') {
     this.backendUrl = backendUrl;
   }
   

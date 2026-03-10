@@ -129,7 +129,7 @@ function configureCSP(webContents) {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data:",
       "font-src 'self' data:",
-      "connect-src 'self' http://127.0.0.1:8000",
+      "connect-src 'self' http://127.0.0.1:35421",
       "frame-src 'self'",
       "object-src 'none'",
       "base-uri 'self'",
@@ -157,7 +157,7 @@ function configureCSP(webContents) {
 | `style-src` | CSS sources | `'self' 'unsafe-inline'` - inline styles for Vue |
 | `img-src` | Image sources | `'self' data:` - allow data URIs |
 | `font-src` | Font sources | `'self' data:` - allow data URIs |
-| `connect-src` | AJAX requests | `'self' http://127.0.0.1:8000` - backend only |
+| `connect-src` | AJAX requests | `'self' http://127.0.0.1:35421` - backend only |
 | `frame-src` | Frame sources | `'self'` - same origin frames |
 | `object-src` | Plugin resources | `'none'` - no plugins |
 | `base-uri` | Base element | `'self'` - same origin |
@@ -645,7 +645,7 @@ function configureCSP(window) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data:",
     "font-src 'self' data:",
-    "connect-src 'self' http://127.0.0.1:8000",
+    "connect-src 'self' http://127.0.0.1:35421",
     "frame-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
@@ -674,7 +674,7 @@ module.exports = { configureCSP };
 | `style-src` | CSS sources | `'self' 'unsafe-inline'` - inline styles for Vue |
 | `img-src` | Image sources | `'self' data:` - allow data URIs |
 | `font-src` | Font sources | `'self' data:` - allow data URIs |
-| `connect-src` | AJAX requests | `'self' http://127.0.0.1:8000` - backend only |
+| `connect-src` | AJAX requests | `'self' http://127.0.0.1:35421` - backend only |
 | `frame-src` | Frame sources | `'self'` - same origin frames |
 | `object-src` | Plugin resources | `'none'` - no plugins |
 | `base-uri` | Base element | `'self'` - same origin |

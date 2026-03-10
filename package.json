@@ -14,7 +14,7 @@
         "dist:mac": "pnpm run build:backend && pnpm run build:frontend && electron-builder --mac",
         "dist:linux": "pnpm run build:backend && pnpm run build:frontend && electron-builder --linux",
         "// --- Development ---": "",
-        "dev:backend": "cd backend && python -m uvicorn app.main:app --reload --port 8000",
+        "dev:backend": "cd backend && python -m uvicorn app.main:app --reload --port 35421",
         "dev:frontend": "pnpm --dir frontend dev",
         "dev:electron": "electron .",
         "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\" \"pnpm run dev:electron\"",

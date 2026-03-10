@@ -40,10 +40,10 @@ interface CSPViolation {
 class CSPManager {
   private config: CSPConfig = {
     defaultSrc: ["'self'"],
-    scriptSrc: ["'self'", "'unsafe-eval'", "'unsafe-inline'", "http://127.0.0.1:8000"],
-    styleSrc: ["'self'", "'unsafe-inline'", "http://127.0.0.1:8000"],
-    imgSrc: ["'self'", "data:", "http://127.0.0.1:8000"],
-    connectSrc: ["'self'", "http://127.0.0.1:8000"],
+    scriptSrc: ["'self'", "'unsafe-eval'", "'unsafe-inline'", "http://127.0.0.1:35421"],
+    styleSrc: ["'self'", "'unsafe-inline'", "http://127.0.0.1:35421"],
+    imgSrc: ["'self'", "data:", "http://127.0.0.1:35421"],
+    connectSrc: ["'self'", "http://127.0.0.1:35421"],
     fontSrc: ["'self'", "data:"],
     objectSrc: ["'none'"],
     baseUri: ["'self'"],
@@ -142,12 +142,12 @@ describe("Property 14: Content Security Policy Enforcement", () => {
   });
   
   it("should restrict script sources", () => {
-    const allowed = cspManager.isResourceAllowed('http://127.0.0.1:8000/script.js', 'scriptSrc');
+    const allowed = cspManager.isResourceAllowed('http://127.0.0.1:35421/script.js', 'scriptSrc');
     expect(allowed).toBe(true);
   });
   
   it("should restrict connect sources", () => {
-    const allowed = cspManager.isResourceAllowed('http://127.0.0.1:8000/api', 'connectSrc');
+    const allowed = cspManager.isResourceAllowed('http://127.0.0.1:35421/api', 'connectSrc');
     expect(allowed).toBe(true);
   });
   

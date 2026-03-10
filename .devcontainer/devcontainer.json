@@ -5,9 +5,9 @@
   "workspaceFolder": "/workspaces/Unity-Generator",
   "runServices": ["backend", "frontend"],
   "shutdownAction": "stopCompose",
-  "forwardPorts": [8000, 5173, 5678],
+  "forwardPorts": [35421, 5173, 5678],
   "portsAttributes": {
-    "8000": {
+    "35421": {
       "label": "Backend (FastAPI)",
       "protocol": "http",
       "onAutoForward": "openBrowserOnce"

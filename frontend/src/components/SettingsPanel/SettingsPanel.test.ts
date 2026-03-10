@@ -14,7 +14,7 @@ describe("SettingsPanel", () => {
     // Mock localStorage
     const localStorageMock = {
       getItem: vi.fn((key) => {
-        if (key === 'backendUrl') return "http://127.0.0.1:8000";
+        if (key === 'backendUrl') return "http://127.0.0.1:35421";
         return null;
       }),
       setItem: vi.fn(),

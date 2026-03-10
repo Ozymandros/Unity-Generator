@@ -220,7 +220,7 @@ The UI stores preferred providers in the local SQLite DB:
 
 ## Backend API
 
-Base URL: `http://127.0.0.1:8000`
+Base URL: `http://127.0.0.1:35421`
 
 Health:
 
@@ -335,7 +335,7 @@ Electron app.
 
 ## Troubleshooting
 
-- If the UI cannot reach the backend, confirm the backend is running on port 8000.
+- If the UI cannot reach the backend, confirm the backend is running on port 35421.
 - If generation fails, verify your provider keys in `config/api_keys.json`.
 - If a provider request errors, check `logs/` for the failed request log.
 - If a Docker build is slow, ensure `node_modules/` and venvs are ignored.

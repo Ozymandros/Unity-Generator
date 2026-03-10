@@ -1,3 +1,5 @@
+import { getDefaultBackendUrl } from "@/api/constants";
+
 export type GenerationResponse = {
   success: boolean;
   date: string;
@@ -13,6 +15,7 @@ export type DiscoveryResponse = {
   providers?: ProviderCapabilities[];
   models?: Record<string, unknown>;
   keys?: Record<string, string>;
+  preferences?: Record<string, string>;
   prompts?: Record<string, string>;
   settings?: Record<string, unknown>;
 };
@@ -43,7 +46,7 @@ export type GenerationRequest = {
 };
 
 function getBackendUrl(): string {
-  return localStorage.getItem("backendUrl") || "http://127.0.0.1:8000";
+  return localStorage.getItem("backendUrl") || getDefaultBackendUrl();
 }
 
 /**

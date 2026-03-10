@@ -15,8 +15,10 @@ import {
   getFinalizeJobStatus,
   downloadFinalizedProject,
 } from "@/api/client";
+import { getDefaultBackendUrl } from "@/api/constants";
 
 const mockFetch = vi.fn();
+const defaultBackendUrl = getDefaultBackendUrl();
 
 function mockResponse(data: unknown, ok = true) {
   return Promise.resolve({
@@ -29,9 +31,8 @@ function mockResponse(data: unknown, ok = true) {
 beforeEach(() => {
   mockFetch.mockReset();
   globalThis.fetch = mockFetch as unknown as typeof fetch;
-  // Use vi.stubGlobal to mock localStorage for Vitest compatibility
   vi.stubGlobal('localStorage', {
-    getItem: vi.fn(() => "http://127.0.0.1:8000"),
+    getItem: vi.fn(() => defaultBackendUrl),
     setItem: vi.fn(),
     removeItem: vi.fn(),
     clear: vi.fn(),
@@ -47,7 +48,7 @@ describe("api client", () => {
     );
     await generateCode({ prompt: "p" });
     expect(mockFetch).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/generate/code",
+      defaultBackendUrl + "/generate/code",
       expect.objectContaining({ method: "POST" })
     );
   });
@@ -58,7 +59,7 @@ describe("api client", () => {
     );
     await generateText({ prompt: "p" });
     expect(mockFetch).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/generate/text",
+      defaultBackendUrl + "/generate/text",
       expect.objectContaining({ method: "POST" })
     );
   });
@@ -69,7 +70,7 @@ describe("api client", () => {
     );
     await generateImage({ prompt: "p" });
     expect(mockFetch).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/generate/image",
+      defaultBackendUrl + "/generate/image",
       expect.objectContaining({ method: "POST" })
     );
   });
@@ -80,7 +81,7 @@ describe("api client", () => {
     );
     await generateAudio({ prompt: "p" });
     expect(mockFetch).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/generate/audio",
+      defaultBackendUrl + "/generate/audio",
       expect.objectContaining({ method: "POST" })
     );
   });
@@ -91,7 +92,7 @@ describe("api client", () => {
     );
     await saveApiKeys({ openai_api_key: "x" });
     expect(mockFetch).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/config/keys",
+      defaultBackendUrl + "/config/keys",
       expect.objectContaining({ method: "POST" })
     );
   });
@@ -102,7 +103,7 @@ describe("api client", () => {
     );
     await setPref("k", "v");
     expect(mockFetch).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/prefs",
+      defaultBackendUrl + "/prefs",
       expect.objectContaining({ method: "POST" })
     );
   });
@@ -113,7 +114,7 @@ describe("api client", () => {
     );
     await getPref("k");
     expect(mockFetch).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/prefs/k",
+      defaultBackendUrl + "/prefs/k",
       expect.objectContaining({ method: "GET" })
     );
   });
@@ -124,7 +125,7 @@ describe("api client", () => {
     );
     await generateUnityProject({ project_name: "p" });
     expect(mockFetch).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/generate/unity-project",
+      defaultBackendUrl + "/generate/unity-project",
       expect.objectContaining({ method: "POST" })
     );
   });
@@ -135,7 +136,7 @@ describe("api client", () => {
     );
     await getLatestOutput();
     expect(mockFetch).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/output/latest",
+      defaultBackendUrl + "/output/latest",
       expect.objectContaining({ method: "GET" })
     );
   });
@@ -144,7 +145,7 @@ describe("api client", () => {
     mockFetch.mockReturnValueOnce(mockResponse({ status: "ok" }));
     await healthCheck();
     expect(mockFetch).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/health",
+      defaultBackendUrl + "/health",
       expect.objectContaining({ method: "GET" })
     );
   });
@@ -158,7 +159,7 @@ describe("api client", () => {
       unity_settings: { generate_scene: true, scene_name: "MainScene" },
     });
     expect(mockFetch).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/api/v1/project/finalize",
+      defaultBackendUrl + "/api/v1/project/finalize",
       expect.objectContaining({ method: "POST" })
     );
     expect(result.job_id).toBe("abc123");
@@ -181,7 +182,7 @@ describe("api client", () => {
     );
     const result = await getFinalizeJobStatus("abc123");
     expect(mockFetch).toHaveBeenCalledWith(
-      "http://127.0.0.1:8000/api/v1/project/finalize/abc123",
+      defaultBackendUrl + "/api/v1/project/finalize/abc123",
       expect.objectContaining({ method: "GET" })
     );
     expect(result.status).toBe("running");
@@ -191,7 +192,7 @@ describe("api client", () => {
   it("returns download URL for downloadFinalizedProject", () => {
     const url = downloadFinalizedProject("abc123");
     expect(url).toBe(
-      "http://127.0.0.1:8000/api/v1/project/finalize/abc123/download"
+      defaultBackendUrl + "/api/v1/project/finalize/abc123/download"
     );
   });
 });

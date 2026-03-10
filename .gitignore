@@ -22,6 +22,7 @@ htmlcov/
 test_fail.json
 repro_failure.py
 temp_mcp_instructions/
+temp_extracted_asar/
 
 # Node
 node_modules/

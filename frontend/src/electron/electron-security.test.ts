@@ -25,7 +25,7 @@ class SecurityManager {
   private config: SecurityConfig = {
     allowLocalhost: true,
     allowHttps: true,
-    allowedOrigins: ['http://127.0.0.1:8000', 'https://localhost:8000']
+    allowedOrigins: ['http://127.0.0.1:35421', 'https://localhost:35421']
   };
 
   /**
@@ -106,7 +106,7 @@ describe("Property 13: Backend Communication Security", () => {
   });
   
   it("should allow localhost connections", () => {
-    const result = securityManager.validateBackendUrl('http://127.0.0.1:8000');
+    const result = securityManager.validateBackendUrl('http://127.0.0.1:35421');
     
     expect(result.valid).toBe(true);
   });
@@ -125,7 +125,7 @@ describe("Property 13: Backend Communication Security", () => {
   });
   
   it("should validate allowed origins", () => {
-    const result = securityManager.validateBackendUrl('http://127.0.0.1:8000');
+    const result = securityManager.validateBackendUrl('http://127.0.0.1:35421');
     
     expect(result.valid).toBe(true);
   });
@@ -141,7 +141,7 @@ describe("Property 13: Backend Communication Security", () => {
     // This test verifies the configuration is applied correctly
     
     // The default config should allow localhost
-    expect(securityManager.isUrlSecure('http://127.0.0.1:8000')).toBe(true);
+    expect(securityManager.isUrlSecure('http://127.0.0.1:35421')).toBe(true);
     
     // Configure to disallow localhost
     securityManager.configureSecurity({
@@ -149,11 +149,11 @@ describe("Property 13: Backend Communication Security", () => {
     });
     
     // After disabling localhost, the URL should be invalid
-    expect(securityManager.isUrlSecure('http://127.0.0.1:8000')).toBe(false);
+    expect(securityManager.isUrlSecure('http://127.0.0.1:35421')).toBe(false);
   });
   
   it("should check URL security", () => {
-    expect(securityManager.isUrlSecure('http://127.0.0.1:8000')).toBe(true);
+    expect(securityManager.isUrlSecure('http://127.0.0.1:35421')).toBe(true);
     expect(securityManager.isUrlSecure('https://api.example.com')).toBe(true);
   });
 });

@@ -6,8 +6,9 @@
 
 import axios, { AxiosError, AxiosResponse } from 'axios';
 
-// Configuration
-const API_BASE_URL = 'http://127.0.0.1:8000';
+// Configuration (default port must match main process and backend entrypoint)
+const DEFAULT_BACKEND_PORT = 35421;
+const API_BASE_URL = `http://127.0.0.1:${DEFAULT_BACKEND_PORT}`;
 const REQUEST_TIMEOUT = 30000; // 30 seconds
 
 /**

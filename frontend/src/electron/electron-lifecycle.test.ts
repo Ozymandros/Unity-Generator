@@ -26,7 +26,7 @@ interface BackendProcess {
  */
 class LifecycleManager {
   private backendProcess: BackendProcess | null = null;
-  private healthCheckEndpoint = 'http://127.0.0.1:8000/health';
+  private healthCheckEndpoint = 'http://127.0.0.1:35421/health';
   
   /**
    * Spawn the Python FastAPI backend process
@@ -35,7 +35,7 @@ class LifecycleManager {
     const process: BackendProcess = {
       pid: Math.floor(Math.random() * 10000) + 1,
       isRunning: true,
-      port: 8000,
+      port: 35421,
       healthStatus: 'starting'
     };
     this.backendProcess = process;
@@ -112,7 +112,7 @@ describe("Property 1: Backend Process Lifecycle Management", () => {
     
     expect(process).toBeDefined();
     expect(process.isRunning).toBe(true);
-    expect(process.port).toBe(8000);
+    expect(process.port).toBe(35421);
     expect(process.pid).toBeGreaterThan(0);
   });
   

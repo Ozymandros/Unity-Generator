@@ -49,3 +49,5 @@ Thumbs.db
 # Local config
 .env
 .env.*
+
+temp_extracted_asar

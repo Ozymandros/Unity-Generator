@@ -14,9 +14,9 @@ const SERVERS = {
   backend: {
     name: 'Python Backend',
     command: 'python',
-    args: ['-m', 'uvicorn', 'app.main:app', '--reload', '--port', '8000'],
+    args: ['-m', 'uvicorn', 'app.main:app', '--reload', '--port', '35421'],
     cwd: path.join(__dirname, '..', 'backend'),
-    port: 8000
+    port: 35421
   },
   frontend: {
     name: 'Vue Frontend',

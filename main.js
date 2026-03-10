@@ -6,7 +6,7 @@
 const { app, BrowserWindow, ipcMain, dialog, Notification, nativeTheme, shell, autoUpdater } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const axios = require('axios');
 const os = require('os');
 
@@ -112,8 +112,15 @@ function loadFrontend(window) {
   try {
     if (process.env.NODE_ENV === 'development') {
       window.loadURL('http://localhost:5173');
+      window.webContents.openDevTools();
       return;
     }
+
+    // In development (not packaged), open DevTools to see errors
+    if (!app.isPackaged) {
+      window.webContents.openDevTools();
+    }
+
     // When packaged, use app.getAppPath() to get the correct base path
     // This resolves to the app.asar location
     const appPath = app.getAppPath();
@@ -146,18 +153,23 @@ function loadFrontend(window) {
 }
 
 // --- Lifecycle (backend spawn) ---
-const BACKEND_PORT = 8000, BACKEND_HOST = '127.0.0.1', HEALTH_ENDPOINT = '/health';
+/** Default backend port (high port to avoid conflicts). Override with BACKEND_PORT env (e.g. for E2E). */
+const DEFAULT_BACKEND_PORT = 35421;
+const BACKEND_PORT = parseInt(process.env.BACKEND_PORT, 10) || DEFAULT_BACKEND_PORT;
+const BACKEND_HOST = '127.0.0.1';
+const HEALTH_ENDPOINT = '/health';
 const MAX_RETRIES = 30, RETRY_INTERVAL = 1000;
 
 async function startPythonBackend() {
-  const isDev = process.env.NODE_ENV === 'development';
+  const isDev =  !app.isPackaged;
+  const databaseDir = path.join(app.getPath('userData'), 'db');
   
   logMainProcess(`Starting backend in ${isDev ? 'development' : 'production'} mode`);
   
   if (isDev) {
     // Development: Run Python with uvicorn
     const pythonPath = process.platform === 'win32' ? 'python.exe' : 'python';
-    const backendPath = path.join(__dirname, '..', 'backend');
+    const backendPath = path.join(__dirname, 'backend');
     
     logMainProcess(`Backend path (dev): ${backendPath}`);
     
@@ -192,7 +204,7 @@ async function startPythonBackend() {
     
     // Run the standalone backend executable
     const backend = spawn(backendExePath, [], {
-      env: { ...process.env, PORT: String(BACKEND_PORT), HOST: BACKEND_HOST },
+      env: { ...process.env, PORT: String(BACKEND_PORT), HOST: BACKEND_HOST, DATABASE_DIR: path.join(app.getPath('userData'), 'db') },
       stdio: ['pipe', 'pipe', 'pipe']
     });
     
@@ -214,6 +226,49 @@ async function waitForBackendReady(backend) {
     await new Promise(r => setTimeout(r, RETRY_INTERVAL));
   }
   return false;
+}
+
+/**
+ * Terminate the backend process and its tree so the port is released.
+ * On Windows uses taskkill /T /F for reliable process-tree kill.
+ * On Unix uses SIGTERM then SIGKILL after a short delay.
+ * Resolves when the process has exited or after a timeout.
+ * @param {import('child_process').ChildProcess | null} proc - Backend child process
+ * @returns {Promise<void>}
+ */
+function killBackendProcess(proc) {
+  if (!proc || proc.pid == null) return Promise.resolve();
+  const pid = Math.floor(Number(proc.pid));
+  if (!Number.isFinite(pid) || pid <= 0) return Promise.resolve();
+
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timeoutId);
+      try { proc.removeListener('exit', onExit); } catch (_) {}
+      resolve();
+    };
+    const onExit = () => finish();
+    const timeoutId = setTimeout(finish, 3000);
+    proc.once('exit', onExit);
+
+    if (process.platform === 'win32') {
+      try {
+        execSync(`taskkill /PID ${pid} /T /F`, { stdio: 'ignore', timeout: 5000 });
+      } catch (_) {
+        // Process may already be dead
+      }
+      finish();
+    } else {
+      try { proc.kill('SIGTERM'); } catch (_) {}
+      setTimeout(() => {
+        try { proc.kill('SIGKILL'); } catch (_) {}
+        finish();
+      }, 1500);
+    }
+  });
 }
 
 // --- Notification ---
@@ -270,10 +325,13 @@ function handleCSPViolation(violation) {
   return { blocked: true, reason: 'CSP violation' };
 }
 
-const DEFAULT_CSP_STRING = "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' http://127.0.0.1:8000; style-src 'self' 'unsafe-inline' http://127.0.0.1:8000; img-src 'self' data: http://127.0.0.1:8000; connect-src 'self' http://127.0.0.1:8000; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';";
+function buildCSPString() {
+  const backendOrigin = `http://${BACKEND_HOST}:${BACKEND_PORT}`;
+  return `default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' ${backendOrigin}; style-src 'self' 'unsafe-inline' ${backendOrigin}; img-src 'self' data: ${backendOrigin}; connect-src 'self' ${backendOrigin}; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';`;
+}
 
 function configureCSP() {
-  return DEFAULT_CSP_STRING;
+  return buildCSPString();
 }
 
 // --- i18n ---
@@ -512,6 +570,11 @@ async function initializeApp() {
       logMainProcess(`Window crashed: killed=${killed}`);
     });
     
+    // Capture console messages from renderer
+    mainWindow.webContents.on('console-message', (level, message, line, sourceId) => {
+      logMainProcess(`Renderer console [${level}]: ${message} (${sourceId}:${line})`);
+    });
+    
     logMainProcess('Loading frontend...');
     loadFrontend(mainWindow);
     
@@ -534,7 +597,10 @@ ipcMain.handle('backend:status', async () => ({
 
 ipcMain.handle('backend:restart', async () => {
   try {
-    if (backendProcess) backendProcess.kill('SIGTERM');
+    if (backendProcess) {
+      await killBackendProcess(backendProcess);
+      backendProcess = null;
+    }
     backendProcess = await startPythonBackend();
     const ready = await waitForBackendReady(backendProcess);
     return { isRunning: ready, health: ready ? 'healthy' : 'unhealthy', port: BACKEND_PORT };
@@ -596,9 +662,14 @@ app.on('ready', async () => {
 
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
 
-app.on('before-quit', () => {
+app.on('before-quit', (event) => {
+  if (isQuitting) return;
   isQuitting = true;
-  if (backendProcess) { try { backendProcess.kill('SIGTERM'); } catch (_) {} }
+  if (!backendProcess) return;
+  event.preventDefault();
+  const proc = backendProcess;
+  backendProcess = null;
+  killBackendProcess(proc).then(() => { app.quit(); }).catch(() => { app.quit(); });
 });
 
 app.on('quit', () => logMainProcess('Application quit'));

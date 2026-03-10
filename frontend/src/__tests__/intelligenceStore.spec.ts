@@ -27,7 +27,7 @@ describe("IntelligenceStore", () => {
       success: true,
       date: new Date().toISOString(),
       error: null,
-      data: { "preferred_llm_provider": "openai" },
+      preferences: { "preferred_llm_provider": "openai" },
       providers: [{ name: "openai", modalities: ["llm"] }],
       models: { openai: [{ value: "gpt-4", label: "GPT-4", modality: "llm" }] },
       prompts: { "default": "You are a bot" },
@@ -95,7 +95,7 @@ describe("IntelligenceStore", () => {
       success: true,
       date: new Date().toISOString(),
       error: null,
-      data: {
+      preferences: {
         preferred_llm_provider: "openai",
         preferred_llm_model: "gpt-4",
       },

@@ -19,7 +19,7 @@ pip install -r requirements.txt
 pip install -e ".[dev]"
 
 echo.
-echo Starting backend development server on port 8000...
-python -m uvicorn app.main:app --reload --port 8000
+echo Starting backend development server on port 35421...
+python -m uvicorn app.main:app --reload --port 35421
 
 endlocal

@@ -178,13 +178,13 @@ pip install -r requirements.txt
 pnpm run backend:dev
 
 # Option 2: Directly with uvicorn (after venv activation)
-python -m uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --port 35421
 
 # Option 3: With debugpy for remote debugging
 pnpm run backend:debug
 ```
 
-The backend serves on `http://127.0.0.1:8000` with CORS enabled.
+The backend serves on `http://127.0.0.1:35421` with CORS enabled.
 
 ### Frontend setup
 
@@ -223,7 +223,7 @@ Provider preferences are stored in `db/user_prefs.db` with keys:
 ## Backend endpoints (dev sanity)
 
 ```bash
-curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:35421/health
 ```
 
 ## Tests
@@ -365,7 +365,7 @@ Editor automation scripts are generated from Jinja2 templates in
 
 ## Common issues
 
-- Backend not reachable: confirm port 8000 is free and the backend is running.
+- Backend not reachable: confirm port 35421 is free and the backend is running.
 - Provider failures: verify `config/api_keys.json` and check `logs/`.
 - Unity output missing: confirm `output/` exists and requests include prompts.
 - Frontend build issues: delete `node_modules/` and reinstall with pnpm.

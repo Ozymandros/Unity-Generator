@@ -50,7 +50,7 @@ Unity-Generator/
 ├── main.js                    # Electron main process
 ├── preload.js                 # Electron preload script
 ├── frontend/src/              # Vue source (localhost:5173)
-└── backend/app/               # FastAPI source (localhost:8000)
+└── backend/app/               # FastAPI source (localhost:35421)
 ```
 
 ### Production Build

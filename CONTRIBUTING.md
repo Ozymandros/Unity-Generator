@@ -60,7 +60,7 @@ pnpm run backend:dev
 # Or directly with Python (after creating .venv)
 cd backend
 <platform-specific venv activation>
-python -m uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --port 35421
 ```
 
 See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for full platform-specific venv activation instructions.

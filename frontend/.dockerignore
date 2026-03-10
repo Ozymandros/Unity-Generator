@@ -25,6 +25,8 @@ build/
 coverage/
 playwright-report/
 test-results/
+temp_extracted_asar
+temp_mcp_instructions
 
 # Electron build output
 dist/

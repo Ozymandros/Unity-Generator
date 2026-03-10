@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const BACKEND_PORT = process.env.BACKEND_PORT || "8000";
+const BACKEND_PORT = process.env.BACKEND_PORT || "35421";
 const BACKEND_URL = `http://127.0.0.1:${BACKEND_PORT}`;
 
 /**

@@ -46,7 +46,7 @@ export UNITY_EDITOR_PATH="/Applications/Unity/Hub/Editor/2022.3.0f1/Unity.app/Co
 ### Setting via the API
 
 ```bash
-curl -X POST http://127.0.0.1:8000/prefs \
+curl -X POST http://127.0.0.1:35421/prefs \
   -H "Content-Type: application/json" \
   -d '{"key": "unity_editor_path", "value": "/path/to/Unity"}'
 ```

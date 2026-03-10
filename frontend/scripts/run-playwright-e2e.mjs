@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import process from "node:process";
 
 const START_PORT = 5173;
-const BACKEND_START_PORT = 8000;
+const BACKEND_START_PORT = 35421;
 const MAX_ATTEMPTS = 200;
 
 function canListen(port) {

@@ -128,7 +128,7 @@ Unity-Generator/
 ├── frontend/
 │   └── src/                   # Vue source (dev server: localhost:5173)
 └── backend/
-    └── app/                   # FastAPI source (dev server: localhost:8000)
+    └── app/                   # FastAPI source (dev server: localhost:35421)
 ```
 
 ### Production Build

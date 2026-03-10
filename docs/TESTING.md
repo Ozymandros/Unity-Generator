@@ -310,6 +310,9 @@ test('feature works correctly', async ({ page }) => {
 - Check backend logs for errors
 - Ensure correct port configuration
 
+### Default backend port
+The app and tests use a fixed default backend port (**35421**) to avoid conflicts with common dev tools. E2E and Playwright read `BACKEND_PORT` from the environment; if you run the backend on a different port, set `BACKEND_PORT` when running tests (e.g. `BACKEND_PORT=35500 pnpm --dir frontend test:e2e`).
+
 ### Port already in use
 - Test runner finds free ports automatically
 - Check for zombie processes

@@ -10,7 +10,7 @@
         "app.main:app",
         "--reload",
         "--port",
-        "8000"
+        "35421"
       ],
       "cwd": "${workspaceFolder}/backend",
       "env": {
@@ -39,7 +39,7 @@
       "name": "Electron App",
       "type": "node-terminal",
       "request": "launch",
-      "command": "pnpm dev:electron",
+      "command": "pnpm dev:electron; Read-Host 'Press Enter to close'",
       "cwd": "${workspaceFolder}"
     }
   ],

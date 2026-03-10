@@ -44,7 +44,7 @@ electron-builder is the industry standard for packaging Electron applications. I
 
 **Development:**
 - Frontend: `frontend/src/` → Vite dev server at `http://localhost:5173`
-- Backend: `backend/` → Python dev server at `http://127.0.0.1:8000`
+- Backend: `backend/` → Python dev server at `http://127.0.0.1:35421`
 - Main process: `main.js` (runs directly with `electron .`)
 - Preload: `preload.js`
 

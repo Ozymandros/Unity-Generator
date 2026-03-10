@@ -12,7 +12,7 @@ import pytest
 def setup_test_env():
     """
     Override the global setup_test_env fixture with a no-op version.
-    
+
     Entrypoint tests only validate import mechanics and don't need
     database or filesystem setup.
     """

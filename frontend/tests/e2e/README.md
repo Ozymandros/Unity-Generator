@@ -73,7 +73,7 @@ pnpm --dir frontend test:e2e
 ## Test Environment
 
 The tests automatically:
-1. Find free ports for frontend (starting at 5173) and backend (starting at 8000)
+1. Use default ports: frontend 5173, backend 35421 (override with `VITE_PORT` / `BACKEND_PORT` if needed)
 2. Start Vite dev server (unless in CI)
 3. Start Python backend (unless in CI)
 4. Run Playwright tests

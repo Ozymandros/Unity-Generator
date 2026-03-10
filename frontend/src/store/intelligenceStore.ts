@@ -57,7 +57,7 @@ export const useIntelligenceStore = defineStore("intelligence", {
         this.models = (data.models as Record<string, ModelEntry[]>) || {};
         this.prompts = (data.prompts as Record<string, string>) || {};
         this.keys = (data.keys as Record<string, string>) || {};
-        this.preferences = (data.data as Record<string, string>) || {};
+        this.preferences = (data.preferences as Record<string, string>) || {};
         this.isLoaded = true;
       } catch (e: unknown) {
         this.error = (e as Error).message || "Failed to load intelligence configuration";
