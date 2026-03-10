@@ -9,10 +9,15 @@ export default defineConfig({
   expect: {
     timeout: 30000,
   },
+  retries: process.env.CI ? 2 : 0,
   use: {
     baseURL: `http://127.0.0.1:${port}`,
     viewport: { width: 1280, height: 720 },
     navigationTimeout: 30000,
+    // Capture artifacts on CI failures to aid debugging
+    trace: process.env.CI ? 'retain-on-failure' : 'off',
+    video: process.env.CI ? 'retain-on-failure' : 'off',
+    screenshot: process.env.CI ? 'only-on-failure' : 'off',
   },
   ...(process.env.CI ? {} : {
     webServer: [

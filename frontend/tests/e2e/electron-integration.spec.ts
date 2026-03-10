@@ -287,7 +287,7 @@ test.describe("Integration Test 18.2: Backend Communication - Electron", () => {
     await page.locator("textarea").first().fill("Test prompt");
     await page.getByRole("button", { name: "Generate" }).click();
 
-    // Verify error is shown
-    await expect(page.getByText(/failed|error|offline/i)).toBeVisible({ timeout: 15000 });
+    // Verify error is shown (use first() to avoid ambiguous matches in strict mode)
+    await expect(page.getByText(/failed|error|offline/i).first()).toBeVisible({ timeout: 15000 });
   });
 });
