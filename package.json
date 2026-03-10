@@ -1,5 +1,5 @@
 {
-  "version": "0.10.0",
+  "version": "1.0.1",
   "description": "Desktop app to generate Unity assets using AI (Electron + FastAPI)",
   "name": "unity-generator",
   "private": true,
@@ -12,6 +12,7 @@
     "// --- Build & Distribution (Electron) ---": "",
     "build:backend": "python scripts/build_backend.py",
     "build:frontend": "pnpm --dir frontend build",
+    "build:all": "pnpm run build:backend && pnpm run build:frontend",
     "package": "pnpm run build:backend && pnpm run build:frontend && electron-builder",
     "dist": "pnpm run build:backend && pnpm run build:frontend && electron-builder",
     "dist:win": "pnpm run build:backend && pnpm run build:frontend && electron-builder --win",
@@ -21,7 +22,8 @@
     "dev:backend": "cd backend && python -m uvicorn app.main:app --reload --port 35421",
     "dev:frontend": "pnpm --dir frontend dev",
     "dev:electron": "electron .",
-    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\" \"pnpm run dev:electron\"",
+    "dev:electron:live": "cross-env NODE_ENV=development electron .",
+    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\" \"pnpm run dev:electron:live\"",
     "// --- Electron Commands ---": "",
     "electron": "electron .",
     "electron:dev": "electron .",
@@ -50,6 +52,7 @@
     "electron-squirrel-startup": "^1.0.1"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "@rollup/plugin-commonjs": "^29.0.2",
     "@types/node": "^25.3.0",
     "@vitejs/plugin-vue": "^6.0.4",

@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from ..core.db import get_all_prefs
+from ..core.seeder import DEFAULT_SYSTEM_PROMPTS
 from ..repositories import get_api_key_repo, get_model_repo, get_provider_repo, get_system_prompt_repo
 from ..schemas import ok_response
 from ..services.providers.capabilities import Modality, ProviderCapabilities
@@ -12,6 +13,20 @@ from ..services.providers.registry import provider_registry
 
 router = APIRouter(prefix="/api/management", tags=["management"])
 LOGGER = logging.getLogger(__name__)
+
+
+def _do_reset_prompts():
+    repo = get_system_prompt_repo()
+    for modality, content in DEFAULT_SYSTEM_PROMPTS.items():
+        repo.save(modality, content)
+    return ok_response(DEFAULT_SYSTEM_PROMPTS)
+
+
+@router.post("/system-prompts/reset")
+def reset_system_prompts():
+    """Reset all system prompts to defaults."""
+    return _do_reset_prompts()
+
 
 # --- Discovery ---
 

@@ -6,6 +6,7 @@
 const { app, BrowserWindow, ipcMain, dialog, Notification, nativeTheme, shell, autoUpdater } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const net = require('net');
 const { spawn, execSync } = require('child_process');
 const axios = require('axios');
 const os = require('os');
@@ -108,37 +109,42 @@ function handleWindowClose(window) {
   if (window === global.mainWindow) global.mainWindow = null;
 }
 
-function loadFrontend(window) {
+const VITE_DEV_URL = 'http://localhost:5173';
+
+/**
+ * In dev (not packaged): try Vite first so launcher doesn't depend on NODE_ENV.
+ * If port 5173 responds, load from there; otherwise, load from frontend/dist.
+ */
+async function loadFrontend(window) {
   try {
-    if (process.env.NODE_ENV === 'development') {
-      window.loadURL('http://localhost:5173');
-      window.webContents.openDevTools();
-      return;
-    }
-
-    // In development (not packaged), open DevTools to see errors
     if (!app.isPackaged) {
-      window.webContents.openDevTools();
+      for (let i = 0; i < 15; i++) {
+        try {
+          await axios.get(VITE_DEV_URL, { timeout: 1500 });
+          logMainProcess(`Loading frontend from Vite (${VITE_DEV_URL})`);
+          window.loadURL(VITE_DEV_URL);
+          // window.webContents.openDevTools();
+          return;
+        } catch (_) {
+          await new Promise((r) => setTimeout(r, 500));
+        }
+      }
+      logMainProcess('Vite not reachable; loading from frontend/dist');
     }
 
-    // When packaged, use app.getAppPath() to get the correct base path
-    // This resolves to the app.asar location
+    if (!app.isPackaged) {
+      // window.webContents.openDevTools();
+    }
+
     const appPath = app.getAppPath();
     const frontendPath = path.join(appPath, 'frontend', 'dist', 'index.html');
-    
-    logMainProcess(`App path: ${appPath}`);
     logMainProcess(`Loading frontend from: ${frontendPath}`);
-    logMainProcess(`Frontend exists: ${safeExistsSync(frontendPath)}`);
-    
+
     if (safeExistsSync(frontendPath)) {
       window.loadFile(frontendPath);
       logMainProcess('Frontend loaded successfully');
     } else {
-      // Try alternative path (in case structure is different)
       const altPath = path.join(__dirname, 'frontend', 'dist', 'index.html');
-      logMainProcess(`Trying alternative path: ${altPath}`);
-      logMainProcess(`Alternative exists: ${safeExistsSync(altPath)}`);
-      
       if (safeExistsSync(altPath)) {
         window.loadFile(altPath);
         logMainProcess('Frontend loaded from alternative path');
@@ -160,10 +166,139 @@ const BACKEND_HOST = '127.0.0.1';
 const HEALTH_ENDPOINT = '/health';
 const MAX_RETRIES = 30, RETRY_INTERVAL = 1000;
 
+async function isBackendHealthy(timeout = 1000) {
+  try {
+    const r = await axios.get(`http://${BACKEND_HOST}:${BACKEND_PORT}${HEALTH_ENDPOINT}`, { timeout });
+    return r.status === 200;
+  } catch (_) {
+    return false;
+  }
+}
+
+/** Backend process names we consider "ours" (no .exe; Get-Process uses ProcessName). */
+const OUR_BACKEND_NAMES = ['python', 'unity-generator-backend'];
+
+/**
+ * Kill only processes listening on BACKEND_PORT that are our backend (python.exe or
+ * unity-generator-backend.exe). Uses Get-NetTCPConnection when possible (more reliable on Windows).
+ * Safe to call at quit and at startup when port is stale.
+ * On non-Windows: no-op (rely on killing the spawned process).
+ */
+function terminateOurBackendOnPort() {
+  if (process.platform !== 'win32') return;
+  const port = BACKEND_PORT;
+  const namesArg = OUR_BACKEND_NAMES.map((n) => `'${n}'`).join(',');
+  const script = [
+    '$port = ' + port,
+    '$names = @(' + namesArg + ')',
+    '$pids = @()',
+    'try {',
+    '  $conn = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction Stop',
+    '  foreach ($c in $conn) { $pids += $c.OwningProcess }',
+    '} catch {}',
+    'if (-not $pids) {',
+    '  netstat -ano | Select-String (":" + $port + "\\s+.*LISTENING") | ForEach-Object {',
+    '    $parts = ($_.Line -split "\\s+") | Where-Object { $_ -ne "" }; if ($parts[-1] -match "^\\d+$") { $pids += [int]$parts[-1] }',
+    '  }',
+    '}',
+    'foreach ($procId in $pids) {',
+    '  $p = Get-Process -Id $procId -ErrorAction SilentlyContinue',
+    '  if ($p -and ($names -contains $p.ProcessName)) { try { Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue } catch {} }',
+    '}',
+  ].join('\n');
+  try {
+    const tmpDir = os.tmpdir();
+    const scriptPath = path.join(tmpDir, 'unity-generator-kill-backend.ps1');
+    fs.writeFileSync(scriptPath, script, 'utf8');
+    execSync(`powershell -NoProfile -ExecutionPolicy Bypass -File "${scriptPath}"`, { stdio: 'ignore', timeout: 8000 });
+    try { fs.unlinkSync(scriptPath); } catch (_) {}
+  } catch (_) {
+    // Best-effort
+  }
+}
+
+/**
+ * Kill any process listening on BACKEND_PORT (used only on quit after we killed our own).
+ * Prefer terminateOurBackendOnPort() when we want to avoid killing other apps.
+ */
+function terminateListenersOnBackendPort() {
+  if (process.platform !== 'win32') return;
+  terminateOurBackendOnPort();
+}
+
+/**
+ * Returns true if nothing is listening on the port (connection refused).
+ * Used to wait for a server to disappear after we kill it.
+ */
+async function isBackendPortFree(timeoutMs = 4000) {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    try {
+      const r = await axios.get(`http://${BACKEND_HOST}:${BACKEND_PORT}${HEALTH_ENDPOINT}`, { timeout: 400 });
+      if (r.status === 200) {
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        continue;
+      }
+    } catch (_) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Returns true if we can bind to the port (kernel says it's free).
+ * Uses SO_REUSEADDR so we can bind even when the port is in TIME_WAIT after a previous close.
+ */
+function canBindToPort(port, host) {
+  return new Promise((resolve) => {
+    const server = net.createServer(() => {});
+    server.once('listening', () => {
+      server.close(() => resolve(true));
+    });
+    server.once('error', (err) => {
+      if (err.code === 'EADDRINUSE' || err.code === 'EACCES') resolve(false);
+      else resolve(false);
+    });
+    server.listen({ port, host, reuseAddress: true });
+  });
+}
+
+/** Wait until we can bind to the port or timeout (ms). Returns true if bindable. */
+async function waitUntilPortBindable(port, host, timeoutMs) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    if (await canBindToPort(port, host)) return true;
+    await new Promise((r) => setTimeout(r, 400));
+  }
+  return false;
+}
+
 async function startPythonBackend() {
-  const isDev =  !app.isPackaged;
-  const databaseDir = path.join(app.getPath('userData'), 'db');
-  
+  const isDev = !app.isPackaged;
+
+  // In dev, wait up to 12s for an existing backend to respond (e.g. started from Launch config).
+  if (isDev) {
+    for (let i = 0; i < 12; i++) {
+      if (await isBackendHealthy(1500)) {
+        logMainProcess(`Backend already running at http://${BACKEND_HOST}:${BACKEND_PORT}; reusing it`);
+        return null;
+      }
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  } else if (await isBackendHealthy(1500)) {
+    logMainProcess(`Backend already running at http://${BACKEND_HOST}:${BACKEND_PORT}; reusing it`);
+    return null;
+  }
+
+  // Free the port by killing only our backends, then start.
+  terminateOurBackendOnPort();
+  await new Promise((r) => setTimeout(r, 2000));
+  const bindable = await waitUntilPortBindable(BACKEND_PORT, BACKEND_HOST, 8000);
+  if (!bindable) {
+    logMainProcess(`Bind check failed for port ${BACKEND_PORT}; attempting to start backend anyway`);
+  }
+
   logMainProcess(`Starting backend in ${isDev ? 'development' : 'production'} mode`);
   
   if (isDev) {
@@ -177,7 +312,7 @@ async function startPythonBackend() {
       throw new Error(`Backend directory not found: ${backendPath}`);
     }
     
-    const backend = spawn(pythonPath, ['-m', 'uvicorn', 'app.main:app', '--host', BACKEND_HOST, '--port', String(BACKEND_PORT), '--reload'], {
+    const backend = spawn(pythonPath, ['-m', 'uvicorn', 'app.main:app', '--host', BACKEND_HOST, '--port', String(BACKEND_PORT)], {
       cwd: backendPath,
       env: { ...process.env, PYTHONPATH: backendPath },
       stdio: ['pipe', 'pipe', 'pipe']
@@ -260,7 +395,11 @@ function killBackendProcess(proc) {
       } catch (_) {
         // Process may already be dead
       }
-      finish();
+      // Ensure port is released: kill anything still listening (child or orphan)
+      setTimeout(() => {
+        terminateListenersOnBackendPort();
+        finish();
+      }, 400);
     } else {
       try { proc.kill('SIGTERM'); } catch (_) {}
       setTimeout(() => {
@@ -327,7 +466,12 @@ function handleCSPViolation(violation) {
 
 function buildCSPString() {
   const backendOrigin = `http://${BACKEND_HOST}:${BACKEND_PORT}`;
-  return `default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' ${backendOrigin}; style-src 'self' 'unsafe-inline' ${backendOrigin}; img-src 'self' data: ${backendOrigin}; connect-src 'self' ${backendOrigin}; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';`;
+  const isDev = !app.isPackaged;
+  // In dev, Vue needs unsafe-eval. In production, remove it for security.
+  const scriptSrc = isDev 
+    ? `'self' 'unsafe-eval' 'unsafe-inline' ${backendOrigin}` 
+    : `'self' 'unsafe-inline' ${backendOrigin}`;
+  return `default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline' ${backendOrigin}; img-src 'self' data: ${backendOrigin}; connect-src 'self' ${backendOrigin}; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';`;
 }
 
 function configureCSP() {
@@ -547,7 +691,10 @@ async function initializeApp() {
     if (!backendReady) {
       logMainProcess('ERROR: Backend failed to start');
       await showNotification({ title: 'Backend Error', body: 'Failed to start Python backend. Check logs.', type: 'error' });
-      dialog.showErrorBox('Backend Error', `Failed to start Python backend.\n\nCheck logs at: ${logFilePath}`);
+      dialog.showErrorBox(
+        'Backend Error',
+        `Failed to start Python backend.\n\nIf port ${BACKEND_PORT} is stuck, restart the PC or run with BACKEND_PORT=35422 and set the backend URL in app settings to http://127.0.0.1:35422\n\nLogs: ${logFilePath}`
+      );
       app.quit();
       return;
     }
@@ -560,6 +707,16 @@ async function initializeApp() {
     global.mainWindow = mainWindow;
     
     mainWindow.on('closed', () => handleWindowClose(mainWindow));
+    
+    // Set CSP headers
+    mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Content-Security-Policy': [configureCSP()]
+        }
+      });
+    });
     
     // Add error handlers for the window
     mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
@@ -576,8 +733,8 @@ async function initializeApp() {
     });
     
     logMainProcess('Loading frontend...');
-    loadFrontend(mainWindow);
-    
+    await loadFrontend(mainWindow);
+
     logMainProcess('Application initialized successfully');
   } catch (e) {
     console.error('FATAL ERROR in initializeApp:', e);
@@ -589,11 +746,15 @@ async function initializeApp() {
 }
 
 // --- IPC ---
-ipcMain.handle('backend:status', async () => ({
-  isRunning: !!backendProcess,
-  health: backendProcess ? 'healthy' : 'stopped',
-  port: BACKEND_PORT
-}));
+ipcMain.handle('backend:status', async () => {
+  const healthy = await isBackendHealthy(1000);
+  return {
+    isRunning: healthy || !!backendProcess,
+    health: healthy ? 'healthy' : 'stopped',
+    port: BACKEND_PORT,
+    managedByElectron: !!backendProcess
+  };
+});
 
 ipcMain.handle('backend:restart', async () => {
   try {
@@ -669,7 +830,16 @@ app.on('before-quit', (event) => {
   event.preventDefault();
   const proc = backendProcess;
   backendProcess = null;
-  killBackendProcess(proc).then(() => { app.quit(); }).catch(() => { app.quit(); });
+  killBackendProcess(proc)
+    .then(() => {
+      // On Windows, ensure port is freed so next launch does not see "port occupied"
+      if (process.platform === 'win32') {
+        terminateListenersOnBackendPort();
+        return new Promise((r) => setTimeout(r, 600));
+      }
+    })
+    .then(() => { app.quit(); })
+    .catch(() => { app.quit(); });
 });
 
 app.on('quit', () => logMainProcess('Application quit'));

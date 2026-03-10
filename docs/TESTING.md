@@ -221,6 +221,22 @@ cd frontend
 pnpm exec playwright show-report
 ```
 
+## Troubleshooting
+
+### 404 on "Reset system prompts" (or other `/api/management/...` endpoints)
+
+The route is registered in the backend (see `backend/tests/test_management_discovery.py::test_reset_system_prompts`). If you get 404:
+
+1. **The process on port 35421 may be an old backend.** Use Launch **"B: Full stack (Vite + uvicorn)"** or **"C: Full stack + Electron"** so the preLaunchTask frees the port and the correct backend starts.
+2. **Confirm the route in this codebase:**  
+   `cd backend && python -m pytest tests/test_management_discovery.py::test_reset_system_prompts -v`  
+   If this passes, the app has the route; the server you're hitting is not this app.
+3. **Optional:** Clear bytecode and restart: remove `backend/app/**/__pycache__` and restart the backend from Launch.
+
+### Health check identifies this backend
+
+`GET /health` returns `{"status": "ok", "management": true}` for this backend. If you get a different response (e.g. no `management` key), the process on 35421 is not the Unity Generator backend from this repo.
+
 ## Writing New Tests
 
 ### Unit Test Template

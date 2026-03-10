@@ -517,6 +517,20 @@ export async function saveSystemPrompt(modality: string, content: string): Promi
   }
 }
 
+export async function resetSystemPrompts(): Promise<Record<string, string>> {
+  const url = `${getBackendUrl()}/api/management/system-prompts/reset`;
+  try {
+    const response = await fetch(url, { method: "POST" });
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      throw new Error(errorBody.detail || errorBody.error || `HTTP ${response.status}`);
+    }
+    return (await response.json()).data as Record<string, string>;
+  } catch (error) {
+    throw createFetchError(url, "POST", error);
+  }
+}
+
 export async function getAllConfig(): Promise<DiscoveryResponse> {
   const url = `${getBackendUrl()}/api/management/all`;
   

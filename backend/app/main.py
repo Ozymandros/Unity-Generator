@@ -91,14 +91,13 @@ def debug_sys() -> dict[str, Any]:
 
 @app.get("/health")
 def health() -> dict[str, Any]:
-    logger.info("/health endpoint called.")
     """
     Health check endpoint for the Unity Generator backend.
 
     Returns:
-        dict[str, Any]: A simple status dictionary indicating the service is running.
+        dict[str, Any]: Status and a hint that management routes (e.g. system-prompts reset) are available.
     """
-    return {"status": "ok"}
+    return {"status": "ok", "management": True}
 
 
 from app.routers import management, unity_versions

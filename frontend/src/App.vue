@@ -37,14 +37,8 @@ const getTabIcon = (tab: string) => {
       <div class="pa-6 d-flex align-center">
         <v-icon color="primary" size="32" class="mr-3">mdi-gravity</v-icon>
         <div class="flex-grow-1 min-width-0">
-          <v-text-field
-            v-model="projectName"
-            variant="plain"
-            hide-details
-            density="compact"
-            class="project-name-field text-h6 font-weight-bold line-height-1"
-            placeholder="Project name"
-          />
+          <v-text-field v-model="projectName" variant="plain" hide-details density="compact"
+            class="project-name-field text-h6 font-weight-bold line-height-1" placeholder="Project name" />
           <div class="d-flex align-center">
             <v-badge dot :color="backendStatus === 'online' ? 'success' : 'error'" inline class="mr-2"></v-badge>
             <span class="text-caption text-grey">{{ backendStatus === 'online' ? 'Online' : 'Offline' }}</span>
@@ -56,9 +50,8 @@ const getTabIcon = (tab: string) => {
 
       <v-list nav density="comfortable">
         <v-list-item v-for="tab in tabs.filter(t => t !== 'Management')" :key="tab" :active="tab === active"
-          :prepend-icon="getTabIcon(tab)" :title="tab" :data-testid="`nav-${tab.replace(/\s+/g, '-')}`"
-          rounded="xl" class="mb-1 nav-item" @click="setActive(tab)"
-          color="primary"></v-list-item>
+          :prepend-icon="getTabIcon(tab)" :title="tab" :data-testid="`nav-${tab.replace(/\s+/g, '-')}`" rounded="xl"
+          class="mb-1 nav-item" @click="setActive(tab)" color="primary"></v-list-item>
       </v-list>
 
       <template v-slot:append>
@@ -101,13 +94,16 @@ const getTabIcon = (tab: string) => {
 .project-name-field :deep(.v-field__overlay) {
   opacity: 0;
 }
+
 .project-name-field:hover :deep(.v-field__overlay),
 .project-name-field.v-field--focused :deep(.v-field__overlay) {
   opacity: 1;
 }
+
 .project-name-field :deep(.v-field) {
   --v-field-border-opacity: 0;
 }
+
 .project-name-field:hover :deep(.v-field),
 .project-name-field.v-field--focused :deep(.v-field) {
   --v-field-border-opacity: 0.6;
