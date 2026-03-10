@@ -1,0 +1,28 @@
+.settings-shell {
+  background: #020617;
+}
+
+.border-bottom {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.border-right {
+  border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+:deep(.v-tab) {
+  letter-spacing: normal !important;
+  font-size: 0.95rem !important;
+  opacity: 0.75;
+}
+
+:deep(.v-tab--selected) {
+  opacity: 1;
+}
+
+.section-container {
+  max-width: 1200px;
+  width: 100%;
+  padding-top: 24px;
+  padding-bottom: 48px;
+}

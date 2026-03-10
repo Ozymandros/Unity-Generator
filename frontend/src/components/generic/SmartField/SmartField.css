@@ -1,0 +1,17 @@
+.smart-field-container {
+  margin-bottom: 0.5rem;
+}
+
+:deep(.v-field__input) {
+  font-size: 0.9rem !important;
+}
+
+:deep(.v-label) {
+  font-size: 0.85rem !important;
+  opacity: 0.9;
+}
+
+:deep(.v-messages) {
+  font-size: 0.75rem !important;
+  opacity: 0.7;
+}

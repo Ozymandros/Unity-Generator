@@ -1,197 +1,115 @@
+"""
+Main FastAPI application for the Unity Generator backend.
+
+This module defines the API application and includes routers for various features.
+"""
+
 import logging
-from typing import Any, Dict
+import os
+from typing import Any
+
+from app.core.config import get_logs_dir
+from app.core.logging import setup_logging
+
+setup_logging(get_logs_dir())
+
+# Configure logging early: root logger so all app loggers (e.g. app.agents.unity_agent) emit
+_root = logging.getLogger()
+_root.setLevel(logging.INFO)
+if not _root.handlers:
+    _handler = logging.StreamHandler()
+    _handler.setFormatter(logging.Formatter("[%(asctime)s] %(levelname)s %(name)s: %(message)s"))
+    _root.addHandler(_handler)
+
+logger = logging.getLogger("unity_generator")
+logger.setLevel(logging.INFO)
+logger.propagate = True
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .agent_manager import AgentManager
-from .config import get_logs_dir, save_api_keys, load_api_keys
-from .db import init_db, get_pref, set_pref
-from .logging_config import setup_logging
-from .schemas import (
-    GenerationRequest,
-    ApiKeysRequest,
-    PrefRequest,
-    UnityProjectRequest,
-    ok_response,
-    error_response,
-)
-from .unity_project import create_unity_project, get_latest_project_path
+from app.core.db import init_db
+from app.routers import config, finalize, generation, prefs, projects, scenes
 
+# Import singleton for compatibility if tests rely on app.main.agent_manager
 
-setup_logging(get_logs_dir())
-LOGGER = logging.getLogger(__name__)
+# Initialize database
+logger.info("Initializing database...")
+init_db()
 
-app = FastAPI(title="Unity Generator Backend")
+from app.core.seeder import seed_database
+
+seed_database()
+
+from app.services.providers.registry import provider_registry
+
+provider_registry.load_from_db()
+logger.info("Database initialized, seeded, and registry loaded.")
+
+# FastAPI app instance
+app = FastAPI()
+logger.info("FastAPI app instance created.")
+
+# CORS: The port is configured via PORT env var (from entrypoint.py DEFAULT_PORT = 35421).
+# This ensures CORS allows the backend's own origin regardless of what port it runs on.
+_default_port = "35421"
+_backend_port = os.environ.get("PORT", _default_port)
+
+_cors_origins: list[str] = [
+    # Vite dev server
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    # Backend's own origin (matches the port it's actually running on)
+    f"http://localhost:{_backend_port}",
+    f"http://127.0.0.1:{_backend_port}",
+    # Electron file:// origin
+    "null",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-agent_manager = AgentManager()
-init_db()
+
+@app.get("/debug/sys")
+def debug_sys() -> dict[str, Any]:
+    logger.info("/debug/sys endpoint called.")
+    import os
+    import sys
+    return {
+        "sys_path": sys.path,
+        "cwd": os.getcwd(),
+        "executable": sys.executable,
+        "modules_app": [k for k in sys.modules if k.startswith("app")],
+        "env": {k: v for k, v in os.environ.items() if "KEY" not in k and "TOKEN" not in k}
+    }
 
 
 @app.get("/health")
-def health() -> Dict[str, Any]:
+def health() -> dict[str, Any]:
+    logger.info("/health endpoint called.")
+    """
+    Health check endpoint for the Unity Generator backend.
+
+    Returns:
+        dict[str, Any]: A simple status dictionary indicating the service is running.
+    """
     return {"status": "ok"}
 
 
-@app.post("/generate/code")
-def generate_code(request: GenerationRequest):
-    try:
-        provider = request.provider or get_pref("preferred_llm_provider")
-        data = agent_manager.run_code(
-            request.prompt, provider, request.options
-        )
-        return ok_response(data)
-    except Exception as exc:
-        logging.getLogger("failed_requests").warning(
-            "Code generation failed: %s", exc
-        )
-        return error_response(str(exc))
+from app.routers import management, unity_versions
 
-
-@app.post("/generate/text")
-def generate_text(request: GenerationRequest):
-    try:
-        provider = request.provider or get_pref("preferred_llm_provider")
-        data = agent_manager.run_text(
-            request.prompt, provider, request.options
-        )
-        return ok_response(data)
-    except Exception as exc:
-        logging.getLogger("failed_requests").warning(
-            "Text generation failed: %s", exc
-        )
-        return error_response(str(exc))
-
-
-@app.post("/generate/image")
-def generate_image(request: GenerationRequest):
-    try:
-        provider = request.provider or get_pref("preferred_image_provider")
-        data = agent_manager.run_image(
-            request.prompt, provider, request.options
-        )
-        return ok_response(data)
-    except Exception as exc:
-        logging.getLogger("failed_requests").warning(
-            "Image generation failed: %s", exc
-        )
-        return error_response(str(exc))
-
-
-@app.post("/generate/audio")
-def generate_audio(request: GenerationRequest):
-    try:
-        provider = request.provider or get_pref("preferred_audio_provider")
-        data = agent_manager.run_audio(
-            request.prompt, provider, request.options
-        )
-        return ok_response(data)
-    except Exception as exc:
-        logging.getLogger("failed_requests").warning(
-            "Audio generation failed: %s", exc
-        )
-        return error_response(str(exc))
-
-
-@app.get("/config/keys")
-def get_keys():
-    keys = load_api_keys()
-    masked = {key: ("***" if value else "") for key, value in keys.items()}
-    return ok_response({"keys": masked})
-
-
-@app.post("/config/keys")
-def save_keys(request: ApiKeysRequest):
-    save_api_keys(request.keys)
-    return ok_response({"saved": list(request.keys.keys())})
-
-
-@app.get("/prefs/{key}")
-def read_pref(key: str):
-    value = get_pref(key)
-    return ok_response({"key": key, "value": value})
-
-
-@app.post("/prefs")
-def write_pref(request: PrefRequest):
-    set_pref(request.key, request.value)
-    return ok_response({"key": request.key})
-
-
-@app.post("/generate/unity-project")
-def generate_unity_project(request: UnityProjectRequest):
-    try:
-        code_provider = request.provider_overrides.get(
-            "code", get_pref("preferred_llm_provider")
-        )
-        text_provider = request.provider_overrides.get(
-            "text", get_pref("preferred_llm_provider")
-        )
-        image_provider = request.provider_overrides.get(
-            "image", get_pref("preferred_image_provider")
-        )
-        audio_provider = request.provider_overrides.get(
-            "audio", get_pref("preferred_audio_provider")
-        )
-
-        code_output = None
-        text_output = None
-        image_output = None
-        audio_output = None
-
-        if request.code_prompt:
-            code_output = agent_manager.run_code(
-                request.code_prompt,
-                code_provider,
-                request.options.get("code", {}),
-            ).get("content")
-
-        if request.text_prompt:
-            text_output = agent_manager.run_text(
-                request.text_prompt,
-                text_provider,
-                request.options.get("text", {}),
-            ).get("content")
-
-        if request.image_prompt:
-            image_output = agent_manager.run_image(
-                request.image_prompt,
-                image_provider,
-                request.options.get("image", {}),
-            ).get("image")
-
-        if request.audio_prompt:
-            audio_output = agent_manager.run_audio(
-                request.audio_prompt,
-                audio_provider,
-                request.options.get("audio", {}),
-            )
-
-        data = create_unity_project(
-            request.project_name,
-            code_output,
-            text_output,
-            image_output,
-            audio_output,
-        )
-        return ok_response(data)
-    except Exception as exc:
-        logging.getLogger("failed_requests").warning(
-            "Unity project generation failed: %s", exc
-        )
-        return error_response(str(exc))
-
-
-@app.get("/output/latest")
-def output_latest():
-    path = get_latest_project_path()
-    if not path:
-        return error_response("No output projects found.")
-    return ok_response({"path": path})
+# Include routers
+logger.info("Including routers...")
+app.include_router(generation.router)
+app.include_router(config.router)
+app.include_router(prefs.router)
+app.include_router(projects.router)
+app.include_router(scenes.router)
+app.include_router(finalize.router)
+app.include_router(management.router)
+app.include_router(unity_versions.router)

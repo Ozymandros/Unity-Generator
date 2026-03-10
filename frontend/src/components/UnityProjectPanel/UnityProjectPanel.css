@@ -1,0 +1,46 @@
+.panel {
+  max-width: 900px;
+  margin: 1rem;
+}
+
+.options-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.field-sm {
+  flex: 1;
+}
+
+.toggle-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+/* Log viewer */
+.log-viewer {
+  max-height: 250px;
+  overflow-y: auto;
+  font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #020617 !important; /* Deep dark for logs */
+  color: #f8fafc !important;
+}
+
+.log-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.log-error {
+  color: #fca5a5 !important;
+  font-weight: 600;
+}
+
+.gap-4 {
+  gap: 1rem;
+}

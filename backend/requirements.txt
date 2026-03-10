@@ -1,8 +1,10 @@
 fastapi
 uvicorn
-semantic-kernel
+mcp[cli]
+semantic-kernel[mcp]>=1.15.0
 pydantic
 requests
-pytest
-debugpy
-ruff
+Pillow
+jinja2
+google-genai
+anthropic

@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 echo "Starting backend..."
 ./scripts/run_backend.sh &
 
-echo "Starting frontend (Tauri dev)..."
+echo "Starting frontend..."
 cd frontend
 npm install
-npm run dev:tauri
+npm run dev

@@ -1,8 +1,14 @@
+import os
+
 import requests
+
+DEFAULT_BACKEND_PORT = 35421
 
 
 def main() -> None:
-    response = requests.get("http://127.0.0.1:8000/health", timeout=10)
+    port = os.environ.get("BACKEND_PORT", str(DEFAULT_BACKEND_PORT))
+    url = f"http://127.0.0.1:{port}/health"
+    response = requests.get(url, timeout=10)
     response.raise_for_status()
     print(response.json())
 

@@ -1,24 +1,10 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "allowJs": true,
-    "checkJs": false,
-    "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    },
-    "types": ["vite/client"],
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    }
   },
-  "include": [
-    "src/**/*.js",
-    "src/**/*.ts",
-    "src/**/*.vue",
-    "env.d.ts"
-  ],
+  "include": ["src/**/*", "../main/errors.d.ts"],
   "exclude": ["node_modules"]
 }

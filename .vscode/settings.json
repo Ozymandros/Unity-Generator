@@ -1,0 +1,38 @@
+{
+  "vetur.useWorkspaceDependencies": true,
+  "vetur.experimental.templateInterpolationService": true,
+  "vetur.validation.template": true,
+  "vetur.validation.script": true,
+  "vetur.validation.style": true,
+  "vetur.format.enable": true,
+  "vetur.format.defaultFormatter.html": "prettier",
+  "vetur.format.defaultFormatter.js": "prettier",
+  "vetur.format.defaultFormatter.ts": "prettier",
+  "vetur.format.defaultFormatterOptions": {
+    "prettier": {
+      "semi": true,
+      "singleQuote": false,
+      "tabWidth": 2,
+      "useTabs": false
+    }
+  },
+  "typescript.tsdk": "frontend/node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.preferences.includePackageJsonAutoImports": "on",
+  "files.associations": {
+    "*.vue": "vue"
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "Vue.volar"
+  },
+  "vetur.config": {
+    "tsconfig": "./frontend/tsconfig.json",
+    "jsconfig": "./frontend/jsconfig.json"
+  },
+  "chat.tools.terminal.autoApprove": {
+    "/^pnpm --dir frontend test:e2e$/": {
+      "approve": true,
+      "matchCommandLine": true
+    }
+  }
+}

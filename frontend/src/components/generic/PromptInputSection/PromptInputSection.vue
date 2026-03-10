@@ -1,0 +1,44 @@
+<template>
+  <v-card variant="flat" border class="pa-4 rounded-lg bg-surface mb-6">
+    <SmartField 
+      :label="label" 
+      :id="`${type}-prompt`"
+      type="textarea" 
+      :model-value="localPrompt"
+      @update:model-value="val => { localPrompt = String(val); emit('update:modelValue', String(val)); }"
+      :rows="3" 
+    />
+
+    <SmartField 
+      v-if="providers && providers.length"
+      label="Provider"
+      type="select"
+      :model-value="localProvider"
+      @update:model-value="val => { localProvider = String(val); emit('update:provider', String(val)); }"
+      :options="providers"
+      placeholder="Default"
+      class="mt-4"
+    />
+
+    <div class="mt-4">
+      <slot name="options" :options="localOptions" :updateOptions="updateOptions" />
+    </div>
+  </v-card>
+</template>
+
+<script setup lang="ts">
+import { SmartField } from "../SmartField";
+import { usePromptInputSection, type PromptInputSectionProps } from "./PromptInputSection";
+
+const props = defineProps<PromptInputSectionProps>();
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string): void;
+  (e: 'update:provider', value: string): void;
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  (e: 'update:options', value: Record<string, any>): void;
+}>();
+
+const { localPrompt, localProvider, localOptions, updateOptions } = usePromptInputSection(props, emit);
+</script>
+
+<style scoped src="./PromptInputSection.css"></style>

@@ -1,39 +1,68 @@
 # Unity Generator
 
+## 🏗️ Project Status
+
+[![Latest Release](https://img.shields.io/github/v/release/Ozymandros/Unity-Generator?display_name=tag)](https://github.com/Ozymandros/Unity-Generator/releases)
 [![CI](https://github.com/Ozymandros/Unity-Generator/actions/workflows/ci.yml/badge.svg)](https://github.com/Ozymandros/Unity-Generator/actions/workflows/ci.yml)
+[![Build](https://github.com/Ozymandros/Unity-Generator/actions/workflows/build.yml/badge.svg)](https://github.com/Ozymandros/Unity-Generator/actions/workflows/build.yml)
+[![Release](https://github.com/Ozymandros/Unity-Generator/actions/workflows/release.yml/badge.svg)](https://github.com/Ozymandros/Unity-Generator/actions/workflows/release.yml)
+
+## 🔒 Quality & Security
+
 [![CodeQL](https://github.com/Ozymandros/Unity-Generator/actions/workflows/codeql.yml/badge.svg)](https://github.com/Ozymandros/Unity-Generator/security/code-scanning)
 [![Dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot&logoColor=white)](https://github.com/Ozymandros/Unity-Generator/security/dependabot)
+[![Playwright](https://img.shields.io/badge/Playwright-45ba4b?logo=playwright&logoColor=white)](https://github.com/Ozymandros/Unity-Generator/actions/workflows/ci.yml)
+
+## 💻 Tech Stack
+
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
 ![Semantic Kernel](https://img.shields.io/badge/Semantic%20Kernel-512BD4)
 ![Vue](https://img.shields.io/badge/Vue-3-4FC08D?logo=vue.js&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
-![Tauri](https://img.shields.io/badge/Tauri-1.x-24C8DB?logo=tauri&logoColor=white)
+![Electron](https://img.shields.io/badge/Electron-28.0.0-47848F?logo=electron&logoColor=white)
+![Electron Forge](https://img.shields.io/badge/Electron%20Forge-000000?logo=electronforge&logoColor=white)
+![Electron Builder](https://img.shields.io/badge/Electron%20Builder-000000?logo=electronbuilder&logoColor=white)
+![Electron Packager](https://img.shields.io/badge/Electron%20Packager-000000?logo=electronpackager&logoColor=white)
+![vitest](https://img.shields.io/badge/Vitest-000000?logo=vitest&logoColor=white)
+![playwright](https://img.shields.io/badge/Playwright-45ba4b?logo=playwright&logoColor=white)
+![eslint](https://img.shields.io/badge/ESLint-4B32C3?logo=eslint&logoColor=white)
+![prettier](https://img.shields.io/badge/Prettier-F7B93E?logo=prettier&logoColor=white)
+![husky](https://img.shields.io/badge/Husky-4B32C3?logo=husky&logoColor=white)
+![lint-staged](https://img.shields.io/badge/Lint%20Staged-4B32C3?logo=lint-staged&logoColor=white)
+![commitlint](https://img.shields.io/badge/Commitlint-4B32C3?logo=commitlint&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 ![pnpm](https://img.shields.io/badge/pnpm-F69220?logo=pnpm&logoColor=white)
-[![Playwright](https://img.shields.io/badge/Playwright-45ba4b?logo=playwright&logoColor=white)](https://github.com/Ozymandros/Unity-Generator/actions/workflows/ci.yml)
 
-Unity Generator is a lightweight desktop app for generating Unity C# code, text,
-images, and audio using cloud AI providers. It ships a Tauri + Vue UI with a
-local FastAPI backend orchestrated by Semantic Kernel. All API keys are provided
-by the user and stored locally.
+Unity Generator is a lightweight desktop app for generating Unity C# code and assets (text,
+images, and audio) using cloud AI providers. It ships an Electron + Vue UI with a
+local FastAPI backend orchestrated by Semantic Kernel, including a custom plug-in: Unity MCP server. All API keys are provided
+by the user and stored locally. The app is designed to be a fast, local-first assistant for Unity developers, with a focus on incremental asset generation and seamless integration with active Unity projects.
 
 ## Why this exists
 
 Unity Generator is a small, local-first studio assistant. It keeps the UI fast,
 the backend lightweight, and prompts flexible so you can iterate on Unity code
-and assets without wiring multiple tools together.
+and assets without wiring multiple tools together. It’s not a full IDE or asset pipeline replacement - it’s just a quick way to generate and save Unity-ready code snippets, text, images, and audio assets using your choice of providers. It’s designed to slot into your existing workflow and let you iterate on generated assets in an active Unity project without friction.
 
 ## What it can do
 
 - Generate Unity-ready C# snippets and project scaffolds
 - Create text drafts, image prompts, and audio placeholders
+- **Incremental Asset Generation**: Save assets directly into an active Unity project
+- **Pixel-Art Sprites**: Generate and process 2D sprite sheets with automatic cropping
+- **Unity MCP Integration**: Real-time interaction with the Unity Editor using [Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin) and [Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)
 - Save and reuse provider settings and preferences locally
+- Configure global and per-request system key prompts for tailored generation
 - Keep output structured so Unity can open it right away
+- Run on Windows, Linux, and macOS with full feature parity
+- Package as native installers with Electron (no Docker dependency for end users)
+- Open-source and extensible with a modular architecture
 
 ## Workspace Structure
 
-- `frontend/` - Tauri + Vue UI
+- `frontend/` - Electron + Vue UI
 - `backend/` - FastAPI + Semantic Kernel backend
 - `config/` - Local API key storage
 - `agents/` - Modular Semantic Kernel agents
@@ -44,13 +73,14 @@ and assets without wiring multiple tools together.
 
 ## Status
 
-Scaffolded and functional. See docs for development and packaging details.
+Scaffolded and functional. See docs for development and packaging details. The project is in early stages and may have rough edges, but the core architecture is in place. Contributions are welcome!
 
 ## Documentation
 
 - [Architecture overview](docs/ARCHITECTURE.md)
 - [Development guide](docs/DEVELOPMENT.md)
 - [Packaging and distribution](docs/PACKAGING.md)
+- [System Prompts guide](docs/SYSTEM_PROMPTS.md)
 
 ## Integrated Tooling
 
@@ -59,36 +89,96 @@ Unity Generator is optimized for development with **VS Code**:
 - **Native Workflow**: Use the `Dev: Backend + Frontend` launch configuration to debug both stacks simultaneously.
 - **Docker Support**: Integrated tasks for `docker-compose` and remote machine debugging are provided for isolated testing.
 - **Editor Setup**: Configured for **Volar (Vue 3)** and **TypeScript**, with type checking mapped to internal monorepo paths.
-- **Architecture**: While Docker is used for dev/CI, the final product uses the **Tauri Sidecar pattern** (NOT Docker) for a zero-dependency installation experience.
+- **Architecture**: While Docker is used for dev/CI, the final product uses the **Electron** framework for a zero-dependency installation experience.
 
 All contributions must follow the **SRP**, **KISS**, and **Clean Architecture** principles outlined in the development guide.
 
+## 🔥 Cross-Platform Support
+
+Unity Generator runs on **Windows**, **Linux**, and **macOS** with full feature parity.
+
+### Development Setup (All Platforms)
+
+```bash
+# Install dependencies (works on all platforms)
+pnpm run setup
+
+# Start backend (cross-platform)
+pnpm run backend:dev
+
+# Start frontend (cross-platform)
+pnpm run dev
+```
+
+### Containerized Development
+
+All platforms support Docker/Docker Compose:
+
+```bash
+docker-compose up
+```
+
+### Validation
+
+The project maintains cross-platform compatibility through:
+
+- **Automated CI**: Tests run on Ubuntu, Windows, and macOS on every PR
+- **Path Handling**: Uses `pathlib.Path` throughout for safe cross-platform file operations
+- **Shell Scripts**: Build and dev scripts use cross-platform npm/pnpm commands
+- **Configuration**: Platform-agnostic JSON/YAML configs (no hardcoded paths)
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for platform-specific development guidelines.
+
 ## Quick Start
 
-1. **Setup**: Install all dependencies (Backend & Frontend)
+### For Development
 
+Most development doesn't require building the full installer:
+
+```bash
+# 1. Install dependencies
+pnpm run setup
+
+# 2. Start dev servers (backend + frontend with hot reload)
+pnpm run dev
+```
+
+This launches the app in development mode with live reloading.
+
+### For Local Packaging
+
+To build the full native installer locally:
+
+1. **Build the package**:
    ```bash
-   pnpm run setup
+   pnpm run package
    ```
+   This creates the native installer using Electron Forge:
+   - **Windows**: `.exe` installer
+   - **Linux**: `.deb` and `.AppImage` packages
+   - **macOS**: `.dmg` installer
 
-2. **Run**: Start the Tauri development environment
+### For Production Releases (Automated)
 
-   ```bash
-   pnpm run dev
-   ```
+**You don't need to build installers manually.** CI automatically builds for all platforms:
+
+1. Tag a release: `git tag -a v1.0.0 -m "Release v1.0.0" && git push origin v1.0.0`
+2. GitHub Actions builds Windows/Linux/macOS installers
+3. Download from the [Releases page](https://github.com/Ozymandros/Unity-Generator/releases)
 
 ## How it works
 
-1. The Vue + Tauri UI collects prompts and settings.
+1. The Vue + Electron UI collects prompts and settings.
 2. The FastAPI backend routes each request to an agent.
 3. Agents call provider wrappers (LLM, image, audio) using your keys.
 4. Responses are normalized and returned to the UI.
 5. Unity project requests are written to `output/` with Unity metadata.
+6. **Active Projects**: Individual assets can be auto-saved to any active Unity project workspace. The UI keeps a session-scoped project name and path; when you create a scene, that path is sent to the backend and injected into the Unity agent so MCP tools (e.g. save_*, contract) receive the correct project path.
 
 ## Configuration
 
-API keys are stored locally in `config/api_keys.json`. Use the Settings panel,
-or copy `config/api_keys.example.json` and fill it in manually.
+API keys are stored locally in `config/api_keys.json`. Use the **Settings** panel to configure keys and set preferred providers.
+The UI uses dropdown menus to let you easily select from supported providers and models.
 
 ### Supported providers
 
@@ -98,21 +188,27 @@ LLM:
 - `deepseek`
 - `openrouter`
 - `groq`
+- `google`
+- `anthropic`
+- `huggingface`
+- `replicate` (chat via [Replicate predictions API](https://replicate.com/docs/reference/http); default model `meta/llama-2-7b`)
 
 Image:
 
 - `stability`
 - `flux`
+- `openai`
+- `replicate` (e.g. Flux)
 
 Audio:
 
 - `elevenlabs`
 - `playht`
+- `replicate` (e.g. MusicGen)
 
 The backend selects providers by priority when no explicit provider is set.
-Priority order is defined in [services/llm_provider.py](services/llm_provider.py),
-[services/image_provider.py](services/image_provider.py), and
-[services/audio_provider.py](services/audio_provider.py).
+Replicate LLM uses a custom Semantic Kernel adapter that calls the predictions API (create + poll) instead of an OpenAI-compatible endpoint. See [backend/app/services/providers/connectors/replicate.py](backend/app/services/providers/connectors/replicate.py).
+Priority order is defined in the provider registry and in [services/llm_provider.py](services/llm_provider.py), [services/image_provider.py](services/image_provider.py), and [services/audio_provider.py](services/audio_provider.py).
 
 ### Preferences
 
@@ -124,7 +220,7 @@ The UI stores preferred providers in the local SQLite DB:
 
 ## Backend API
 
-Base URL: `http://127.0.0.1:8000`
+Base URL: `http://127.0.0.1:35421`
 
 Health:
 
@@ -136,6 +232,7 @@ Generation:
 - `POST /generate/text`
 - `POST /generate/image`
 - `POST /generate/audio`
+- `POST /generate/sprites`
 
 Request body:
 
@@ -143,6 +240,7 @@ Request body:
 {
   "prompt": "Generate a Unity player controller",
   "provider": "openai",
+  "project_path": "C:/Projects/MyUnityGame",
   "options": {"model": "gpt-4o-mini", "temperature": 0.2}
 }
 ```
@@ -184,16 +282,35 @@ Output:
 
 ## Outputs
 
-- Generated assets and Unity projects land in `output/`.
-- The Unity project output includes minimal `ProjectSettings` and `.meta` files.
-- Scripts are written to `Assets/Scripts/GeneratedScript.cs`.
-- Text is written to `Assets/Text/generated_text.txt`.
-- Images are written to `Assets/Textures/`.
-- Audio is written to `Assets/Audio/`.
+- Generated assets and Unity projects land in `output/` by default.
+- When an active project is set, files are saved directly to its `Assets/` subfolders:
+  - Scripts: `Assets/Scripts/`
+  - Text: `Assets/Text/`
+  - Images/Sprites: `Assets/Sprites/`
+  - Audio: `Assets/Audio/`
+- Every saved asset includes an automatically generated `.meta` file.
+
+
+## Test Isolation & Mocking
+
+All tests in this repository are fully isolated from the real filesystem and network:
+
+- **Frontend unit/integration tests**: All network requests are globally mocked using [MSW](https://mswjs.io/). No real HTTP requests are made; all dependencies must be mocked in each test.
+- **Backend unit/integration tests**: All filesystem operations are globally mocked using [pyfakefs](https://github.com/jmcgeheeiv/pyfakefs). No real files or directories are created, modified, or deleted during tests. All network dependencies must be mocked in each test.
+- **E2E tests**: All backend API endpoints are intercepted and mocked using Playwright’s route interception. No real backend or network is required for E2E tests; all dependencies are mocked for deterministic, fast, and safe runs.
+
+> **Note:** Any test that attempts to access the real filesystem or network will fail by default. If you add new dependencies, ensure they are properly mocked in your tests.
+
+See the test setup files in `frontend/src/test/setup.ts` and `backend/tests/conftest.py` for details.
+
+---
 
 ## Tests
 
 ```bash
+# Total validation (Lint + Typecheck + Test)
+pnpm check:all
+
 # All tests (Backend & Frontend)
 pnpm run test:all
 
@@ -210,7 +327,7 @@ pnpm run test:e2e
 ## Packaging
 
 See `docs/PACKAGING.md` for bundling the backend sidecar and building the
-Tauri app.
+Electron app.
 
 ## Docker
 
@@ -218,7 +335,24 @@ Tauri app.
 
 ## Troubleshooting
 
-- If the UI cannot reach the backend, confirm the backend is running on port 8000.
+- If the UI cannot reach the backend, confirm the backend is running on port 35421.
 - If generation fails, verify your provider keys in `config/api_keys.json`.
 - If a provider request errors, check `logs/` for the failed request log.
 - If a Docker build is slow, ensure `node_modules/` and venvs are ignored.
+
+## Unity MCP Integration
+
+See [docs/UNITY_MCP_INTEGRATION.md](docs/UNITY_MCP_INTEGRATION.md) for details on the Semantic Kernel MCP integration, configuration, and usage.
+
+## Download
+
+You can download prebuilt packages from GitHub:
+
+- **Latest stable builds (recommended):**  
+  https://github.com/Ozymandros/Unity-Generator/releases
+
+- **CI artifacts from latest workflow runs:**  
+  https://github.com/Ozymandros/Unity-Generator/actions/workflows/build.yml
+
+> Note: GitHub Actions artifacts are tied to a workflow run and may expire.  
+> For permanent downloads, use **Releases**.

@@ -1,0 +1,14 @@
+.section-container {
+  max-width: 1200px;
+}
+
+.shadow-highlight {
+  box-shadow: 0 4px 14px 0 rgba(var(--v-theme-primary), 0.39) !important;
+}
+
+.text-overline {
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  color: rgba(var(--v-theme-primary), 0.8) !important;
+}

@@ -1,0 +1,4 @@
+.prompt-section {
+  display: flex;
+  flex-direction: column;
+}

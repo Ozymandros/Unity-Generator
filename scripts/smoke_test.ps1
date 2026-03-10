@@ -1,4 +1,4 @@
-$baseUrl = "http://127.0.0.1:8000"
+$baseUrl = "http://127.0.0.1:35421"
 
 Write-Host "Health check..."
 Invoke-RestMethod "$baseUrl/health"

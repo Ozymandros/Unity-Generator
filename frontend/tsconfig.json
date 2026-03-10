@@ -15,9 +15,10 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "main/*": ["../main/*"]
     },
-    "types": ["vite/client"],
+    "types": ["vite/client", "vitest", "node"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
@@ -27,6 +28,6 @@
     "src/**/*.tsx",
     "src/**/*.vue",
     "env.d.ts"
-  ],
+, "../main/errors.d.ts"  ],
   "exclude": ["node_modules"]
 }

@@ -13,9 +13,19 @@ pip-delete-this-directory.txt
 .coverage
 htmlcov/
 
+# Test outputs & artifacts (contain platform-specific absolute paths)
+*_test_*.txt
+*_test_*.json
+*_failure*.txt
+*_output*.txt
+*_results*.txt
+test_fail.json
+repro_failure.py
+temp_mcp_instructions/
+temp_extracted_asar/
+
 # Node
 node_modules/
-pnpm-lock.yaml
 dist/
 
 # Environment
@@ -71,11 +81,6 @@ coverage/
 playwright-report/
 test-results/
 
-# Tauri / Rust
-src-tauri/target/
-src-tauri/.tauri/
-target/
-
 # Local data
 config/api_keys.json
 db/*.db
@@ -89,7 +94,6 @@ logs/
 Thumbs.db
 Desktop.ini
 .idea/
-.vscode/
 .vs/
 *.swp
 *.swo
@@ -101,9 +105,21 @@ frontend/node_modules/
 .claude/
 .cursor/
 .qwen/
+.kiro/
 
 # Python cache directories at any level
 **/__pycache__/
 **/__pycache__/**
 /agents/__pycache__
 /backend/tests/__pycache__
+.vscode/mcp.json
+*.txt
+**/*.db
+out
+
+# Build status documentation
+BUILD_STATUS.md
+
+# Electron build outputs
+dist-electron/
+out/

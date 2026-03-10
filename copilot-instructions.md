@@ -1,6 +1,6 @@
 # GitHub Copilot Custom Instructions
 
-This file provides comprehensive guidance for GitHub Copilot to generate code that follows modern best practices, clean architecture principles, and project-specific conventions for both backend (Python/FastAPI) and frontend (TypeScript/Vue/Tauri) components.
+This file provides comprehensive guidance for GitHub Copilot to generate code that follows modern best practices, clean architecture principles, and project-specific conventions for both backend (Python/FastAPI) and frontend (TypeScript/Vue/Electron) components.
 
 ## Core Principles
 
@@ -15,6 +15,43 @@ Always adhere to these fundamental principles:
 - **DRY (Don't Repeat Yourself)**: Avoid code duplication; extract common functionality
 - **Intuitive Design**: Code should be self-documenting and easy to understand
 - **Scalability**: Design for growth and change without major refactoring
+- **Mandatory Validation**: Every agent action (creation, modification, etc.) MUST be validated with `pnpm check:all & pnpm test:all` before completion.
+
+## Available Skills (Semantic Kernel)
+
+- **UnityCodeSkill**: Provides Unity-aware code generation (`generate_unity_csharp`), syntax validation (`validate_unity_syntax`), and code extraction (`extract_csharp_code`).
+- **UnityProjectSkill**: Secure file operations restricted to the output directory (`write_unity_asset`, `create_unity_folder`).
+- **TextSkill**: Basic text manipulation like `trim_text`, `uppercase_text`, and `lowercase_text`.
+- **TimeSkill**: Date and time operations including `get_current_time` and `format_date`.
+- **MathSkill**: Basic mathematical operations like `add_numbers` and `multiply_numbers`.
+
+### Frontend Technical Skills (Vue/TypeScript)
+
+- **apiClient**: Unified API wrapper in `src/api/client.ts` for all backend communication (generation, prefs, jobs).
+- **SmartField**: Versatile UI component in `src/components/generic/SmartField.vue` for consistent form inputs.
+- **StatusBanner**: Standardized status and error reporting component in `src/components/StatusBanner.vue`.
+
+## Code Organization Guidelines
+
+Keep HTML, CSS, and TypeScript code strictly separated, avoiding inline styles or logic whenever possible.
+
+Split code into independent, focused files, ensuring each file has a single clear responsibility.
+
+Maintain a clean, hierarchical, and intuitive folder structure, grouping related components, utilities, and assets together.
+
+Ensure that components remain modular, reusable, and easy to navigate.
+
+Prefer cohesive naming conventions and consistent file organization across the entire project.
+
+When refactoring or creating new components, always prioritize:
+- **Clarity**: Code should be easy to read and understand.
+- **Maintainability**: Changes should be easy to implement without side effects.
+- **Testability**: Code should be structured to allow easy unit testing.
+- **Minimal Coupling**: Minimize dependencies between modules/components.
+
+Use project instructions and rules files as definitive guidelines.
+
+Use these skills when appropriate according to the task context. Be smart, mutatis mutandis.
 
 ## Function Writing Standards
 
@@ -54,31 +91,31 @@ When writing functions, **always** follow these requirements:
 def process_user_data(user_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Process user data and return normalized result.
-    
+
     Args:
         user_id: Unique identifier for the user. Must be non-empty string.
         data: Dictionary containing user data fields. Must contain 'name' and 'email' keys.
-    
+
     Returns:
         Dictionary with processed user data including normalized fields.
-    
+
     Raises:
         ValueError: If user_id is empty or data is missing required fields.
         TypeError: If user_id is not a string or data is not a dictionary.
-    
+
     Example:
         >>> process_user_data("user123", {"name": "John", "email": "john@example.com"})
         {'id': 'user123', 'name': 'John', 'email': 'john@example.com', 'normalized': True}
     """
     if not isinstance(user_id, str) or not user_id:
         raise ValueError("user_id must be a non-empty string")
-    
+
     if not isinstance(data, dict):
         raise TypeError("data must be a dictionary")
-    
+
     if "name" not in data or "email" not in data:
         raise ValueError("data must contain 'name' and 'email' keys")
-    
+
     # Process data...
     return {"id": user_id, **data, "normalized": True}
 ```
@@ -181,13 +218,13 @@ class GenerateRequest(BaseModel):
 async def generate_code_endpoint(request: GenerateRequest) -> GenerationResponse:
     """
     Generate code using the specified agent.
-    
+
     Args:
         request: Validated generation request containing prompt and options.
-    
+
     Returns:
         GenerationResponse with success status and generated content or error.
-    
+
     Example:
         POST /generate/code
         {
@@ -198,7 +235,7 @@ async def generate_code_endpoint(request: GenerateRequest) -> GenerationResponse
     """
     if not request.prompt or len(request.prompt.strip()) == 0:
         return error_response("Prompt cannot be empty")
-    
+
     try:
         result = agent_manager.run_code(
             prompt=request.prompt,
@@ -214,7 +251,7 @@ async def generate_code_endpoint(request: GenerateRequest) -> GenerationResponse
         return error_response("Internal server error")
 ```
 
-## Frontend Guidelines (TypeScript/Vue/Tauri)
+## Frontend Guidelines (TypeScript/Vue/Electron)
 
 ### Architecture Patterns
 
@@ -379,7 +416,7 @@ onMounted(() => {
 - **Panel Components**: Each generation type (Code, Text, Image, Audio) should have its own panel component
 - **Status Banner**: Use `StatusBanner` component for consistent status/error display
 - **API Client**: All backend communication goes through `api/client.ts` functions
-- **Backend URL**: Store backend URL in localStorage with fallback to `http://127.0.0.1:8000`
+- **Backend URL**: Store backend URL in localStorage with fallback to `http://127.0.0.1:35421`
 
 ### Testing
 
@@ -387,6 +424,16 @@ onMounted(() => {
 - **Frontend Tests**: Use Vitest for unit tests; Playwright for E2E tests
 - **Test Naming**: Use descriptive test names that explain what is being tested
 - **Test Structure**: Follow Arrange-Act-Assert pattern
+- **Validation**: Always run `pnpm check:all & pnpm test:all` to verify changes across the entire monorepo.
+
+## Unified Quality Control (Global package.json)
+
+The project root contains a global `package.json` that provides unified scripts for maintaining quality across both frontend and backend. Always prefer these commands for validation:
+
+- `pnpm check:all`: Runs linting, typechecking, and tests for both stacks.
+- `pnpm test:all`: Runs all backend and frontend tests.
+- `pnpm lint:all`: Runs linting for both stacks.
+- `pnpm typecheck:all`: Runs typechecking for both stacks.
 
 ## Code Review Checklist
 
@@ -403,6 +450,7 @@ When generating code, ensure:
 - [ ] No code duplication (DRY principle)
 - [ ] Code is simple and intuitive (KISS principle)
 - [ ] Architecture layers are respected (separation of concerns)
+- [ ] Changes are validated with `pnpm check:all & pnpm test:all`
 - [ ] Backend uses Pydantic models for validation
 - [ ] Frontend uses TypeScript types for type safety
 - [ ] Logging is appropriate (backend) or error messages are user-friendly (frontend)
@@ -436,3 +484,7 @@ When generating code, ensure:
 ---
 
 **Remember**: The goal is to write code that is clean, maintainable, scalable, and easy to understand. When in doubt, choose the simpler solution that follows these principles.
+
+Remove whitespace from blank lines. Always validate with `pnpm check:all` before finalizing any code changes.
+All import block must be sorted and grouped to ruff's satisfaction.
+All code must be formatted with `pnpm lint:all`.
