@@ -1,5 +1,6 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { generateImage } from "@/api/client";
+import { DEFAULT_PROJECT_NAME } from "@/api/constants";
 import { ASPECT_RATIOS, QUALITY_OPTIONS } from "@/constants/providers";
 import { useSessionProject } from "@/composables/useSessionProject";
 import { projectStore } from "@/store/projectStore";
@@ -75,7 +76,7 @@ export function useImagePanel() {
           quality: quality.value,
           api_key: apiKey.value || undefined,
         },
-        project_name: (autoSaveToProject.value && (projectStore.activeProjectName || sessionProjectName.value)) || undefined
+        project_name: sessionProjectName.value?.trim() || DEFAULT_PROJECT_NAME
       });
       if (!response.success) {
         tone.value = "error";

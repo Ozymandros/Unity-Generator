@@ -57,7 +57,8 @@ beforeEach(() => {
     });
 
     it("calls createScene API with correct parameters including provider and options", async () => {
-        vi.spyOn(client, "createScene").mockResolvedValue({
+        const createSceneSpy = vi.spyOn(client, "createScene");
+        createSceneSpy.mockResolvedValue({
             success: true,
             date: new Date().toISOString(),
             error: null,
@@ -113,10 +114,15 @@ beforeEach(() => {
             prompt: "Create a test scene",
             provider: "openai",
             api_key: "sk-test-key",
+            project_name: expect.any(String), // shared session project name or DEFAULT_PROJECT_NAME; backend always receives it
             options: expect.objectContaining({
                 temperature: 0.7
             })
             })
         );
+        const callArg = (createSceneSpy as unknown as { mock: { calls: unknown[][] } }).mock.calls[0][0] as { project_name?: string };
+        expect(callArg.project_name).toBeDefined();
+        expect(typeof callArg.project_name).toBe("string");
+        expect(callArg.project_name!.length).toBeGreaterThan(0); // backend always receives a non-empty session/default project name
     });
 // ...existing code...

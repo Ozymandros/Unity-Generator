@@ -4,13 +4,14 @@ from pathlib import Path
 
 
 def setup_logging(log_dir: Path) -> None:
+    """Configure root logger with console and file handlers. Log directory must be writable."""
+    log_dir = Path(log_dir)
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / "backend.log"
     failed_file = log_dir / "failed_requests.log"
 
     root = logging.getLogger()
     root.setLevel(logging.INFO)
-
     formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s %(message)s")
 
     console = logging.StreamHandler()

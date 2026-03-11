@@ -1,5 +1,6 @@
 import { computed, ref, onMounted, watch, type CSSProperties } from "vue";
 import { generateSprites } from "@/api/client";
+import { DEFAULT_PROJECT_NAME } from "@/api/constants";
 import { useSessionProject } from "@/composables/useSessionProject";
 import { projectStore } from "@/store/projectStore";
 import { useIntelligenceStore } from "@/store/intelligenceStore";
@@ -85,7 +86,7 @@ export function useSpritesPanel() {
           palette_size: paletteSize.value,
           auto_crop: autoCrop.value
         },
-        project_name: (autoSaveToProject.value && (projectStore.activeProjectName || sessionProjectName.value)) || undefined
+        project_name: sessionProjectName.value?.trim() || DEFAULT_PROJECT_NAME
       });
 
       if (!response.success) {

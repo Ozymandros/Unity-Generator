@@ -5,6 +5,7 @@ import { useUnityProjectPanel } from "./UnityProjectPanel";
 
 const {
   projectName,
+  sessionProjectResetKey,
   settings,
   finalize,
   UNITY_TEMPLATES,
@@ -38,6 +39,7 @@ const {
 
     <div class="field">
       <SmartField 
+        :key="sessionProjectResetKey"
         label="Project Name" 
         v-model="projectName" 
         required 

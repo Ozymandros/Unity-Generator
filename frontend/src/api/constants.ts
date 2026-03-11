@@ -13,3 +13,6 @@ const BACKEND_HOST = "127.0.0.1";
 export function getDefaultBackendUrl(): string {
   return `http://${BACKEND_HOST}:${DEFAULT_BACKEND_PORT}`;
 }
+
+/** Default project name when session project name is empty. Must match backend schema defaults. */
+export const DEFAULT_PROJECT_NAME = "UnityProject";
