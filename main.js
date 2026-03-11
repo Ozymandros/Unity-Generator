@@ -6,10 +6,11 @@
 const { app, BrowserWindow, ipcMain, dialog, Notification, nativeTheme, shell, autoUpdater } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const net = require('net');
 const { spawn, execSync } = require('child_process');
 const axios = require('axios');
 const os = require('os');
+const { createApplicationMenu, enableContextMenu } = require('./main/menu');
+const { parseManifestJson, parseProjectVersionTxt } = require('./main/unityProjectScanParsers');
 
 // --- safeExistsSync (avoids DEP0187) ---
 function safeExistsSync(p) {
@@ -77,6 +78,7 @@ function configureAccessibility() {
 
 function createMainWindow() {
   try {
+    const isDev = !app.isPackaged;
     const window = new BrowserWindow({
       width: WINDOW_WIDTH,
       height: WINDOW_HEIGHT,
@@ -92,10 +94,14 @@ function createMainWindow() {
         accessibilitySupport: true,
         webSecurity: true
       },
-      autoHideMenuBar: true,
+      // In dev, keep menus visible (Windows/Linux). In prod, allow auto-hide.
+      autoHideMenuBar: !isDev,
       titleBarStyle: 'hiddenInset',
       trafficLightPosition: { x: 16, y: 16 }
     });
+    if (isDev) {
+      try { window.setMenuBarVisibility(true); } catch (_) {}
+    }
     // Note: Electron uses the window title for accessibility automatically
     // No need to call setAccessibilityTitle() - it doesn't exist in Electron's API
     return window;
@@ -109,44 +115,53 @@ function handleWindowClose(window) {
   if (window === global.mainWindow) global.mainWindow = null;
 }
 
-const VITE_DEV_URL = 'http://localhost:5173';
+async function isViteDevServerUp(timeoutMs = 400) {
+  try {
+    const r = await axios.get('http://127.0.0.1:5173', { timeout: timeoutMs });
+    return r.status >= 200 && r.status < 500;
+  } catch (_) {
+    return false;
+  }
+}
 
-/**
- * In dev (not packaged): try Vite first so launcher doesn't depend on NODE_ENV.
- * If port 5173 responds, load from there; otherwise, load from frontend/dist.
- */
 async function loadFrontend(window) {
   try {
-    if (!app.isPackaged) {
-      for (let i = 0; i < 15; i++) {
-        try {
-          await axios.get(VITE_DEV_URL, { timeout: 1500 });
-          logMainProcess(`Loading frontend from Vite (${VITE_DEV_URL})`);
-          window.loadURL(VITE_DEV_URL);
-          // window.webContents.openDevTools();
-          return;
-        } catch (_) {
-          await new Promise((r) => setTimeout(r, 500));
-        }
+    if (process.env.NODE_ENV === 'development') {
+      // Prefer Vite in dev, but fallback to dist if Vite isn't running.
+      const up = await isViteDevServerUp(600);
+      if (up) {
+        await window.loadURL('http://localhost:5173');
+        window.webContents.openDevTools();
+        return;
       }
-      logMainProcess('Vite not reachable; loading from frontend/dist');
+      logMainProcess('Vite dev server not reachable on :5173; falling back to frontend/dist');
     }
 
+    // In development (not packaged), open DevTools to see errors
     if (!app.isPackaged) {
-      // window.webContents.openDevTools();
+      window.webContents.openDevTools();
     }
 
+    // When packaged, use app.getAppPath() to get the correct base path
+    // This resolves to the app.asar location
     const appPath = app.getAppPath();
     const frontendPath = path.join(appPath, 'frontend', 'dist', 'index.html');
+    
+    logMainProcess(`App path: ${appPath}`);
     logMainProcess(`Loading frontend from: ${frontendPath}`);
-
+    logMainProcess(`Frontend exists: ${safeExistsSync(frontendPath)}`);
+    
     if (safeExistsSync(frontendPath)) {
-      window.loadFile(frontendPath);
+      await window.loadFile(frontendPath);
       logMainProcess('Frontend loaded successfully');
     } else {
+      // Try alternative path (in case structure is different)
       const altPath = path.join(__dirname, 'frontend', 'dist', 'index.html');
+      logMainProcess(`Trying alternative path: ${altPath}`);
+      logMainProcess(`Alternative exists: ${safeExistsSync(altPath)}`);
+      
       if (safeExistsSync(altPath)) {
-        window.loadFile(altPath);
+        await window.loadFile(altPath);
         logMainProcess('Frontend loaded from alternative path');
       } else {
         throw new Error(`Frontend not found at: ${frontendPath} or ${altPath}`);
@@ -175,61 +190,58 @@ async function isBackendHealthy(timeout = 1000) {
   }
 }
 
-/** Backend process names we consider "ours" (no .exe; Get-Process uses ProcessName). */
-const OUR_BACKEND_NAMES = ['python', 'unity-generator-backend'];
-
-/**
- * Kill only processes listening on BACKEND_PORT that are our backend (python.exe or
- * unity-generator-backend.exe). Uses Get-NetTCPConnection when possible (more reliable on Windows).
- * Safe to call at quit and at startup when port is stale.
- * On non-Windows: no-op (rely on killing the spawned process).
- */
-function terminateOurBackendOnPort() {
-  if (process.platform !== 'win32') return;
-  const port = BACKEND_PORT;
-  const namesArg = OUR_BACKEND_NAMES.map((n) => `'${n}'`).join(',');
-  const script = [
-    '$port = ' + port,
-    '$names = @(' + namesArg + ')',
-    '$pids = @()',
-    'try {',
-    '  $conn = Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction Stop',
-    '  foreach ($c in $conn) { $pids += $c.OwningProcess }',
-    '} catch {}',
-    'if (-not $pids) {',
-    '  netstat -ano | Select-String (":" + $port + "\\s+.*LISTENING") | ForEach-Object {',
-    '    $parts = ($_.Line -split "\\s+") | Where-Object { $_ -ne "" }; if ($parts[-1] -match "^\\d+$") { $pids += [int]$parts[-1] }',
-    '  }',
-    '}',
-    'foreach ($procId in $pids) {',
-    '  $p = Get-Process -Id $procId -ErrorAction SilentlyContinue',
-    '  if ($p -and ($names -contains $p.ProcessName)) { try { Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue } catch {} }',
-    '}',
-  ].join('\n');
+async function backendHasRoute(routePath, timeout = 1500) {
   try {
-    const tmpDir = os.tmpdir();
-    const scriptPath = path.join(tmpDir, 'unity-generator-kill-backend.ps1');
-    fs.writeFileSync(scriptPath, script, 'utf8');
-    execSync(`powershell -NoProfile -ExecutionPolicy Bypass -File "${scriptPath}"`, { stdio: 'ignore', timeout: 8000 });
-    try { fs.unlinkSync(scriptPath); } catch (_) {}
+    const r = await axios.get(`http://${BACKEND_HOST}:${BACKEND_PORT}/openapi.json`, { timeout });
+    const paths = r?.data?.paths;
+    return !!(paths && Object.prototype.hasOwnProperty.call(paths, routePath));
   } catch (_) {
-    // Best-effort
+    return false;
   }
 }
 
 /**
- * Kill any process listening on BACKEND_PORT (used only on quit after we killed our own).
- * Prefer terminateOurBackendOnPort() when we want to avoid killing other apps.
+ * Kill any process listening on BACKEND_PORT so the port is released.
+ * On Windows: tries PowerShell Get-NetTCPConnection, then netstat fallback.
+ * On non-Windows: no-op (rely on killing the spawned process).
+ * Only call this when we are sure the listener is our own backend (e.g. right after
+ * we killed our process on app quit). Do NOT use at startup to "free" the port, or
+ * we might kill another application that is using the same port by coincidence.
  */
 function terminateListenersOnBackendPort() {
   if (process.platform !== 'win32') return;
-  terminateOurBackendOnPort();
+  const port = BACKEND_PORT;
+  // 1) PowerShell: find PIDs by port and stop them
+  const ps = [
+    '$ids = Get-NetTCPConnection -State Listen -LocalAddress 127.0.0.1 -LocalPort ' + port + ' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique',
+    'if ($ids) { foreach ($id in $ids) { try { Stop-Process -Id $id -Force -ErrorAction SilentlyContinue } catch {} } }',
+  ].join('; ');
+  try {
+    execSync(`powershell -NoProfile -Command "${ps}"`, { stdio: 'ignore', timeout: 5000 });
+  } catch (_) {
+    // Ignore
+  }
+  // 2) Fallback: netstat -ano and taskkill PIDs listening on port
+  try {
+    const out = execSync(`netstat -ano`, { encoding: 'utf8', timeout: 3000 });
+    const needle = ':' + port;
+    const pids = new Set();
+    for (const line of out.split('\n')) {
+      if (!line.includes('LISTENING') || !line.includes(needle)) continue;
+      const parts = line.trim().split(/\s+/);
+      const pid = parts[parts.length - 1];
+      if (/^\d+$/.test(pid)) pids.add(pid);
+    }
+    for (const pid of pids) {
+      try {
+        execSync(`taskkill /PID ${pid} /F`, { stdio: 'ignore', timeout: 2000 });
+      } catch (_) {}
+    }
+  } catch (_) {
+    // Best-effort; spawn may still fail with EADDRINUSE.
+  }
 }
 
-/**
- * Returns true if nothing is listening on the port (connection refused).
- * Used to wait for a server to disappear after we kill it.
- */
 async function isBackendPortFree(timeoutMs = 4000) {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
@@ -246,57 +258,22 @@ async function isBackendPortFree(timeoutMs = 4000) {
   return false;
 }
 
-/**
- * Returns true if we can bind to the port (kernel says it's free).
- * Uses SO_REUSEADDR so we can bind even when the port is in TIME_WAIT after a previous close.
- */
-function canBindToPort(port, host) {
-  return new Promise((resolve) => {
-    const server = net.createServer(() => {});
-    server.once('listening', () => {
-      server.close(() => resolve(true));
-    });
-    server.once('error', (err) => {
-      if (err.code === 'EADDRINUSE' || err.code === 'EACCES') resolve(false);
-      else resolve(false);
-    });
-    server.listen({ port, host, reuseAddress: true });
-  });
-}
-
-/** Wait until we can bind to the port or timeout (ms). Returns true if bindable. */
-async function waitUntilPortBindable(port, host, timeoutMs) {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    if (await canBindToPort(port, host)) return true;
-    await new Promise((r) => setTimeout(r, 400));
-  }
-  return false;
-}
-
 async function startPythonBackend() {
-  const isDev = !app.isPackaged;
+  const isDev =  !app.isPackaged;
+  const databaseDir = path.join(app.getPath('userData'), 'db');
 
-  // In dev, wait up to 12s for an existing backend to respond (e.g. started from Launch config).
-  if (isDev) {
-    for (let i = 0; i < 12; i++) {
-      if (await isBackendHealthy(1500)) {
-        logMainProcess(`Backend already running at http://${BACKEND_HOST}:${BACKEND_PORT}; reusing it`);
-        return null;
-      }
-      await new Promise((r) => setTimeout(r, 1000));
+  // If something is already serving the backend port, reuse it instead of spawning
+  // another process that will fail with EADDRINUSE on Windows.
+  if (await isBackendHealthy(1000)) {
+    const hasResetRoute = await backendHasRoute('/api/management/system-prompts/reset', 1500);
+    if (hasResetRoute) {
+      logMainProcess(`Backend already running at http://${BACKEND_HOST}:${BACKEND_PORT}; reusing existing process`);
+      return null;
     }
-  } else if (await isBackendHealthy(1500)) {
-    logMainProcess(`Backend already running at http://${BACKEND_HOST}:${BACKEND_PORT}; reusing it`);
-    return null;
-  }
-
-  // Free the port by killing only our backends, then start.
-  terminateOurBackendOnPort();
-  await new Promise((r) => setTimeout(r, 2000));
-  const bindable = await waitUntilPortBindable(BACKEND_PORT, BACKEND_HOST, 8000);
-  if (!bindable) {
-    logMainProcess(`Bind check failed for port ${BACKEND_PORT}; attempting to start backend anyway`);
+    logMainProcess(`Backend on ${BACKEND_PORT} is healthy but stale (missing /api/management/system-prompts/reset)`);
+    throw new Error(
+      `Another application is using port ${BACKEND_PORT}. Please close it (e.g. a previous Unity Generator, or another server) and try again. You can also set BACKEND_PORT to a different port.`
+    );
   }
 
   logMainProcess(`Starting backend in ${isDev ? 'development' : 'production'} mode`);
@@ -466,12 +443,7 @@ function handleCSPViolation(violation) {
 
 function buildCSPString() {
   const backendOrigin = `http://${BACKEND_HOST}:${BACKEND_PORT}`;
-  const isDev = !app.isPackaged;
-  // In dev, Vue needs unsafe-eval. In production, remove it for security.
-  const scriptSrc = isDev 
-    ? `'self' 'unsafe-eval' 'unsafe-inline' ${backendOrigin}` 
-    : `'self' 'unsafe-inline' ${backendOrigin}`;
-  return `default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline' ${backendOrigin}; img-src 'self' data: ${backendOrigin}; connect-src 'self' ${backendOrigin}; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';`;
+  return `default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' ${backendOrigin}; style-src 'self' 'unsafe-inline' ${backendOrigin}; img-src 'self' data: ${backendOrigin}; connect-src 'self' ${backendOrigin}; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';`;
 }
 
 function configureCSP() {
@@ -691,10 +663,7 @@ async function initializeApp() {
     if (!backendReady) {
       logMainProcess('ERROR: Backend failed to start');
       await showNotification({ title: 'Backend Error', body: 'Failed to start Python backend. Check logs.', type: 'error' });
-      dialog.showErrorBox(
-        'Backend Error',
-        `Failed to start Python backend.\n\nIf port ${BACKEND_PORT} is stuck, restart the PC or run with BACKEND_PORT=35422 and set the backend URL in app settings to http://127.0.0.1:35422\n\nLogs: ${logFilePath}`
-      );
+      dialog.showErrorBox('Backend Error', `Failed to start Python backend.\n\nCheck logs at: ${logFilePath}`);
       app.quit();
       return;
     }
@@ -707,16 +676,6 @@ async function initializeApp() {
     global.mainWindow = mainWindow;
     
     mainWindow.on('closed', () => handleWindowClose(mainWindow));
-    
-    // Set CSP headers
-    mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
-      callback({
-        responseHeaders: {
-          ...details.responseHeaders,
-          'Content-Security-Policy': [configureCSP()]
-        }
-      });
-    });
     
     // Add error handlers for the window
     mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
@@ -735,6 +694,11 @@ async function initializeApp() {
     logMainProcess('Loading frontend...');
     await loadFrontend(mainWindow);
 
+    // Create application menu (File/Edit/Tools/Help)
+    createApplicationMenu(mainWindow, app, __dirname, logMainProcess);
+    // Enable context menu (right-click)
+    enableContextMenu(mainWindow, logMainProcess);
+    
     logMainProcess('Application initialized successfully');
   } catch (e) {
     console.error('FATAL ERROR in initializeApp:', e);
@@ -798,6 +762,64 @@ ipcMain.handle('shell:open-path', async (_e, filePath) => {
     return { success: true };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Failed to open path' };
+  }
+});
+
+/**
+ * Scan a Unity project folder and return best-effort metadata for prefilling UI.
+ * Reads only well-known files under the selected root; does not mutate anything.
+ */
+ipcMain.handle('unityProject:scan', async (_e, projectRoot) => {
+  try {
+    if (!projectRoot || typeof projectRoot !== 'string' || !projectRoot.trim()) {
+      return { success: false, error: 'projectRoot must be a non-empty string' };
+    }
+
+    const root = path.resolve(projectRoot);
+    const assetsDir = path.join(root, 'Assets');
+    const projectSettingsDir = path.join(root, 'ProjectSettings');
+    const packagesDir = path.join(root, 'Packages');
+
+    if (!safeExistsSync(assetsDir) || !safeExistsSync(projectSettingsDir)) {
+      return { success: false, error: 'Selected folder is not a valid Unity project (missing Assets/ProjectSettings)' };
+    }
+
+    /** @type {{ root: string; unityVersion: string; packages: string[]; files: { projectVersionTxt: boolean; manifestJson: boolean } }} */
+    const result = {
+      root,
+      unityVersion: '',
+      packages: [],
+      files: {
+        projectVersionTxt: safeExistsSync(path.join(projectSettingsDir, 'ProjectVersion.txt')),
+        manifestJson: safeExistsSync(path.join(packagesDir, 'manifest.json')),
+      },
+    };
+
+    // Project version
+    try {
+      const pvPath = path.join(projectSettingsDir, 'ProjectVersion.txt');
+      if (safeExistsSync(pvPath)) {
+        const content = fs.readFileSync(pvPath, 'utf8');
+        result.unityVersion = parseProjectVersionTxt(content).unityVersion || '';
+      }
+    } catch (e) {
+      logMainProcess(`unityProject:scan ProjectVersion parse failed: ${formatError(e)}`);
+    }
+
+    // Packages manifest
+    try {
+      const manifestPath = path.join(packagesDir, 'manifest.json');
+      if (safeExistsSync(manifestPath)) {
+        const content = fs.readFileSync(manifestPath, 'utf8');
+        result.packages = parseManifestJson(content).packages || [];
+      }
+    } catch (e) {
+      logMainProcess(`unityProject:scan manifest parse failed: ${formatError(e)}`);
+    }
+
+    return { success: true, data: result };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : 'Scan failed' };
   }
 });
 

@@ -1,5 +1,5 @@
 {
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Desktop app to generate Unity assets using AI (Electron + FastAPI)",
   "name": "unity-generator",
   "private": true,
@@ -21,7 +21,7 @@
     "// --- Development ---": "",
     "dev:backend": "cd backend && python -m uvicorn app.main:app --reload --port 35421",
     "dev:frontend": "pnpm --dir frontend dev",
-    "dev:electron": "electron .",
+    "dev:electron": "concurrently \"pnpm --dir frontend dev\" \"cross-env NODE_ENV=development electron .\"",
     "dev:electron:live": "cross-env NODE_ENV=development electron .",
     "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\" \"pnpm run dev:electron:live\"",
     "// --- Electron Commands ---": "",

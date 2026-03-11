@@ -2,23 +2,14 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "A: Electron",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "pnpm run dev:electron:live",
-      "cwd": "${workspaceFolder}"
-    },
-    {
-      "name": "Backend (uvicorn)",
+      "name": "Backend (FastAPI)",
       "type": "debugpy",
       "request": "launch",
-      "preLaunchTask": "kill-port-35421",
       "module": "uvicorn",
       "args": [
         "app.main:app",
         "--port",
-        "35421",
-        "--reload"
+        "35421"
       ],
       "cwd": "${workspaceFolder}/backend",
       "env": {
@@ -27,28 +18,36 @@
       "justMyCode": true
     },
     {
-      "name": "Frontend (Vite)",
+      "name": "Frontend (Vite Server)",
       "type": "node-terminal",
       "request": "launch",
       "command": "pnpm run dev",
       "cwd": "${workspaceFolder}/frontend"
+    },
+    // {
+    //   "name": "Frontend (Browser)",
+    //   "type": "chrome",
+    //   "request": "launch",
+    //   "url": "http://localhost:5173", // Make sure this matches your Vite port
+    //   "webRoot": "${workspaceFolder}/frontend",
+    //   "sourceMapPathOverrides": {
+    //     "webpack:///./src/*": "${webRoot}/src/*"
+    //   }
+    // },
+    {
+      "name": "Electron App",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm dev:electron; Read-Host 'Press Enter to close'",
+      "cwd": "${workspaceFolder}"
     }
   ],
   "compounds": [
     {
-      "name": "B: Full stack (Vite + uvicorn)",
+      "name": "Debug: Full Stack",
       "configurations": [
-        "Backend (uvicorn)",
-        "Frontend (Vite)"
-      ],
-      "stopAll": true
-    },
-    {
-      "name": "C: Full stack + Electron",
-      "configurations": [
-        "Backend (uvicorn)",
-        "Frontend (Vite)",
-        "A: Electron"
+        "Frontend (Vite Server)",
+        "Electron App"
       ],
       "stopAll": true
     }

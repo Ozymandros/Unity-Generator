@@ -21,6 +21,15 @@ function setSession(key: string, value: string): void {
   }
 }
 
+function removeSession(key: string): void {
+  if (typeof sessionStorage === "undefined") return;
+  try {
+    sessionStorage.removeItem(key);
+  } catch {
+    // ignore
+  }
+}
+
 /**
  * Session-scoped project name and path (sessionStorage).
  * Backend always derives project_path as base_path (output from settings) + project_name; never project_name alone.
@@ -33,13 +42,37 @@ export function useSessionProject() {
   watch(projectName, (val) => setSession(NAME_KEY, val ?? ""), { immediate: false });
   watch(projectPath, (val) => setSession(PATH_KEY, val ?? ""), { immediate: false });
 
+  function setProjectName(name: string): void {
+    projectName.value = name ?? "";
+  }
+
   function setProjectPath(path: string): void {
     projectPath.value = path;
+  }
+
+  /**
+   * Reset the session-scoped project fields to defaults.
+   *
+   * @param defaultName - Project name to set after reset.
+   *
+   * @example
+   * ```ts
+   * const { resetSessionProject } = useSessionProject();
+   * resetSessionProject("UnityProject");
+   * ```
+   */
+  function resetSessionProject(defaultName: string = "UnityProject"): void {
+    removeSession(NAME_KEY);
+    removeSession(PATH_KEY);
+    projectPath.value = "";
+    projectName.value = defaultName;
   }
 
   return {
     projectName,
     projectPath,
+    setProjectName,
     setProjectPath,
+    resetSessionProject,
   };
 }

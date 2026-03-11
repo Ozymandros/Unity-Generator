@@ -61,6 +61,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     openPath: (filePath) => ipcRenderer.invoke('shell:open-path', filePath)
   },
 
+  // Unity project scanning (read-only)
+  unityProject: {
+    scan: (projectRoot) => ipcRenderer.invoke('unityProject:scan', projectRoot)
+  },
+
   // Migration functionality
   migration: {
     status: () => ipcRenderer.invoke('migration:status'),
@@ -88,8 +93,35 @@ contextBridge.exposeInMainWorld('electronAPI', {
       callback(url);
     });
     return () => subscription.remove();
+  },
+
+  // Window control
+  window: {
+    reload: () => ipcRenderer.invoke('window:reload')
+  },
+
+  // Menu events
+  onMenuNewProject: (callback) => {
+    const handler = () => {
+      callback();
+    };
+    ipcRenderer.on('menu:new-project', handler);
+    return () => {
+      ipcRenderer.removeListener('menu:new-project', handler);
+    };
+  },
+
+  onMenuOpenProject: (callback) => {
+    const handler = (_event, projectPath) => {
+      callback(projectPath);
+    };
+    ipcRenderer.on('menu:open-project', handler);
+    return () => {
+      ipcRenderer.removeListener('menu:open-project', handler);
+    };
   }
 });
 
 // Log preload initialization
-console.log('Electron preload script initialized');
+console.log('[Preload] Electron preload script initialized');
+console.log('[Preload] electronAPI exposed to window');

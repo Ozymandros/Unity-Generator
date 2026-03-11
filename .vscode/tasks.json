@@ -2,14 +2,6 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "kill-port-35421",
-      "type": "shell",
-      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File ${workspaceFolder}/scripts/kill-port-35421.ps1",
-      "options": { "cwd": "${workspaceFolder}" },
-      "problemMatcher": [],
-      "presentation": { "reveal": "silent", "panel": "shared" }
-    },
-    {
       "label": "backend: dev",
       "type": "shell",
       "command": "python -m uvicorn app.main:app --reload --port 8000",

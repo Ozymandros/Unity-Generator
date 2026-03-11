@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from "vue";
+// Menu event handlers for File > New Project and File > Open Project
+import { ref, onMounted, onUnmounted } from "vue";
 import SettingsPanel from "./components/SettingsPanel/SettingsPanel.vue";
 import CodePanel from "./components/CodePanel/CodePanel.vue";
 import TextPanel from "./components/TextPanel/TextPanel.vue";
@@ -9,11 +10,18 @@ import SpritesPanel from "./components/SpritesPanel/SpritesPanel.vue";
 import UnityProjectPanel from "./components/UnityProjectPanel/UnityProjectPanel.vue";
 import { useApp } from "./App";
 import { useSessionProject } from "./composables/useSessionProject";
+import { useIntelligenceStore } from "./store/intelligenceStore";
+import { clearActiveProject } from "./store/projectStore";
+import { useUnityProjectUiStore } from "./store/unityProjectUiStore";
 import ScenesPanel from "./components/ScenesPanel.vue";
+import type { ElectronAPI } from "./types/electron";
 
 const { tabs, active, backendStatus, setActive } = useApp();
-const { projectName } = useSessionProject();
+const { projectName, setProjectName, setProjectPath, resetSessionProject } = useSessionProject();
 const drawer = ref(true);
+const store = useIntelligenceStore();
+const unityUi = useUnityProjectUiStore();
+unityUi.enableAutoPersist();
 
 const getTabIcon = (tab: string) => {
   switch (tab) {
@@ -28,6 +36,96 @@ const getTabIcon = (tab: string) => {
     default: return 'mdi-circle-medium';
   }
 };
+
+// Menu event handlers
+let unsubscribeNewProject: (() => void) | undefined;
+let unsubscribeOpenProject: (() => void) | undefined;
+
+/**
+ * Handle "New Project" menu action.
+ * Resets the frontend store and reloads all initial values from backend/DB.
+ */
+async function handleNewProject() {
+  // Make UI reset synchronous and best-effort: never block on backend.
+  try {
+    // Reset session-scoped project fields deterministically
+    resetSessionProject("UnityProject");
+
+    // Clear active project (auto-save target) stored in localStorage
+    clearActiveProject();
+
+    // Reset Unity Project UI state (persisted)
+    unityUi.reset();
+    unityUi.status = "New project started (UI state reset).";
+    unityUi.tone = "ok";
+
+    // Switch to Unity Project tab immediately
+    setActive('Unity Project');
+  } catch {
+    // Best-effort: keep going even if storage is unavailable
+    setActive('Unity Project');
+  }
+
+  // Optional: reload other app config in background (do not block UI reset)
+  try {
+    store.$reset();
+    void store.load(true);
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Handle "Open Project" menu action.
+ * Loads the selected Unity project folder into the UnityProjectPanel.
+ */
+async function handleOpenProject(projectPath: string) {
+  if (!projectPath) return;
+  
+  // Set the project path in session
+  setProjectPath(projectPath);
+  
+  // Extract project name from path
+  const pathParts = projectPath.replace(/\\/g, '/').split('/');
+  const folderName = pathParts[pathParts.length - 1];
+  setProjectName(folderName || "UnityProject");
+
+  // Best-effort scan & prefill Unity Project UI settings (Electron only)
+  try {
+    const api = window.electronAPI as ElectronAPI | undefined;
+    const scan = await api?.unityProject?.scan(projectPath);
+    if (scan?.success && scan?.data) {
+      if (typeof scan.data.unityVersion === "string" && scan.data.unityVersion.trim()) {
+        unityUi.settings.version = scan.data.unityVersion.trim();
+      }
+      if (Array.isArray(scan.data.packages) && scan.data.packages.length > 0) {
+        const packages = scan.data.packages.filter((p) => typeof p === "string" && p.trim()).join(", ");
+        unityUi.settings.installPackages = true;
+        unityUi.settings.packages = packages;
+      }
+    }
+  } catch {
+    // Prefill is best-effort; do not block navigation
+  }
+  
+  // Switch to Unity Project tab
+  setActive('Unity Project');
+}
+
+onMounted(() => {
+  // Register menu event listeners if running in Electron
+  if (window.electronAPI) {
+    const api = window.electronAPI as ElectronAPI;
+    unsubscribeNewProject = api.onMenuNewProject(handleNewProject);
+    unsubscribeOpenProject = api.onMenuOpenProject(handleOpenProject);
+  }
+});
+
+onUnmounted(() => {
+  // Clean up event listeners
+  if (unsubscribeNewProject) unsubscribeNewProject();
+  if (unsubscribeOpenProject) unsubscribeOpenProject();
+});
 </script>
 
 <template>
