@@ -17,6 +17,7 @@ import {
   LENGTH_PRESETS,
   STABILITY_PRESETS 
 } from "@/constants/providers";
+import { DEFAULT_PROJECT_NAME } from "@/api/constants";
 import { FINALIZE_STATUS, UI_TONE } from "@/constants/finalize";
 import { UNITY_TEMPLATES, UNITY_PLATFORMS } from "@/constants/unity";
 import { electronShell } from "@/services/electronShell";
@@ -29,7 +30,7 @@ const DEFAULT_UNITY_VERSIONS: UnityVersionOption[] = [
 ];
 
 export function useUnityProjectPanel() {
-  const { projectName, projectPath, setProjectPath } = useSessionProject();
+  const { projectName, projectPath, sessionProjectResetKey, setProjectPath } = useSessionProject();
   const uiStore = useUnityProjectUiStore();
 
   // Unity Engine Settings
@@ -180,7 +181,7 @@ export function useUnityProjectPanel() {
     }
     try {
       const response = await generateUnityProject({
-        project_name: projectName.value,
+        project_name: projectName.value?.trim() || DEFAULT_PROJECT_NAME,
         unity_template: settings.template,
         unity_version: settings.version,
         unity_platform: settings.platform,
@@ -219,7 +220,7 @@ export function useUnityProjectPanel() {
         : [];
 
       const response = await finalizeProject({
-        project_name: projectName.value,
+        project_name: projectName.value?.trim() || DEFAULT_PROJECT_NAME,
         project_path: lastProjectPath.value || projectPath.value || undefined,
         unity_settings: {
           install_packages: settings.installPackages,
@@ -351,6 +352,7 @@ export function useUnityProjectPanel() {
 
   return {
     projectName,
+    sessionProjectResetKey,
     settings,
     finalize,
     UNITY_TEMPLATES,

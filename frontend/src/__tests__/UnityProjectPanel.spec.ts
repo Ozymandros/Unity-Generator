@@ -6,6 +6,7 @@ import * as client from "@/api/client";
 import * as electronShellModule from "@/services/electronShell";
 import { createVuetify } from 'vuetify';
 import { createPinia, setActivePinia } from "pinia";
+import { useSessionProject } from "@/composables/useSessionProject";
 
 const vuetify = createVuetify();
 
@@ -64,7 +65,7 @@ describe("UnityProjectPanel", () => {
     vi.mocked(electronShell.openPath).mockResolvedValue({
       success: true,
     });
-    // Align with useSessionProject: default name so panel and finalize tests see "UnityProject"
+    // Align with useSessionProject: stub sessionStorage and reset shared state so every test sees the same initial state (Vue shared state pattern).
     vi.stubGlobal("sessionStorage", {
       getItem: (k: string) =>
         k === SESSION_NAME_KEY ? "UnityProject" : k === SESSION_PATH_KEY ? "" : null,
@@ -74,6 +75,8 @@ describe("UnityProjectPanel", () => {
       length: 0,
       key: vi.fn(),
     });
+    const { resetSessionProject } = useSessionProject();
+    resetSessionProject("UnityProject");
   });
 
   const mountPanel = () => {

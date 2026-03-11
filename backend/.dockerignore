@@ -51,3 +51,8 @@ Thumbs.db
 .env.*
 
 temp_extracted_asar
+
+# Electron build outputs
+dist-electron/
+dist-electron-build/
+out/

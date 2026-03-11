@@ -2,7 +2,7 @@
   "name": "unity-generator-frontend",
   "description": "Frontend for Unity Generator",
   "private": true,
-  "version": "1.4.0",
+  "version": "1.4.1",
   "type": "module",
   "scripts": {
     "dev": "vite",

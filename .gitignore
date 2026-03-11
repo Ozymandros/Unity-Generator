@@ -122,4 +122,5 @@ BUILD_STATUS.md
 
 # Electron build outputs
 dist-electron/
+dist-electron-build/
 out/

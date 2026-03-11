@@ -30,104 +30,128 @@ def init_db() -> None:
 
     Creates the database directory if it doesn't exist and initializes
     all required tables for user preferences, providers, and models.
+    On "database disk image is malformed", removes the DB file and retries once
+    so the app can recover from corruption (e.g. after a bad migration or crash).
     """
     db_dir = get_db_dir()
     db_dir.mkdir(parents=True, exist_ok=True)
+    db_path = get_db_path()
 
-    conn = sqlite3.connect(get_db_path())
-    try:
-        cursor = conn.cursor()
+    for attempt in range(2):
+        try:
+            conn = sqlite3.connect(db_path)
+            try:
+                cursor = conn.cursor()
 
-        # User preferences table
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS user_prefs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                key TEXT UNIQUE NOT NULL,
-                value TEXT NOT NULL
-            )
-            """
-        )
+                # User preferences table
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS user_prefs (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        key TEXT UNIQUE NOT NULL,
+                        value TEXT NOT NULL
+                    )
+                    """
+                )
 
-        # Providers table
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS providers (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT UNIQUE NOT NULL,
-                api_key_name TEXT,
-                base_url TEXT,
-                openai_compatible BOOLEAN DEFAULT 0,
-                requires_api_key BOOLEAN DEFAULT 1,
-                supports_vision BOOLEAN DEFAULT 0,
-                supports_streaming BOOLEAN DEFAULT 0,
-                supports_function_calling BOOLEAN DEFAULT 0,
-                supports_tool_use BOOLEAN DEFAULT 0,
-                modalities TEXT NOT NULL,
-                default_models TEXT NOT NULL,
-                extra TEXT
-            )
-            """
-        )
+                # Providers table
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS providers (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT UNIQUE NOT NULL,
+                        api_key_name TEXT,
+                        base_url TEXT,
+                        openai_compatible BOOLEAN DEFAULT 0,
+                        requires_api_key BOOLEAN DEFAULT 1,
+                        supports_vision BOOLEAN DEFAULT 0,
+                        supports_streaming BOOLEAN DEFAULT 0,
+                        supports_function_calling BOOLEAN DEFAULT 0,
+                        supports_tool_use BOOLEAN DEFAULT 0,
+                        modalities TEXT NOT NULL,
+                        default_models TEXT NOT NULL,
+                        extra TEXT
+                    )
+                    """
+                )
 
-        # Provider models table
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS provider_models (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                provider TEXT NOT NULL,
-                model_value TEXT NOT NULL,
-                model_label TEXT NOT NULL,
-                modality TEXT DEFAULT 'llm',
-                UNIQUE(provider, model_value)
-            )
-            """
-        )
+                # Provider models table
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS provider_models (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        provider TEXT NOT NULL,
+                        model_value TEXT NOT NULL,
+                        model_label TEXT NOT NULL,
+                        modality TEXT DEFAULT 'llm',
+                        UNIQUE(provider, model_value)
+                    )
+                    """
+                )
 
-        # Migration: Add modality column if it doesn't exist
-        cursor.execute("PRAGMA table_info(provider_models)")
-        columns = [column[1] for column in cursor.fetchall()]
-        if "modality" not in columns:
-            cursor.execute("ALTER TABLE provider_models ADD COLUMN modality TEXT DEFAULT 'llm'")
+                # Migration: Add modality column if it doesn't exist
+                cursor.execute("PRAGMA table_info(provider_models)")
+                columns = [column[1] for column in cursor.fetchall()]
+                if "modality" not in columns:
+                    cursor.execute("ALTER TABLE provider_models ADD COLUMN modality TEXT DEFAULT 'llm'")
 
-        # API keys table
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS api_keys (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                service_name TEXT UNIQUE NOT NULL,
-                key_value TEXT NOT NULL,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
+                # API keys table
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS api_keys (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        service_name TEXT UNIQUE NOT NULL,
+                        key_value TEXT NOT NULL,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                    """
+                )
 
-        # System prompts table
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS system_prompts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                modality TEXT UNIQUE NOT NULL,
-                content TEXT NOT NULL,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        )
+                # System prompts table
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS system_prompts (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        modality TEXT UNIQUE NOT NULL,
+                        content TEXT NOT NULL,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                    """
+                )
 
-        # Unity versions table
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS unity_versions (
-                id TEXT PRIMARY KEY,
-                label TEXT NOT NULL
-            )
-            """
-        )
+                # Unity versions table
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS unity_versions (
+                        id TEXT PRIMARY KEY,
+                        label TEXT NOT NULL
+                    )
+                    """
+                )
 
-        conn.commit()
-        LOGGER.info("Database initialized successfully at %s", get_db_path())
-    finally:
-        conn.close()
+                conn.commit()
+                LOGGER.info("Database initialized successfully at %s", db_path)
+            finally:
+                conn.close()
+            return
+        except sqlite3.DatabaseError as e:
+            err_msg = str(e).lower()
+            if "malformed" in err_msg or "corrupt" in err_msg:
+                if attempt == 0 and db_path.exists():
+                    LOGGER.warning(
+                        "Database file corrupt or malformed (%s). Removing and retrying: %s",
+                        e,
+                        db_path,
+                    )
+                    try:
+                        db_path.unlink()
+                    except OSError as unlink_err:
+                        LOGGER.error("Failed to remove corrupt DB file: %s", unlink_err)
+                        raise
+                else:
+                    raise
+            else:
+                raise
 
 
 def set_pref(key: str, value: str) -> None:

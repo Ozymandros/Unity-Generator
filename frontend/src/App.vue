@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Menu event handlers for File > New Project and File > Open Project
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, nextTick, onMounted, onUnmounted } from "vue";
 import SettingsPanel from "./components/SettingsPanel/SettingsPanel.vue";
 import CodePanel from "./components/CodePanel/CodePanel.vue";
 import TextPanel from "./components/TextPanel/TextPanel.vue";
@@ -17,7 +17,7 @@ import ScenesPanel from "./components/ScenesPanel.vue";
 import type { ElectronAPI } from "./types/electron";
 
 const { tabs, active, backendStatus, setActive } = useApp();
-const { projectName, setProjectName, setProjectPath, resetSessionProject } = useSessionProject();
+const { projectName, sessionProjectResetKey, setProjectName, setProjectPath, resetSessionProject } = useSessionProject();
 const drawer = ref(true);
 const store = useIntelligenceStore();
 const unityUi = useUnityProjectUiStore();
@@ -50,6 +50,7 @@ async function handleNewProject() {
   try {
     // Reset session-scoped project fields deterministically
     resetSessionProject("UnityProject");
+    await nextTick(); // Flush reactive updates so Project Name field (and key-based remount) apply before tab switch
 
     // Clear active project (auto-save target) stored in localStorage
     clearActiveProject();
@@ -135,7 +136,7 @@ onUnmounted(() => {
       <div class="pa-6 d-flex align-center">
         <v-icon color="primary" size="32" class="mr-3">mdi-gravity</v-icon>
         <div class="flex-grow-1 min-width-0">
-          <v-text-field v-model="projectName" variant="plain" hide-details density="compact"
+          <v-text-field :key="sessionProjectResetKey" v-model="projectName" variant="plain" hide-details density="compact"
             class="project-name-field text-h6 font-weight-bold line-height-1" placeholder="Project name" />
           <div class="d-flex align-center">
             <v-badge dot :color="backendStatus === 'online' ? 'success' : 'error'" inline class="mr-2"></v-badge>

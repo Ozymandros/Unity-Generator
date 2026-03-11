@@ -50,3 +50,8 @@ mcps
 .qwen/
 .kiro/
 temp_extracted_asar
+
+# Electron build outputs
+dist-electron/
+dist-electron-build/
+out/

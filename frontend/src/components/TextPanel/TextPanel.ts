@@ -1,5 +1,6 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { generateText } from "@/api/client";
+import { DEFAULT_PROJECT_NAME } from "@/api/constants";
 import { TEMPERATURE_PRESETS, LENGTH_PRESETS } from "@/constants/providers";
 import { useSessionProject } from "@/composables/useSessionProject";
 import { projectStore } from "@/store/projectStore";
@@ -73,7 +74,7 @@ export function useTextPanel() {
           max_tokens: maxTokens.value,
           api_key: apiKey.value || undefined,
         },
-        project_name: (autoSaveToProject.value && (projectStore.activeProjectName || sessionProjectName.value)) || undefined
+        project_name: sessionProjectName.value?.trim() || DEFAULT_PROJECT_NAME
       });
       if (!response.success) {
         tone.value = "error";

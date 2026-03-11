@@ -94,8 +94,7 @@ function createMainWindow() {
         accessibilitySupport: true,
         webSecurity: true
       },
-      // In dev, keep menus visible (Windows/Linux). In prod, allow auto-hide.
-      autoHideMenuBar: !isDev,
+      autoHideMenuBar: false,
       titleBarStyle: 'hiddenInset',
       trafficLightPosition: { x: 16, y: 16 }
     });
@@ -297,10 +296,17 @@ async function startPythonBackend() {
       throw new Error(`Backend executable not found: ${backendExePath}`);
     }
     
-    // Run the standalone backend executable
+    // Run the standalone backend executable (LOGS_DIR so logs dir is writable in packaged app)
+    const userData = app.getPath('userData');
     const backend = spawn(backendExePath, [], {
-      env: { ...process.env, PORT: String(BACKEND_PORT), HOST: BACKEND_HOST, DATABASE_DIR: path.join(app.getPath('userData'), 'db') },
-      stdio: ['pipe', 'pipe', 'pipe']
+      env: {
+        ...process.env,
+        PORT: String(BACKEND_PORT),
+        HOST: BACKEND_HOST,
+        DATABASE_DIR: path.join(userData, 'db'),
+        LOGS_DIR: path.join(userData, 'logs'),
+      },
+      stdio: ['pipe', 'pipe', 'pipe'],
     });
     
     backend.stdout.on('data', d => logMainProcess(`Backend: ${d.toString()}`));
@@ -518,7 +524,10 @@ function migrateToElectron(legacyData, electronPath = getElectronDataLocation())
     if (!safeExistsSync(electronPath)) fs.mkdirSync(electronPath, { recursive: true });
   } catch (e) { result.errors.push({ type: 'directory_creation', message: e.message }); return result; }
   if (!legacyData.exists) { result.message = 'No legacy data to migrate'; return result; }
+  // Skip db/ folder: SQLite DB is binary; copying as utf8 would corrupt it. Backend will create a fresh DB.
+  const isDbPath = (rel) => rel.startsWith('db' + path.sep) || rel.startsWith('db/') || rel === 'db';
   for (const [rel, content] of Object.entries(legacyData.files)) {
+    if (isDbPath(rel)) { result.skipped++; continue; }
     try {
       const targetPath = path.join(electronPath, rel);
       const targetDir = path.dirname(targetPath);
@@ -528,6 +537,7 @@ function migrateToElectron(legacyData, electronPath = getElectronDataLocation())
     } catch (e) { result.errors.push({ file: rel, type: 'file_write', message: e.message }); }
   }
   for (const dir of legacyData.directories || []) {
+    if (isDbPath(dir)) { result.skipped++; continue; }
     try {
       const targetDir = path.join(electronPath, dir);
       if (!safeExistsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });

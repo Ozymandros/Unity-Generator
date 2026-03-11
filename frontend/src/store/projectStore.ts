@@ -1,5 +1,9 @@
 import { reactive, watch } from "vue";
 
+/**
+ * Active project (auto-save target) — global reactive singleton, persisted to localStorage.
+ * See https://vuejs.org/guide/scaling-up/state-management.html (simple state with reactivity API).
+ */
 export interface ProjectState {
   activeProjectName: string;
   activeProjectPath: string;
