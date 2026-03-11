@@ -71,7 +71,7 @@ function createFetchError(url: string, method: string, cause: unknown): Error {
   const error = new Error(message);
   error.name = "BackendError";
   // Store cause as a custom property for compatibility
-  (error as any).cause = cause;
+  (error as Error & { cause?: unknown }).cause = cause;
   return error;
 }
 

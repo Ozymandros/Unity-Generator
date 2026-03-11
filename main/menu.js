@@ -228,11 +228,8 @@ function createApplicationMenu(mainWindow, app, __dirname, logMainProcess) {
     }
   ];
   
-  console.log('[Menu] Building menu from template with', template.length, 'top-level items');
   const menu = Menu.buildFromTemplate(template);
-  console.log('[Menu] Menu built successfully');
   Menu.setApplicationMenu(menu);
-  console.log('[Menu] Application menu set');
   
   if (logMainProcess) {
     logMainProcess('Application menu created');

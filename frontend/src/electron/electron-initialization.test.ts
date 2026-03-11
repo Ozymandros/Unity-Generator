@@ -182,7 +182,7 @@ describe("Property 8: Initialization Order Enforcement", () => {
     const failingManager = new InitializationManager();
     
     // Mock spawnBackend to throw
-    (failingManager as any).spawnBackend = async () => {
+    (failingManager as unknown as { spawnBackend: () => Promise<void> }).spawnBackend = async () => {
       throw new Error('Backend spawn failed');
     };
     

@@ -215,6 +215,12 @@ cd frontend
 pnpm exec playwright test --debug smoke.spec.ts
 ```
 
+### Run a single E2E spec (via project script)
+```bash
+cd frontend
+pnpm run test:e2e prompt-reset.spec.ts
+```
+
 ### View test report
 ```bash
 cd frontend

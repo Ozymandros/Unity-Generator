@@ -90,7 +90,7 @@ function loadFromStorage(): UnityProjectUiState {
     if (!parsed || typeof parsed !== "object") return getDefaultState();
 
     const defaults = getDefaultState();
-    const parsedSettings = (parsed as any).settings;
+    const parsedSettings = parsed.settings;
 
     return {
       ...defaults,

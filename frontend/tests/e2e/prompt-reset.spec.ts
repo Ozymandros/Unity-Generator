@@ -1,11 +1,12 @@
 import { test, expect, type Route } from "@playwright/test";
 
-const BACKEND_PORT = process.env.BACKEND_PORT || "8000";
+const BACKEND_PORT = process.env.BACKEND_PORT || "35421";
 const BACKEND_URL = `http://127.0.0.1:${BACKEND_PORT}`;
 
 const ENDPOINTS = {
   HEALTH: `${BACKEND_URL}/health`,
   MANAGEMENT_ALL: `${BACKEND_URL}/api/management/all`,
+  PROMPTS_LIST: `${BACKEND_URL}/api/management/prompts`,
   PROMPTS_RESET: `${BACKEND_URL}/api/management/system-prompts/reset`,
 } as const;
 
@@ -30,23 +31,34 @@ test.beforeEach(async ({ page }) => {
   });
 
   // Initial discovery payload uses custom prompts so we can detect reset
+  const customPrompts = {
+    code: "CUSTOM CODE PROMPT",
+    text: "CUSTOM TEXT PROMPT",
+    image: "CUSTOM IMAGE PROMPT",
+    audio: "CUSTOM AUDIO PROMPT",
+    music: "CUSTOM MUSIC PROMPT",
+    sprite: "CUSTOM SPRITE PROMPT",
+  };
+
   const discoveryPayload = {
     providers: [],
     models: {},
-    prompts: {
-      code: "CUSTOM CODE PROMPT",
-      text: "CUSTOM TEXT PROMPT",
-      image: "CUSTOM IMAGE PROMPT",
-      audio: "CUSTOM AUDIO PROMPT",
-      music: "CUSTOM MUSIC PROMPT",
-      sprite: "CUSTOM SPRITE PROMPT",
-    },
+    prompts: customPrompts,
     keys: [],
     preferences: {},
   };
 
   await page.route(ENDPOINTS.MANAGEMENT_ALL, async (route) => {
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(discoveryPayload) });
+  });
+
+  // PromptManagement loads prompts from /api/management/prompts
+  await page.route(ENDPOINTS.PROMPTS_LIST, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(customPrompts),
+    });
   });
 });
 
@@ -77,14 +89,14 @@ test("resets prompts to backend defaults when clicking Reset to defaults", async
   await page.getByRole("tab", { name: "Prompts" }).click();
 
   // Verify initial custom prompt is visible (one of them)
-  await expect(page.getByText("System Prompts")).toBeVisible({ timeout: 30000 });
-  await expect(page.locator("textarea").filter({ hasText: "CUSTOM CODE PROMPT" }).first()).toBeVisible({ timeout: 30000 });
+  await expect(page.getByRole("heading", { name: "System Prompts" })).toBeVisible({ timeout: 30000 });
+  await expect(page.locator("textarea").first()).toHaveValue("CUSTOM CODE PROMPT", { timeout: 30000 });
 
   // Click Reset button and confirm dialog
   await page.getByRole("button", { name: "Reset to defaults" }).click();
   // Confirmation shown
   await expect(page.getByText("Reset all prompts?")).toBeVisible();
-  await page.getByRole("button", { name: "Reset" }).click();
+  await page.getByRole("button", { name: "Reset", exact: true }).click();
 
   // After reset, at least one textarea should contain the default code prompt
   await expect(page.locator("textarea").first()).toHaveValue(defaults.code, { timeout: 30000 });

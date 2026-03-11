@@ -122,6 +122,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   }
 });
 
-// Log preload initialization
-console.log('[Preload] Electron preload script initialized');
-console.log('[Preload] electronAPI exposed to window');
+// Avoid noisy logs in production; enable only when explicitly requested.
+if (process?.env?.NODE_ENV === 'development' && process?.env?.ELECTRON_PRELOAD_DEBUG === '1') {
+  // eslint-disable-next-line no-console
+  console.log('[Preload] Electron preload script initialized');
+  // eslint-disable-next-line no-console
+  console.log('[Preload] electronAPI exposed to window');
+}

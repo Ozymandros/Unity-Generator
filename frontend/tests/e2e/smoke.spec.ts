@@ -20,7 +20,9 @@ const ENDPOINTS = {
   MANAGEMENT_ALL: `${BACKEND_URL}/api/management/all`,
 } as const;
 
-test.describe("Smoke Tests: Critical Path", () => {
+// All tests in this file are tagged with "@smoke" in their describe titles,
+// so we can include/exclude them via Playwright's --grep / --grep-invert flags.
+test.describe("@smoke Smoke Tests: Critical Path", () => {
   /**
    * Smoke Test 1: Window Opens
    * 
@@ -188,7 +190,7 @@ test.describe("Smoke Tests: Critical Path", () => {
  * These tests directly call the backend API without going through the frontend.
  * This helps isolate backend issues from frontend issues.
  */
-test.describe("Smoke Tests: Backend API Direct", () => {
+test.describe("@smoke Smoke Tests: Backend API Direct", () => {
   /**
    * Direct API Test 1: Health Endpoint
    * 

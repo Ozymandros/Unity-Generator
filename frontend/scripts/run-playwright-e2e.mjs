@@ -46,9 +46,12 @@ async function main() {
 
     // Get test file pattern from command line args (e.g., "smoke.spec.ts")
     const testPattern = process.argv[2] || "";
+    // By default, run full E2E but exclude @smoke-tagged tests.
+    // Smoke tests are only run when an explicit pattern is provided
+    // (e.g., `node scripts/run-playwright-e2e.mjs smoke.spec.ts` or `pnpm test:smoke`).
     const playwrightCmd = testPattern 
         ? `pnpm exec playwright test ${testPattern}`
-        : "pnpm exec playwright test";
+        : "pnpm exec playwright test --grep-invert @smoke";
 
     const child = spawn(playwrightCmd, {
         cwd: process.cwd(),

@@ -242,25 +242,8 @@ function terminateListenersOnBackendPort() {
   }
 }
 
-async function isBackendPortFree(timeoutMs = 4000) {
-  const started = Date.now();
-  while (Date.now() - started < timeoutMs) {
-    try {
-      const r = await axios.get(`http://${BACKEND_HOST}:${BACKEND_PORT}${HEALTH_ENDPOINT}`, { timeout: 400 });
-      if (r.status === 200) {
-        await new Promise((resolve) => setTimeout(resolve, 150));
-        continue;
-      }
-    } catch (_) {
-      return true;
-    }
-  }
-  return false;
-}
-
 async function startPythonBackend() {
   const isDev =  !app.isPackaged;
-  const databaseDir = path.join(app.getPath('userData'), 'db');
 
   // If something is already serving the backend port, reuse it instead of spawning
   // another process that will fail with EADDRINUSE on Windows.

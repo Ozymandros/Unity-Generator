@@ -75,18 +75,23 @@ app.add_middleware(
 )
 
 
-@app.get("/debug/sys")
-def debug_sys() -> dict[str, Any]:
-    logger.info("/debug/sys endpoint called.")
-    import os
-    import sys
-    return {
-        "sys_path": sys.path,
-        "cwd": os.getcwd(),
-        "executable": sys.executable,
-        "modules_app": [k for k in sys.modules if k.startswith("app")],
-        "env": {k: v for k, v in os.environ.items() if "KEY" not in k and "TOKEN" not in k}
-    }
+if os.environ.get("DEBUG_SYS") == "1":
+    @app.get("/debug/sys")
+    def debug_sys() -> dict[str, Any]:
+        """
+        Debug-only endpoint. Enabled only when DEBUG_SYS=1.
+
+        Returns:
+            dict[str, Any]: Process/runtime diagnostics (no secrets).
+        """
+        import sys
+        return {
+            "sys_path": sys.path,
+            "cwd": os.getcwd(),
+            "executable": sys.executable,
+            "modules_app": [k for k in sys.modules if k.startswith("app")],
+            "env": {k: v for k, v in os.environ.items() if "KEY" not in k and "TOKEN" not in k},
+        }
 
 
 @app.get("/health")
