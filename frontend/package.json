@@ -37,7 +37,7 @@
     "eslint": "^9",
     "eslint-plugin-vue": "^9",
     "globals": "^17.3.0",
-    "jsdom": "^24.0.0",
+    "jsdom": "^28.1.0",
     "msw": "^2.12.10",
     "playwright": "latest",
     "typescript": "latest",
