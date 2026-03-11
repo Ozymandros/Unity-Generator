@@ -1,9 +1,13 @@
 name: Release
 
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  release:
+    types:
+      - published
+  workflow_dispatch:
 
 permissions:
   contents: write
