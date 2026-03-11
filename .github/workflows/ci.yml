@@ -108,7 +108,6 @@ jobs:
     name: Playwright E2E (Ubuntu)
     runs-on: ubuntu-latest
     needs: frontend
-    if: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.run_smoke == 'true' || github.event.inputs.run_smoke == true) }}
     defaults:
       run:
         shell: bash
@@ -149,7 +148,17 @@ jobs:
           sleep 10
           echo "Vite server should be running"
 
-      - name: Run Playwright tests
+      - name: Run Playwright smoke tests
+        if: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.run_smoke == 'true' || github.event.inputs.run_smoke == true) }}
+        working-directory: frontend
+        env:
+          CI: true
+          PORT: ${{ env.VITE_PORT }}
+          VITE_PORT: ${{ env.VITE_PORT }}
+        run: pnpm run test:smoke
+
+      - name: Run Playwright full E2E tests
+        if: ${{ !(github.event_name == 'workflow_dispatch' && (github.event.inputs.run_smoke == 'true' || github.event.inputs.run_smoke == true)) }}
         working-directory: frontend
         env:
           CI: true

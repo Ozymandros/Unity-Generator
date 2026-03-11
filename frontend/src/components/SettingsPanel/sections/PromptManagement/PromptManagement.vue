@@ -5,8 +5,11 @@ const {
   prompts,
   promptModalities,
   isLoading,
+  isResetting,
+  confirmResetDialog,
   status,
-  handleSave
+  handleSave,
+  handleResetAll,
 } = usePromptManagement();
 </script>
 
@@ -15,6 +18,17 @@ const {
     <div class="d-flex align-center mb-8">
       <v-icon color="success" size="36" class="mr-4">mdi-script-text</v-icon>
       <h2 class="text-h4 font-weight-bold">System Prompts</h2>
+      <v-spacer></v-spacer>
+      <v-btn
+        variant="tonal"
+        color="warning"
+        prepend-icon="mdi-refresh"
+        size="small"
+        :loading="isResetting"
+        @click="confirmResetDialog = true"
+      >
+        Reset to defaults
+      </v-btn>
     </div>
 
     <v-skeleton-loader v-if="isLoading" type="card@2" class="bg-transparent"></v-skeleton-loader>
@@ -42,6 +56,23 @@ const {
         </v-col>
       </v-row>
     </div>
+
+    <!-- Reset confirmation dialog -->
+    <v-dialog v-model="confirmResetDialog" max-width="420" persistent>
+      <v-card rounded="xl">
+        <v-card-title class="pt-6 pb-2 d-flex align-center ga-3">
+          <v-icon color="warning">mdi-alert-circle-outline</v-icon>
+          Reset all prompts?
+        </v-card-title>
+        <v-card-text class="text-medium-emphasis">
+          This will overwrite all current system prompts with the built-in defaults. This action cannot be undone.
+        </v-card-text>
+        <v-card-actions class="pb-4 px-6 ga-2 justify-end">
+          <v-btn variant="text" @click="confirmResetDialog = false">Cancel</v-btn>
+          <v-btn variant="flat" color="warning" @click="handleResetAll">Reset</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <v-snackbar :model-value="!!status" @update:model-value="val => !val && (status = null)" location="bottom right" rounded="pill">
       {{ status }}

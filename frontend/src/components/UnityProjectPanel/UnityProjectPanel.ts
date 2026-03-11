@@ -1,4 +1,4 @@
-import { ref, computed, onUnmounted, onMounted, reactive } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
 import {
   generateUnityProject,
   getLatestOutput,
@@ -21,6 +21,7 @@ import { FINALIZE_STATUS, UI_TONE } from "@/constants/finalize";
 import { UNITY_TEMPLATES, UNITY_PLATFORMS } from "@/constants/unity";
 import { electronShell } from "@/services/electronShell";
 import { setActiveProject } from "@/store/projectStore";
+import { useUnityProjectUiStore } from "@/store/unityProjectUiStore";
 import { useSessionProject } from "@/composables/useSessionProject";
 
 const DEFAULT_UNITY_VERSIONS: UnityVersionOption[] = [
@@ -29,20 +30,11 @@ const DEFAULT_UNITY_VERSIONS: UnityVersionOption[] = [
 
 export function useUnityProjectPanel() {
   const { projectName, projectPath, setProjectPath } = useSessionProject();
+  const uiStore = useUnityProjectUiStore();
 
   // Unity Engine Settings
-  const settings = reactive({
-    installPackages: false,
-    generateScene: false,
-    setupUrp: false,
-    packages: "com.unity.textmeshpro",
-    sceneName: "MainScene",
-    editorPath: "",
-    timeout: 300,
-    template: "",
-    version: "",
-    platform: ""
-  });
+  // Use store object directly (do not wrap with reactive), so v-model remains stable across remounts
+  const settings = uiStore.settings;
 
 
   // Finalize job state
@@ -54,10 +46,22 @@ export function useUnityProjectPanel() {
   });
   let pollTimer: ReturnType<typeof setInterval> | null = null;
 
-  const status = ref<string | null>(null);
-  const tone = ref<"ok" | "error">(UI_TONE.OK);
-  const result = ref("");
-  const lastProjectPath = ref("");
+  const status = computed({
+    get: () => uiStore.status,
+    set: (v: string | null) => uiStore.$patch({ status: v }),
+  });
+  const tone = computed({
+    get: () => uiStore.tone,
+    set: (v: "ok" | "error") => uiStore.$patch({ tone: v }),
+  });
+  const result = computed({
+    get: () => uiStore.result,
+    set: (v: string) => uiStore.$patch({ result: v }),
+  });
+  const lastProjectPath = computed({
+    get: () => uiStore.lastProjectPath,
+    set: (v: string) => uiStore.$patch({ lastProjectPath: v }),
+  });
 
   // Unity versions from API (user can add more); fallback to default if empty
   const unityVersions = ref<UnityVersionOption[]>(DEFAULT_UNITY_VERSIONS);
@@ -119,6 +123,8 @@ export function useUnityProjectPanel() {
   onMounted(() => {
     loadUnityVersions();
   });
+
+  // Persistence is handled by the store (enableAutoPersist), so it doesn't depend on this panel being mounted.
 
   const availableVoices = computed(() => {
     return [];

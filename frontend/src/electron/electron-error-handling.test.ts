@@ -16,7 +16,7 @@ import { describe, expect, it, beforeEach } from "vitest";
  * Simulates the error handling manager
  */
 class ErrorHandlingManager {
-  private errorLog: Array<{ timestamp: number; message: string; details?: any }> = [];
+  private errorLog: Array<{ timestamp: number; message: string; details?: unknown }> = [];
   
   /**
    * Check if an API is available on the current platform
@@ -50,7 +50,7 @@ class ErrorHandlingManager {
   /**
    * Log warning for unavailable API
    */
-  logWarning(message: string, details?: any): void {
+  logWarning(message: string, details?: unknown): void {
     this.errorLog.push({
       timestamp: Date.now(),
       message,
@@ -61,7 +61,7 @@ class ErrorHandlingManager {
   /**
    * Get error log
    */
-  getErrorLog(): Array<{ timestamp: number; message: string; details?: any }> {
+  getErrorLog(): Array<{ timestamp: number; message: string; details?: unknown }> {
     return [...this.errorLog];
   }
   

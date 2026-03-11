@@ -8,7 +8,6 @@
       "module": "uvicorn",
       "args": [
         "app.main:app",
-        "--reload",
         "--port",
         "35421"
       ],
@@ -47,7 +46,6 @@
     {
       "name": "Debug: Full Stack",
       "configurations": [
-        "Backend (FastAPI)",
         "Frontend (Vite Server)",
         "Electron App"
       ],

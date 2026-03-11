@@ -64,16 +64,19 @@ describe('Error Formatting Unit Tests', () => {
     });
 
     it('should throw TypeError for invalid backendError', () => {
-      expect(() => formatBackendError(null as any)).toThrow('backendError must be an object');
-      expect(() => formatBackendError('invalid' as any)).toThrow('backendError must be an object');
+      type BackendErrorArg = Parameters<typeof formatBackendError>[0];
+      expect(() => formatBackendError(null as unknown as BackendErrorArg)).toThrow('backendError must be an object');
+      expect(() => formatBackendError('invalid' as unknown as BackendErrorArg)).toThrow('backendError must be an object');
     });
 
     it('should throw Error for missing status', () => {
-      expect(() => formatBackendError({ message: 'Error' } as any)).toThrow('backendError must have a status property');
+      type BackendErrorArg = Parameters<typeof formatBackendError>[0];
+      expect(() => formatBackendError({ message: 'Error' } as unknown as BackendErrorArg)).toThrow('backendError must have a status property');
     });
 
     it('should throw Error for invalid message', () => {
-      expect(() => formatBackendError({ status: 500, message: 123 as any })).toThrow('backendError must have a valid message string');
+      type BackendErrorArg = Parameters<typeof formatBackendError>[0];
+      expect(() => formatBackendError({ status: 500, message: 123 } as unknown as BackendErrorArg)).toThrow('backendError must have a valid message string');
     });
   });
 
@@ -128,12 +131,13 @@ describe('Error Formatting Unit Tests', () => {
     });
 
     it('should throw TypeError for invalid processError', () => {
-      expect(() => formatProcessError(null as any, 'Process')).toThrow('processError must be an object');
+      type ProcessErrorArg = Parameters<typeof formatProcessError>[0];
+      expect(() => formatProcessError(null as unknown as ProcessErrorArg, 'Process')).toThrow('processError must be an object');
     });
 
     it('should throw TypeError for invalid processName', () => {
       expect(() => formatProcessError({}, '')).toThrow('processName must be a non-empty string');
-      expect(() => formatProcessError({}, 123 as any)).toThrow('processName must be a non-empty string');
+      expect(() => formatProcessError({}, 123 as unknown as string)).toThrow('processName must be a non-empty string');
     });
   });
 

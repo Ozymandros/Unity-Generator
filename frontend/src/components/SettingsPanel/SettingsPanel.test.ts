@@ -70,13 +70,17 @@ describe("SettingsPanel", () => {
     const wrapper = mountPanel();
     await flushPromises();
 
-    // Initially should show General (tab 0)
-    expect((wrapper.vm as any).activeTab).toBe(0);
+    const tabs = wrapper.findAll(".v-tab");
+
+    // Initially the "General" tab (index 0) should be selected
+    expect(tabs[0].attributes("aria-selected")).toBe("true");
 
     // Click on Providers tab (tab 1)
-    const providerTab = wrapper.findAll(".v-tab")[1];
+    const providerTab = tabs[1];
     await providerTab.trigger("click");
+    await flushPromises();
 
-    expect((wrapper.vm as any).activeTab).toBe(1);
+    // After click, Providers tab should be selected
+    expect(tabs[1].attributes("aria-selected")).toBe("true");
   });
 });

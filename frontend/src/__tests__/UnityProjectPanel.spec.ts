@@ -5,6 +5,7 @@ import { SmartField } from "@/components/generic/SmartField";
 import * as client from "@/api/client";
 import * as electronShellModule from "@/services/electronShell";
 import { createVuetify } from 'vuetify';
+import { createPinia, setActivePinia } from "pinia";
 
 const vuetify = createVuetify();
 
@@ -46,6 +47,7 @@ const SESSION_PATH_KEY = "unity_session_project_path";
 
 describe("UnityProjectPanel", () => {
   beforeEach(() => {
+    setActivePinia(createPinia());
     vi.resetAllMocks();
     vi.mocked(client.getUnityVersions).mockResolvedValue({
       success: true,
@@ -74,17 +76,21 @@ describe("UnityProjectPanel", () => {
     });
   });
 
-  const mountPanel = () => mount(UnityProjectPanel, {
-    global: {
-      plugins: [vuetify],
-      stubs: {
-        'v-expand-transition': { template: '<div><slot /></div>' },
-        'v-fade-transition': { template: '<div><slot /></div>' },
-        'v-dialog': { template: '<div v-if="modelValue"><slot /></div>', props: ['modelValue'] },
-        'status-banner': true
+  const mountPanel = () => {
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    return mount(UnityProjectPanel, {
+      global: {
+        plugins: [vuetify, pinia],
+        stubs: {
+          'v-expand-transition': { template: '<div><slot /></div>' },
+          'v-fade-transition': { template: '<div><slot /></div>' },
+          'v-dialog': { template: '<div v-if="modelValue"><slot /></div>', props: ['modelValue'] },
+          'status-banner': true
+        }
       }
-    }
-  });
+    });
+  };
 
   it("renders form fields", () => {
     const wrapper = mountPanel();

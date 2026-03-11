@@ -40,3 +40,11 @@ def test_unified_discovery_preferences_exist():
     # even if empty, the keys should potentially be there if seeder is robust
     # But at least check it doesn't crash
     assert isinstance(prefs, dict)
+
+def test_reset_system_prompts():
+    """POST /api/management/system-prompts/reset must be registered and return 200."""
+    response = client.post("/api/management/system-prompts/reset")
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+    data = response.json()
+    assert "data" in data
+    assert isinstance(data["data"], dict)

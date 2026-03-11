@@ -17,11 +17,11 @@ import { describe, expect, it, beforeEach } from "vitest";
  */
 interface BackendResponse {
   ok: boolean;
-  data?: any;
+  data?: unknown;
   error?: {
     status: number;
     message: string;
-    details?: any;
+    details?: unknown;
   };
 }
 

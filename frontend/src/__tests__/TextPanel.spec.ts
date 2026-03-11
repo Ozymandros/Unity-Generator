@@ -84,7 +84,7 @@ describe("TextPanel", () => {
     });
     // Find SmartField components by label
     const fields = wrapper.findAllComponents({ name: "SmartField" });
-    const setField = (label: string, value: any) => {
+    const setField = (label: string, value: string | number | boolean) => {
       const field = fields.find(f => f.props("label") === label);
       if (!field) throw new Error(`SmartField with label ${label} not found`);
       return field.vm.$emit("update:modelValue", value);
@@ -128,7 +128,7 @@ describe("TextPanel", () => {
       global: { plugins: [vuetify] },
     });
     const fields = wrapper.findAllComponents({ name: "SmartField" });
-    const setField = (label: string, value: any) => {
+    const setField = (label: string, value: string | number | boolean) => {
       const field = fields.find(f => f.props("label") === label);
       if (!field) throw new Error(`SmartField with label ${label} not found`);
       return field.vm.$emit("update:modelValue", value);
@@ -160,7 +160,7 @@ describe("TextPanel", () => {
       global: { plugins: [vuetify] },
     });
     const fields = wrapper.findAllComponents({ name: "SmartField" });
-    const setField = (label: string, value: any) => {
+    const setField = (label: string, value: string | number | boolean) => {
       const field = fields.find(f => f.props("label") === label);
       if (!field) throw new Error(`SmartField with label ${label} not found`);
       return field.vm.$emit("update:modelValue", value);
