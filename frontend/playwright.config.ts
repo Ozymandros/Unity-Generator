@@ -40,5 +40,6 @@ export default defineConfig({
     ],
   }),
   // Exclude frontend unit tests from Playwright (testDir is ./tests/e2e, ignore src unit specs)
-  testIgnore: ["**/src/**/*.test.ts", "**/src/**/*.spec.ts", "**/src/**/*.test.js", "**/src/**/*.spec.js"],
+  // Exclude smoke tests — they require a live backend on port 35421 and must be run manually
+  testIgnore: ["**/src/**/*.test.ts", "**/src/**/*.spec.ts", "**/src/**/*.test.js", "**/src/**/*.spec.js", "**/smoke.spec.ts"],
 });

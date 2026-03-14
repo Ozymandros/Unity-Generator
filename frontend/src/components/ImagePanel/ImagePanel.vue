@@ -24,8 +24,20 @@ const {
   run,
   providerOptions,
   ASPECT_RATIOS,
-  QUALITY_OPTIONS
+  QUALITY_OPTIONS,
+  generatedImage,
+  textureNameInput,
+  textureTypeSelect,
+  saveToUnity,
 } = useImagePanel();
+
+// Texture type options for Unity
+const TEXTURE_TYPES = [
+  { value: "Default", label: "Default" },
+  { value: "Sprite", label: "Sprite" },
+  { value: "Normal", label: "Normal Map" },
+  { value: "UI", label: "UI" }
+];
 </script>
 
 <template>
@@ -124,6 +136,45 @@ const {
     >
       Generate Image
     </v-btn>
+
+    <!-- Save to Unity Section (shown only when image is generated) -->
+    <v-card 
+      v-if="generatedImage" 
+      class="mb-6" 
+      variant="outlined"
+      elevation="0"
+    >
+      <v-card-title class="text-subtitle-1 d-flex align-center">
+        <v-icon start color="primary">mdi-unity</v-icon>
+        Save to Unity
+      </v-card-title>
+      <v-card-text>
+        <SmartField
+          label="Texture Name"
+          type="text"
+          v-model="textureNameInput"
+          placeholder="GeneratedTexture"
+          class="mb-3"
+        />
+        <SmartField
+          label="Texture Type"
+          type="select"
+          v-model="textureTypeSelect"
+          :options="TEXTURE_TYPES"
+        />
+      </v-card-text>
+      <v-card-actions class="px-4 pb-4">
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-export"
+          block
+          variant="tonal"
+          @click="saveToUnity"
+        >
+          Save to Unity Project
+        </v-btn>
+      </v-card-actions>
+    </v-card>
 
     <SmartField label="Result (JSON)" type="textarea" v-model="result" :rows="10" disabled />
 
