@@ -339,5 +339,200 @@ class AgentManager:
         )
 
 
+    async def run_unity_ui(
+        self,
+        prompt: str,
+        provider: str | None,
+        options: dict[str, Any],
+        api_key: str | None = None,
+        ui_system: str = "ugui",
+        element_type: str | None = None,
+        output_format: str = "script",
+        anchor_preset: str | None = None,
+        color_theme: str | None = None,
+        include_animations: bool = False,
+        system_prompt: str | None = None,
+        project_path: str | None = None,
+    ) -> AgentResult:
+        """
+        Generate Unity UI prefab assets using a UI-aware system prompt.
+
+        Builds a specialised system message for either uGUI (Canvas/RectTransform)
+        or UI Toolkit (UXML/USS) and delegates to the UnityAgent.
+
+        Args:
+            prompt: Natural-language description of the UI element.
+            provider: LLM provider name. Falls back to preferred_llm_provider pref.
+            options: Provider-specific options (model, temperature, etc.).
+            api_key: Optional per-request API key override.
+            ui_system: ``"ugui"`` or ``"uitoolkit"``.
+            element_type: Hint for element category (e.g. ``"health_bar"``).
+            output_format: ``"script"``, ``"prefab_yaml"``, or ``"both"``.
+            anchor_preset: RectTransform anchor hint (e.g. ``"stretch"``).
+            color_theme: Optional colour/style hint injected into the prompt.
+            include_animations: Whether to include animation/transition code.
+            system_prompt: Optional full system prompt override (skips auto-build).
+            project_path: Optional Unity project root path.
+
+        Returns:
+            :class:`AgentResult` with generated content and file list.
+
+        Raises:
+            RuntimeError: If UnityAgent is not available.
+            ValueError: If prompt is empty.
+
+        Example:
+            >>> manager = AgentManager()
+            >>> result = await manager.run_unity_ui(
+            ...     "Create a health bar", "openai", {"model": "gpt-4o-mini"}
+            ... )  # doctest: +SKIP
+        """
+        self._ensure_agents()
+        from ..repositories import get_api_key_repo
+
+        if not prompt or not prompt.strip():
+            raise ValueError("prompt must be a non-empty string")
+
+        api_keys = cast(dict[str, str], get_api_key_repo().get_all())
+        if provider and api_key:
+            caps = provider_registry.get(provider)
+            if caps and caps.api_key_name:
+                api_keys[caps.api_key_name] = api_key
+
+        if not self.unity_agent:
+            raise RuntimeError("UnityAgent is not available.")
+
+        # Build UI-specific system prompt unless caller provides a full override
+        effective_system_prompt = system_prompt or self._build_unity_ui_system_prompt(
+            ui_system=ui_system,
+            element_type=element_type,
+            output_format=output_format,
+            anchor_preset=anchor_preset,
+            color_theme=color_theme,
+            include_animations=include_animations,
+        )
+
+        result = await self.unity_agent.run(
+            prompt=prompt,
+            provider=provider,
+            options=options,
+            api_keys=api_keys,
+            system_prompt=effective_system_prompt,
+            project_path=project_path,
+        )
+
+        if not isinstance(result, dict):
+            content = str(result)
+            result = {"content": content}
+
+        return AgentResult(
+            content=str(result.get("content", "")),
+            provider=provider or "unity",
+            raw=result if isinstance(result, dict) else None,
+            model=str(options.get("model", "")),
+        )
+
+    def _build_unity_ui_system_prompt(
+        self,
+        ui_system: str,
+        element_type: str | None,
+        output_format: str,
+        anchor_preset: str | None,
+        color_theme: str | None,
+        include_animations: bool,
+    ) -> str:
+        """
+        Build a Unity UI-specific system prompt based on the requested parameters.
+
+        Args:
+            ui_system: ``"ugui"`` for Canvas/uGUI or ``"uitoolkit"`` for UXML/USS.
+            element_type: Optional element category hint (e.g. ``"health_bar"``).
+            output_format: ``"script"``, ``"prefab_yaml"``, or ``"both"``.
+            anchor_preset: Optional RectTransform anchor preset hint.
+            color_theme: Optional colour/style hint.
+            include_animations: Whether to include animation code.
+
+        Returns:
+            A complete system prompt string tailored for Unity UI generation.
+
+        Example:
+            >>> manager = AgentManager()
+            >>> prompt = manager._build_unity_ui_system_prompt(
+            ...     "ugui", "health_bar", "script", "stretch", None, False
+            ... )
+            >>> assert "uGUI" in prompt
+            >>> assert "health_bar" in prompt
+        """
+        lines: list[str] = [
+            "You are a senior Unity UI engineer specialising in game UI development.",
+            "Generate clean, well-commented, production-ready Unity UI code.",
+            "",
+        ]
+
+        element_hint = f" for a {element_type.replace('_', ' ')}" if element_type else ""
+
+        if ui_system == "uitoolkit":
+            lines += [
+                f"TARGET SYSTEM: UI Toolkit (UXML/USS){element_hint}.",
+                "- Generate UXML document structure with proper VisualElement hierarchy.",
+                "- Generate companion USS stylesheet with scoped class selectors.",
+                "- Use UI Toolkit's FlexBox layout model (flex-direction, align-items, justify-content).",
+                "- Reference assets via resource paths (e.g. url('project://database/Assets/...'))",
+                "- For runtime binding, generate a C# MonoBehaviour that queries the UXML via UQuery.",
+                "- Place UXML files under Assets/UI/UXML/ and USS under Assets/UI/USS/.",
+            ]
+        else:
+            lines += [
+                f"TARGET SYSTEM: uGUI (Canvas-based){element_hint}.",
+                "- Generate a C# MonoBehaviour script that creates the UI hierarchy at runtime.",
+                "- Use Canvas, CanvasScaler (Scale With Screen Size), GraphicRaycaster.",
+                "- Use RectTransform for all layout; prefer anchors over fixed positions.",
+                "- Use TMP_Text (TextMeshPro) for all text elements.",
+                "- Use Image component for backgrounds and icons.",
+                "- Use Slider for progress bars (health bars, XP bars).",
+                "- Place generated prefab files under Assets/UI/{element_type or 'Elements'}/.",
+            ]
+
+        # Output format guidance
+        if output_format == "prefab_yaml":
+            lines += ["", "OUTPUT FORMAT: Prefab YAML — generate Unity .prefab YAML serialisation only."]
+        elif output_format == "both":
+            lines += ["", "OUTPUT FORMAT: Generate both the C# MonoBehaviour script AND the .prefab YAML."]
+        else:
+            lines += ["", "OUTPUT FORMAT: C# MonoBehaviour script only."]
+
+        # Anchor preset
+        if anchor_preset:
+            anchor_map = {
+                "full_screen": "Stretch both axes (anchorMin=(0,0), anchorMax=(1,1), offsets=0).",
+                "top_left": "Anchor to top-left corner (anchorMin=anchorMax=(0,1)).",
+                "center": "Anchor to center (anchorMin=anchorMax=(0.5,0.5)).",
+                "stretch": "Stretch horizontally, anchor to center vertically.",
+            }
+            hint = anchor_map.get(anchor_preset, f"Use '{anchor_preset}' anchor preset.")
+            lines.append(f"ANCHOR PRESET: {hint}")
+
+        # Colour theme
+        if color_theme:
+            lines.append(f"COLOUR THEME: {color_theme}. Apply these colours to backgrounds, fills, and text.")
+
+        # Animation
+        if include_animations:
+            lines += [
+                "",
+                "ANIMATIONS: Include smooth transition code.",
+                "- For uGUI: use DOTween (if available) or Unity Coroutines for fade/scale/slide.",
+                "- For UI Toolkit: use USS transitions (transition property) and USS animations.",
+            ]
+
+        lines += [
+            "",
+            "Always include XML doc comments on public members.",
+            "Always validate that required components exist before accessing them.",
+        ]
+
+        return "\n".join(lines)
+
+
 # Module-level singleton
 agent_manager = AgentManager()

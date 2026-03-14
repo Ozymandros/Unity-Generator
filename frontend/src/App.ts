@@ -10,6 +10,7 @@ const tabs = [
   "Image",
   "Sprites",
   "Audio",
+  "Unity UI",
   "Unity Project",
   "Management",
 ] as const;

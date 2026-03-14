@@ -200,6 +200,45 @@ class CreateSceneRequest(BaseModel):
     project_path: str | None = None  # ignored; kept for API compatibility
 
 
+class UnityUIRequest(BaseModel):
+    """Request body for Unity UI element generation.
+
+    Attributes:
+        prompt: Natural-language description of the UI element to generate.
+        provider: Optional LLM provider override.
+        ui_system: Target Unity UI system — ``"ugui"`` (Canvas/uGUI) or ``"uitoolkit"`` (UXML/USS).
+        element_type: Hint for the element category (e.g. ``"health_bar"``, ``"button"``).
+        output_format: What to generate — ``"script"``, ``"prefab_yaml"``, or ``"both"``.
+        anchor_preset: RectTransform anchor preset hint (e.g. ``"stretch"``, ``"top_left"``).
+        color_theme: Optional free-text colour/style hint injected into the prompt.
+        include_animations: Whether to include animation/transition code.
+        api_key: Optional per-request API key override.
+        system_prompt: Optional system prompt override.
+        project_name: Target Unity project name (resolved to base_path + project_name).
+        project_path: Ignored; kept for API compatibility.
+        options: Provider-specific options (``model``, ``temperature``, etc.).
+
+    Example:
+        >>> req = UnityUIRequest(prompt="Create a health bar", ui_system="ugui")
+        >>> req.ui_system
+        'ugui'
+    """
+
+    prompt: str
+    provider: str | None = None
+    ui_system: str = "ugui"
+    element_type: str | None = None
+    output_format: str = "script"
+    anchor_preset: str | None = None
+    color_theme: str | None = None
+    include_animations: bool = False
+    api_key: str | None = None
+    system_prompt: str | None = None
+    project_name: str | None = None
+    project_path: str | None = None  # ignored; kept for API compatibility
+    options: dict[str, Any] = Field(default_factory=dict)
+
+
 
 # ---------------------------------------------------------------------------
 # Finalize workflow schemas
