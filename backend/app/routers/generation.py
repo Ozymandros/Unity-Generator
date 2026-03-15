@@ -12,6 +12,7 @@ from app.schemas import (
     ImageOptions,
     SpritesRequest,
     TextOptions,
+    UnityPhysicsRequest,
     UnityUIRequest,
     VideoOptions,
     error_response,
@@ -243,4 +244,60 @@ async def generate_unity_ui(request: UnityUIRequest) -> GenerationResponse:
         return error_response(str(exc))
     except Exception as exc:
         logging.getLogger("failed_requests").warning("Unity UI generation failed: %s", exc)
+        return error_response(str(exc))
+
+
+@router.post("/unity-physics", response_model=GenerationResponse)
+async def generate_unity_physics(request: UnityPhysicsRequest) -> GenerationResponse:
+    """
+    Generate Unity Physics configuration code (PhysX or DOTS) using a
+    physics-aware system prompt.
+
+    Args:
+        request: Validated physics generation request.
+
+    Returns:
+        GenerationResponse with generated physics code or error details.
+
+    Example:
+        POST /generate/unity-physics
+        {
+            "prompt": "Set up a bouncy ball with Earth gravity",
+            "physics_backend": "physx",
+            "include_rigidbody": true,
+            "include_colliders": true
+        }
+    """
+    if not request.prompt or not request.prompt.strip():
+        return error_response("Prompt cannot be empty")
+
+    try:
+        provider = request.provider or get_pref("preferred_llm_provider")
+
+        if not provider:
+            return error_response(
+                "No provider specified and no preferred provider found in settings."
+            )
+
+        project_path = _project_path_from_request(request.project_name)
+        data = await agent_manager.run_unity_physics(
+            prompt=request.prompt,
+            provider=provider,
+            options=request.options,
+            api_key=request.api_key,
+            physics_backend=request.physics_backend,
+            simulation_mode=request.simulation_mode,
+            gravity_preset=request.gravity_preset,
+            include_rigidbody=request.include_rigidbody,
+            include_colliders=request.include_colliders,
+            include_layers=request.include_layers,
+            system_prompt=request.system_prompt,
+            project_path=project_path,
+        )
+        return ok_response(data)
+    except ValueError as exc:
+        logging.getLogger("failed_requests").warning("Unity Physics generation failed (ValueError): %s", exc)
+        return error_response(str(exc))
+    except Exception as exc:
+        logging.getLogger("failed_requests").warning("Unity Physics generation failed: %s", exc)
         return error_response(str(exc))

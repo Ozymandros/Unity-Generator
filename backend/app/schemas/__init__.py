@@ -240,6 +240,43 @@ class UnityUIRequest(BaseModel):
 
 
 
+class UnityPhysicsRequest(BaseModel):
+    """Request body for Unity Physics configuration generation.
+
+    Attributes:
+        prompt: Natural-language description of the physics behaviour to generate.
+        provider: Optional LLM provider override.
+        physics_backend: Target physics engine — ``"physx"`` (default) or ``"dots"``.
+        simulation_mode: ``"fixed_update"``, ``"update"``, or ``"script"``.
+        gravity_preset: Gravity preset hint (e.g. ``"earth"``, ``"moon"``, ``"zero_g"``).
+        include_rigidbody: Whether to include Rigidbody component setup code.
+        include_colliders: Whether to include Collider component setup code.
+        include_layers: Whether to include Physics Layer matrix configuration.
+        api_key: Optional per-request API key override.
+        system_prompt: Optional system prompt override.
+        project_name: Target Unity project name (resolved to base_path + project_name).
+        options: Provider-specific options (``model``, ``temperature``, etc.).
+
+    Example:
+        >>> req = UnityPhysicsRequest(prompt="Set up a bouncy ball with gravity")
+        >>> req.physics_backend
+        'physx'
+    """
+
+    prompt: str
+    provider: str | None = None
+    physics_backend: str = "physx"
+    simulation_mode: str = "fixed_update"
+    gravity_preset: str | None = None
+    include_rigidbody: bool = True
+    include_colliders: bool = True
+    include_layers: bool = False
+    api_key: str | None = None
+    system_prompt: str | None = None
+    project_name: str | None = None
+    options: dict[str, Any] = Field(default_factory=dict)
+
+
 # ---------------------------------------------------------------------------
 # Finalize workflow schemas
 # ---------------------------------------------------------------------------

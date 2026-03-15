@@ -9,6 +9,7 @@ import AudioPanel from "./components/AudioPanel/AudioPanel.vue";
 import SpritesPanel from "./components/SpritesPanel/SpritesPanel.vue";
 import UnityProjectPanel from "./components/UnityProjectPanel/UnityProjectPanel.vue";
 import UnityUIPanel from "./components/UnityUIPanel/UnityUIPanel.vue";
+import UnityPhysicsPanel from "./components/UnityPhysicsPanel/UnityPhysicsPanel.vue";
 import { useApp } from "./App";
 import { useSessionProject } from "./composables/useSessionProject";
 import { useOpenProject } from "./composables/useOpenProject";
@@ -36,6 +37,7 @@ const getTabIcon = (tab: string) => {
     case 'Sprites': return 'mdi-grid';
     case 'Audio': return 'mdi-volume-high';
     case 'Unity UI': return 'mdi-palette-outline';
+    case 'Unity Physics': return 'mdi-atom';
     case 'Unity Project': return 'mdi-unity';
     default: return 'mdi-circle-medium';
   }
@@ -152,6 +154,7 @@ onUnmounted(() => {
             <SpritesPanel v-else-if="active === 'Sprites'" />
             <AudioPanel v-else-if="active === 'Audio'" />
             <UnityUIPanel v-else-if="active === 'Unity UI'" />
+            <UnityPhysicsPanel v-else-if="active === 'Unity Physics'" />
             <UnityProjectPanel v-else-if="active === 'Unity Project'" />
           </div>
         </v-fade-transition>

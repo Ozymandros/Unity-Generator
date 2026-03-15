@@ -402,15 +402,22 @@ class AgentManager:
         if not self.unity_agent:
             raise RuntimeError("UnityAgent is not available.")
 
-        # Build UI-specific system prompt unless caller provides a full override
-        effective_system_prompt = system_prompt or self._build_unity_ui_system_prompt(
-            ui_system=ui_system,
-            element_type=element_type,
-            output_format=output_format,
-            anchor_preset=anchor_preset,
-            color_theme=color_theme,
-            include_animations=include_animations,
-        )
+        # Build UI-specific system prompt unless caller provides a full override.
+        # Falls back to the user-configured global default for "unity_ui" if set,
+        # then to the auto-built prompt derived from the request parameters.
+        if system_prompt:
+            effective_system_prompt = system_prompt
+        else:
+            from ..repositories import get_system_prompt_repo
+            db_prompt = get_system_prompt_repo().get("unity_ui")
+            effective_system_prompt = db_prompt or self._build_unity_ui_system_prompt(
+                ui_system=ui_system,
+                element_type=element_type,
+                output_format=output_format,
+                anchor_preset=anchor_preset,
+                color_theme=color_theme,
+                include_animations=include_animations,
+            )
 
         result = await self.unity_agent.run(
             prompt=prompt,
@@ -529,6 +536,214 @@ class AgentManager:
             "",
             "Always include XML doc comments on public members.",
             "Always validate that required components exist before accessing them.",
+        ]
+
+        return "\n".join(lines)
+
+
+    async def run_unity_physics(
+        self,
+        prompt: str,
+        provider: str | None,
+        options: dict[str, Any],
+        api_key: str | None = None,
+        physics_backend: str = "physx",
+        simulation_mode: str = "fixed_update",
+        gravity_preset: str | None = None,
+        include_rigidbody: bool = True,
+        include_colliders: bool = True,
+        include_layers: bool = False,
+        system_prompt: str | None = None,
+        project_path: str | None = None,
+    ) -> AgentResult:
+        """
+        Generate Unity Physics configuration code using a physics-aware system prompt.
+
+        Builds a specialised system message for either PhysX or DOTS physics and
+        delegates to the UnityAgent.
+
+        Args:
+            prompt: Natural-language description of the physics behaviour.
+            provider: LLM provider name. Falls back to preferred_llm_provider pref.
+            options: Provider-specific options (model, temperature, etc.).
+            api_key: Optional per-request API key override.
+            physics_backend: ``"physx"`` (default) or ``"dots"``.
+            simulation_mode: ``"fixed_update"``, ``"update"``, or ``"script"``.
+            gravity_preset: Gravity hint (e.g. ``"earth"``, ``"moon"``, ``"zero_g"``).
+            include_rigidbody: Whether to include Rigidbody component setup.
+            include_colliders: Whether to include Collider component setup.
+            include_layers: Whether to include Physics Layer matrix configuration.
+            system_prompt: Optional full system prompt override (skips auto-build).
+            project_path: Optional Unity project root path.
+
+        Returns:
+            :class:`AgentResult` with generated content and file list.
+
+        Raises:
+            RuntimeError: If UnityAgent is not available.
+            ValueError: If prompt is empty.
+
+        Example:
+            >>> manager = AgentManager()
+            >>> result = await manager.run_unity_physics(
+            ...     "Set up a bouncy ball", "openai", {"model": "gpt-4o-mini"}
+            ... )  # doctest: +SKIP
+        """
+        self._ensure_agents()
+        from ..repositories import get_api_key_repo
+
+        if not prompt or not prompt.strip():
+            raise ValueError("prompt must be a non-empty string")
+
+        api_keys = cast(dict[str, str], get_api_key_repo().get_all())
+        if provider and api_key:
+            caps = provider_registry.get(provider)
+            if caps and caps.api_key_name:
+                api_keys[caps.api_key_name] = api_key
+
+        if not self.unity_agent:
+            raise RuntimeError("UnityAgent is not available.")
+
+        # Falls back to the user-configured global default for "unity_physics" if set,
+        # then to the auto-built prompt derived from the request parameters.
+        if system_prompt:
+            effective_system_prompt = system_prompt
+        else:
+            from ..repositories import get_system_prompt_repo
+            db_prompt = get_system_prompt_repo().get("unity_physics")
+            effective_system_prompt = db_prompt or self._build_unity_physics_system_prompt(
+                physics_backend=physics_backend,
+                simulation_mode=simulation_mode,
+                gravity_preset=gravity_preset,
+                include_rigidbody=include_rigidbody,
+                include_colliders=include_colliders,
+                include_layers=include_layers,
+            )
+
+        result = await self.unity_agent.run(
+            prompt=prompt,
+            provider=provider,
+            options=options,
+            api_keys=api_keys,
+            system_prompt=effective_system_prompt,
+            project_path=project_path,
+        )
+
+        if not isinstance(result, dict):
+            content = str(result)
+            result = {"content": content}
+
+        return AgentResult(
+            content=str(result.get("content", "")),
+            provider=provider or "unity",
+            raw=result if isinstance(result, dict) else None,
+            model=str(options.get("model", "")),
+        )
+
+    def _build_unity_physics_system_prompt(
+        self,
+        physics_backend: str,
+        simulation_mode: str,
+        gravity_preset: str | None,
+        include_rigidbody: bool,
+        include_colliders: bool,
+        include_layers: bool,
+    ) -> str:
+        """
+        Build a Unity Physics-specific system prompt based on the requested parameters.
+
+        Args:
+            physics_backend: ``"physx"`` or ``"dots"`` (DOTS/ECS physics).
+            simulation_mode: ``"fixed_update"``, ``"update"``, or ``"script"``.
+            gravity_preset: Optional gravity hint (``"earth"``, ``"moon"``, ``"zero_g"``).
+            include_rigidbody: Whether to include Rigidbody setup guidance.
+            include_colliders: Whether to include Collider setup guidance.
+            include_layers: Whether to include Physics Layer matrix guidance.
+
+        Returns:
+            A complete system prompt string tailored for Unity Physics generation.
+
+        Example:
+            >>> manager = AgentManager()
+            >>> prompt = manager._build_unity_physics_system_prompt(
+            ...     "physx", "fixed_update", "earth", True, True, False
+            ... )
+            >>> assert "PhysX" in prompt
+        """
+        gravity_map = {
+            "earth": "9.81 m/s² downward (standard Earth gravity).",
+            "moon": "1.62 m/s² downward (lunar gravity).",
+            "zero_g": "0 m/s² — zero gravity / space environment.",
+            "low": "3.0 m/s² downward (low-gravity planet).",
+            "high": "20.0 m/s² downward (high-gravity planet).",
+        }
+
+        lines: list[str] = [
+            "You are a senior Unity physics engineer specialising in game physics configuration.",
+            "Generate clean, well-commented, production-ready Unity physics code.",
+            "",
+        ]
+
+        if physics_backend == "dots":
+            lines += [
+                "TARGET BACKEND: Unity DOTS Physics (Unity.Physics package).",
+                "- Use PhysicsBody and PhysicsShape authoring components.",
+                "- Generate ECS-compatible code using IComponentData and SystemBase/ISystem.",
+                "- Use PhysicsWorld and PhysicsStep for simulation control.",
+                "- Place generated files under Assets/Scripts/Physics/.",
+            ]
+        else:
+            lines += [
+                "TARGET BACKEND: Unity PhysX (built-in physics engine).",
+                "- Use standard MonoBehaviour-based physics components.",
+                "- Access physics via Rigidbody, Collider, and Physics.* static API.",
+                "- Use Physics.gravity for global gravity settings.",
+                "- Place generated files under Assets/Scripts/Physics/.",
+            ]
+
+        sim_map = {
+            "fixed_update": "FixedUpdate() — standard physics timestep (recommended for Rigidbody).",
+            "update": "Update() — frame-rate dependent (use only for kinematic or non-physics movement).",
+            "script": "Script-driven via Physics.Simulate() — manual simulation stepping.",
+        }
+        lines.append(f"SIMULATION MODE: {sim_map.get(simulation_mode, simulation_mode)}")
+
+        if gravity_preset:
+            gravity_desc = gravity_map.get(gravity_preset, f"Custom preset: {gravity_preset}.")
+            lines.append(f"GRAVITY: {gravity_desc} Set via Physics.gravity in an initialisation script.")
+
+        if include_rigidbody:
+            lines += [
+                "",
+                "RIGIDBODY SETUP: Include Rigidbody component configuration.",
+                "- Set mass, drag, angularDrag, and interpolation mode.",
+                "- Use RigidbodyConstraints where appropriate.",
+                "- Prefer isKinematic=false for physics-driven objects.",
+            ]
+
+        if include_colliders:
+            lines += [
+                "",
+                "COLLIDERS: Include Collider component setup.",
+                "- Choose the most appropriate collider shape (Box, Sphere, Capsule, Mesh).",
+                "- Configure PhysicMaterial with bounciness and friction values.",
+                "- Use trigger colliders (isTrigger=true) for overlap detection.",
+            ]
+
+        if include_layers:
+            lines += [
+                "",
+                "PHYSICS LAYERS: Include Physics Layer matrix configuration.",
+                "- Define layer constants as a static class.",
+                "- Use Physics.IgnoreLayerCollision() for layer interaction rules.",
+                "- Document each layer's purpose with XML comments.",
+            ]
+
+        lines += [
+            "",
+            "Always include XML doc comments on public members.",
+            "Always validate that required components exist (GetComponent with null check).",
+            "Prefer [RequireComponent] attribute to enforce component dependencies.",
         ]
 
         return "\n".join(lines)
