@@ -70,6 +70,8 @@ const {
                         placeholder="Select Provider" 
                         class="flex-grow-1"
                     />
+                  </div>
+                  <div class="row d-flex align-center gap-2">
                     <SmartField 
                         label="Model" 
                         type="select" 
@@ -79,16 +81,17 @@ const {
                         :disabled="!provider"
                         class="flex-grow-1"
                     />
+                  </div>
+                  <div class="row d-flex align-center gap-2">
                     <v-btn
-                      icon="mdi-plus"
+                      variant="text"
                       size="small"
-                      variant="tonal"
-                      color="primary"
-                      class="ml-2 mt-7"
+                      class="mt-1 margin-0"
+                      prepend-icon="mdi-plus"
                       @click="showModelManager = true"
-                      :disabled="!provider"
-                      title="Manage models"
-                    ></v-btn>
+                    >
+                      Add model
+                    </v-btn>
                   </div>
                 </div>
 
