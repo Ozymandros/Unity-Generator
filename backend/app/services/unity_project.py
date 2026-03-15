@@ -185,13 +185,114 @@ def _save_audio(output_dir: Path, data: dict[str, Any]) -> list[str]:
     return files
 
 
-def _write_project_settings(project_dir: Path, written_files: list[str]) -> None:
+# Minimal package sets per template — enough for inferTemplate() to identify the template.
+# Keys match the unity_template values accepted by the API.
+_TEMPLATE_PACKAGES: dict[str, dict[str, str]] = {
+    "urp": {
+        "com.unity.render-pipelines.universal": "17.0.3",
+        "com.unity.render-pipelines.core": "17.0.3",
+    },
+    "hdrp": {
+        "com.unity.render-pipelines.high-definition": "17.0.3",
+        "com.unity.render-pipelines.core": "17.0.3",
+    },
+    "vr": {
+        "com.unity.xr.management": "4.4.0",
+        "com.unity.xr.openxr": "1.10.0",
+    },
+    "2d": {
+        "com.unity.feature.2d": "2.0.0",
+    },
+    "mobile": {},
+    "3d": {},
+}
+
+
+def _write_packages_manifest(
+    project_dir: Path,
+    written_files: list[str],
+    unity_template: str = "",
+) -> None:
+    """
+    Write ``Packages/manifest.json`` with template-appropriate UPM dependencies.
+
+    The manifest is required for ``unityProject:scan`` to read back packages and
+    infer the template when the project is re-opened via "Open Folder".
+
+    Args:
+        project_dir: Root directory of the Unity project.
+        written_files: List to append created file paths to.
+        unity_template: Template key (e.g. ``"urp"``, ``"hdrp"``, ``"vr"``, ``"2d"``).
+            Falls back to an empty dependencies dict for unknown/blank templates.
+
+    Example:
+        >>> _write_packages_manifest(Path("/tmp/MyProject"), [], "urp")
+    """
+    packages_dir = project_dir / "Packages"
+    _ensure_folder(packages_dir, written_files)
+
+    deps = _TEMPLATE_PACKAGES.get(unity_template.strip().lower(), {})
+    manifest = {"dependencies": deps}
+    manifest_path = packages_dir / "manifest.json"
+    _write_text(manifest_path, json.dumps(manifest, indent=2))
+    written_files.append(str(manifest_path))
+
+
+def _write_generator_meta(
+    project_dir: Path,
+    written_files: list[str],
+    unity_template: str = "",
+    unity_platform: str = "",
+) -> None:
+    """
+    Write ``ProjectSettings/GeneratorMeta.json`` with template and platform metadata.
+
+    This file is read back by the Electron scan so that "Open Project" / "Open Folder"
+    can restore the template and platform fields without inference heuristics.
+
+    Args:
+        project_dir: Root directory of the Unity project.
+        written_files: List to append created file paths to.
+        unity_template: Template key (e.g. ``"urp"``, ``"3d"``).
+        unity_platform: Platform key (e.g. ``"windows"``).
+
+    Example:
+        >>> _write_generator_meta(Path("/tmp/MyProject"), [], "urp", "windows")
+    """
+    settings_dir = project_dir / "ProjectSettings"
+    settings_dir.mkdir(parents=True, exist_ok=True)
+    meta_path = settings_dir / "GeneratorMeta.json"
+    _write_text(meta_path, json.dumps({
+        "unity_template": unity_template,
+        "unity_platform": unity_platform,
+    }, indent=2))
+    written_files.append(str(meta_path))
+
+
+def _write_project_settings(
+    project_dir: Path,
+    written_files: list[str],
+    unity_version: str = "",
+) -> None:
+    """
+    Write Unity ProjectSettings directory with a ProjectVersion.txt.
+
+    Args:
+        project_dir: Root directory of the Unity project.
+        written_files: List to append created file paths to.
+        unity_version: Unity version string (e.g. ``"6000.3.2f1"``).
+            Falls back to ``"2022.3.0f1"`` when empty.
+
+    Example:
+        >>> _write_project_settings(Path("/tmp/MyProject"), [], "6000.3.2f1")
+    """
+    version = unity_version.strip() if unity_version and unity_version.strip() else "2022.3.0f1"
     settings_dir = project_dir / "ProjectSettings"
     _ensure_folder(settings_dir, written_files)
     version_file = settings_dir / "ProjectVersion.txt"
     _write_text(
         version_file,
-        "m_EditorVersion: 2022.3.0f1\nm_EditorVersionWithRevision: 2022.3.0f1 (placeholder)\n",
+        f"m_EditorVersion: {version}\nm_EditorVersionWithRevision: {version} (placeholder)\n",
     )
     written_files.append(str(version_file))
     written_files.append(_write_meta(version_file))
@@ -213,11 +314,35 @@ def create_unity_project(
     text: str | None,
     image_data: Any | None,
     audio_data: dict[str, Any] | None,
+    unity_version: str = "",
+    unity_template: str = "",
+    unity_platform: str = "",
 ) -> dict[str, Any]:
+    """
+    Scaffold a Unity project directory with optional generated assets.
+
+    Args:
+        project_name: Name of the project; used as the folder name (sanitised).
+        code: Optional C# script content to write under Assets/Scripts.
+        text: Optional text content to write under Assets/Text.
+        image_data: Optional image data (URL, base64 string, or list manifest).
+        audio_data: Optional audio data dict with ``audio_bytes`` or ``audio_url``.
+        unity_version: Unity version string written to ProjectVersion.txt (e.g. ``"6000.3.2f1"``).
+        unity_template: Project template hint stored in project metadata (e.g. ``"3d"``, ``"urp"``).
+        unity_platform: Target platform hint stored in project metadata (e.g. ``"windows"``).
+
+    Returns:
+        Dict with ``project_path`` (absolute path) and ``files`` (list of created paths).
+
+    Example:
+        >>> result = create_unity_project("MyGame", None, None, None, None, "6000.3.2f1", "3d", "windows")
+        >>> "project_path" in result
+        True
+    """
     output_root = get_output_dir()
     output_root.mkdir(parents=True, exist_ok=True)
 
-    folder_name = f"{_safe_name(project_name)}_{_timestamp()}"
+    folder_name = _safe_name(project_name)
     project_dir = output_root / folder_name
     written_files: list[str] = []
     assets_dir = project_dir / "Assets"
@@ -232,7 +357,9 @@ def create_unity_project(
     _ensure_folder(text_dir, written_files)
     _ensure_folder(image_dir, written_files)
     _ensure_folder(audio_dir, written_files)
-    _write_project_settings(project_dir, written_files)
+    _write_project_settings(project_dir, written_files, unity_version)
+    _write_packages_manifest(project_dir, written_files, unity_template)
+    _write_generator_meta(project_dir, written_files, unity_template, unity_platform)
     _write_readme(project_dir, written_files)
 
     if code:
@@ -256,6 +383,9 @@ def create_unity_project(
     return {
         "project_path": str(project_dir),
         "files": written_files,
+        "unity_version": unity_version or "2022.3.0f1",
+        "unity_template": unity_template,
+        "unity_platform": unity_platform,
     }
 
 

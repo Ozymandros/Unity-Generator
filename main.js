@@ -742,6 +742,31 @@ ipcMain.handle('migration:status', () => ({
 ipcMain.handle('migration:perform', () => performMigration());
 ipcMain.handle('migration:extract-data', () => extractLegacyData());
 ipcMain.handle('dialog:open-file', async (e, options) => dialog.showOpenDialog(options));
+
+/**
+ * Open a Unity project folder picker with parent window reference (avoids detached dialog on Windows).
+ * Validates that the selected folder contains Assets/ and ProjectSettings/.
+ *
+ * @returns {{ canceled: boolean, projectPath: string|null, error: string|null }}
+ */
+ipcMain.handle('dialog:open-unity-project', async () => {
+  if (!mainWindow) return { canceled: true, projectPath: null, error: 'No window available' };
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory'],
+    title: 'Select Unity Project Folder',
+    buttonLabel: 'Open Project',
+  });
+  if (result.canceled || !result.filePaths.length) {
+    return { canceled: true, projectPath: null, error: null };
+  }
+  const projectPath = result.filePaths[0];
+  const assetsPath = path.join(projectPath, 'Assets');
+  const projectSettingsPath = path.join(projectPath, 'ProjectSettings');
+  if (!safeExistsSync(assetsPath) || !safeExistsSync(projectSettingsPath)) {
+    return { canceled: false, projectPath: null, error: 'Not a valid Unity project (missing Assets or ProjectSettings folder)' };
+  }
+  return { canceled: false, projectPath, error: null };
+});
 ipcMain.handle('dialog:save-file', async (e, options) => dialog.showSaveDialog(options));
 ipcMain.handle('dialog:error', async (e, options) => dialog.showMessageBox({ type: 'error', title: options?.title || 'Error', message: options?.message, detail: options?.detail, buttons: options?.buttons || ['OK'] }));
 ipcMain.handle('dialog:info', async (e, options) => dialog.showMessageBox({ type: 'info', title: options?.title || 'Information', message: options?.message, detail: options?.detail, buttons: options?.buttons || ['OK'] }));
@@ -751,7 +776,11 @@ ipcMain.handle('dialog:question', async (e, options) => dialog.showMessageBox({ 
 ipcMain.handle('shell:open-path', async (_e, filePath) => {
   if (!filePath || typeof filePath !== 'string') return { success: false, error: 'File path must be a non-empty string' };
   try {
-    await shell.openPath(filePath);
+    // shell.openPath returns an empty string on success, or an error message string on failure
+    const errorMsg = await shell.openPath(filePath);
+    if (errorMsg) {
+      return { success: false, error: errorMsg };
+    }
     return { success: true };
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Failed to open path' };
@@ -777,14 +806,17 @@ ipcMain.handle('unityProject:scan', async (_e, projectRoot) => {
       return { success: false, error: 'Selected folder is not a valid Unity project (missing Assets/ProjectSettings)' };
     }
 
-    /** @type {{ root: string; unityVersion: string; packages: string[]; files: { projectVersionTxt: boolean; manifestJson: boolean } }} */
+    /** @type {{ root: string; unityVersion: string; packages: string[]; unityTemplate: string; unityPlatform: string; files: { projectVersionTxt: boolean; manifestJson: boolean; generatorMeta: boolean } }} */
     const result = {
       root,
       unityVersion: '',
       packages: [],
+      unityTemplate: '',
+      unityPlatform: '',
       files: {
         projectVersionTxt: safeExistsSync(path.join(projectSettingsDir, 'ProjectVersion.txt')),
         manifestJson: safeExistsSync(path.join(packagesDir, 'manifest.json')),
+        generatorMeta: safeExistsSync(path.join(projectSettingsDir, 'GeneratorMeta.json')),
       },
     };
 
@@ -808,6 +840,18 @@ ipcMain.handle('unityProject:scan', async (_e, projectRoot) => {
       }
     } catch (e) {
       logMainProcess(`unityProject:scan manifest parse failed: ${formatError(e)}`);
+    }
+
+    // Generator metadata (template + platform written by this app at generation time)
+    try {
+      const metaPath = path.join(projectSettingsDir, 'GeneratorMeta.json');
+      if (safeExistsSync(metaPath)) {
+        const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
+        result.unityTemplate = meta?.unity_template || '';
+        result.unityPlatform = meta?.unity_platform || '';
+      }
+    } catch (e) {
+      logMainProcess(`unityProject:scan GeneratorMeta parse failed: ${formatError(e)}`);
     }
 
     return { success: true, data: result };

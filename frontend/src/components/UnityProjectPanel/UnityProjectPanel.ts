@@ -1,12 +1,12 @@
 import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
 import {
   generateUnityProject,
-  getLatestOutput,
   finalizeProject,
   getFinalizeJobStatus,
   downloadFinalizedProject,
   getUnityVersions,
   addUnityVersion,
+  getLatestOutput,
   type UnityVersionOption,
 } from "@/api/client";
 import type { FinalizeJobStatusResponse } from "@/api/client";
@@ -24,6 +24,7 @@ import { electronShell } from "@/services/electronShell";
 import { setActiveProject } from "@/store/projectStore";
 import { useUnityProjectUiStore } from "@/store/unityProjectUiStore";
 import { useSessionProject } from "@/composables/useSessionProject";
+import { useOpenProject } from "@/composables/useOpenProject";
 
 const DEFAULT_UNITY_VERSIONS: UnityVersionOption[] = [
   { value: "6000.3.2f1", label: "6000.3.2f1" },
@@ -31,6 +32,7 @@ const DEFAULT_UNITY_VERSIONS: UnityVersionOption[] = [
 
 export function useUnityProjectPanel() {
   const { projectName, projectPath, sessionProjectResetKey, setProjectPath } = useSessionProject();
+  const { loadProject } = useOpenProject();
   const uiStore = useUnityProjectUiStore();
 
   // Unity Engine Settings
@@ -293,56 +295,82 @@ export function useUnityProjectPanel() {
   }
 
   /**
-   * Open the output folder in the system's default file explorer.
+   * Open a Unity project folder picker (Electron) and load the selected project.
    *
-   * Attempts to open the last project path or fetches the latest output path
-   * from the backend, then uses Electron IPC to open it safely.
+   * Delegates to the main process via `unityProject.openPicker` which shows a
+   * native folder dialog with the correct parent window reference (avoids the
+   * detached-dialog bug on Windows). The main process also validates that the
+   * selected folder is a Unity project before returning the path.
    *
    * @example
    * ```typescript
    * await openOutputFolder();
-   * // Updates status.value based on success or failure
+   * // Populates version/template fields and updates status
    * ```
    */
   async function openOutputFolder(): Promise<void> {
-    try {
-      const pathForFolder = lastProjectPath.value || projectPath.value;
-      const response: { success: boolean; data?: Record<string, unknown> | null; error?: string | null } =
-        pathForFolder
-          ? { success: true, data: { path: pathForFolder } }
-          : await getLatestOutput();
+    const api = window.electronAPI;
 
-      if (!response.success) {
-        tone.value = UI_TONE.ERROR;
-        status.value = response.error || "No output folder found.";
-        return;
-      }
-
-      const data = response.data && typeof response.data === "object" ? response.data : undefined;
-      const path = String((data as { path?: string } | undefined)?.path || "");
-      if (!path) {
-        tone.value = UI_TONE.ERROR;
-        status.value = "No output folder found.";
-        return;
-      }
-
+    if (api?.unityProject?.openPicker) {
       try {
-        // Use Electron shell service via IPC to open folder
-        const result = await electronShell.openPath(path);
-        if (result.success) {
-          status.value = "Opened output folder.";
-          tone.value = UI_TONE.OK;
-        } else {
+        const pickerResult = await api.unityProject.openPicker();
+
+        if (pickerResult.canceled) return;
+
+        if (pickerResult.error || !pickerResult.projectPath) {
           tone.value = UI_TONE.ERROR;
-          status.value = `Failed to open folder: ${result.error || 'Unknown error'}`;
+          status.value = pickerResult.error || "No project path returned.";
+          return;
+        }
+
+        const selectedPath = pickerResult.projectPath;
+
+        // Load project: sets name, path, scans for version/packages/template
+        await loadProject(selectedPath);
+        lastProjectPath.value = selectedPath;
+
+        // Only set success status if loadProject didn't surface an error
+        if (uiStore.tone !== UI_TONE.ERROR) {
+          const folderName = selectedPath.replace(/\\/g, "/").split("/").pop() || selectedPath;
+          status.value = `Opened project: ${folderName}`;
+          tone.value = UI_TONE.OK;
         }
       } catch (error) {
         tone.value = UI_TONE.ERROR;
-        status.value = `Path: ${path} (Failed to open: ${String(error)})`;
+        status.value = `Failed to open project: ${String(error)}`;
+      }
+      return;
+    }
+
+    // Non-Electron fallback: open the known project path, or fetch latest from backend
+    let knownPath = lastProjectPath.value || projectPath.value;
+    if (!knownPath) {
+      try {
+        const latest = await getLatestOutput();
+        knownPath = latest.success ? String(latest.data?.path || "") : "";
+      } catch {
+        knownPath = "";
+      }
+    }
+
+    if (!knownPath) {
+      tone.value = UI_TONE.ERROR;
+      status.value = "No project path set. Generate a project first.";
+      return;
+    }
+
+    try {
+      const shellResult = await electronShell.openPath(knownPath);
+      if (shellResult.success) {
+        status.value = "Opened output folder.";
+        tone.value = UI_TONE.OK;
+      } else {
+        tone.value = UI_TONE.ERROR;
+        status.value = `Failed to open folder: ${shellResult.error || "Unknown error"}`;
       }
     } catch (error) {
       tone.value = UI_TONE.ERROR;
-      status.value = `Open failed: ${String(error)}`;
+      status.value = `Failed to open folder: ${error}`;
     }
   }
 

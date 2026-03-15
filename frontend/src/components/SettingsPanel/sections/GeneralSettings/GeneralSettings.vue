@@ -5,6 +5,7 @@ const {
   backendUrl,
   defaultBackendUrl,
   outputBasePath,
+  unityEditorPath,
   providers,
   preferredLlm,
   preferredLlmModel,
@@ -61,6 +62,18 @@ const {
         hint="Relative path for generated Unity projects (e.g. ./output). Stored in database."
         rounded="lg"
         class="mt-4"
+      ></v-text-field>
+      <v-text-field
+        v-model="unityEditorPath"
+        label="Unity Editor Path (optional)"
+        placeholder="Auto-detected from Unity Hub"
+        variant="outlined"
+        persistent-hint
+        hint="Leave empty to auto-detect from Unity Hub. Override only if Unity is installed in a non-standard location."
+        rounded="lg"
+        class="mt-4"
+        prepend-inner-icon="mdi-unity"
+        clearable
       ></v-text-field>
     </v-card>
 

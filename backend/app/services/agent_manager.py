@@ -490,7 +490,7 @@ class AgentManager:
                 "- Use TMP_Text (TextMeshPro) for all text elements.",
                 "- Use Image component for backgrounds and icons.",
                 "- Use Slider for progress bars (health bars, XP bars).",
-                "- Place generated prefab files under Assets/UI/{element_type or 'Elements'}/.",
+                f"- Place generated prefab files under Assets/UI/{element_type or 'Elements'}/.",
             ]
 
         # Output format guidance

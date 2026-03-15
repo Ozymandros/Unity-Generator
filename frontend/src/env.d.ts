@@ -62,6 +62,26 @@ declare global {
     extractData: () => Promise<{ exists: boolean; files: Record<string, string>; directories: string[]; count: number }>;
   }
 
+  interface ElectronUnityProjectAPI {
+    scan: (projectRoot: string) => Promise<{
+      success: boolean;
+      data?: {
+        root: string;
+        unityVersion: string;
+        packages: string[];
+        unityTemplate: string;
+        unityPlatform: string;
+        files: { projectVersionTxt: boolean; manifestJson: boolean; generatorMeta: boolean };
+      };
+      error?: string;
+    }>;
+    openPicker: () => Promise<{
+      canceled: boolean;
+      projectPath: string | null;
+      error: string | null;
+    }>;
+  }
+
   interface ElectronAPI {
     backend: ElectronBackendAPI;
     notification: ElectronNotificationAPI;
@@ -72,9 +92,12 @@ declare global {
     urlScheme: ElectronURLSchemeAPI;
     shell: ElectronShellAPI;
     migration: ElectronMigrationAPI;
+    unityProject: ElectronUnityProjectAPI;
     onBackendStatus: (callback: (status: unknown) => void) => () => void;
     onNotification: (callback: (notification: unknown) => void) => () => void;
     onUrlScheme: (callback: (url: string) => void) => () => void;
+    onMenuNewProject: (callback: () => void) => () => void;
+    onMenuOpenProject: (callback: (projectPath: string) => void) => () => void;
   }
 
   interface Window {
