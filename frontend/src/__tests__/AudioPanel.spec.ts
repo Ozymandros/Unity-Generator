@@ -3,6 +3,7 @@ import { shallowMount, flushPromises, VueWrapper } from "@vue/test-utils";
 import AudioPanel from "@/components/AudioPanel";
 import * as client from "@/api/client";
 import { createPinia, setActivePinia, type Pinia } from "pinia";
+import i18n from "@/i18n";
 
 vi.mock("@/api/client");
 
@@ -54,7 +55,7 @@ describe("AudioPanel", () => {
   it("renders form fields", () => {
     const wrapper = shallowMount(AudioPanel, {
       global: { 
-        plugins: [pinia],
+        plugins: [pinia, i18n],
         stubs: {
           'v-btn': true,
           'v-expansion-panels': true,
@@ -77,7 +78,7 @@ describe("AudioPanel", () => {
 
     const wrapper = shallowMount(AudioPanel, {
       global: { 
-        plugins: [pinia],
+        plugins: [pinia, i18n],
         stubs: {
           'v-btn': true,
           'v-expansion-panels': true,
@@ -122,7 +123,7 @@ describe("AudioPanel", () => {
 
     const wrapper = shallowMount(AudioPanel, {
       global: { 
-        plugins: [pinia],
+        plugins: [pinia, i18n],
         stubs: {
           'v-btn': true,
           'v-expansion-panels': true,
@@ -152,7 +153,7 @@ describe("AudioPanel", () => {
 
     const wrapper = shallowMount(AudioPanel, {
       global: { 
-        plugins: [pinia],
+        plugins: [pinia, i18n],
         stubs: {
           'v-btn': true,
           'v-expansion-panels': true,

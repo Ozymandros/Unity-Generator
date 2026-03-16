@@ -3,6 +3,7 @@ import { mount, flushPromises } from "@vue/test-utils";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import * as client from "@/api/client";
 import { createVuetify } from 'vuetify';
+import i18n from "@/i18n";
 
 const vuetify = createVuetify();
 
@@ -42,7 +43,7 @@ describe("SettingsPanel", () => {
 
   const mountPanel = () => mount(SettingsPanel, {
     global: {
-      plugins: [vuetify],
+      plugins: [vuetify, i18n],
       stubs: {
         // Stubbing sub-components to focus on the shell
         GeneralSettings: true,

@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { StatusBanner } from "@/components/StatusBanner";
 import { SmartField } from "@/components/generic/SmartField";
 import { ModelManagerModal } from "@/components/generic/ModelManagerModal";
 import { useUnityPhysicsPanel, type PhysicsAgentResult, PHYSICS_EXAMPLE_PROMPTS } from "./UnityPhysicsPanel";
+
+const { t } = useI18n();
 
 const {
   prompt,
@@ -73,42 +76,28 @@ function handleQuickActionClick(action: typeof PHYSICS_QUICK_ACTIONS[number]): v
 <template>
   <div class="panel">
     <div class="header">
-      <h2>Unity Physics</h2>
-      <p class="subtitle">Generate Unity physics configuration — Rigidbodies, colliders, gravity, and more.</p>
+      <h2>{{ t('unityPhysics.title') }}</h2>
+      <p class="subtitle">{{ t('unityPhysics.subtitle') }}</p>
     </div>
 
     <StatusBanner :status="status" :tone="tone" />
 
-    <!-- Quick Actions -->
     <div class="quick-actions mb-4">
-      <h3 class="text-subtitle-2 mb-2">Quick Actions</h3>
+      <h3 class="text-subtitle-2 mb-2">{{ t('unityPhysics.quickActions') }}</h3>
       <v-chip-group>
-        <v-chip
-          v-for="action in PHYSICS_QUICK_ACTIONS"
-          :key="action.label"
-          :prepend-icon="action.icon"
-          variant="outlined"
-          color="primary"
-          class="ma-1"
-          @click="handleQuickActionClick(action)"
-        >
+        <v-chip v-for="action in PHYSICS_QUICK_ACTIONS" :key="action.label" :prepend-icon="action.icon"
+          variant="outlined" color="primary" class="ma-1" @click="handleQuickActionClick(action)">
           {{ action.label }}
         </v-chip>
       </v-chip-group>
     </div>
 
-    <!-- Example Prompts -->
     <v-expansion-panels class="mb-4">
-      <v-expansion-panel title="Example Prompts" bg-color="surface">
+      <v-expansion-panel :title="t('common.examplePrompts')" bg-color="surface">
         <v-expansion-panel-text>
           <v-list density="compact">
-            <v-list-item
-              v-for="example in PHYSICS_EXAMPLE_PROMPTS"
-              :key="example.text"
-              @click="prompt = example.text"
-              class="cursor-pointer"
-              rounded="lg"
-            >
+            <v-list-item v-for="example in PHYSICS_EXAMPLE_PROMPTS" :key="example.text"
+              @click="prompt = example.text" class="cursor-pointer" rounded="lg">
               <v-list-item-title class="text-caption">{{ example.text }}</v-list-item-title>
             </v-list-item>
           </v-list>
@@ -116,140 +105,59 @@ function handleQuickActionClick(action: typeof PHYSICS_QUICK_ACTIONS[number]): v
       </v-expansion-panel>
     </v-expansion-panels>
 
-    <!-- Backend + Simulation Mode row -->
     <div class="d-flex gap-3 mb-4">
-      <SmartField
-        label="Physics Backend"
-        type="select"
-        v-model="physicsBackend"
-        :options="physicsBackendOptions"
-        class="flex-grow-1"
-      />
-      <SmartField
-        label="Simulation Mode"
-        type="select"
-        v-model="simulationMode"
-        :options="simulationModeOptions"
-        class="flex-grow-1"
-      />
+      <SmartField :label="t('unityPhysics.fields.physicsBackend')" type="select" v-model="physicsBackend"
+        :options="physicsBackendOptions" class="flex-grow-1" />
+      <SmartField :label="t('unityPhysics.fields.simulationMode')" type="select" v-model="simulationMode"
+        :options="simulationModeOptions" class="flex-grow-1" />
     </div>
 
-    <!-- Gravity preset -->
     <div class="mb-4">
-      <SmartField
-        label="Gravity Preset"
-        type="select"
-        v-model="gravityPreset"
-        :options="gravityPresetOptions"
-      />
+      <SmartField :label="t('unityPhysics.fields.gravityPreset')" type="select" v-model="gravityPreset"
+        :options="gravityPresetOptions" />
     </div>
 
-    <!-- Prompt textarea -->
-    <SmartField
-      label="Physics Description"
-      type="textarea"
-      v-model="prompt"
-      :rows="4"
-      placeholder="Describe the physics behaviour you want to generate..."
-    />
+    <SmartField :label="t('unityPhysics.fields.prompt')" type="textarea" v-model="prompt" :rows="4"
+      placeholder="Describe the physics behaviour you want to generate..." />
 
-    <!-- Component toggles -->
     <div class="d-flex gap-4 mb-4 flex-wrap">
-      <v-checkbox
-        v-model="includeRigidbody"
-        label="Include Rigidbody setup"
-        color="primary"
-        hide-details
-      />
-      <v-checkbox
-        v-model="includeColliders"
-        label="Include Collider setup"
-        color="primary"
-        hide-details
-      />
-      <v-checkbox
-        v-model="includeLayers"
-        label="Include Physics Layers"
-        color="primary"
-        hide-details
-      />
+      <v-checkbox v-model="includeRigidbody" :label="t('unityPhysics.fields.includeRigidbody')" color="primary" hide-details />
+      <v-checkbox v-model="includeColliders" :label="t('unityPhysics.fields.includeColliders')" color="primary" hide-details />
+      <v-checkbox v-model="includeLayers" :label="t('unityPhysics.fields.includeLayers')" color="primary" hide-details />
     </div>
 
-    <!-- Provider / Model / Temperature -->
     <div class="field-group">
       <div class="options-row d-flex align-center gap-2 mb-4">
-        <SmartField
-          label="Provider"
-          type="select"
-          v-model="provider"
-          :options="providerOptions"
-          placeholder="Select Provider"
-          class="flex-grow-1"
-        />
-        <SmartField
-          label="Model"
-          type="select"
-          v-model="model"
-          :options="availableModels"
-          placeholder="Select Model"
-          :disabled="!provider"
-          class="flex-grow-1"
-        />
-        <v-btn
-          icon="mdi-plus"
-          size="small"
-          variant="tonal"
-          color="primary"
-          class="mt-7"
-          :disabled="!provider"
-          title="Manage models"
-          @click="showModelManager = true"
-        />
+        <SmartField :label="t('common.provider')" type="select" v-model="provider" :options="providerOptions"
+          :placeholder="t('common.selectProvider')" class="flex-grow-1" />
+        <SmartField :label="t('common.model')" type="select" v-model="model" :options="availableModels"
+          :placeholder="t('common.selectModel')" :disabled="!provider" class="flex-grow-1" />
+        <v-btn icon="mdi-plus" size="small" variant="tonal" color="primary" class="mt-7" :disabled="!provider"
+          :title="t('common.manageModels')" @click="showModelManager = true" />
       </div>
 
       <div class="mb-6">
-        <SmartField label="Temperature" type="select" v-model.number="temperature" :options="TEMPERATURE_PRESETS" />
+        <SmartField :label="t('common.temperature')" type="select" v-model.number="temperature" :options="TEMPERATURE_PRESETS" />
       </div>
 
       <v-expansion-panels class="mb-6">
-        <v-expansion-panel title="Advanced Options" bg-color="surface" class="border rounded-lg" elevation="0">
+        <v-expansion-panel :title="t('common.advancedOptions')" bg-color="surface" class="border rounded-lg" elevation="0">
           <v-expansion-panel-text class="pa-4">
-            <SmartField
-              label="API Key (Optional Override)"
-              type="password"
-              v-model="apiKey"
-              placeholder="Leave empty to use global key"
-            />
-            <SmartField
-              label="System Prompt Override"
-              type="textarea"
-              v-model="systemPrompt"
-              :placeholder="defaultSystemPrompt"
-              :rows="3"
-            />
+            <SmartField :label="t('common.apiKey')" type="password" v-model="apiKey" :placeholder="t('common.leaveEmptyForGlobalKey')" />
+            <SmartField :label="t('common.systemPrompt')" type="textarea" v-model="systemPrompt" :placeholder="defaultSystemPrompt" :rows="3" />
           </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
     </div>
 
-    <v-btn
-      color="primary"
-      size="large"
-      rounded="pill"
-      block
-      prepend-icon="mdi-atom"
-      :loading="loading"
-      :disabled="!canGenerate"
-      class="mb-8"
-      @click="run"
-    >
-      Generate Physics Config
+    <v-btn color="primary" size="large" rounded="pill" block prepend-icon="mdi-atom"
+      :loading="loading" :disabled="!canGenerate" class="mb-8" @click="run">
+      {{ t('unityPhysics.actions.generate') }}
     </v-btn>
 
-    <!-- Result -->
     <v-fade-transition>
       <div v-if="result" class="results">
-        <h3 class="text-h6 font-weight-bold mb-4">Result</h3>
+        <h3 class="text-h6 font-weight-bold mb-4">{{ t('common.result') }}</h3>
 
         <v-card
           v-if="(result as PhysicsAgentResult).content"
@@ -262,7 +170,7 @@ function handleQuickActionClick(action: typeof PHYSICS_QUICK_ACTIONS[number]): v
         </v-card>
 
         <div v-if="(result as PhysicsAgentResult).files?.length" class="files-list mb-4">
-          <h4 class="text-subtitle-2 font-weight-bold mb-2">Created Files</h4>
+          <h4 class="text-subtitle-2 font-weight-bold mb-2">{{ t('common.createdFiles') }}</h4>
           <v-list density="compact" class="bg-transparent text-white">
             <v-list-item
               v-for="file in (result as PhysicsAgentResult).files"
@@ -277,7 +185,7 @@ function handleQuickActionClick(action: typeof PHYSICS_QUICK_ACTIONS[number]): v
         <div v-if="(result as PhysicsAgentResult).metadata?.steps?.length" class="steps-list">
           <v-expansion-panels variant="accordion">
             <v-expansion-panel
-              :title="`View Steps (${(result as PhysicsAgentResult).metadata!.steps!.length})`"
+              :title="t('common.viewSteps', { n: (result as PhysicsAgentResult).metadata!.steps!.length })"
               bg-color="surface"
               elevation="0"
               class="border rounded-lg"

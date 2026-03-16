@@ -21,29 +21,25 @@ function safeExistsSync(p) {
 }
 
 /**
- * Creates and sets the application menu with File, Edit, Tools, and Help menus.
- * Enables keyboard shortcuts and provides standard menu functionality.
- * 
+ * Creates and sets the application menu with English labels.
+ * Call this once at startup.
+ *
  * @param {Electron.BrowserWindow} mainWindow - The main application window
  * @param {Electron.App} app - The Electron app instance
  * @param {string} __dirname - The directory name of the current module
  * @param {Function} logMainProcess - Logging function
- * 
+ *
  * @example
  * ```javascript
  * createApplicationMenu(mainWindow, app, __dirname, logMainProcess);
  * ```
  */
 function createApplicationMenu(mainWindow, app, __dirname, logMainProcess) {
-  if (!mainWindow) {
-    throw new Error('mainWindow is required');
-  }
-  if (!app) {
-    throw new Error('app is required');
-  }
+  if (!mainWindow) throw new Error('mainWindow is required');
+  if (!app) throw new Error('app is required');
 
   const isMac = process.platform === 'darwin';
-  
+
   const template = [
     // App menu (macOS only)
     ...(isMac ? [{
@@ -60,7 +56,7 @@ function createApplicationMenu(mainWindow, app, __dirname, logMainProcess) {
         { role: 'quit' }
       ]
     }] : []),
-    
+
     // File menu
     {
       label: 'File',
@@ -68,47 +64,34 @@ function createApplicationMenu(mainWindow, app, __dirname, logMainProcess) {
         {
           label: 'New Project',
           accelerator: 'CmdOrCtrl+N',
-          click: () => {
-            if (mainWindow) {
-              mainWindow.webContents.send('menu:new-project');
-            }
-          }
+          click: () => { if (mainWindow) mainWindow.webContents.send('menu:new-project'); }
         },
         {
           label: 'Open Project...',
           accelerator: 'CmdOrCtrl+O',
           click: async () => {
             if (!mainWindow) return;
-            
             const result = await dialog.showOpenDialog(mainWindow, {
               properties: ['openDirectory'],
               title: 'Select Unity Project Folder',
               buttonLabel: 'Open Project'
             });
-            
             if (!result.canceled && result.filePaths.length > 0) {
               const projectPath = result.filePaths[0];
-              
-              // Validate Unity project structure
               const assetsPath = path.join(projectPath, 'Assets');
               const projectSettingsPath = path.join(projectPath, 'ProjectSettings');
-              
               if (safeExistsSync(assetsPath) && safeExistsSync(projectSettingsPath)) {
                 mainWindow.webContents.send('menu:open-project', projectPath);
-                if (logMainProcess) {
-                  logMainProcess(`Unity project opened: ${projectPath}`);
-                }
+                if (logMainProcess) logMainProcess(`Unity project opened: ${projectPath}`);
               } else {
-                dialog.showErrorBox(
-                  'Invalid Unity Project',
-                  'The selected folder is not a valid Unity project.\n\nA Unity project must contain "Assets" and "ProjectSettings" folders.'
-                );
+                dialog.showErrorBox('Invalid Unity Project',
+                  'The selected folder is not a valid Unity project.\n\nA Unity project must contain "Assets" and "ProjectSettings" folders.');
               }
             }
           }
         },
         { type: 'separator' },
-        isMac ? { role: 'close' } : { 
+        isMac ? { role: 'close' } : {
           label: 'Exit',
           accelerator: 'Alt+F4',
           click: () => app.quit()
@@ -116,7 +99,7 @@ function createApplicationMenu(mainWindow, app, __dirname, logMainProcess) {
       ]
     },
 
-    // View menu (standard window controls)
+    // View menu
     {
       label: 'View',
       submenu: [
@@ -131,7 +114,7 @@ function createApplicationMenu(mainWindow, app, __dirname, logMainProcess) {
         { role: 'togglefullscreen' },
       ],
     },
-    
+
     // Edit menu
     {
       label: 'Edit',
@@ -147,13 +130,7 @@ function createApplicationMenu(mainWindow, app, __dirname, logMainProcess) {
           { role: 'delete' },
           { role: 'selectAll' },
           { type: 'separator' },
-          {
-            label: 'Speech',
-            submenu: [
-              { role: 'startSpeaking' },
-              { role: 'stopSpeaking' }
-            ]
-          }
+          { label: 'Speech', submenu: [{ role: 'startSpeaking' }, { role: 'stopSpeaking' }] }
         ] : [
           { role: 'delete' },
           { type: 'separator' },
@@ -161,7 +138,7 @@ function createApplicationMenu(mainWindow, app, __dirname, logMainProcess) {
         ])
       ]
     },
-    
+
     // Tools menu
     {
       label: 'Tools',
@@ -169,11 +146,7 @@ function createApplicationMenu(mainWindow, app, __dirname, logMainProcess) {
         {
           label: 'Developer Tools',
           accelerator: 'F12',
-          click: () => {
-            if (mainWindow) {
-              mainWindow.webContents.toggleDevTools();
-            }
-          }
+          click: () => { if (mainWindow) mainWindow.webContents.toggleDevTools(); }
         },
         { type: 'separator' },
         { role: 'reload' },
@@ -181,17 +154,15 @@ function createApplicationMenu(mainWindow, app, __dirname, logMainProcess) {
       ]
     },
 
-    // Window menu (non-mac; helps users that expect it)
-    ...(!isMac
-      ? [{
-          label: 'Window',
-          submenu: [
-            { role: 'minimize' },
-            { role: 'close' },
-          ],
-        }]
-      : []),
-    
+    // Window menu (non-mac)
+    ...(!isMac ? [{
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' },
+        { role: 'close' },
+      ],
+    }] : []),
+
     // Help menu
     {
       label: 'Help',
@@ -227,13 +198,11 @@ function createApplicationMenu(mainWindow, app, __dirname, logMainProcess) {
       ]
     }
   ];
-  
+
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
-  
-  if (logMainProcess) {
-    logMainProcess('Application menu created');
-  }
+
+  if (logMainProcess) logMainProcess('Application menu created');
 }
 
 /**

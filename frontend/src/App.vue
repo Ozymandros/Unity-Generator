@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // Menu event handlers for File > New Project and File > Open Project
 import { ref, nextTick, onMounted, onUnmounted } from "vue";
+import { useI18n } from "vue-i18n";
 import SettingsPanel from "./components/SettingsPanel/SettingsPanel.vue";
 import CodePanel from "./components/CodePanel/CodePanel.vue";
 import TextPanel from "./components/TextPanel/TextPanel.vue";
@@ -14,6 +15,7 @@ import { useApp } from "./App";
 import { useSessionProject } from "./composables/useSessionProject";
 import { useOpenProject } from "./composables/useOpenProject";
 import { useTheme } from "./composables/useTheme";
+import { useLocale } from "./composables/useLocale";
 import { useIntelligenceStore } from "./store/intelligenceStore";
 import { clearActiveProject } from "./store/projectStore";
 import { useUnityProjectUiStore } from "./store/unityProjectUiStore";
@@ -21,15 +23,32 @@ import ScenesPanel from "./components/ScenesPanel.vue";
 import ThemeToggle from "./components/ThemeToggle/ThemeToggle.vue";
 import type { ElectronAPI } from "./types/electron";
 
+const { t } = useI18n();
 const { tabs, active, backendStatus, setActive } = useApp();
 const { projectName, sessionProjectResetKey, resetSessionProject } = useSessionProject();
 const { loadProject } = useOpenProject();
 // Register the system media-query listener at app root so it lives for the full app lifetime
 useTheme();
+// Register locale at app root so Electron IPC sync is initialised once
+useLocale();
 const drawer = ref(true);
 const store = useIntelligenceStore();
 const unityUi = useUnityProjectUiStore();
 unityUi.enableAutoPersist();
+
+/** Map internal tab key → i18n nav key */
+const TAB_NAV_KEY: Record<string, string> = {
+  Settings: "app.nav.settings",
+  Scenes: "app.nav.scenes",
+  Code: "app.nav.code",
+  Text: "app.nav.text",
+  Image: "app.nav.image",
+  Sprites: "app.nav.sprites",
+  Audio: "app.nav.audio",
+  "Unity UI": "app.nav.unityUi",
+  "Unity Physics": "app.nav.unityPhysics",
+  "Unity Project": "app.nav.unityProject",
+};
 
 const getTabIcon = (tab: string) => {
   switch (tab) {
@@ -56,28 +75,17 @@ let unsubscribeOpenProject: (() => void) | undefined;
  * Resets the frontend store and reloads all initial values from backend/DB.
  */
 async function handleNewProject() {
-  // Make UI reset synchronous and best-effort: never block on backend.
   try {
-    // Reset session-scoped project fields deterministically
     resetSessionProject("UnityProject");
-    await nextTick(); // Flush reactive updates so Project Name field (and key-based remount) apply before tab switch
-
-    // Clear active project (auto-save target) stored in localStorage
+    await nextTick();
     clearActiveProject();
-
-    // Reset Unity Project UI state (persisted)
     unityUi.reset();
     unityUi.status = "New project started (UI state reset).";
     unityUi.tone = "ok";
-
-    // Switch to Unity Project tab immediately
     setActive('Unity Project');
   } catch {
-    // Best-effort: keep going even if storage is unavailable
     setActive('Unity Project');
   }
-
-  // Optional: reload other app config in background (do not block UI reset)
   try {
     store.$reset();
     void store.load(true);
@@ -96,7 +104,6 @@ async function handleOpenProject(projectPath: string) {
 }
 
 onMounted(() => {
-  // Register menu event listeners if running in Electron
   if (window.electronAPI) {
     const api = window.electronAPI as ElectronAPI;
     unsubscribeNewProject = api.onMenuNewProject(handleNewProject);
@@ -105,7 +112,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  // Clean up event listeners
   if (unsubscribeNewProject) unsubscribeNewProject();
   if (unsubscribeOpenProject) unsubscribeOpenProject();
 });
@@ -122,7 +128,7 @@ onUnmounted(() => {
             class="project-name-field text-h6 font-weight-bold line-height-1" placeholder="Project name" />
           <div class="d-flex align-center">
             <v-badge dot :color="backendStatus === 'online' ? 'success' : 'error'" inline class="mr-2"></v-badge>
-            <span class="text-caption text-grey">{{ backendStatus === 'online' ? 'Online' : 'Offline' }}</span>
+            <span class="text-caption text-grey">{{ backendStatus === 'online' ? t('app.status.online') : t('app.status.offline') }}</span>
           </div>
         </div>
       </div>
@@ -131,7 +137,7 @@ onUnmounted(() => {
 
       <v-list nav density="comfortable">
         <v-list-item v-for="tab in tabs.filter(t => t !== 'Management')" :key="tab" :active="tab === active"
-          :prepend-icon="getTabIcon(tab)" :title="tab" :data-testid="`nav-${tab.replace(/\s+/g, '-')}`" rounded="xl"
+          :prepend-icon="getTabIcon(tab)" :title="t(TAB_NAV_KEY[tab] ?? tab)" :data-testid="`nav-${tab.replace(/\s+/g, '-')}`" rounded="xl"
           class="mb-1 nav-item" @click="setActive(tab)" color="primary"></v-list-item>
       </v-list>
 
@@ -140,7 +146,7 @@ onUnmounted(() => {
           <ThemeToggle />
           <v-btn variant="tonal" block prepend-icon="mdi-github" size="small" class="text-none" rounded="lg"
             href="https://github.com/Ozymandros/Unity-Generator" target="_blank">
-            Repository
+            {{ t('app.actions.repository') }}
           </v-btn>
         </div>
       </template>

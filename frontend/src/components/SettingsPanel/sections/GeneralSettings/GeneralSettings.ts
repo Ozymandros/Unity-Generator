@@ -97,6 +97,7 @@ export function useGeneralSettings() {
       } else {
         await setPref("unity_editor_path", "");
       }
+      await setPref("preferred_locale", store.getPreference("preferred_locale") || "en");
 
       await store.refresh();
       status.value = "Preferences saved successfully.";

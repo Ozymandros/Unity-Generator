@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { StatusBanner } from "@/components/StatusBanner";
 import { SmartField } from "@/components/generic/SmartField";
 import { ModelManagerModal } from "@/components/generic/ModelManagerModal";
 import { useUnityUIPanel } from "./UnityUIPanel";
 import type { UIQuickAction } from "./UnityUIPanel";
+
+const { t } = useI18n();
 
 const {
   prompt,
@@ -75,69 +78,37 @@ function handleQuickActionClick(action: UIQuickAction): void {
 <template>
   <div class="panel">
     <div class="header">
-      <h2>Unity UI Elements</h2>
-      <p class="subtitle">Generate Unity UI prefabs — health bars, buttons, dialogue boxes, and more.</p>
+      <h2>{{ t('unityUi.title') }}</h2>
+      <p class="subtitle">{{ t('unityUi.subtitle') }}</p>
     </div>
 
     <StatusBanner :status="status" :tone="tone" />
 
-    <!-- Quick Actions -->
     <div class="quick-actions mb-4">
-      <h3 class="text-subtitle-2 mb-2">Quick Actions</h3>
+      <h3 class="text-subtitle-2 mb-2">{{ t('unityPhysics.quickActions') }}</h3>
       <v-chip-group>
-        <v-chip
-          v-for="action in UI_QUICK_ACTIONS"
-          :key="action.elementType"
-          :prepend-icon="action.icon"
-          variant="outlined"
-          color="primary"
-          class="ma-1"
-          @click="handleQuickActionClick(action)"
-        >
+        <v-chip v-for="action in UI_QUICK_ACTIONS" :key="action.elementType" :prepend-icon="action.icon"
+          variant="outlined" color="primary" class="ma-1" @click="handleQuickActionClick(action)">
           {{ action.label }}
         </v-chip>
       </v-chip-group>
     </div>
 
-    <!-- UI System + Element Type row -->
     <div class="d-flex gap-3 mb-4">
-      <SmartField
-        label="UI System"
-        type="select"
-        v-model="uiSystem"
-        :options="uiSystemOptions"
-        class="flex-grow-1"
-      />
-      <SmartField
-        label="Element Type"
-        type="select"
-        v-model="elementType"
-        :options="UI_ELEMENT_TYPES"
-        class="flex-grow-1"
-      />
+      <SmartField :label="t('unityUi.fields.uiSystem')" type="select" v-model="uiSystem" :options="uiSystemOptions" class="flex-grow-1" />
+      <SmartField :label="t('unityUi.fields.elementType')" type="select" v-model="elementType" :options="UI_ELEMENT_TYPES" class="flex-grow-1" />
     </div>
 
-    <!-- Prompt textarea -->
-    <SmartField
-      label="UI Element Description"
-      type="textarea"
-      v-model="prompt"
-      :rows="4"
-      placeholder="Describe the UI element you want to generate..."
-    />
+    <SmartField :label="t('unityUi.fields.prompt')" type="textarea" v-model="prompt" :rows="4"
+      placeholder="Describe the UI element you want to generate..." />
 
-    <!-- Example Prompts -->
     <div class="d-flex gap-3 mb-4">
       <v-expansion-panels class="mb-4">
-        <v-expansion-panel title="Example Prompts" bg-color="surface">
+        <v-expansion-panel :title="t('common.examplePrompts')" bg-color="surface">
           <v-expansion-panel-text>
             <v-list density="compact">
-              <v-list-item
-                v-for="example in UI_EXAMPLE_PROMPTS"
-                :key="example.text"
-                class="cursor-pointer"
-                @click="prompt = example.text"
-              >
+              <v-list-item v-for="example in UI_EXAMPLE_PROMPTS" :key="example.text" class="cursor-pointer"
+                @click="prompt = example.text">
                 <v-list-item-title class="text-caption">{{ example.text }}</v-list-item-title>
               </v-list-item>
             </v-list>
@@ -146,117 +117,50 @@ function handleQuickActionClick(action: UIQuickAction): void {
       </v-expansion-panels>
     </div>
 
-    <!-- Output options row -->
     <div class="d-flex gap-3 mb-4">
-      <SmartField
-        label="Output Format"
-        type="select"
-        v-model="outputFormat"
-        :options="outputFormatOptions"
-        class="flex-grow-1"
-      />
-      <SmartField
-        label="Anchor Preset"
-        type="select"
-        v-model="anchorPreset"
-        :options="anchorPresetOptions"
-        class="flex-grow-1"
-      />
+      <SmartField :label="t('unityUi.fields.outputFormat')" type="select" v-model="outputFormat" :options="outputFormatOptions" class="flex-grow-1" />
+      <SmartField :label="t('unityUi.fields.anchorPreset')" type="select" v-model="anchorPreset" :options="anchorPresetOptions" class="flex-grow-1" />
     </div>
 
-    <!-- Color theme + animation row -->
     <div class="d-flex align-center gap-3 mb-4">
-      <SmartField
-        label="Colour Theme (optional)"
-        type="text"
-        v-model="colorTheme"
-        placeholder="e.g. dark blue, gold accents"
-        class="flex-grow-1"
-      />
-      <v-checkbox
-        v-model="includeAnimations"
-        label="Include animations"
-        color="primary"
-        hide-details
-        class="mt-1 flex-shrink-0"
-      />
+      <SmartField :label="t('unityUi.fields.colourTheme')" type="text" v-model="colorTheme"
+        placeholder="e.g. dark blue, gold accents" class="flex-grow-1" />
+      <v-checkbox v-model="includeAnimations" :label="t('unityUi.fields.includeAnimations')"
+        color="primary" hide-details class="mt-1 flex-shrink-0" />
     </div>
 
-    <!-- Provider / Model / Temperature -->
     <div class="field-group">
       <div class="options-row d-flex align-center gap-2 mb-4">
-        <SmartField
-          label="Provider"
-          type="select"
-          v-model="provider"
-          :options="providerOptions"
-          placeholder="Select Provider"
-          class="flex-grow-1"
-        />
-        <SmartField
-          label="Model"
-          type="select"
-          v-model="model"
-          :options="availableModels"
-          placeholder="Select Model"
-          :disabled="!provider"
-          class="flex-grow-1"
-        />
-        <v-btn
-          icon="mdi-plus"
-          size="small"
-          variant="tonal"
-          color="primary"
-          class="mt-7"
-          :disabled="!provider"
-          title="Manage models"
-          @click="showModelManager = true"
-        />
+        <SmartField :label="t('common.provider')" type="select" v-model="provider" :options="providerOptions"
+          :placeholder="t('common.selectProvider')" class="flex-grow-1" />
+        <SmartField :label="t('common.model')" type="select" v-model="model" :options="availableModels"
+          :placeholder="t('common.selectModel')" :disabled="!provider" class="flex-grow-1" />
+        <v-btn icon="mdi-plus" size="small" variant="tonal" color="primary" class="mt-7" :disabled="!provider"
+          :title="t('common.manageModels')" @click="showModelManager = true" />
       </div>
 
       <div class="mb-6">
-        <SmartField label="Temperature" type="select" v-model.number="temperature" :options="TEMPERATURE_PRESETS" />
+        <SmartField :label="t('common.temperature')" type="select" v-model.number="temperature" :options="TEMPERATURE_PRESETS" />
       </div>
 
       <v-expansion-panels class="mb-6">
-        <v-expansion-panel title="Advanced Options" bg-color="surface" class="border rounded-lg" elevation="0">
+        <v-expansion-panel :title="t('common.advancedOptions')" bg-color="surface" class="border rounded-lg" elevation="0">
           <v-expansion-panel-text class="pa-4">
-            <SmartField
-              label="API Key (Optional Override)"
-              type="password"
-              v-model="apiKey"
-              placeholder="Leave empty to use global key"
-            />
-            <SmartField
-              label="System Prompt Override"
-              type="textarea"
-              v-model="systemPrompt"
-              :placeholder="defaultSystemPrompt"
-              :rows="3"
-            />
+            <SmartField :label="t('common.apiKey')" type="password" v-model="apiKey" :placeholder="t('common.leaveEmptyForGlobalKey')" />
+            <SmartField :label="t('common.systemPrompt')" type="textarea" v-model="systemPrompt" :placeholder="defaultSystemPrompt" :rows="3" />
           </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
     </div>
 
-    <v-btn
-      color="primary"
-      size="large"
-      rounded="pill"
-      block
-      prepend-icon="mdi-palette-outline"
-      :loading="loading"
-      :disabled="!canGenerate"
-      class="mb-8"
-      @click="run"
-    >
-      Generate UI Element
+    <v-btn color="primary" size="large" rounded="pill" block prepend-icon="mdi-palette-outline"
+      :loading="loading" :disabled="!canGenerate" class="mb-8" @click="run">
+      {{ t('unityUi.actions.generate') }}
     </v-btn>
 
-    <!-- Result -->
     <v-fade-transition>
       <div v-if="result" class="results">
-        <h3 class="text-h6 font-weight-bold mb-4">Result</h3>
+        <h3 class="text-h6 font-weight-bold mb-4">{{ t('common.result') }}</h3>
 
         <v-card
           v-if="result.content"
@@ -269,7 +173,7 @@ function handleQuickActionClick(action: UIQuickAction): void {
         </v-card>
 
         <div v-if="result.files && result.files.length > 0" class="files-list mb-4">
-          <h4 class="text-subtitle-2 font-weight-bold mb-2">Created Files</h4>
+          <h4 class="text-subtitle-2 font-weight-bold mb-2">{{ t('common.createdFiles') }}</h4>
           <v-list density="compact" class="bg-transparent text-white">
             <v-list-item v-for="file in result.files" :key="file" prepend-icon="mdi-file-outline">
               <v-list-item-title class="text-caption">{{ file }}</v-list-item-title>
@@ -280,7 +184,7 @@ function handleQuickActionClick(action: UIQuickAction): void {
         <div v-if="result.metadata?.steps?.length" class="steps-list">
           <v-expansion-panels variant="accordion">
             <v-expansion-panel
-              :title="`View Steps (${result.metadata.steps.length})`"
+              :title="t('common.viewSteps', { n: result.metadata.steps.length })"
               bg-color="surface"
               elevation="0"
               class="border rounded-lg"

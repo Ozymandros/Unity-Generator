@@ -7,6 +7,7 @@ import * as electronShellModule from "@/services/electronShell";
 import { createVuetify } from 'vuetify';
 import { createPinia, setActivePinia } from "pinia";
 import { useSessionProject } from "@/composables/useSessionProject";
+import i18n from "@/i18n";
 
 const vuetify = createVuetify();
 
@@ -29,11 +30,11 @@ const emitUpdate = async (wrapper: VueWrapper<unknown>, label: string, value: un
 };
 
 function getGenerateButton(wrapper: VueWrapper<unknown>) {
-  return wrapper.findAll("button").find((b) => b.text().includes("Generate Base Project"));
+  return wrapper.findAll("button").find((b) => b.text().includes("Generate Project"));
 }
 
 function getOpenFolderButton(wrapper: VueWrapper<unknown>) {
-  return wrapper.findAll("button").find((b) => b.text().includes("Open Folder"));
+  return wrapper.findAll("button").find((b) => b.text().includes("Open Output Folder"));
 }
 
 function getStatusText(wrapper: VueWrapper<unknown>): string {
@@ -84,7 +85,7 @@ describe("UnityProjectPanel", () => {
     setActivePinia(pinia);
     return mount(UnityProjectPanel, {
       global: {
-        plugins: [vuetify, pinia],
+        plugins: [vuetify, pinia, i18n],
         stubs: {
           'v-expand-transition': { template: '<div><slot /></div>' },
           'v-fade-transition': { template: '<div><slot /></div>' },
@@ -98,7 +99,7 @@ describe("UnityProjectPanel", () => {
   it("renders form fields", () => {
     const wrapper = mountPanel();
     expect(wrapper.findAllComponents(SmartField).length).toBeGreaterThan(0);
-    expect(wrapper.text()).toContain("Generate Base Project");
+    expect(wrapper.text()).toContain("Generate Project");
   });
 
   it("calls generateUnityProject API on button click", async () => {
@@ -263,7 +264,7 @@ describe("UnityProjectPanel", () => {
     const wrapper = mountPanel();
     const buttons = wrapper.findAll("button");
     const finalizeBtn = buttons.find((b) =>
-      b.text().includes("Finalize with Unity Engine")
+      b.text().includes("Finalize Project")
     );
     expect(finalizeBtn).toBeTruthy();
   });
@@ -314,7 +315,7 @@ describe("UnityProjectPanel", () => {
     const wrapper = mountPanel();
     const buttons = wrapper.findAll("button");
     const finalizeBtn = buttons.find((b) =>
-      b.text().includes("Finalize with Unity Engine")
+      b.text().includes("Finalize Project")
     );
     await finalizeBtn!.trigger("click");
     await flushPromises();
@@ -341,7 +342,7 @@ describe("UnityProjectPanel", () => {
     const wrapper = mountPanel();
     const buttons = wrapper.findAll("button");
     const finalizeBtn = buttons.find((b) =>
-      b.text().includes("Finalize with Unity Engine")
+      b.text().includes("Finalize Project")
     );
     await finalizeBtn!.trigger("click");
     await flushPromises();

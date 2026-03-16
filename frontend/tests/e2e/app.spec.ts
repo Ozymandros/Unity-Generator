@@ -176,7 +176,7 @@ test("generates image", async ({ page }) => {
 test("generates audio", async ({ page }) => {
   await page.goto("/");
   await page.locator('[data-testid="nav-Audio"]').click();
-  await expect(page.getByRole("heading", { name: "Audio & Music Generation" })).toBeVisible({ timeout: 30000 });
+  await expect(page.getByRole("heading", { name: "Audio Generation" })).toBeVisible({ timeout: 30000 });
   await page.locator("textarea").first().fill("A battle cry");
 
   // Click generate and wait for the status message to update
@@ -190,7 +190,7 @@ test("generates audio", async ({ page }) => {
 test("generates unity project", async ({ page }) => {
   await page.goto("/");
   await page.locator('[data-testid="nav-Unity-Project"]').click();
-  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible({ timeout: 30000 });
+  await expect(page.getByRole("heading", { name: "Unity Project" })).toBeVisible({ timeout: 30000 });
   // Fill required fields: project name, template, version, platform (Vuetify v-select = combobox)
   await page.getByLabel("Project Name").fill("TestProject");
   await page.getByLabel("Unity Template").click({ force: true });
@@ -200,7 +200,7 @@ test("generates unity project", async ({ page }) => {
   await page.getByLabel("Target Platform").click({ force: true });
   await page.getByRole("option", { name: "Windows" }).click();
 
-  await page.getByRole("button", { name: "Generate Base Project" }).click();
+  await page.getByRole("button", { name: "Generate Project" }).click();
   await expect(page.getByText("Unity project generated.")).toBeVisible({ timeout: 30000 });
 
   // UnityProjectPanel displays the full JSON response
@@ -248,10 +248,10 @@ test("navigates between all tabs", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Image Generation" })).toBeVisible({ timeout: 30000 });
 
   await page.locator('[data-testid="nav-Audio"]').click();
-  await expect(page.getByRole("heading", { name: "Audio & Music Generation" })).toBeVisible({ timeout: 30000 });
+  await expect(page.getByRole("heading", { name: "Audio Generation" })).toBeVisible({ timeout: 30000 });
 
   await page.locator('[data-testid="nav-Unity-Project"]').click();
-  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible({ timeout: 30000 });
+  await expect(page.getByRole("heading", { name: "Unity Project" })).toBeVisible({ timeout: 30000 });
 });
 
 test("shows offline status when backend unavailable", async ({ page }) => {
@@ -281,7 +281,7 @@ test("generates code with provider and model options", async ({ page }) => {
   // Use more specific selector for Provider within the Code panel context
   await page.getByRole("combobox", { name: "Provider" }).first().click({ force: true });
   await page.getByRole("option", { name: "deepseek" }).click();
-  await page.getByLabel(/Model \(for/).click({ force: true });
+  await page.getByRole("combobox", { name: /Model/ }).click({ force: true });
   await page.getByRole("option", { name: "DeepSeek Coder" }).click();
 
   await page.getByRole("button", { name: "Generate" }).click();
@@ -343,7 +343,7 @@ test("generates unity project with all prompts filled", async ({ page }) => {
 
   await page.goto("/");
   await page.locator('[data-testid="nav-Unity-Project"]').click();
-  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible({ timeout: 30000 });
+  await expect(page.getByRole("heading", { name: "Unity Project" })).toBeVisible({ timeout: 30000 });
 
   // Fill required project settings
   await page.getByLabel("Project Name").fill("FullTestProject");
@@ -358,7 +358,7 @@ test("generates unity project with all prompts filled", async ({ page }) => {
   await page.getByLabel("Generate Default Scene").click();
   await page.getByLabel("Auto-Install UPM Packages").click();
 
-  await page.getByRole("button", { name: "Generate Base Project" }).click();
+  await page.getByRole("button", { name: "Generate Project" }).click();
   await expect(page.getByText("Unity project generated.")).toBeVisible({ timeout: 30000 });
 
   // Verify project was generated with correct settings
@@ -376,7 +376,7 @@ test("generates unity project with provider overrides", async ({ page }) => {
 
   await page.goto("/");
   await page.locator('[data-testid="nav-Unity-Project"]').click();
-  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible({ timeout: 30000 });
+  await expect(page.getByRole("heading", { name: "Unity Project" })).toBeVisible({ timeout: 30000 });
 
   await page.getByLabel("Project Name").fill("CustomProject");
   await page.getByLabel("Unity Template").click({ force: true });
@@ -386,7 +386,7 @@ test("generates unity project with provider overrides", async ({ page }) => {
   await page.getByLabel("Target Platform").click({ force: true });
   await page.getByRole("option", { name: "Windows" }).click();
 
-  await page.getByRole("button", { name: "Generate Base Project" }).click();
+  await page.getByRole("button", { name: "Generate Project" }).click();
   await expect(page.getByText("Unity project generated.")).toBeVisible({ timeout: 30000 });
 
   // Verify project was generated with correct name
@@ -441,7 +441,7 @@ test("shows error when audio generation fails", async ({ page }) => {
 
   await page.goto("/");
   await page.locator('[data-testid="nav-Audio"]').click();
-  await expect(page.getByRole("heading", { name: "Audio & Music Generation" })).toBeVisible({ timeout: 30000 });
+  await expect(page.getByRole("heading", { name: "Audio Generation" })).toBeVisible({ timeout: 30000 });
   await page.locator("textarea").first().fill("Generate audio");
   await page.getByRole("button", { name: "Generate" }).click();
   await expect(page.getByText("Invalid voice ID")).toBeVisible({ timeout: 30000 });
@@ -454,7 +454,7 @@ test("shows error when unity project generation fails", async ({ page }) => {
 
   await page.goto("/");
   await page.locator('[data-testid="nav-Unity-Project"]').click();
-  await expect(page.getByRole("heading", { name: "Unity Project Output" })).toBeVisible({ timeout: 30000 });
+  await expect(page.getByRole("heading", { name: "Unity Project" })).toBeVisible({ timeout: 30000 });
   await page.getByLabel("Project Name").fill("ExistingProject");
   await page.getByLabel("Unity Template").click({ force: true });
   await page.getByRole("option", { name: "2D" }).click();
@@ -462,7 +462,7 @@ test("shows error when unity project generation fails", async ({ page }) => {
   await page.getByRole("option", { name: "6000.3.2f1" }).click();
   await page.getByLabel("Target Platform").click({ force: true });
   await page.getByRole("option", { name: "Windows" }).click();
-  await page.getByRole("button", { name: "Generate Base Project" }).click();
+  await page.getByRole("button", { name: "Generate Project" }).click();
   await expect(page.getByText("Project directory already exists")).toBeVisible({ timeout: 30000 });
 });
 
@@ -541,7 +541,7 @@ test("generates and previews 2D sprites", async ({ page }) => {
   await page.getByLabel("Palette Size").click({ force: true });
   await page.getByRole("option", { name: "16" }).click();
 
-  await page.getByRole("button", { name: "Generate Sprite" }).click();
+  await page.getByRole("button", { name: "Generate Sprites" }).click();
 
   await expect(page.getByText("Sprite generated.")).toBeVisible({ timeout: 30000 });
   await expect(page.locator("img")).toBeVisible({ timeout: 30000 });

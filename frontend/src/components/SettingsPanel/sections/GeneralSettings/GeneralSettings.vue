@@ -1,5 +1,14 @@
 <script setup lang="ts">
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import { useGeneralSettings } from "./GeneralSettings";
+import { useLocale } from "@/composables/useLocale";
+import { useTheme } from "@/composables/useTheme";
+import type { ThemeMode } from "@/composables/useTheme";
+
+const { t } = useI18n();
+const { currentLocale, setLocale, localeOptions } = useLocale();
+const { themeMode, setThemeMode } = useTheme();
 
 const {
   backendUrl,
@@ -23,13 +32,19 @@ const {
   statusType,
   save,
 } = useGeneralSettings();
+
+const themeOptions = computed<{ value: ThemeMode; label: string; icon: string }[]>(() => [
+  { value: "light",  label: t("theme.light"),  icon: "mdi-weather-sunny" },
+  { value: "dark",   label: t("theme.dark"),   icon: "mdi-weather-night" },
+  { value: "system", label: t("theme.system"), icon: "mdi-monitor" },
+]);
 </script>
 
 <template>
   <div class="section-container">
     <div class="d-flex align-center mb-8">
       <v-icon color="primary" size="36" class="mr-4">mdi-cog-outline</v-icon>
-      <h2 class="text-h4 font-weight-bold">General Preferences</h2>
+      <h2 class="text-h4 font-weight-bold">{{ t('general.title') }}</h2>
     </div>
 
     <v-alert
@@ -42,58 +57,60 @@ const {
       {{ status }}
     </v-alert>
 
+    <!-- Network & API -->
     <v-card variant="flat" border class="pa-6 rounded-xl mb-6 bg-surface">
-      <div class="text-overline mb-4 text-primary">Network & API</div>
+      <div class="text-overline mb-4 text-primary">{{ t('general.sections.networkApi') }}</div>
       <v-text-field
         v-model="backendUrl"
-        label="Backend URL"
+        :label="t('general.fields.backendUrl')"
         :placeholder="defaultBackendUrl"
         variant="outlined"
         persistent-hint
-        hint="The address of your Unity Generator backend service"
+        :hint="t('general.fields.backendUrlHint')"
         rounded="lg"
-      ></v-text-field>
+      />
       <v-text-field
         v-model="outputBasePath"
-        label="Base path (output)"
+        :label="t('general.fields.outputBasePath')"
         placeholder="./output"
         variant="outlined"
         persistent-hint
-        hint="Relative path for generated Unity projects (e.g. ./output). Stored in database."
+        :hint="t('general.fields.outputBasePathHint')"
         rounded="lg"
         class="mt-4"
-      ></v-text-field>
+      />
       <v-text-field
         v-model="unityEditorPath"
-        label="Unity Editor Path (optional)"
+        :label="t('general.fields.unityEditorPath')"
         placeholder="Auto-detected from Unity Hub"
         variant="outlined"
         persistent-hint
-        hint="Leave empty to auto-detect from Unity Hub. Override only if Unity is installed in a non-standard location."
+        :hint="t('general.fields.unityEditorPathHint')"
         rounded="lg"
         class="mt-4"
         prepend-inner-icon="mdi-unity"
         clearable
-      ></v-text-field>
+      />
     </v-card>
 
-    <v-card variant="flat" border class="pa-6 rounded-xl bg-surface">
-      <div class="text-overline mb-4 text-primary">Preferred Intelligence</div>
+    <!-- Preferred Intelligence -->
+    <v-card variant="flat" border class="pa-6 rounded-xl mb-6 bg-surface">
+      <div class="text-overline mb-4 text-primary">{{ t('general.sections.preferredIntelligence') }}</div>
       <v-row>
         <v-col cols="12" md="6">
           <v-select
             v-model="preferredLlm"
-            label="Default Text/Logic Provider"
+            :label="t('general.fields.preferredLlm')"
             :items="providers.filter(p => p.modalities.includes('llm'))"
             item-title="name"
             item-value="name"
             rounded="lg"
             variant="outlined"
             density="comfortable"
-          ></v-select>
+          />
           <v-select
             v-model="preferredLlmModel"
-            :label="preferredLlm ? `Model (for ${preferredLlm})` : 'Model (select a provider first)'"
+            :label="t('general.fields.preferredLlmModel')"
             :items="llmModels"
             item-title="label"
             item-value="value"
@@ -102,22 +119,22 @@ const {
             variant="outlined"
             density="compact"
             class="mt-n2"
-          ></v-select>
+          />
         </v-col>
         <v-col cols="12" md="6">
           <v-select
             v-model="preferredImage"
-            label="Default Image Generation Provider"
+            :label="t('general.fields.preferredImage')"
             :items="providers.filter(p => p.modalities.includes('image'))"
             item-title="name"
             item-value="name"
             rounded="lg"
             variant="outlined"
             density="comfortable"
-          ></v-select>
+          />
           <v-select
             v-model="preferredImageModel"
-            :label="preferredImage ? `Model (for ${preferredImage})` : 'Model (select a provider first)'"
+            :label="t('general.fields.preferredImageModel')"
             :items="imageModels"
             item-title="label"
             item-value="value"
@@ -126,22 +143,22 @@ const {
             variant="outlined"
             density="compact"
             class="mt-n2"
-          ></v-select>
+          />
         </v-col>
         <v-col cols="12" md="6">
           <v-select
             v-model="preferredAudio"
-            label="Default Speech (TTS) Provider"
+            :label="t('general.fields.preferredAudio')"
             :items="providers.filter(p => p.modalities.includes('audio'))"
             item-title="name"
             item-value="name"
             rounded="lg"
             variant="outlined"
             density="comfortable"
-          ></v-select>
+          />
           <v-select
             v-model="preferredAudioModel"
-            :label="preferredAudio ? `Model (for ${preferredAudio})` : 'Model (select a provider first)'"
+            :label="t('general.fields.preferredAudioModel')"
             :items="audioModels"
             item-title="label"
             item-value="value"
@@ -150,22 +167,22 @@ const {
             variant="outlined"
             density="compact"
             class="mt-n2"
-          ></v-select>
+          />
         </v-col>
         <v-col cols="12" md="6">
           <v-select
             v-model="preferredMusic"
-            label="Default Music Generation Provider"
+            :label="t('general.fields.preferredMusic')"
             :items="providers.filter(p => p.modalities.includes('music'))"
             item-title="name"
             item-value="name"
             rounded="lg"
             variant="outlined"
             density="comfortable"
-          ></v-select>
+          />
           <v-select
             v-model="preferredMusicModel"
-            :label="preferredMusic ? `Model (for ${preferredMusic})` : 'Model (select a provider first)'"
+            :label="t('general.fields.preferredMusicModel')"
             :items="musicModels"
             item-title="label"
             item-value="value"
@@ -174,7 +191,49 @@ const {
             variant="outlined"
             density="compact"
             class="mt-n2"
-          ></v-select>
+          />
+        </v-col>
+      </v-row>
+    </v-card>
+
+    <!-- Appearance: Theme + Language -->
+    <v-card variant="flat" border class="pa-6 rounded-xl mb-6 bg-surface">
+      <div class="text-overline mb-4 text-primary">{{ t('general.sections.appearance') }}</div>
+      <v-row>
+        <v-col cols="12" sm="6">
+          <v-select
+            :model-value="themeMode"
+            :label="t('general.fields.theme')"
+            :items="themeOptions"
+            item-title="label"
+            item-value="value"
+            rounded="lg"
+            variant="outlined"
+            density="comfortable"
+            @update:model-value="setThemeMode"
+          >
+            <template #item="{ item, props: itemProps }">
+              <v-list-item v-bind="itemProps">
+                <template #prepend>
+                  <v-icon class="mr-2">{{ item.raw.icon }}</v-icon>
+                </template>
+              </v-list-item>
+            </template>
+          </v-select>
+        </v-col>
+        <v-col cols="12" sm="6">
+          <v-select
+            :model-value="currentLocale"
+            :label="t('general.fields.language')"
+            :items="localeOptions"
+            item-title="label"
+            item-value="value"
+            rounded="lg"
+            variant="outlined"
+            density="comfortable"
+            prepend-inner-icon="mdi-translate"
+            @update:model-value="setLocale"
+          />
         </v-col>
       </v-row>
     </v-card>
@@ -185,10 +244,10 @@ const {
         size="large"
         rounded="pill"
         prepend-icon="mdi-content-save-check"
-        @click="save"
         class="px-8 shadow-highlight"
+        @click="save"
       >
-        Save All Changes
+        {{ t('general.actions.saveAll') }}
       </v-btn>
     </div>
   </div>

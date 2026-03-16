@@ -15,6 +15,13 @@ MODEL_PREF_VALIDATION: dict[str, tuple[str, str]] = {
     "preferred_music_model": ("preferred_music_provider", "music"),
 }
 
+# Allowed values for locale preference
+ALLOWED_LOCALES: frozenset[str] = frozenset({
+    "en", "es", "ca", "eu", "oc", "uk",
+    "pt", "gl", "fr", "it", "pl", "zh", "ar", "de",
+    "hi", "bn", "ur", "id", "ja", "vi", "ko",
+})
+
 router = APIRouter(prefix="/prefs", tags=["preferences"])
 
 
@@ -31,7 +38,17 @@ def get_pref_endpoint(key: str) -> GenerationResponse:
 def set_pref_endpoint(request: PrefRequest) -> GenerationResponse:
     """
     Set a user preference.
+
+    Validates model preferences against registered provider models, and
+    validates preferred_locale against the set of supported locale codes.
     """
+    if request.key == "preferred_locale":
+        if request.value not in ALLOWED_LOCALES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Locale '{request.value}' is not supported. Allowed: {sorted(ALLOWED_LOCALES)}",
+            )
+
     if request.key in MODEL_PREF_VALIDATION:
         provider_key, modality = MODEL_PREF_VALIDATION[request.key]
         provider = get_pref(provider_key)

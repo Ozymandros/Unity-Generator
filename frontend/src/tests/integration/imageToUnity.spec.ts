@@ -7,6 +7,7 @@ import ScenesPanel from "@/components/ScenesPanel.vue";
 import { useMediaImport } from "@/composables/useMediaImport";
 import * as client from "@/api/client";
 import { useIntelligenceStore } from "@/store/intelligenceStore";
+import i18n from "@/i18n";
 
 /**
  * Integration test suite for Image-to-Unity workflow.
@@ -133,7 +134,7 @@ describe("Image-to-Unity Integration Workflow", () => {
 
     const imagePanel = mount(ImagePanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 
@@ -203,7 +204,7 @@ describe("Image-to-Unity Integration Workflow", () => {
 
     const scenesPanel = mount(ScenesPanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 
@@ -223,7 +224,7 @@ describe("Image-to-Unity Integration Workflow", () => {
 
     // ===== STEP 8: Submit scene generation with media =====
     const sceneGenerateBtn = scenesPanel.findAll("button").find(b => 
-      b.text().toLowerCase().includes("generate scene")
+      b.text().toLowerCase().includes("create scene")
     );
     expect(sceneGenerateBtn).toBeDefined();
     
@@ -354,7 +355,7 @@ describe("Image-to-Unity Integration Workflow", () => {
     // Mount ScenesPanel
     const scenesPanel = mount(ScenesPanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 
@@ -418,14 +419,14 @@ describe("Image-to-Unity Integration Workflow", () => {
     // Mount ScenesPanel and trigger generation
     const scenesPanel = mount(ScenesPanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 
     await flushPromises();
 
     const generateBtn = scenesPanel.findAll("button").find(b => 
-      b.text().toLowerCase().includes("generate scene")
+      b.text().toLowerCase().includes("create scene")
     );
     
     await generateBtn!.trigger("click");
@@ -485,14 +486,14 @@ describe("Image-to-Unity Integration Workflow", () => {
     // Mount ScenesPanel and trigger generation
     const scenesPanel = mount(ScenesPanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 
     await flushPromises();
 
     const generateBtn = scenesPanel.findAll("button").find(b => 
-      b.text().toLowerCase().includes("generate scene")
+      b.text().toLowerCase().includes("create scene")
     );
     
     await generateBtn!.trigger("click");
@@ -537,14 +538,14 @@ describe("Image-to-Unity Integration Workflow", () => {
     // Mount ScenesPanel and trigger generation
     const scenesPanel = mount(ScenesPanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 
     await flushPromises();
 
     const generateBtn = scenesPanel.findAll("button").find(b => 
-      b.text().toLowerCase().includes("generate scene")
+      b.text().toLowerCase().includes("create scene")
     );
     
     await generateBtn!.trigger("click");
@@ -591,7 +592,7 @@ describe("Image-to-Unity Integration Workflow", () => {
   it("should throw error when saving to Unity without generated image", async () => {
     const imagePanel = mount(ImagePanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 
@@ -634,7 +635,7 @@ describe("Image-to-Unity Integration Workflow", () => {
     // Mount ScenesPanel
     const scenesPanel = mount(ScenesPanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 
@@ -651,7 +652,7 @@ describe("Image-to-Unity Integration Workflow", () => {
 
     // Trigger generation
     const generateBtn = scenesPanel.findAll("button").find(b => 
-      b.text().toLowerCase().includes("generate scene")
+      b.text().toLowerCase().includes("create scene")
     );
     
     await generateBtn!.trigger("click");

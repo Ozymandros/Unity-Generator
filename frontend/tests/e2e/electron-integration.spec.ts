@@ -93,13 +93,19 @@ test.describe("Integration Test 18.1: Full Application Startup - Electron", () =
   });
 
   test("displays error when backend is not ready", async ({ page }) => {
-    // Set backend URL in localStorage
+    // Set backend URL in localStorage and force English locale for test stability
     await page.addInitScript((url) => {
       localStorage.setItem("backendUrl", url);
+      localStorage.setItem("appLocale", "en");
     }, BACKEND_URL);
 
     // Mock health check to fail
     await page.route(ENDPOINTS.HEALTH, async (route) => {
+      await route.abort("connectionrefused");
+    });
+
+    // Mock management/all to avoid unhandled fetch errors blocking render
+    await page.route(ENDPOINTS.MANAGEMENT_ALL, async (route) => {
       await route.abort("connectionrefused");
     });
 
@@ -263,13 +269,19 @@ test.describe("Integration Test 18.2: Backend Communication - Electron", () => {
   });
 
   test("handles backend connection failure gracefully", async ({ page }) => {
-    // Set backend URL in localStorage
+    // Set backend URL in localStorage and force English locale for test stability
     await page.addInitScript((url) => {
       localStorage.setItem("backendUrl", url);
+      localStorage.setItem("appLocale", "en");
     }, BACKEND_URL);
 
     // Mock health check to fail
     await page.route(ENDPOINTS.HEALTH, async (route) => {
+      await route.abort("connectionrefused");
+    });
+
+    // Mock management/all to avoid unhandled fetch errors blocking render
+    await page.route(ENDPOINTS.MANAGEMENT_ALL, async (route) => {
       await route.abort("connectionrefused");
     });
 

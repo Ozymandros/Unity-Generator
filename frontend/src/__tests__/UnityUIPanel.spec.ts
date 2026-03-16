@@ -5,6 +5,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import * as client from "@/api/client";
 import { useIntelligenceStore } from "@/store/intelligenceStore";
 import UnityUIPanel from "@/components/UnityUIPanel/UnityUIPanel.vue";
+import i18n from "@/i18n";
 
 vi.mock("../../api/client");
 
@@ -85,13 +86,13 @@ describe("UnityUIPanel", () => {
   // -------------------------------------------------------------------------
 
   it("renders the panel title and subtitle", () => {
-    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify] } });
-    expect(wrapper.text()).toContain("Unity UI Elements");
-    expect(wrapper.text()).toContain("Generate Unity UI prefabs");
+    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify, i18n] } });
+    expect(wrapper.text()).toContain("Unity UI");
+    expect(wrapper.text()).toContain("Generate Unity UI components using AI.");
   });
 
   it("renders quick action chips", () => {
-    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify, i18n] } });
     expect(wrapper.text()).toContain("Health Bar");
     expect(wrapper.text()).toContain("Button");
     expect(wrapper.text()).toContain("Dialogue Box");
@@ -100,13 +101,13 @@ describe("UnityUIPanel", () => {
   });
 
   it("renders the generate button", () => {
-    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify, i18n] } });
     const btn = wrapper.findAll("button").find((b) => b.text().toLowerCase().includes("generate"));
     expect(btn).toBeTruthy();
   });
 
   it("generate button is disabled when prompt is empty", async () => {
-    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify, i18n] } });
     await flushPromises();
     const btn = wrapper.findAll("button").find((b) => b.text().toLowerCase().includes("generate ui"));
     expect(btn?.attributes("disabled")).toBeDefined();
@@ -117,7 +118,7 @@ describe("UnityUIPanel", () => {
   // -------------------------------------------------------------------------
 
   it("clicking a quick action chip injects its prompt", async () => {
-    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify, i18n] } });
     await flushPromises();
 
     const chip = wrapper.findAll(".v-chip").find((c) => c.text().includes("Health Bar"));
@@ -137,7 +138,7 @@ describe("UnityUIPanel", () => {
   it("calls generateUnityUI with correct payload on submit", async () => {
     const spy = vi.spyOn(client, "generateUnityUI").mockResolvedValue(makeSuccessResponse());
 
-    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify, i18n] } });
     await flushPromises();
 
     // Set prompt via SmartField
@@ -162,7 +163,7 @@ describe("UnityUIPanel", () => {
       makeSuccessResponse("public class HealthBar : MonoBehaviour {}")
     );
 
-    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify, i18n] } });
     await flushPromises();
 
     const fields = wrapper.findAllComponents({ name: "SmartField" });
@@ -180,7 +181,7 @@ describe("UnityUIPanel", () => {
   it("shows success status message after generation", async () => {
     vi.spyOn(client, "generateUnityUI").mockResolvedValue(makeSuccessResponse());
 
-    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify, i18n] } });
     await flushPromises();
 
     const fields = wrapper.findAllComponents({ name: "SmartField" });
@@ -202,7 +203,7 @@ describe("UnityUIPanel", () => {
   it("shows error status when API returns success=false", async () => {
     vi.spyOn(client, "generateUnityUI").mockResolvedValue(makeErrorResponse("LLM timeout"));
 
-    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify, i18n] } });
     await flushPromises();
 
     const fields = wrapper.findAllComponents({ name: "SmartField" });
@@ -220,7 +221,7 @@ describe("UnityUIPanel", () => {
   it("shows error status when API throws a network error", async () => {
     vi.spyOn(client, "generateUnityUI").mockRejectedValue(new Error("Backend not running"));
 
-    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify, i18n] } });
     await flushPromises();
 
     const fields = wrapper.findAllComponents({ name: "SmartField" });
@@ -236,7 +237,7 @@ describe("UnityUIPanel", () => {
   });
 
   it("shows error when prompt is empty and run() is called directly", async () => {
-    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify, i18n] } });
     await flushPromises();
 
     // Access exposed composable state — script setup auto-unwraps refs on vm
@@ -255,7 +256,7 @@ describe("UnityUIPanel", () => {
   it("passes ui_system to the API call", async () => {
     const spy = vi.spyOn(client, "generateUnityUI").mockResolvedValue(makeSuccessResponse());
 
-    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify, i18n] } });
     await flushPromises();
 
     const vm = wrapper.vm as unknown as Record<string, unknown>;
@@ -274,7 +275,7 @@ describe("UnityUIPanel", () => {
   it("passes include_animations flag to the API call", async () => {
     const spy = vi.spyOn(client, "generateUnityUI").mockResolvedValue(makeSuccessResponse());
 
-    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify, i18n] } });
     await flushPromises();
 
     const vm = wrapper.vm as unknown as Record<string, unknown>;
@@ -294,7 +295,7 @@ describe("UnityUIPanel", () => {
       .mockResolvedValueOnce(makeSuccessResponse("First result"))
       .mockResolvedValueOnce(makeSuccessResponse("Second result"));
 
-    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(UnityUIPanel, { global: { plugins: [vuetify, i18n] } });
     await flushPromises();
 
     const vm = wrapper.vm as unknown as Record<string, unknown>;
