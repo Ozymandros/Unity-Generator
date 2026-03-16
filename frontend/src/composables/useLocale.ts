@@ -102,7 +102,7 @@ export function useLocale() {
     SUPPORTED_LOCALES.map((code) => ({
       value: code,
       label: t(`languages.${code}`) as string,
-    }))
+    })).sort((a, b) => a.label.localeCompare(b.label))
   );
 
   return { currentLocale, setLocale, localeOptions, supportedLocales: SUPPORTED_LOCALES };

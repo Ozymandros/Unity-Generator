@@ -21,10 +21,32 @@ import ca from "./locales/ca";
 import eu from "./locales/eu";
 import oc from "./locales/oc";
 import uk from "./locales/uk";
+import pt from "./locales/pt";
+import gl from "./locales/gl";
+import fr from "./locales/fr";
+import it from "./locales/it";
+import pl from "./locales/pl";
+import zh from "./locales/zh";
+import ar from "./locales/ar";
+import de from "./locales/de";
+import hi from "./locales/hi";
+import bn from "./locales/bn";
+import ur from "./locales/ur";
+import id from "./locales/id";
+import ja from "./locales/ja";
+import vi from "./locales/vi";
+import ko from "./locales/ko";
 
-export type SupportedLocale = "en" | "es" | "ca" | "eu" | "oc" | "uk";
+export type SupportedLocale =
+  | "en" | "es" | "ca" | "eu" | "oc" | "uk"
+  | "pt" | "gl" | "fr" | "it" | "pl" | "zh" | "ar" | "de"
+  | "hi" | "bn" | "ur" | "id" | "ja" | "vi" | "ko";
 
-export const SUPPORTED_LOCALES: SupportedLocale[] = ["en", "es", "ca", "eu", "oc", "uk"];
+export const SUPPORTED_LOCALES: SupportedLocale[] = [
+  "en", "es", "ca", "eu", "oc", "uk",
+  "pt", "gl", "fr", "it", "pl", "zh", "ar", "de",
+  "hi", "bn", "ur", "id", "ja", "vi", "ko",
+];
 export const DEFAULT_LOCALE: SupportedLocale = "en";
 export const LOCALE_STORAGE_KEY = "appLocale";
 
@@ -55,7 +77,7 @@ const i18n = createI18n({
   legacy: false,           // Composition API mode
   locale: getPersistedLocale(),
   fallbackLocale: DEFAULT_LOCALE,
-  messages: { en, es, ca, eu, oc, uk },
+  messages: { en, es, ca, eu, oc, uk, pt, gl, fr, it, pl, zh, ar, de, hi, bn, ur, id, ja, vi, ko },
   // Silence missing-key warnings in production
   missingWarn: import.meta.env.DEV,
   fallbackWarn: import.meta.env.DEV,
