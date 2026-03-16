@@ -83,8 +83,15 @@ def get_templates_dir() -> Path:
 
 _DEFAULT_UNITY_PATHS: dict[str, list] = {
     "Windows": [
-        r"%ProgramFiles%/UnityHub/Editor/*/Editor/Unity.exe",
-        r"%ProgramFiles%/Unity Hub/Editor/*/Editor/Unity.exe",
+        # Unity Hub default editor install location (most common)
+        r"%PROGRAMFILES%/Unity/Hub/Editor/*/Editor/Unity.exe",
+        # Alternative Hub install locations
+        r"%PROGRAMFILES%/Unity Hub/Editor/*/Editor/Unity.exe",
+        r"%PROGRAMFILES%/UnityHub/Editor/*/Editor/Unity.exe",
+        # Unity Hub stores editors under AppData on some setups
+        r"%APPDATA%/UnityHub/Editor/*/Editor/Unity.exe",
+        # Manual / legacy installs
+        r"%PROGRAMFILES%/Unity/Editor/Unity.exe",
     ],
     "Darwin": [
         "/Applications/Unity/Hub/Editor/*/Unity.app/Contents/MacOS/Unity",
@@ -102,11 +109,17 @@ def _find_unity_on_disk() -> Path | None:
     import glob as _glob
 
     for pattern in _DEFAULT_UNITY_PATHS.get(system, []):
-        matches = sorted(_glob.glob(pattern), reverse=True)
+        # Expand environment variables (e.g. %PROGRAMFILES% on Windows) before globbing
+        expanded = os.path.expandvars(pattern).replace("\\", "/")
+        LOGGER.debug("Unity discovery: trying pattern %s", expanded)
+        matches = sorted(_glob.glob(expanded), reverse=True)
         if matches:
             candidate = Path(matches[0])
+            LOGGER.debug("Unity discovery: found candidate %s (exists=%s)", candidate, candidate.exists())
             if candidate.exists():
                 return candidate
+        else:
+            LOGGER.debug("Unity discovery: no matches for %s", expanded)
     return None
 
 

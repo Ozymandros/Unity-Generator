@@ -8,8 +8,11 @@ import ImagePanel from "./components/ImagePanel/ImagePanel.vue";
 import AudioPanel from "./components/AudioPanel/AudioPanel.vue";
 import SpritesPanel from "./components/SpritesPanel/SpritesPanel.vue";
 import UnityProjectPanel from "./components/UnityProjectPanel/UnityProjectPanel.vue";
+import UnityUIPanel from "./components/UnityUIPanel/UnityUIPanel.vue";
+import UnityPhysicsPanel from "./components/UnityPhysicsPanel/UnityPhysicsPanel.vue";
 import { useApp } from "./App";
 import { useSessionProject } from "./composables/useSessionProject";
+import { useOpenProject } from "./composables/useOpenProject";
 import { useIntelligenceStore } from "./store/intelligenceStore";
 import { clearActiveProject } from "./store/projectStore";
 import { useUnityProjectUiStore } from "./store/unityProjectUiStore";
@@ -17,7 +20,8 @@ import ScenesPanel from "./components/ScenesPanel.vue";
 import type { ElectronAPI } from "./types/electron";
 
 const { tabs, active, backendStatus, setActive } = useApp();
-const { projectName, sessionProjectResetKey, setProjectName, setProjectPath, resetSessionProject } = useSessionProject();
+const { projectName, sessionProjectResetKey, resetSessionProject } = useSessionProject();
+const { loadProject } = useOpenProject();
 const drawer = ref(true);
 const store = useIntelligenceStore();
 const unityUi = useUnityProjectUiStore();
@@ -32,6 +36,8 @@ const getTabIcon = (tab: string) => {
     case 'Image': return 'mdi-image-outline';
     case 'Sprites': return 'mdi-grid';
     case 'Audio': return 'mdi-volume-high';
+    case 'Unity UI': return 'mdi-palette-outline';
+    case 'Unity Physics': return 'mdi-atom';
     case 'Unity Project': return 'mdi-unity';
     default: return 'mdi-circle-medium';
   }
@@ -78,38 +84,10 @@ async function handleNewProject() {
 
 /**
  * Handle "Open Project" menu action.
- * Loads the selected Unity project folder into the UnityProjectPanel.
+ * Delegates to the shared useOpenProject composable.
  */
 async function handleOpenProject(projectPath: string) {
-  if (!projectPath) return;
-  
-  // Set the project path in session
-  setProjectPath(projectPath);
-  
-  // Extract project name from path
-  const pathParts = projectPath.replace(/\\/g, '/').split('/');
-  const folderName = pathParts[pathParts.length - 1];
-  setProjectName(folderName || "UnityProject");
-
-  // Best-effort scan & prefill Unity Project UI settings (Electron only)
-  try {
-    const api = window.electronAPI as ElectronAPI | undefined;
-    const scan = await api?.unityProject?.scan(projectPath);
-    if (scan?.success && scan?.data) {
-      if (typeof scan.data.unityVersion === "string" && scan.data.unityVersion.trim()) {
-        unityUi.settings.version = scan.data.unityVersion.trim();
-      }
-      if (Array.isArray(scan.data.packages) && scan.data.packages.length > 0) {
-        const packages = scan.data.packages.filter((p) => typeof p === "string" && p.trim()).join(", ");
-        unityUi.settings.installPackages = true;
-        unityUi.settings.packages = packages;
-      }
-    }
-  } catch {
-    // Prefill is best-effort; do not block navigation
-  }
-  
-  // Switch to Unity Project tab
+  await loadProject(projectPath);
   setActive('Unity Project');
 }
 
@@ -175,6 +153,8 @@ onUnmounted(() => {
             <ImagePanel v-else-if="active === 'Image'" />
             <SpritesPanel v-else-if="active === 'Sprites'" />
             <AudioPanel v-else-if="active === 'Audio'" />
+            <UnityUIPanel v-else-if="active === 'Unity UI'" />
+            <UnityPhysicsPanel v-else-if="active === 'Unity Physics'" />
             <UnityProjectPanel v-else-if="active === 'Unity Project'" />
           </div>
         </v-fade-transition>

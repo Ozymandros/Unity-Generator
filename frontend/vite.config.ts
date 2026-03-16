@@ -58,11 +58,13 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
-    include: ["src/**/*.test.ts", "src/**/*.spec.ts"],
+    include: ["src/**/*.test.ts", "src/**/*.spec.ts", "tests/**/*.spec.ts"],
+    exclude: ["tests/e2e/**", "node_modules/**"],
     setupFiles: ["./src/test/setup.ts"],
     alias: {
       "@": resolve(__dirname, "./src"),
       main: resolve(__dirname, "../main"),
+      "vue-router": resolve(__dirname, "./src/__mocks__/vue-router.ts"),
     },
     server: {
       deps: {

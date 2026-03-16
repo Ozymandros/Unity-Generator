@@ -4,6 +4,7 @@ import { StatusBanner } from "./StatusBanner";
 import { SmartField } from "./generic/SmartField";
 import { ModelManagerModal } from "./generic/ModelManagerModal";
 import { useScenesPanel } from "./ScenesPanel";
+import { QUICK_ACTIONS, EXAMPLE_PROMPTS, type QuickAction } from "@/constants/unityPrompts";
 
 const {
   prompt,
@@ -23,8 +24,59 @@ const {
   canGenerate,
   run,
   providerOptions,
-  TEMPERATURE_PRESETS
+  TEMPERATURE_PRESETS,
+  pendingMediaImport,
+  hasPendingMediaImport
 } = useScenesPanel();
+
+/**
+ * Handle quick action button click by injecting prompt into input field.
+ * Allows users to quickly start with pre-written prompts for common Unity tasks.
+ * 
+ * @param action - The quick action to execute
+ * @throws {Error} If action or action.prompt is invalid
+ * 
+ * @example
+ * ```typescript
+ * const fpsAction: QuickAction = {
+ *   label: "FPS Prototype",
+ *   icon: "mdi-pistol",
+ *   prompt: "Create a complete FPS prototype...",
+ *   category: "prototype"
+ * };
+ * handleQuickActionClick(fpsAction);
+ * // prompt.value now contains the FPS prototype prompt text
+ * ```
+ */
+function handleQuickActionClick(action: QuickAction): void {
+  if (!action || !action.prompt) {
+    throw new Error("Invalid quick action: action and action.prompt are required");
+  }
+  
+  // Inject prompt into input field
+  prompt.value = action.prompt;
+  
+  // Log analytics event
+  console.log(`Quick action used: ${action.label} (${action.category})`);
+}
+
+/**
+ * Get a random example prompt for placeholder text.
+ * Provides variety and inspiration by showing different capabilities each time.
+ * 
+ * @returns Random example prompt text from EXAMPLE_PROMPTS array
+ * 
+ * @example
+ * ```typescript
+ * const placeholder = getRandomExamplePrompt();
+ * // Returns: "Create a scene with a red cube, blue sphere, and directional light"
+ * // or any other random example from the array
+ * ```
+ */
+function getRandomExamplePrompt(): string {
+  const randomIndex = Math.floor(Math.random() * EXAMPLE_PROMPTS.length);
+  return EXAMPLE_PROMPTS[randomIndex].text;
+}
 </script>
 
 <template>
@@ -36,8 +88,62 @@ const {
 
     <StatusBanner :status="status" :tone="tone" />
 
+    <!-- Media Import Info Banner -->
+    <v-alert
+      v-if="hasPendingMediaImport()"
+      type="info"
+      variant="tonal"
+      class="mb-4"
+      icon="mdi-import"
+      closable
+    >
+      <template v-slot:title>Media Ready to Import</template>
+      <template v-slot:text>
+        {{ pendingMediaImport?.type === 'image' ? 'Image' : 'Audio' }} "{{ pendingMediaImport?.name }}" is ready to be imported to Unity. 
+        Review the prompt below and click "Generate Scene" to proceed.
+      </template>
+    </v-alert>
+
+    <!-- Quick Actions Section -->
+    <div class="quick-actions mb-4">
+      <h3 class="text-subtitle-2 mb-2">Quick Actions</h3>
+      <v-chip-group>
+        <v-chip
+          v-for="action in QUICK_ACTIONS"
+          :key="action.label"
+          :prepend-icon="action.icon"
+          @click="handleQuickActionClick(action)"
+          variant="outlined"
+          color="primary"
+          class="ma-1"
+        >
+          {{ action.label }}
+        </v-chip>
+      </v-chip-group>
+    </div>
+
     <SmartField label="Scene Description" type="textarea" v-model="prompt" :rows="4"
-      placeholder="e.g., Create a scene with a red cube at (0,0,0)..." />
+      :placeholder="getRandomExamplePrompt()" />
+
+    <!-- Example Prompts Section -->
+    <v-expansion-panels class="mb-4">
+      <v-expansion-panel title="Example Prompts" bg-color="surface">
+        <v-expansion-panel-text>
+          <v-list density="compact">
+            <v-list-item
+              v-for="example in EXAMPLE_PROMPTS"
+              :key="example.text"
+              @click="prompt = example.text"
+              class="cursor-pointer hover:bg-surface-variant"
+            >
+              <v-list-item-title class="text-caption">
+                {{ example.text }}
+              </v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-expansion-panel-text>
+      </v-expansion-panel>
+    </v-expansion-panels>
 
     <div class="field-group">
       <div class="options-row d-flex align-center gap-2 mb-4">
@@ -252,5 +358,13 @@ summary {
   cursor: pointer;
   font-weight: 500;
   color: #38bdf8;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-pointer:hover {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 </style>

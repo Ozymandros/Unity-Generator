@@ -33,6 +33,7 @@ Unity Generator supports multiple types of AI-powered content generation:
 - **Sprites**: Generate pixel art and 2D sprites optimized for Unity
 - **Audio**: Generate voice-over (TTS) and music
 - **Scenes**: Create complete Unity scenes with GameObjects and components
+- **Unity UI Elements**: Generate Unity UI prefabs (health bars, buttons, dialogue boxes, HUD layouts) for uGUI or UI Toolkit
 - **Unity Projects**: Generate full Unity project structures
 
 ### Multi-Provider Support
@@ -160,6 +161,27 @@ Create complete Unity scenes:
 - "Create a simple platformer level with platforms and collectibles"
 - "Generate a main menu scene with UI buttons"
 - "Make a test scene with a player, camera, and ground"
+
+### Unity UI Elements Panel
+
+Generate Unity UI prefab assets — health bars, buttons, dialogue boxes, inventory slots, HUD layouts, and more:
+
+1. Click a **Quick Action** chip to inject a ready-made template prompt, or type your own description
+2. Select **UI System**: uGUI (Canvas-based) or UI Toolkit (UXML/USS)
+3. Select **Element Type** to auto-fill a template prompt for that element
+4. Optionally set **Output Format** (C# script, Prefab YAML, or both), **Anchor Preset**, and **Colour Theme**
+5. Toggle **Include animations** to add transition/animation code
+6. Click "Generate UI Element"
+
+**Example prompts:**
+- "Create a health bar with a smooth red fill that depletes from right to left"
+- "Generate a dialogue box with speaker name, portrait slot, and next/skip buttons"
+- "Make an inventory slot with item icon, quantity badge, and hover highlight"
+
+**Output formats:**
+- **C# Script only**: A MonoBehaviour that builds the UI hierarchy at runtime (uGUI) or a C# controller with UQuery bindings (UI Toolkit)
+- **Prefab YAML only**: Unity `.prefab` serialisation ready to drop into `Assets/UI/`
+- **Script + Prefab YAML**: Both files together
 
 ### Unity Project Panel
 

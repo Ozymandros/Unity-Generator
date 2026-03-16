@@ -63,7 +63,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Unity project scanning (read-only)
   unityProject: {
-    scan: (projectRoot) => ipcRenderer.invoke('unityProject:scan', projectRoot)
+    scan: (projectRoot) => ipcRenderer.invoke('unityProject:scan', projectRoot),
+    openPicker: () => ipcRenderer.invoke('dialog:open-unity-project'),
   },
 
   // Migration functionality

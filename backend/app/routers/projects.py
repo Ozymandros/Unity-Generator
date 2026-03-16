@@ -81,6 +81,9 @@ def generate_project(request: UnityProjectRequest) -> GenerationResponse:
             text_output,
             image_output,
             audio_output,
+            unity_version=request.unity_version,
+            unity_template=request.unity_template,
+            unity_platform=request.unity_platform,
         )
         return ok_response(data)
     except Exception as exc:

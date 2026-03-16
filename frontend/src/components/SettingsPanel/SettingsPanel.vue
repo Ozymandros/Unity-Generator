@@ -10,7 +10,7 @@ const activeTab = ref(0);
 
 const tabs = [
   { label: 'General', icon: 'mdi-cog-outline' },
-  { label: 'Providers', icon: 'mdi-brain-outline' },
+  { label: 'Providers', icon: 'mdi-robot-outline' },
   { label: 'Models', icon: 'mdi-robot-outline' },
   { label: 'Prompts', icon: 'mdi-script-text-outline' },
   { label: 'Secrets', icon: 'mdi-key-chain' },

@@ -3,7 +3,7 @@ import { listSystemPrompts, saveSystemPrompt, resetSystemPrompts } from '@/api/c
 
 export function usePromptManagement() {
   const prompts = ref<Record<string, string>>({});
-  const promptModalities = ['code', 'text', 'image', 'audio', 'music', 'video', 'sprite'];
+  const promptModalities = ['code', 'text', 'image', 'audio', 'music', 'video', 'sprite', 'unity_ui', 'unity_physics'];
   const isLoading = ref(false);
   const isResetting = ref(false);
   const confirmResetDialog = ref(false);

@@ -22,6 +22,7 @@ export function useGeneralSettings() {
   }
 
   const outputBasePath = prefComputed("output_base_path", "./output");
+  const unityEditorPath = prefComputed("unity_editor_path", "");
 
   const preferredLlm = prefComputed("preferred_llm_provider");
   const preferredLlmModel = prefComputed("preferred_llm_model");
@@ -91,6 +92,11 @@ export function useGeneralSettings() {
       await setPref("preferred_music_provider", preferredMusic.value);
       await setPref("preferred_music_model", preferredMusicModel.value);
       await setPref("output_base_path", outputBasePath.value.trim() || "./output");
+      if (unityEditorPath.value.trim()) {
+        await setPref("unity_editor_path", unityEditorPath.value.trim());
+      } else {
+        await setPref("unity_editor_path", "");
+      }
 
       await store.refresh();
       status.value = "Preferences saved successfully.";
@@ -109,6 +115,7 @@ export function useGeneralSettings() {
     backendUrl,
     defaultBackendUrl: getDefaultBackendUrl(),
     outputBasePath,
+    unityEditorPath,
     providers,
     llmProviders,
     llmModels,
