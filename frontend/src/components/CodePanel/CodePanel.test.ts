@@ -7,6 +7,7 @@ import * as client from "@/api/client";
 import { createPinia, setActivePinia } from "pinia";
 import { createVuetify } from "vuetify";
 import { useIntelligenceStore } from "@/store/intelligenceStore";
+import i18n from "@/i18n";
 
 vi.mock("../../api/client");
 
@@ -84,7 +85,7 @@ describe("CodePanel", () => {
   });
 
   it("renders form fields", () => {
-    const wrapper = mount(CodePanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(CodePanel, { global: { plugins: [vuetify, i18n] } });
     expect(wrapper.find("textarea").exists()).toBe(true);
     expect(wrapper.findAll("select").length).toBeGreaterThanOrEqual(2);
     const button = wrapper
@@ -101,7 +102,7 @@ describe("CodePanel", () => {
       data: { content: "public class Test {}" },
     });
 
-    const wrapper = mount(CodePanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(CodePanel, { global: { plugins: [vuetify, i18n] } });
     await wrapper.find("textarea").setValue("Create a test class");
     const button = wrapper
       .findAll("button.v-btn")
@@ -123,7 +124,7 @@ describe("CodePanel", () => {
       data: { content: "class PlayerController {}" },
     });
 
-    const wrapper = mount(CodePanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(CodePanel, { global: { plugins: [vuetify, i18n] } });
     await wrapper.find("textarea").setValue("Create player controller");
     const button = wrapper
       .findAll("button.v-btn")
@@ -146,7 +147,7 @@ describe("CodePanel", () => {
       data: null,
     });
 
-    const wrapper = mount(CodePanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(CodePanel, { global: { plugins: [vuetify, i18n] } });
     await wrapper.find("textarea").setValue("Test prompt");
     const button = wrapper
       .findAll("button.v-btn")

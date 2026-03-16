@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from "pinia";
 import { useIntelligenceStore } from "@/store/intelligenceStore";
 import { createVuetify } from "vuetify";
 import { describe, expect, it, beforeEach, vi } from "vitest";
+import i18n from "@/i18n";
 
 vi.mock("../../api/client");
 
@@ -68,7 +69,7 @@ describe("ImagePanel", () => {
   });
 
   it("renders form fields", () => {
-    const wrapper = mount(ImagePanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(ImagePanel, { global: { plugins: [vuetify, i18n] } });
     expect(wrapper.html()).toContain("Prompt");
     expect(wrapper.html().toLowerCase()).toContain("generate");
   });
@@ -81,7 +82,7 @@ describe("ImagePanel", () => {
       data: { image: "base64-image-data" },
     });
 
-    const wrapper = mount(ImagePanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(ImagePanel, { global: { plugins: [vuetify, i18n] } });
     // Find SmartField for prompt and set value
     const fields = wrapper.findAllComponents({ name: 'SmartField' });
     const setField = (label: string, value: unknown) => {
@@ -119,7 +120,7 @@ describe("ImagePanel", () => {
       data: { image: "generated-image-base64" },
     });
 
-    const wrapper = mount(ImagePanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(ImagePanel, { global: { plugins: [vuetify, i18n] } });
     const fields = wrapper.findAllComponents({ name: 'SmartField' });
     const setField = (label: string, value: string | number | boolean) => {
       const field = fields.find(f => f.props('label') === label);
@@ -143,7 +144,7 @@ describe("ImagePanel", () => {
       data: null,
     });
 
-    const wrapper = mount(ImagePanel, { global: { plugins: [vuetify] } });
+    const wrapper = mount(ImagePanel, { global: { plugins: [vuetify, i18n] } });
     const fields = wrapper.findAllComponents({ name: 'SmartField' });
     const setField = (label: string, value: string | number | boolean) => {
       const field = fields.find(f => f.props('label') === label);
@@ -229,7 +230,7 @@ describe("ImagePanel - Unity Integration", () => {
   it("should hide 'Save to Unity' button when no image is generated", async () => {
     const wrapper = mount(ImagePanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 
@@ -238,7 +239,7 @@ describe("ImagePanel - Unity Integration", () => {
     // Verify the Save to Unity section is not present
     expect(wrapper.text()).not.toContain("Save to Unity");
     expect(wrapper.text()).not.toContain("Texture Name");
-    expect(wrapper.text()).not.toContain("Save to Unity Project");
+    expect(wrapper.text()).not.toContain("Save to Unity");
   });
 
   /**
@@ -258,7 +259,7 @@ describe("ImagePanel - Unity Integration", () => {
 
     const wrapper = mount(ImagePanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 
@@ -282,7 +283,7 @@ describe("ImagePanel - Unity Integration", () => {
     expect(wrapper.text()).toContain("Save to Unity");
     expect(wrapper.text()).toContain("Texture Name");
     expect(wrapper.text()).toContain("Texture Type");
-    expect(wrapper.text()).toContain("Save to Unity Project");
+    expect(wrapper.text()).toContain("Save to Unity");
   });
 
   /**
@@ -295,7 +296,7 @@ describe("ImagePanel - Unity Integration", () => {
   it("should throw error when saveToUnity() is called without generated image", async () => {
     const wrapper = mount(ImagePanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 
@@ -329,7 +330,7 @@ describe("ImagePanel - Unity Integration", () => {
 
     const wrapper = mount(ImagePanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 
@@ -395,7 +396,7 @@ describe("ImagePanel - Unity Integration", () => {
 
     const wrapper = mount(ImagePanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 
@@ -446,7 +447,7 @@ describe("ImagePanel - Unity Integration", () => {
 
     const wrapper = mount(ImagePanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 
@@ -486,7 +487,7 @@ describe("ImagePanel - Unity Integration", () => {
   it("should have default values for texture name and type", async () => {
     const wrapper = mount(ImagePanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 
@@ -517,7 +518,7 @@ describe("ImagePanel - Unity Integration", () => {
 
     const wrapper = mount(ImagePanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 
@@ -561,7 +562,7 @@ describe("ImagePanel - Unity Integration", () => {
 
     const wrapper = mount(ImagePanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 
@@ -601,7 +602,7 @@ describe("ImagePanel - Unity Integration", () => {
 
     const wrapper = mount(ImagePanel, {
       global: {
-        plugins: [vuetify]
+        plugins: [vuetify, i18n]
       }
     });
 

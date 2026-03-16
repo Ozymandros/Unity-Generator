@@ -275,6 +275,13 @@ def seed_database():
         LOGGER.info("Seeding default Unity version 6000.3.2f1...")
         seed_unity_versions([{"value": "6000.3.2f1", "label": "6000.3.2f1"}])
 
+    # 2c. Seed default locale preference if not already set
+    from .db import get_pref
+    from .db import set_pref as db_set_pref
+    if get_pref("preferred_locale") is None:
+        LOGGER.info("Seeding default preferred_locale = 'en'...")
+        db_set_pref("preferred_locale", "en")
+
     # 3. Migrate API keys from legacy storage
     existing_keys = api_key_repo.get_all()
     if not existing_keys:

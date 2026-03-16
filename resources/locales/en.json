@@ -33,5 +33,10 @@
   "menuQuit": "Quit",
   "menuReload": "Reload",
   "menuToggleDevTools": "Toggle Developer Tools",
-  "menuToggleFullScreen": "Toggle Full Screen"
+  "menuToggleFullScreen": "Toggle Full Screen",
+  "menuNewProject": "New Project",
+  "menuOpenProject": "Open Project...",
+  "menuExit": "Exit",
+  "menuUserGuide": "User Guide",
+  "menuAbout": "About Unity Generator"
 }

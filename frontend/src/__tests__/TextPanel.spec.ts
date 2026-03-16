@@ -4,7 +4,8 @@ import { TextPanel } from "@/components/TextPanel";
 import * as client from "@/api/client";
 import { setActivePinia, createPinia } from "pinia";
 import { createVuetify } from "vuetify";
-import { useIntelligenceStore } from "@/store/intelligenceStore"; // <-- add this import
+import { useIntelligenceStore } from "@/store/intelligenceStore";
+import i18n from "@/i18n";
 
 vi.mock("../../api/client");
 
@@ -57,7 +58,7 @@ describe("TextPanel", () => {
 
   it("renders form fields", () => {
     const wrapper = mount(TextPanel, {
-      global: { plugins: [vuetify], stubs: { SmartField: true } },
+      global: { plugins: [vuetify, i18n], stubs: { SmartField: true } },
     });
     // Check SmartField components by label prop
     const fields = wrapper.findAllComponents({ name: "SmartField" });
@@ -80,7 +81,7 @@ describe("TextPanel", () => {
     });
 
     const wrapper = mount(TextPanel, {
-      global: { plugins: [vuetify] },
+      global: { plugins: [vuetify, i18n] },
     });
     // Find SmartField components by label
     const fields = wrapper.findAllComponents({ name: "SmartField" });
@@ -125,7 +126,7 @@ describe("TextPanel", () => {
     });
 
     const wrapper = mount(TextPanel, {
-      global: { plugins: [vuetify] },
+      global: { plugins: [vuetify, i18n] },
     });
     const fields = wrapper.findAllComponents({ name: "SmartField" });
     const setField = (label: string, value: string | number | boolean) => {
@@ -157,7 +158,7 @@ describe("TextPanel", () => {
     });
 
     const wrapper = mount(TextPanel, {
-      global: { plugins: [vuetify] },
+      global: { plugins: [vuetify, i18n] },
     });
     const fields = wrapper.findAllComponents({ name: "SmartField" });
     const setField = (label: string, value: string | number | boolean) => {

@@ -103,6 +103,11 @@ test.describe("Integration Test 18.1: Full Application Startup - Electron", () =
       await route.abort("connectionrefused");
     });
 
+    // Mock management/all to avoid unhandled fetch errors blocking render
+    await page.route(ENDPOINTS.MANAGEMENT_ALL, async (route) => {
+      await route.abort("connectionrefused");
+    });
+
     // Navigate to app
     await page.goto("/");
 
@@ -270,6 +275,11 @@ test.describe("Integration Test 18.2: Backend Communication - Electron", () => {
 
     // Mock health check to fail
     await page.route(ENDPOINTS.HEALTH, async (route) => {
+      await route.abort("connectionrefused");
+    });
+
+    // Mock management/all to avoid unhandled fetch errors blocking render
+    await page.route(ENDPOINTS.MANAGEMENT_ALL, async (route) => {
       await route.abort("connectionrefused");
     });
 

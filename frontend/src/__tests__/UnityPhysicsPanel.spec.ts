@@ -3,6 +3,7 @@ import { shallowMount, flushPromises, type VueWrapper } from "@vue/test-utils";
 import UnityPhysicsPanel from "@/components/UnityPhysicsPanel/UnityPhysicsPanel.vue";
 import * as client from "@/api/client";
 import { createPinia, setActivePinia, type Pinia } from "pinia";
+import i18n from "@/i18n";
 
 vi.mock("@/api/client");
 
@@ -60,7 +61,7 @@ const STUBS = {
 
 function mountPanel(pinia: Pinia) {
   return shallowMount(UnityPhysicsPanel, {
-    global: { plugins: [pinia], stubs: STUBS },
+    global: { plugins: [pinia, i18n], stubs: STUBS },
   });
 }
 

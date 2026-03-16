@@ -5,6 +5,7 @@ import { createVuetify, type ThemeDefinition } from "vuetify";
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
 import "vuetify/styles";
+import i18n from "@/i18n";
 
 const unityDarkTheme: ThemeDefinition = { dark: true, colors: {} };
 const unityLightTheme: ThemeDefinition = { dark: false, colors: {} };
@@ -121,7 +122,7 @@ describe("App", () => {
   it("renders app header", async () => {
     const wrapper = mount(App, {
       global: {
-        plugins: [vuetify, pinia],
+        plugins: [vuetify, pinia, i18n],
       },
     });
     expect(wrapper.text()).toContain("Unity Generator");
@@ -131,7 +132,7 @@ describe("App", () => {
     vi.mocked(healthCheck).mockResolvedValue({ status: "ok" });
     const wrapper = mount(App, {
       global: {
-        plugins: [vuetify],
+        plugins: [vuetify, pinia, i18n],
       },
     });
     await flushPromises();
@@ -142,7 +143,7 @@ describe("App", () => {
     vi.mocked(healthCheck).mockRejectedValue(new Error("Network error"));
     const wrapper = mount(App, {
       global: {
-        plugins: [vuetify],
+        plugins: [vuetify, pinia, i18n],
       },
     });
     await flushPromises();
@@ -152,7 +153,7 @@ describe("App", () => {
   it("shows all navigation tabs", async () => {
     const wrapper = mount(App, {
       global: {
-        plugins: [vuetify],
+        plugins: [vuetify, pinia, i18n],
       },
     });
     expect(wrapper.text()).toContain("Settings");
@@ -163,7 +164,7 @@ describe("App", () => {
   it("switches tabs on click", async () => {
     const wrapper = mount(App, {
       global: {
-        plugins: [vuetify],
+        plugins: [vuetify, pinia, i18n],
       },
     });
     const navItems = wrapper.findAll(".nav-item");

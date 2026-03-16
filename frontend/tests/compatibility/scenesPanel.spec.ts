@@ -5,6 +5,7 @@ import { createPinia, setActivePinia } from "pinia";
 import ScenesPanel from "@/components/ScenesPanel.vue";
 import * as client from "@/api/client";
 import { useMediaImport } from "@/composables/useMediaImport";
+import i18n from "@/i18n";
 
 /**
  * Backward Compatibility Tests for ScenesPanel Component
@@ -76,7 +77,7 @@ function mockGetAllConfig() {
  */
 function mountScenesPanel() {
   const vuetify = createVuetify();
-  return mount(ScenesPanel, { global: { plugins: [vuetify] } });
+  return mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
 }
 
 // ---------------------------------------------------------------------------
@@ -115,7 +116,7 @@ describe("ScenesPanel - Backward Compatibility Tests", () => {
       const wrapper = mountScenesPanel();
       await wrapper.vm.$nextTick();
 
-      expect(wrapper.html()).toContain("Unity Scene Creator");
+      expect(wrapper.html()).toContain("Scene Creator");
     });
 
     it("should render the prompt input field", async () => {
@@ -150,7 +151,7 @@ describe("ScenesPanel - Backward Compatibility Tests", () => {
 
       const generateBtn = wrapper
         .findAll("button")
-        .find((b) => b.text().toLowerCase().includes("generate"));
+        .find((b) => b.text().toLowerCase().includes("create scene"));
 
       expect(generateBtn).toBeDefined();
     });
@@ -186,7 +187,7 @@ describe("ScenesPanel - Backward Compatibility Tests", () => {
 
       const generateBtn = wrapper
         .findAll("button")
-        .find((b) => b.text().toLowerCase().includes("generate"));
+        .find((b) => b.text().toLowerCase().includes("create scene"));
       await generateBtn!.trigger("click");
       await wrapper.vm.$nextTick();
       await new Promise((resolve) => setTimeout(resolve, 50));
@@ -237,7 +238,7 @@ describe("ScenesPanel - Backward Compatibility Tests", () => {
 
       const generateBtn = wrapper
         .findAll("button")
-        .find((b) => b.text().toLowerCase().includes("generate"));
+        .find((b) => b.text().toLowerCase().includes("create scene"));
       await generateBtn!.trigger("click");
       await wrapper.vm.$nextTick();
 
@@ -253,7 +254,7 @@ describe("ScenesPanel - Backward Compatibility Tests", () => {
       // Prompt starts empty — button should be disabled
       const generateBtn = wrapper
         .findAll("button")
-        .find((b) => b.text().toLowerCase().includes("generate"));
+        .find((b) => b.text().toLowerCase().includes("create scene"));
 
       expect(generateBtn).toBeDefined();
       // The button is disabled via the :disabled binding when canGenerate is false
@@ -307,7 +308,7 @@ describe("ScenesPanel - Backward Compatibility Tests", () => {
 
       const generateBtn = wrapper
         .findAll("button")
-        .find((b) => b.text().toLowerCase().includes("generate"));
+        .find((b) => b.text().toLowerCase().includes("create scene"));
       await generateBtn!.trigger("click");
       await wrapper.vm.$nextTick();
 
@@ -346,7 +347,7 @@ describe("ScenesPanel - Backward Compatibility Tests", () => {
 
       const generateBtn = wrapper
         .findAll("button")
-        .find((b) => b.text().toLowerCase().includes("generate"));
+        .find((b) => b.text().toLowerCase().includes("create scene"));
       await generateBtn!.trigger("click");
       await wrapper.vm.$nextTick();
 
@@ -411,7 +412,7 @@ describe("ScenesPanel - Backward Compatibility Tests", () => {
       // Submit the modified prompt
       const generateBtn = wrapper
         .findAll("button")
-        .find((b) => b.text().toLowerCase().includes("generate"));
+        .find((b) => b.text().toLowerCase().includes("create scene"));
       await generateBtn!.trigger("click");
       await wrapper.vm.$nextTick();
 
@@ -472,7 +473,7 @@ describe("ScenesPanel - Backward Compatibility Tests", () => {
 
       const generateBtn = wrapper
         .findAll("button")
-        .find((b) => b.text().toLowerCase().includes("generate"));
+        .find((b) => b.text().toLowerCase().includes("create scene"));
       await generateBtn!.trigger("click");
       await wrapper.vm.$nextTick();
 
@@ -498,7 +499,7 @@ describe("ScenesPanel - Backward Compatibility Tests", () => {
 
       // Existing features still present
       expect(wrapper.html()).toContain("Scene Description");
-      expect(wrapper.html()).toContain("Generate Scene");
+      expect(wrapper.html()).toContain("Create Scene");
       expect(wrapper.html()).toContain("Provider");
       expect(wrapper.html()).toContain("Temperature");
     });
@@ -523,7 +524,7 @@ describe("ScenesPanel - Backward Compatibility Tests", () => {
 
       const generateBtn = wrapper
         .findAll("button")
-        .find((b) => b.text().toLowerCase().includes("generate"));
+        .find((b) => b.text().toLowerCase().includes("create scene"));
       await generateBtn!.trigger("click");
       await wrapper.vm.$nextTick();
 

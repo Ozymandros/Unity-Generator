@@ -3,6 +3,7 @@ import { shallowMount } from "@vue/test-utils";
 import { ref } from "vue";
 import { createPinia, setActivePinia } from "pinia";
 import AudioPanel from "@/components/AudioPanel/AudioPanel.vue";
+import i18n from "@/i18n";
 
 /**
  * Unit tests for AudioPanel component - Audio-to-Unity Integration
@@ -65,7 +66,7 @@ describe("AudioPanel - Audio-to-Unity Integration", () => {
       // Arrange: Create wrapper with no generated audio
       const wrapper = shallowMount(AudioPanel, {
         global: {
-          plugins: [pinia],
+          plugins: [pinia, i18n],
           mocks: {
             $router: mockUseRouter(),
             $route: mockUseRoute()

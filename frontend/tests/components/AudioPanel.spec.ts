@@ -5,6 +5,7 @@ import { ref } from "vue";
 import AudioPanel from "@/components/AudioPanel/AudioPanel.vue";
 import { useAudioPanel } from "@/components/AudioPanel/AudioPanel";
 import { useMediaImport } from "@/composables/useMediaImport";
+import i18n from "@/i18n";
 
 /**
  * Unit tests for AudioPanel component - Audio-to-Unity Integration
@@ -93,7 +94,7 @@ describe("AudioPanel - Audio-to-Unity Integration", () => {
       vi.mocked(useAudioPanel).mockReturnValue(mockComposable as any);
 
       // Act: Mount component
-      const wrapper = mount(AudioPanel, { global: { plugins: [createVuetify()] } });
+      const wrapper = mount(AudioPanel, { global: { plugins: [createVuetify(), i18n] } });
 
       // Assert: "Save to Unity" card should not be visible
       const unityCardTitle = wrapper.findAll(".text-subtitle-1").filter(el =>
@@ -134,7 +135,7 @@ describe("AudioPanel - Audio-to-Unity Integration", () => {
       vi.mocked(useAudioPanel).mockReturnValue(mockComposable as any);
 
       // Act: Mount component
-      const wrapper = mount(AudioPanel, { global: { plugins: [createVuetify()] } });
+      const wrapper = mount(AudioPanel, { global: { plugins: [createVuetify(), i18n] } });
 
       // Assert: "Save to Unity" card should be visible
       const unityCardTitle = wrapper.findAll(".text-subtitle-1").filter(el =>

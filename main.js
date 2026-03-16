@@ -449,7 +449,11 @@ function loadLanguageResources(language) {
   const trimmed = language.trim();
   if (!trimmed) throw new Error('language cannot be empty');
   try {
-    const resourcesPath = path.join(__dirname, '..', 'resources', 'locales', `${trimmed}.json`);
+    // Use app.getAppPath() so the path works both in dev and packaged builds.
+    // In dev: <project-root>/resources/locales/<lang>.json
+    // Packaged: app.asar/resources/locales/<lang>.json
+    const basePath = app.getAppPath();
+    const resourcesPath = path.join(basePath, 'resources', 'locales', `${trimmed}.json`);
     if (!safeExistsSync(resourcesPath)) return loadLanguageResources(DEFAULT_LANGUAGE);
     const content = fs.readFileSync(resourcesPath, 'utf8');
     const resources = JSON.parse(content);
@@ -747,7 +751,13 @@ ipcMain.handle('notification:show', async (e, notification) => showNotification(
 ipcMain.handle('logger:error', async (e, err) => { logMainProcess(formatError(err)); return true; });
 ipcMain.handle('notification:request-permissions', () => requestPermissions());
 ipcMain.handle('i18n:translate', async (e, key, params) => translateText(key, params));
-ipcMain.handle('i18n:load', async (e, language) => loadLanguageResources(language));
+ipcMain.handle('i18n:load', async (e, language) => {
+  const basePath = app.getAppPath();
+  logMainProcess(`i18n:load called — language="${language}", appPath="${basePath}"`);
+  const result = loadLanguageResources(language);
+  logMainProcess(`i18n:load result=${result}, currentLanguage="${currentLanguage}"`);
+  return result;
+});
 ipcMain.handle('i18n:available-languages', () => getAvailableLanguages());
 ipcMain.handle('migration:status', () => ({
   legacyPath: getLegacyDataLocation(),

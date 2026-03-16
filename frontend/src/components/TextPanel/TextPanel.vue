@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { StatusBanner } from "../StatusBanner";
 import { SmartField } from "../generic/SmartField";
 import { ModelManagerModal } from "../generic/ModelManagerModal";
 import { useTextPanel } from "./TextPanel";
+
+const { t } = useI18n();
 
 const {
   prompt,
@@ -32,31 +35,31 @@ const {
   <div class="panel">
     <div v-if="activeProjectName" class="project-banner">
       <span class="banner-icon">📁</span>
-      <span class="banner-text">Active Project: <strong>{{ activeProjectName }}</strong></span>
+      <span class="banner-text">{{ t('code.activeProject', { name: activeProjectName }) }}</span>
       <label class="auto-save">
         <input type="checkbox" v-model="autoSaveToProject" />
-        Auto-save to project
+        {{ t('code.autoSave') }}
       </label>
     </div>
-    <h2>Text Generation</h2>
+    <h2>{{ t('text.title') }}</h2>
     <StatusBanner :status="status" :tone="tone" />
-    <SmartField label="Prompt" type="textarea" v-model="prompt" :rows="6" />
+    <SmartField :label="t('common.prompt')" type="textarea" v-model="prompt" :rows="6" />
 
     <div class="field-group">
       <div class="row">
         <SmartField 
-          label="Provider" 
+          :label="t('common.provider')"
           type="select" 
           v-model="provider" 
           :options="providers.map(p => ({ value: p.name, label: p.name }))" 
-          placeholder="Select Provider" 
+          :placeholder="t('common.selectProvider')"
         />
         <SmartField 
-          label="Model" 
+          :label="t('common.model')"
           type="select" 
           v-model="model" 
           :options="providerModels" 
-          placeholder="Select Model" 
+          :placeholder="t('common.selectModel')"
         />
         <v-btn
           icon="mdi-plus"
@@ -66,20 +69,20 @@ const {
           class="ml-2 mt-7"
           @click="showModelManager = true"
           :disabled="!provider"
-          title="Manage models"
+          :title="t('common.manageModels')"
         ></v-btn>
       </div>
       <div class="row" style="margin-bottom: 12px;">
       </div>
       <div class="row">
         <SmartField
-           label="Temperature"
+           :label="t('common.temperature')"
            type="select"
            v-model.number="temperature"
            :options="TEMPERATURE_PRESETS"
         />
         <SmartField
-           label="Length"
+           :label="t('text.fields.length')"
            type="select"
            v-model.number="maxTokens"
            :options="LENGTH_PRESETS"
@@ -89,20 +92,20 @@ const {
 
     <v-expansion-panels class="mb-6">
       <v-expansion-panel
-        title="Advanced Options"
+        :title="t('common.advancedOptions')"
         bg-color="surface"
         class="border rounded-lg"
         elevation="0"
       >
         <v-expansion-panel-text class="pa-4">
           <SmartField 
-            label="API Key (Optional)" 
+            :label="t('common.apiKey')"
             type="password" 
             v-model="apiKey" 
-            placeholder="Override key..." 
+            :placeholder="t('common.leaveEmptyForGlobalKey')"
           />
           <SmartField 
-            label="System Prompt Override" 
+            :label="t('common.systemPrompt')"
             type="textarea" 
             v-model="systemPrompt" 
             :placeholder="defaultSystemPrompt" 
@@ -121,10 +124,10 @@ const {
       @click="run"
       class="mb-6"
     >
-      Generate Text
+      {{ t('text.actions.generate') }}
     </v-btn>
 
-    <SmartField label="Result" type="textarea" v-model="result" :rows="10" disabled />
+    <SmartField :label="t('common.result')" type="textarea" v-model="result" :rows="10" disabled />
 
     <ModelManagerModal
       v-if="showModelManager"

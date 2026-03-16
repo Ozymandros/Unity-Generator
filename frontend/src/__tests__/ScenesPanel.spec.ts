@@ -6,6 +6,7 @@ import { createPinia, setActivePinia } from "pinia";
 import * as client from "@/api/client";
 import { expect, it, beforeEach } from "vitest";
 import { useMediaImport } from "@/composables/useMediaImport";
+import i18n from "@/i18n";
 
 vi.mock("@/api/client"); // Mock the entire client module
 
@@ -55,10 +56,10 @@ beforeEach(() => {
 });
 
     it("renders input fields", async () => {
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         expect(wrapper.html()).toContain("Scene Description");
-        expect(wrapper.html().toLowerCase()).toContain("generate scene");
+        expect(wrapper.html().toLowerCase()).toContain("create scene");
         
     });
 
@@ -75,7 +76,7 @@ beforeEach(() => {
             },
         });
 
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
 
         // Find SmartField for prompt and set value
@@ -110,7 +111,7 @@ beforeEach(() => {
                 };
                 setFieldAfterExpand('API Key (Optional Override)', 'sk-test-key');
                 setField('Temperature', 0.7);
-        const btn = wrapper.findAll('button').find(b => b.text().toLowerCase().includes('generate'));
+        const btn = wrapper.findAll('button').find(b => b.text().toLowerCase().includes('create scene'));
         if (!btn) throw new Error('Generate button not found');
         await btn.trigger("click");
         await wrapper.vm.$nextTick();
@@ -133,7 +134,7 @@ beforeEach(() => {
     });
 
     it("getRandomExamplePrompt returns a valid example prompt", async () => {
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         
         // Access the component's getRandomExamplePrompt function through the wrapper
@@ -166,7 +167,7 @@ beforeEach(() => {
      * its associated prompt text into the prompt input field without triggering form submission.
      */
     it("should inject prompt when quick action is clicked", async () => {
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         
         // Find all quick action chips
@@ -198,7 +199,7 @@ beforeEach(() => {
      * Verifies that all quick actions properly inject their prompts.
      */
     it("should inject correct prompt for each quick action", async () => {
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         
         const quickActions = [
@@ -241,7 +242,7 @@ beforeEach(() => {
      * and the field remains editable (not disabled).
      */
     it("should allow prompt editing after quick action click", async () => {
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         
         // Find and click a quick action
@@ -274,7 +275,7 @@ beforeEach(() => {
      * Validates: Requirements 2.9, 2.11
      * 
      * Clicking a quick action should NOT automatically submit the form.
-     * Users must explicitly click the "Generate Scene" button.
+     * Users must explicitly click the "create scene" button.
      */
     it("should not auto-submit when quick action is clicked", async () => {
         const createSceneSpy = vi.spyOn(client, "createScene");
@@ -285,7 +286,7 @@ beforeEach(() => {
             data: { content: "Scene details", files: [], metadata: {} },
         });
         
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         
         // Click a quick action
@@ -300,7 +301,7 @@ beforeEach(() => {
         
         // Verify the generate button still exists and is clickable
         const generateBtn = wrapper.findAll('button')
-            .find(b => b.text().toLowerCase().includes('generate'));
+            .find(b => b.text().toLowerCase().includes('create scene'));
         expect(generateBtn).toBeDefined();
         expect(generateBtn!.attributes('disabled')).toBeUndefined();
     });
@@ -313,7 +314,7 @@ beforeEach(() => {
      * should inject its text into the prompt input field.
      */
     it("should inject text when example prompt is clicked", async () => {
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         
         // Find the expansion panel title button and click it to expand
@@ -360,7 +361,7 @@ beforeEach(() => {
      * Verifies that all example prompts can be clicked and injected.
      */
     it("should inject correct text for each example prompt", async () => {
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         
         // Find and expand the Example Prompts panel
@@ -412,7 +413,7 @@ beforeEach(() => {
      * pass invalid actions, but the function must still validate inputs defensively.
      */
     it("should throw error for invalid quick action", async () => {
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         
         // Access the component instance to test the function directly
@@ -438,7 +439,7 @@ beforeEach(() => {
      * Verifies that the quick actions section is rendered with all expected buttons.
      */
     it("should render quick actions section with all buttons", async () => {
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         
         // Verify quick actions section exists
@@ -469,7 +470,7 @@ beforeEach(() => {
      * Verifies that the example prompts section is rendered and expandable.
      */
     it("should render example prompts section", async () => {
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         
         // Verify example prompts section exists
@@ -500,7 +501,7 @@ beforeEach(() => {
     it("should log analytics event when quick action is clicked", async () => {
         const consoleSpy = vi.spyOn(console, 'log');
         
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         
         // Click a quick action
@@ -548,7 +549,7 @@ beforeEach(() => {
         );
         
         // Act: Mount ScenesPanel (simulates navigation)
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         
         // Assert: Verify media data is preserved
@@ -578,7 +579,7 @@ beforeEach(() => {
         );
         
         // Act: Mount ScenesPanel
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         
         // Assert: Verify audio data is preserved
@@ -616,7 +617,7 @@ beforeEach(() => {
         );
         
         // Act: Mount ScenesPanel
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         // Wait for onMounted to complete
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -650,7 +651,7 @@ beforeEach(() => {
         );
         
         // Act: Mount ScenesPanel
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         // Wait for onMounted to complete
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -691,7 +692,7 @@ beforeEach(() => {
         );
         
         // Act: Mount ScenesPanel
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         // Wait for onMounted to complete
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -726,7 +727,7 @@ beforeEach(() => {
         );
         
         // Act: Mount ScenesPanel
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         
         // Assert: Verify info banner is displayed
@@ -770,13 +771,13 @@ beforeEach(() => {
         });
         
         // Act: Mount and trigger scene generation
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         // Wait for onMounted to complete
         await new Promise(resolve => setTimeout(resolve, 100));
         
         const generateBtn = wrapper.findAll('button')
-            .find(b => b.text().toLowerCase().includes('generate'));
+            .find(b => b.text().toLowerCase().includes('create scene'));
         
         expect(generateBtn).toBeDefined();
         await generateBtn!.trigger('click');
@@ -823,13 +824,13 @@ beforeEach(() => {
         });
         
         // Act: Mount and trigger scene generation
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         // Wait for onMounted to complete
         await new Promise(resolve => setTimeout(resolve, 100));
         
         const generateBtn = wrapper.findAll('button')
-            .find(b => b.text().toLowerCase().includes('generate'));
+            .find(b => b.text().toLowerCase().includes('create scene'));
         
         expect(generateBtn).toBeDefined();
         await generateBtn!.trigger('click');
@@ -864,7 +865,7 @@ beforeEach(() => {
         });
         
         // Act: Mount and trigger scene generation
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         
         // Set prompt manually
@@ -874,7 +875,7 @@ beforeEach(() => {
         await wrapper.vm.$nextTick();
         
         const generateBtn = wrapper.findAll('button')
-            .find(b => b.text().toLowerCase().includes('generate'));
+            .find(b => b.text().toLowerCase().includes('create scene'));
         
         await generateBtn!.trigger('click');
         await wrapper.vm.$nextTick();
@@ -917,13 +918,13 @@ beforeEach(() => {
         });
         
         // Act: Mount and trigger scene generation
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         // Wait for onMounted to complete
         await new Promise(resolve => setTimeout(resolve, 100));
         
         const generateBtn = wrapper.findAll('button')
-            .find(b => b.text().toLowerCase().includes('generate'));
+            .find(b => b.text().toLowerCase().includes('create scene'));
         
         expect(generateBtn).toBeDefined();
         await generateBtn!.trigger('click');
@@ -964,11 +965,11 @@ beforeEach(() => {
         });
         
         // Act: Mount and trigger scene generation
-        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(ScenesPanel, { global: { plugins: [vuetify, i18n] } });
         await wrapper.vm.$nextTick();
         
         const generateBtn = wrapper.findAll('button')
-            .find(b => b.text().toLowerCase().includes('generate'));
+            .find(b => b.text().toLowerCase().includes('create scene'));
         
         await generateBtn!.trigger('click');
         await wrapper.vm.$nextTick();

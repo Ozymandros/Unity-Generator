@@ -4,6 +4,7 @@ import { SpritesPanel } from "@/components/SpritesPanel";
 import * as client from "@/api/client";
 import { createPinia, setActivePinia } from "pinia";
 import { createVuetify } from "vuetify";
+import i18n from "@/i18n";
 
 vi.mock("../../api/client");
 
@@ -50,7 +51,7 @@ describe("SpritesPanel", () => {
     });
 
     it("renders initial state correctly", async () => {
-        const wrapper = mount(SpritesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(SpritesPanel, { global: { plugins: [vuetify, i18n] } });
         await flushPromises();
         // Set provider/model via SmartField events
         const fields = wrapper.findAllComponents({ name: 'SmartField' });
@@ -68,7 +69,7 @@ describe("SpritesPanel", () => {
     });
 
     it("requires prompt before generation", async () => {
-        const wrapper = mount(SpritesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(SpritesPanel, { global: { plugins: [vuetify, i18n] } });
         await flushPromises();
         const fields = wrapper.findAllComponents({ name: 'SmartField' });
         const setField = (label: string, value: unknown) => {
@@ -93,7 +94,7 @@ describe("SpritesPanel", () => {
             data: { image: "fake-base64", resolution: 64, provider: "openai" },
         });
 
-        const wrapper = mount(SpritesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(SpritesPanel, { global: { plugins: [vuetify, i18n] } });
         await flushPromises();
         const fields = wrapper.findAllComponents({ name: 'SmartField' });
         const setField = (label: string, value: unknown) => {
@@ -133,7 +134,7 @@ describe("SpritesPanel", () => {
             data: null,
         });
 
-        const wrapper = mount(SpritesPanel, { global: { plugins: [vuetify] } });
+        const wrapper = mount(SpritesPanel, { global: { plugins: [vuetify, i18n] } });
         await flushPromises();
         const fields = wrapper.findAllComponents({ name: 'SmartField' });
         const setField = (label: string, value: unknown) => {
