@@ -16,7 +16,7 @@ MODEL_PREF_VALIDATION: dict[str, tuple[str, str]] = {
 }
 
 # Allowed values for locale preference
-ALLOWED_LOCALES: frozenset[str] = frozenset({"en", "es", "ca"})
+ALLOWED_LOCALES: frozenset[str] = frozenset({"en", "es", "ca", "eu", "oc", "uk"})
 
 router = APIRouter(prefix="/prefs", tags=["preferences"])
 

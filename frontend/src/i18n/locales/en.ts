@@ -295,7 +295,10 @@ export default {
   // ── Language names (shown in selector) ────────────────────────────────────
   languages: {
     en: "English",
-    es: "Español",
-    ca: "Català",
+    es: "Spanish",
+    ca: "Catalan",
+    eu: "Basque",
+    oc: "Occitan",
+    uk: "Ukrainian",
   },
 } as const;

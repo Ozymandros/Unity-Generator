@@ -18,10 +18,13 @@ import { createI18n } from "vue-i18n";
 import en from "./locales/en";
 import es from "./locales/es";
 import ca from "./locales/ca";
+import eu from "./locales/eu";
+import oc from "./locales/oc";
+import uk from "./locales/uk";
 
-export type SupportedLocale = "en" | "es" | "ca";
+export type SupportedLocale = "en" | "es" | "ca" | "eu" | "oc" | "uk";
 
-export const SUPPORTED_LOCALES: SupportedLocale[] = ["en", "es", "ca"];
+export const SUPPORTED_LOCALES: SupportedLocale[] = ["en", "es", "ca", "eu", "oc", "uk"];
 export const DEFAULT_LOCALE: SupportedLocale = "en";
 export const LOCALE_STORAGE_KEY = "appLocale";
 
@@ -52,7 +55,7 @@ const i18n = createI18n({
   legacy: false,           // Composition API mode
   locale: getPersistedLocale(),
   fallbackLocale: DEFAULT_LOCALE,
-  messages: { en, es, ca },
+  messages: { en, es, ca, eu, oc, uk },
   // Silence missing-key warnings in production
   missingWarn: import.meta.env.DEV,
   fallbackWarn: import.meta.env.DEV,

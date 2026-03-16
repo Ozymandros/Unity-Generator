@@ -96,7 +96,7 @@ export default {
       language: "Idioma de la interfaz",
     },
     actions: {
-      saveAll: "Guardar todos los cambios",
+      saveAll: "Guardar cambios",
     },
     status: {
       saving: "Guardando…",
@@ -278,8 +278,11 @@ export default {
   },
 
   languages: {
-    en: "English",
+    en: "Inglés",
     es: "Español",
-    ca: "Català",
+    ca: "Catalán",
+    eu: "Euskera",
+    oc: "Occitano",
+    uk: "Ucraniano",
   },
 } as const;

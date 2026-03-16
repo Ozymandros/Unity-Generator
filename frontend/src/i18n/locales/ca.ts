@@ -278,8 +278,11 @@ export default {
   },
 
   languages: {
-    en: "English",
-    es: "Español",
+    en: "Anglès",
+    es: "Castellà",
     ca: "Català",
+    eu: "Euskara",
+    oc: "Occità",
+    uk: "Ucrainès",
   },
 } as const;

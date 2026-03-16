@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useGeneralSettings } from "./GeneralSettings";
 import { useLocale } from "@/composables/useLocale";
@@ -32,11 +33,11 @@ const {
   save,
 } = useGeneralSettings();
 
-const themeOptions: { value: ThemeMode; label: string; icon: string }[] = [
-  { value: "light", label: t("theme.light"), icon: "mdi-weather-sunny" },
-  { value: "dark",  label: t("theme.dark"),  icon: "mdi-weather-night" },
-  { value: "system",label: t("theme.system"),icon: "mdi-monitor" },
-];
+const themeOptions = computed<{ value: ThemeMode; label: string; icon: string }[]>(() => [
+  { value: "light",  label: t("theme.light"),  icon: "mdi-weather-sunny" },
+  { value: "dark",   label: t("theme.dark"),   icon: "mdi-weather-night" },
+  { value: "system", label: t("theme.system"), icon: "mdi-monitor" },
+]);
 </script>
 
 <template>
