@@ -24,8 +24,19 @@ const {
   showModelManager,
   refreshModels,
   run,
-  providers
+  providers,
+  generatedAudio,
+  audioNameInput,
+  audioFormatSelect,
+  saveToUnity,
 } = useAudioPanel();
+
+// Audio format options for Unity
+const AUDIO_FORMATS = [
+  { value: "WAV", label: "WAV" },
+  { value: "MP3", label: "MP3" },
+  { value: "OGG", label: "OGG" }
+];
 </script>
 
 <template>
@@ -142,6 +153,45 @@ const {
     >
       Generate Audio
     </v-btn>
+
+    <!-- Save to Unity Section (shown only when audio is generated) -->
+    <v-card 
+      v-if="generatedAudio" 
+      class="mb-6" 
+      variant="outlined"
+      elevation="0"
+    >
+      <v-card-title class="text-subtitle-1 d-flex align-center">
+        <v-icon start color="primary">mdi-unity</v-icon>
+        Save to Unity
+      </v-card-title>
+      <v-card-text>
+        <SmartField
+          label="Audio Clip Name"
+          type="text"
+          v-model="audioNameInput"
+          placeholder="GeneratedAudio"
+          class="mb-3"
+        />
+        <SmartField
+          label="Audio Format"
+          type="select"
+          v-model="audioFormatSelect"
+          :options="AUDIO_FORMATS"
+        />
+      </v-card-text>
+      <v-card-actions class="px-4 pb-4">
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-export"
+          block
+          variant="tonal"
+          @click="saveToUnity"
+        >
+          Save to Unity Project
+        </v-btn>
+      </v-card-actions>
+    </v-card>
 
     <SmartField label="Result (JSON)" type="textarea" v-model="result" :rows="10" disabled />
 

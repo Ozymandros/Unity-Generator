@@ -374,3 +374,19 @@ Editor automation scripts are generated from Jinja2 templates in
   `Editor.log`.
 - Timeout during finalize: increase the timeout in Unity Engine Settings
   (default 300s). Large projects with many packages may need more time.
+- **Port 5173 already in use**: The Vite dev server uses `strictPort: true`, so
+  it will crash instead of picking another port. This happens when a previous
+  dev session was not cleanly shut down (e.g. the Electron window was force-closed
+  or the terminal was killed). The orphaned Node process keeps the port open.
+
+  To fix it, kill all Node processes from a PowerShell terminal:
+
+  ```powershell
+  Stop-Process -Name "node" -Force -ErrorAction SilentlyContinue
+  ```
+
+  Then restart the dev server normally (`pnpm run dev`).
+
+  > Note: this kills **all** Node processes on the machine. If you have other
+  > Node-based tools running (e.g. another project's dev server), stop them
+  > individually first using `Stop-Process -Id <PID> -Force`.

@@ -182,6 +182,7 @@ The GitHub Actions workflow runs:
 - Image generation ✅
 - Audio generation ✅
 - Sprite generation ✅
+- Unity UI generation ✅
 - Unity project generation ✅
 - Settings management ✅
 - Error handling ✅
@@ -355,12 +356,13 @@ If tests are significantly slower:
 
 ## Test Results
 
-Latest test run (2026-03-08):
+Latest test run (2026-03-14):
 ```
-✅ Smoke Tests: 9/9 passed (18.2s)
-✅ Unit Tests: All passed
+✅ Smoke Tests: 9/9 passed
+✅ Unit Tests: 37 files / 364 tests passed (1 skipped)
+✅ E2E Tests: 30 passed
 ✅ Type Check: No errors
-✅ Lint: No errors
+✅ Lint: No errors (22 warnings — no-explicit-any in test files only)
 ```
 
 ## Resources

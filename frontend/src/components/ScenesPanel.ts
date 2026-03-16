@@ -4,10 +4,12 @@ import { DEFAULT_PROJECT_NAME } from "@/api/constants";
 import { TEMPERATURE_PRESETS } from "@/constants/providers";
 import { useIntelligenceStore } from "@/store/intelligenceStore";
 import { useSessionProject } from "@/composables/useSessionProject";
+import { useMediaImport } from "@/composables/useMediaImport";
 
 export function useScenesPanel() {
   const store = useIntelligenceStore();
   const { projectName } = useSessionProject();
+  const { pendingMediaImport, pendingPrompt, clearPendingMediaImport, hasPendingMediaImport } = useMediaImport();
 
   const prompt = ref("");
   const provider = ref("");
@@ -26,6 +28,27 @@ export function useScenesPanel() {
     metadata?: {
       steps?: string[];
     };
+  }
+
+  interface MediaImportPayload {
+    data: string;
+    name: string;
+    type: string;
+    texture_type?: string;
+    audio_format?: string;
+  }
+
+  interface SceneRequestPayload {
+    prompt: string;
+    system_prompt?: string;
+    provider?: string;
+    api_key?: string;
+    project_name: string;
+    options: {
+      model?: string;
+      temperature: number;
+    };
+    media_import?: MediaImportPayload;
   }
 
   const result = ref<AgentResult | null>(null);
@@ -54,6 +77,13 @@ export function useScenesPanel() {
     } catch (e) {
       console.error("Failed to load ScenesPanel state via store", e);
     }
+
+    // Check for pending media import from ImagePanel or AudioPanel
+    if (hasPendingMediaImport() && pendingPrompt.value) {
+      prompt.value = pendingPrompt.value;
+      status.value = `Ready to import ${pendingMediaImport.value?.type || 'media'} to Unity`;
+      tone.value = "ok";
+    }
   });
 
   watch(provider, () => {
@@ -79,7 +109,8 @@ export function useScenesPanel() {
     result.value = null;
 
     try {
-      const response = await createScene({
+      // Build request payload
+      const requestPayload: SceneRequestPayload = {
         prompt: prompt.value,
         system_prompt: systemPrompt.value || undefined,
         provider: provider.value || undefined,
@@ -89,11 +120,29 @@ export function useScenesPanel() {
              model: model.value || undefined,
              temperature: temperature.value
         }
-      });
+      };
+
+      // Include media import data if present
+      if (hasPendingMediaImport() && pendingMediaImport.value) {
+        requestPayload.media_import = {
+          data: pendingMediaImport.value.data,
+          name: pendingMediaImport.value.name,
+          type: pendingMediaImport.value.type,
+          texture_type: pendingMediaImport.value.textureType,
+          audio_format: pendingMediaImport.value.audioFormat
+        };
+      }
+
+      const response = await createScene(requestPayload);
 
       if (response.success) {
         status.value = "Scene generated successfully.";
         result.value = response.data as unknown as AgentResult;
+        
+        // Clear pending media import after successful generation
+        if (hasPendingMediaImport()) {
+          clearPendingMediaImport();
+        }
       } else {
         tone.value = "error";
         status.value = response.error || "Unknown error occurred";
@@ -125,6 +174,9 @@ export function useScenesPanel() {
     loading,
     canGenerate,
     run,
-    TEMPERATURE_PRESETS
+    TEMPERATURE_PRESETS,
+    // Media import state
+    pendingMediaImport,
+    hasPendingMediaImport
   };
 }

@@ -134,6 +134,42 @@ export function generateAudio(body: GenerationRequest) {
   return post<GenerationResponse>("/generate/audio", body);
 }
 
+export type UnityUIRequest = {
+  prompt: string;
+  provider?: string;
+  ui_system?: string;
+  element_type?: string;
+  output_format?: string;
+  anchor_preset?: string;
+  color_theme?: string;
+  include_animations?: boolean;
+  api_key?: string;
+  system_prompt?: string;
+  project_name?: string;
+  options?: Record<string, unknown>;
+};
+
+/**
+ * Generate Unity UI prefab assets (health bars, buttons, dialogue boxes, etc.).
+ *
+ * @param body - Request body with prompt and UI generation options.
+ * @returns Promise resolving to a GenerationResponse with generated content.
+ * @throws {BackendError} If the request fails or backend is unavailable.
+ *
+ * @example
+ * ```typescript
+ * const response = await generateUnityUI({
+ *   prompt: "Create a health bar with smooth fill animation",
+ *   ui_system: "ugui",
+ *   element_type: "health_bar",
+ *   include_animations: true,
+ * });
+ * ```
+ */
+export function generateUnityUI(body: UnityUIRequest) {
+  return post<GenerationResponse>("/generate/unity-ui", body as unknown as GenerationRequest);
+}
+
 export type SpritesRequest = {
   prompt: string;
   provider?: string;
@@ -587,6 +623,41 @@ export async function generateUnityProject(body: UnityProjectRequest): Promise<G
   } catch (error) {
     throw createFetchError(url, "POST", error);
   }
+}
+
+export type UnityPhysicsRequest = {
+  prompt: string;
+  provider?: string;
+  physics_backend?: string;
+  simulation_mode?: string;
+  gravity_preset?: string;
+  include_rigidbody?: boolean;
+  include_colliders?: boolean;
+  include_layers?: boolean;
+  api_key?: string;
+  system_prompt?: string;
+  project_name?: string;
+  options?: Record<string, unknown>;
+};
+
+/**
+ * Generate Unity Physics configuration code (PhysX or DOTS).
+ *
+ * @param body - Request body with prompt and physics generation options.
+ * @returns Promise resolving to a GenerationResponse with generated content.
+ * @throws {BackendError} If the request fails or backend is unavailable.
+ *
+ * @example
+ * ```typescript
+ * const response = await generateUnityPhysics({
+ *   prompt: "Set up a bouncy ball with Earth gravity",
+ *   physics_backend: "physx",
+ *   include_rigidbody: true,
+ * });
+ * ```
+ */
+export function generateUnityPhysics(body: UnityPhysicsRequest) {
+  return post<GenerationResponse>("/generate/unity-physics", body as unknown as GenerationRequest);
 }
 
 export async function getLatestOutput(): Promise<GenerationResponse> {

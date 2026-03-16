@@ -50,6 +50,7 @@ and assets without wiring multiple tools together. It’s not a full IDE or asse
 
 - Generate Unity-ready C# snippets and project scaffolds
 - Create text drafts, image prompts, and audio placeholders
+- **Unity UI Elements**: Generate Unity UI prefabs (health bars, buttons, dialogue boxes, HUD layouts) for both uGUI and UI Toolkit
 - **Incremental Asset Generation**: Save assets directly into an active Unity project
 - **Pixel-Art Sprites**: Generate and process 2D sprite sheets with automatic cropping
 - **Unity MCP Integration**: Real-time interaction with the Unity Editor using [Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin) and [Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)
@@ -233,8 +234,9 @@ Generation:
 - `POST /generate/image`
 - `POST /generate/audio`
 - `POST /generate/sprites`
+- `POST /generate/unity-ui`
 
-Request body:
+Request body (standard generation):
 
 ```json
 {
@@ -242,6 +244,22 @@ Request body:
   "provider": "openai",
   "project_path": "C:/Projects/MyUnityGame",
   "options": {"model": "gpt-4o-mini", "temperature": 0.2}
+}
+```
+
+Unity UI generation (`/generate/unity-ui`):
+
+```json
+{
+  "prompt": "Create a health bar with smooth fill animation",
+  "provider": "openai",
+  "ui_system": "ugui",
+  "element_type": "health_bar",
+  "output_format": "script",
+  "anchor_preset": "stretch",
+  "color_theme": "dark red with gold accents",
+  "include_animations": true,
+  "options": {"model": "gpt-4o-mini", "temperature": 0.4}
 }
 ```
 

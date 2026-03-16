@@ -110,12 +110,20 @@ export interface ElectronAPI {
         root: string;
         unityVersion: string;
         packages: string[];
+        unityTemplate: string;
+        unityPlatform: string;
         files: {
           projectVersionTxt: boolean;
           manifestJson: boolean;
+          generatorMeta: boolean;
         };
       };
       error?: string;
+    }>;
+    openPicker: () => Promise<{
+      canceled: boolean;
+      projectPath: string | null;
+      error: string | null;
     }>;
   };
 

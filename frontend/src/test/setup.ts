@@ -126,5 +126,23 @@ vi.mock("electron", () => ({
   },
 }));
 
+// Mock vue-router since some components import it but the project uses tab navigation
+vi.mock("vue-router", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    go: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    currentRoute: { value: { query: {}, params: {} } }
+  }),
+  useRoute: () => ({
+    query: {},
+    params: {},
+    path: "/",
+    name: "home"
+  })
+}));
+
 // Optionally, mock fetch to throw if not handled by msw (defensive)
 // Already enforced above
