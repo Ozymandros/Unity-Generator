@@ -126,24 +126,26 @@ function getRandomExamplePrompt(): string {
       :placeholder="getRandomExamplePrompt()" />
 
     <!-- Example Prompts Section -->
-    <v-expansion-panels class="mb-4">
-      <v-expansion-panel title="Example Prompts" bg-color="surface">
-        <v-expansion-panel-text>
-          <v-list density="compact">
-            <v-list-item
-              v-for="example in EXAMPLE_PROMPTS"
-              :key="example.text"
-              @click="prompt = example.text"
-              class="cursor-pointer hover:bg-surface-variant"
-            >
-              <v-list-item-title class="text-caption">
-                {{ example.text }}
-              </v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-expansion-panel-text>
-      </v-expansion-panel>
-    </v-expansion-panels>
+    <div class="d-flex gap-3 mb-4">
+      <v-expansion-panels class="mb-4">
+        <v-expansion-panel title="Example Prompts" bg-color="surface">
+          <v-expansion-panel-text>
+            <v-list density="compact">
+              <v-list-item
+                v-for="example in EXAMPLE_PROMPTS"
+                :key="example.text"
+                @click="prompt = example.text"
+                class="cursor-pointer hover:bg-surface-variant"
+              >
+                <v-list-item-title class="text-caption">
+                  {{ example.text }}
+                </v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-expansion-panel-text>
+        </v-expansion-panel>
+      </v-expansion-panels>
+    </div>
 
     <div class="field-group">
       <div class="options-row d-flex align-center gap-2 mb-4">

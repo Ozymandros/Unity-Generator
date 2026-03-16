@@ -13,15 +13,19 @@ import UnityPhysicsPanel from "./components/UnityPhysicsPanel/UnityPhysicsPanel.
 import { useApp } from "./App";
 import { useSessionProject } from "./composables/useSessionProject";
 import { useOpenProject } from "./composables/useOpenProject";
+import { useTheme } from "./composables/useTheme";
 import { useIntelligenceStore } from "./store/intelligenceStore";
 import { clearActiveProject } from "./store/projectStore";
 import { useUnityProjectUiStore } from "./store/unityProjectUiStore";
 import ScenesPanel from "./components/ScenesPanel.vue";
+import ThemeToggle from "./components/ThemeToggle/ThemeToggle.vue";
 import type { ElectronAPI } from "./types/electron";
 
 const { tabs, active, backendStatus, setActive } = useApp();
 const { projectName, sessionProjectResetKey, resetSessionProject } = useSessionProject();
 const { loadProject } = useOpenProject();
+// Register the system media-query listener at app root so it lives for the full app lifetime
+useTheme();
 const drawer = ref(true);
 const store = useIntelligenceStore();
 const unityUi = useUnityProjectUiStore();
@@ -132,7 +136,8 @@ onUnmounted(() => {
       </v-list>
 
       <template v-slot:append>
-        <div class="pa-4">
+        <div class="pa-4 d-flex flex-column gap-2">
+          <ThemeToggle />
           <v-btn variant="tonal" block prepend-icon="mdi-github" size="small" class="text-none" rounded="lg"
             href="https://github.com/Ozymandros/Unity-Generator" target="_blank">
             Repository
@@ -211,23 +216,23 @@ onUnmounted(() => {
 
 :deep(.v-label.v-field-label) {
   opacity: 0.9 !important;
-  color: #ffffff !important;
+  color: rgb(var(--v-theme-on-surface)) !important;
   font-weight: 500 !important;
 }
 
 :deep(.v-field--focused .v-label.v-field-label) {
   opacity: 1 !important;
-  color: var(--v-theme-primary) !important;
+  color: rgb(var(--v-theme-primary)) !important;
 }
 
 :deep(.v-field__input::placeholder) {
   opacity: 0.5 !important;
-  color: #ffffff !important;
+  color: rgb(var(--v-theme-on-surface)) !important;
 }
 
 :deep(.v-checkbox .v-label) {
   opacity: 1 !important;
-  color: #ffffff !important;
+  color: rgb(var(--v-theme-on-surface)) !important;
   font-weight: 500 !important;
 }
 
@@ -246,11 +251,6 @@ onUnmounted(() => {
 
 .app-main {
   background: transparent;
-}
-
-/* Ensure our dark theme stays consistent */
-.v-theme--unityDarkTheme .app-main {
-  background: #0f172a !important;
 }
 
 /* Global Scrollbar Styles */

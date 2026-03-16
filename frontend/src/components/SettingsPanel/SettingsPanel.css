@@ -1,13 +1,13 @@
 .settings-shell {
-  background: #020617;
+  background: rgb(var(--v-theme-background));
 }
 
 .border-bottom {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.15) !important;
 }
 
 .border-right {
-  border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-right: 1px solid rgba(var(--v-theme-on-surface), 0.15) !important;
 }
 
 :deep(.v-tab) {

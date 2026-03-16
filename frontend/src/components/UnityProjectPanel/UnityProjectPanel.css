@@ -19,16 +19,18 @@
   flex-wrap: wrap;
 }
 
-/* Log viewer */
+/* Log viewer — intentionally uses a near-black background in both themes
+   for terminal-style readability. Uses theme surface-variant as a subtle
+   adaptation rather than pure black. */
 .log-viewer {
   max-height: 250px;
   overflow-y: auto;
   font-family: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
   font-size: 0.8rem;
   line-height: 1.6;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: #020617 !important; /* Deep dark for logs */
-  color: #f8fafc !important;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
+  background: rgb(var(--v-theme-surface-variant)) !important;
+  color: rgb(var(--v-theme-on-surface)) !important;
 }
 
 .log-line {
@@ -37,7 +39,7 @@
 }
 
 .log-error {
-  color: #fca5a5 !important;
+  color: rgb(var(--v-theme-error)) !important;
   font-weight: 600;
 }
 

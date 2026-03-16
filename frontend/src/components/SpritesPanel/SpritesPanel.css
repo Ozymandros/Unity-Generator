@@ -10,8 +10,8 @@
 }
 
 .badge {
-    background: #0c4a6e;
-    color: #7dd3fc;
+    background: rgb(var(--v-theme-primary-darken-1));
+    color: rgb(var(--v-theme-on-surface));
     padding: 2px 10px;
     border-radius: 12px;
     font-size: 0.75rem;
@@ -34,14 +34,14 @@
 }
 
 .preview-area {
-    background: #1e293b;
+    background: rgb(var(--v-theme-surface-variant));
     border-radius: 8px;
     min-height: 400px;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 24px;
-    color: #94a3b8;
+    color: rgb(var(--v-theme-on-surface-variant));
 }
 
 .canvas-container {
@@ -54,7 +54,7 @@
 .meta {
     text-align: center;
     font-size: 0.8rem;
-    color: #cbd5e1;
+    color: rgb(var(--v-theme-on-surface-variant));
 }
 
 .field {
@@ -82,17 +82,18 @@
 
 .toggle-group button {
     padding: 4px 8px;
-    border: 1px solid #cbd5e1;
-    background: #f8fafc;
+    border: 1px solid rgba(var(--v-theme-on-surface), 0.3);
+    background: rgb(var(--v-theme-surface));
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.8rem;
+    color: rgb(var(--v-theme-on-surface));
 }
 
 .toggle-group button.active {
-    background: #2563eb;
-    color: white;
-    border-color: #2563eb;
+    background: rgb(var(--v-theme-primary));
+    color: rgb(var(--v-theme-on-primary, 255 255 255));
+    border-color: rgb(var(--v-theme-primary));
 }
 
 .checkbox {
@@ -105,25 +106,27 @@ label.field-label {
     font-size: 0.9rem;
     font-weight: 500;
     margin-bottom: 4px;
-    color: #475569;
+    color: rgb(var(--v-theme-on-surface));
 }
 
 textarea,
 input[type="password"],
 select {
     padding: 8px;
-    border: 1px solid #cbd5e1;
+    border: 1px solid rgba(var(--v-theme-on-surface), 0.3);
     border-radius: 6px;
     width: 100%;
     box-sizing: border-box;
     font-family: inherit;
+    background: rgb(var(--v-theme-surface));
+    color: rgb(var(--v-theme-on-surface));
 }
 
 .primary {
     padding: 12px 14px;
     border: none;
     border-radius: 6px;
-    background: #2563eb;
+    background: rgb(var(--v-theme-primary));
     color: white;
     cursor: pointer;
     font-weight: 600;
@@ -131,7 +134,7 @@ select {
 }
 
 .primary:hover {
-    background: #1d4ed8;
+    background: rgb(var(--v-theme-primary-darken-1));
 }
 
 .margin-0 {

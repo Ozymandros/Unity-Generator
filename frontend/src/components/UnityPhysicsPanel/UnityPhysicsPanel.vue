@@ -2,7 +2,7 @@
 import { StatusBanner } from "@/components/StatusBanner";
 import { SmartField } from "@/components/generic/SmartField";
 import { ModelManagerModal } from "@/components/generic/ModelManagerModal";
-import { useUnityPhysicsPanel, type PhysicsAgentResult } from "./UnityPhysicsPanel";
+import { useUnityPhysicsPanel, type PhysicsAgentResult, PHYSICS_EXAMPLE_PROMPTS } from "./UnityPhysicsPanel";
 
 const {
   prompt,
@@ -96,6 +96,25 @@ function handleQuickActionClick(action: typeof PHYSICS_QUICK_ACTIONS[number]): v
         </v-chip>
       </v-chip-group>
     </div>
+
+    <!-- Example Prompts -->
+    <v-expansion-panels class="mb-4">
+      <v-expansion-panel title="Example Prompts" bg-color="surface">
+        <v-expansion-panel-text>
+          <v-list density="compact">
+            <v-list-item
+              v-for="example in PHYSICS_EXAMPLE_PROMPTS"
+              :key="example.text"
+              @click="prompt = example.text"
+              class="cursor-pointer"
+              rounded="lg"
+            >
+              <v-list-item-title class="text-caption">{{ example.text }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-expansion-panel-text>
+      </v-expansion-panel>
+    </v-expansion-panels>
 
     <!-- Backend + Simulation Mode row -->
     <div class="d-flex gap-3 mb-4">

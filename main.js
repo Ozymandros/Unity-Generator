@@ -703,6 +703,22 @@ async function initializeApp() {
 }
 
 // --- IPC ---
+
+/**
+ * Set the native OS theme (title bar, menus, scrollbars) to match the app theme.
+ * Accepts 'light', 'dark', or 'system'. Maps directly to Electron's nativeTheme.themeSource.
+ */
+ipcMain.handle('theme:set', (_event, mode) => {
+  const valid = ['light', 'dark', 'system'];
+  if (!valid.includes(mode)) {
+    logMainProcess(`theme:set — invalid mode "${mode}"`);
+    return { success: false, error: `Invalid mode: ${mode}` };
+  }
+  nativeTheme.themeSource = mode;
+  logMainProcess(`Native theme set to: ${mode}`);
+  return { success: true, mode };
+});
+
 ipcMain.handle('backend:status', async () => {
   const healthy = await isBackendHealthy(1000);
   return {

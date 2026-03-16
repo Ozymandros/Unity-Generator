@@ -101,6 +101,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     reload: () => ipcRenderer.invoke('window:reload')
   },
 
+  // Native theme (title bar, menus, OS chrome)
+  nativeTheme: {
+    /**
+     * Set the OS-level theme. Accepts 'light', 'dark', or 'system'.
+     * @param {'light'|'dark'|'system'} mode
+     */
+    setTheme: (mode) => ipcRenderer.invoke('theme:set', mode)
+  },
+
   // Menu events
   onMenuNewProject: (callback) => {
     const handler = () => {

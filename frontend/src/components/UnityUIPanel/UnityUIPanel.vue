@@ -127,22 +127,24 @@ function handleQuickActionClick(action: UIQuickAction): void {
     />
 
     <!-- Example Prompts -->
-    <v-expansion-panels class="mb-4">
-      <v-expansion-panel title="Example Prompts" bg-color="surface">
-        <v-expansion-panel-text>
-          <v-list density="compact">
-            <v-list-item
-              v-for="example in UI_EXAMPLE_PROMPTS"
-              :key="example.text"
-              class="cursor-pointer"
-              @click="prompt = example.text"
-            >
-              <v-list-item-title class="text-caption">{{ example.text }}</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-expansion-panel-text>
-      </v-expansion-panel>
-    </v-expansion-panels>
+    <div class="d-flex gap-3 mb-4">
+      <v-expansion-panels class="mb-4">
+        <v-expansion-panel title="Example Prompts" bg-color="surface">
+          <v-expansion-panel-text>
+            <v-list density="compact">
+              <v-list-item
+                v-for="example in UI_EXAMPLE_PROMPTS"
+                :key="example.text"
+                class="cursor-pointer"
+                @click="prompt = example.text"
+              >
+                <v-list-item-title class="text-caption">{{ example.text }}</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-expansion-panel-text>
+        </v-expansion-panel>
+      </v-expansion-panels>
+    </div>
 
     <!-- Output options row -->
     <div class="d-flex gap-3 mb-4">

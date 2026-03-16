@@ -152,6 +152,22 @@ export interface ElectronAPI {
     }>;
   };
 
+  /** Native OS theme control (title bar, menus, scrollbars). */
+  nativeTheme: {
+    /**
+     * Set the OS-level theme source. Maps to Electron's nativeTheme.themeSource.
+     *
+     * @param mode - 'light', 'dark', or 'system'
+     * @returns Promise resolving to success status
+     *
+     * @example
+     * ```ts
+     * await window.electronAPI?.nativeTheme?.setTheme('dark');
+     * ```
+     */
+    setTheme: (mode: 'light' | 'dark' | 'system') => Promise<{ success: boolean; mode?: string; error?: string }>;
+  };
+
   // Event listeners
   onBackendStatus: (callback: (status: unknown) => void) => () => void;
   onNotification: (callback: (notification: unknown) => void) => () => void;

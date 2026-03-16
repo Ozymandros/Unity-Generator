@@ -1,6 +1,6 @@
 {
   "name": "unity-generator-backend",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "Backend for Unity Generator",
   "private": true,
   "scripts": {

@@ -1,13 +1,23 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { mount } from "@vue/test-utils";
 import App from "@/App.vue";
-import { createVuetify } from "vuetify";
+import { createVuetify, type ThemeDefinition } from "vuetify";
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
 import "vuetify/styles";
 
+const unityDarkTheme: ThemeDefinition = { dark: true, colors: {} };
+const unityLightTheme: ThemeDefinition = { dark: false, colors: {} };
+
 const pinia = createPinia();
-const vuetify = createVuetify({ components, directives });
+const vuetify = createVuetify({
+  components,
+  directives,
+  theme: {
+    defaultTheme: "unityDarkTheme",
+    themes: { unityDarkTheme, unityLightTheme },
+  },
+});
 
 // Mock the store module so we control its return value (no real Pinia store in this describe)
 vi.mock("@/store/intelligenceStore", () => ({

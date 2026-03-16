@@ -25,6 +25,26 @@ const unityDarkTheme: ThemeDefinition = {
   },
 };
 
+const unityLightTheme: ThemeDefinition = {
+  dark: false,
+  colors: {
+    background: "#f1f5f9",
+    surface: "#ffffff",
+    "on-surface": "#0f172a",
+    "surface-variant": "#e2e8f0",
+    "on-surface-variant": "#1e293b",
+    "on-background": "#0f172a",
+    primary: "#0284c7",
+    "primary-darken-1": "#0369a1",
+    secondary: "#6366f1",
+    "secondary-darken-1": "#4f46e5",
+    error: "#e11d48",
+    info: "#0284c7",
+    success: "#059669",
+    warning: "#d97706",
+  },
+};
+
 export default createVuetify({
   components,
   directives,
@@ -63,6 +83,7 @@ export default createVuetify({
     defaultTheme: "unityDarkTheme",
     themes: {
       unityDarkTheme,
+      unityLightTheme,
     },
   },
 });

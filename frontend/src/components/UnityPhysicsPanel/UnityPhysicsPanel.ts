@@ -2,8 +2,11 @@ import { computed, ref, onMounted, watch } from "vue";
 import { generateUnityPhysics } from "@/api/client";
 import { DEFAULT_PROJECT_NAME } from "@/api/constants";
 import { TEMPERATURE_PRESETS } from "@/constants/providers";
+import { PHYSICS_EXAMPLE_PROMPTS } from "@/constants/unityPhysicsPrompts";
 import { useIntelligenceStore } from "@/store/intelligenceStore";
 import { useSessionProject } from "@/composables/useSessionProject";
+
+export { PHYSICS_EXAMPLE_PROMPTS } from "@/constants/unityPhysicsPrompts";
 
 export interface PhysicsAgentResult {
   content: string;
@@ -201,5 +204,6 @@ export function useUnityPhysicsPanel() {
     // Constants
     TEMPERATURE_PRESETS,
     PHYSICS_QUICK_ACTIONS,
+    PHYSICS_EXAMPLE_PROMPTS,
   };
 }
