@@ -56,3 +56,17 @@ Thumbs.db
 .cursor/
 .qwen/
 .kiro/
+
+.venv
+.venv-local
+.venv-build
+.vscode
+.idea
+.pytest_cache
+.coverage
+.coverage.*
+.coverage.*.*
+.coverage.*.*.*
+.coverage.*.*.*.*
+.coverage.*.*.*.*.*
+.coverage.*.*.*.*.*.*

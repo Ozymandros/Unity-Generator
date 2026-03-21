@@ -55,3 +55,17 @@ temp_extracted_asar
 dist-electron/
 dist-electron-build/
 out/
+
+.venv
+.venv-local
+.venv-build
+.vscode
+.idea
+.pytest_cache
+.coverage
+.coverage.*
+.coverage.*.*
+.coverage.*.*.*
+.coverage.*.*.*.*
+.coverage.*.*.*.*.*
+.coverage.*.*.*.*.*.*
