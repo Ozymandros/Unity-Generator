@@ -9,15 +9,40 @@ For the Semantic Kernel Python bridge, see [UNITY_MCP_INTEGRATION.md](./UNITY_MC
 |------|--------|
 | **GitHub** | **[github.com/Ozymandros/Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)** |
 | **Clone (HTTPS)** | `https://github.com/Ozymandros/Unity-MCP-Server.git` |
+| **GHCR image (Docker)** | **`ghcr.io/ozymandros/unity-mcp-server`** — package page: **[github.com/Ozymandros/Unity-MCP-Server/pkgs/container/unity-mcp-server](https://github.com/Ozymandros/Unity-MCP-Server/pkgs/container/unity-mcp-server)** |
 | **Typical CLI name** | `unity-mcp` (global .NET tool or built executable — follow upstream README) |
 
 **Installation** is defined **upstream**: clone the repo and follow **Unity-MCP-Server** `README.md` (e.g. `dotnet tool install`, Unity package, or build steps). This Unity-Generator repo does **not** ship the server binary; it expects the executable to exist locally or on `PATH`.
 
-### Docker (only if upstream provides it)
+### Docker install from GHCR
 
-Check **[Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)** for a **`Dockerfile`**, **`docker-compose.yml`**, or a **Docker** section in `README.md`. If the project does **not** document Docker, use clone + CLI install above (or ask upstream to add a container workflow).
+Official container images are published here:
 
-When Docker *is* documented upstream, use their image name, ports, and env vars as the source of truth. Below is how that maps to **Unity-Generator** only.
+**[Unity-MCP-Server — Package `unity-mcp-server` (GHCR)](https://github.com/Ozymandros/Unity-MCP-Server/pkgs/container/unity-mcp-server)**
+
+| Item | Value |
+|------|--------|
+| **Registry / image** | `ghcr.io/ozymandros/unity-mcp-server` |
+| **Tags** | Use the package page for current tags (e.g. `latest`, version tags like `v3.2.1`, or `sha-<commit>` digests). Prefer a **version tag** or digest for reproducible installs. |
+
+**Pull** (replace `<tag>` with a tag from the [package page](https://github.com/Ozymandros/Unity-MCP-Server/pkgs/container/unity-mcp-server), e.g. `latest` or `v3.2.1`):
+
+```bash
+docker pull ghcr.io/ozymandros/unity-mcp-server:<tag>
+```
+
+**Run** (example only — **port and env vars** must match **Unity-MCP-Server** docs for MCP HTTP vs stdio; adjust `-p` and any `-e` flags per upstream):
+
+```bash
+docker run --rm -p <HOST_PORT>:<CONTAINER_PORT> ghcr.io/ozymandros/unity-mcp-server:<tag>
+```
+
+- If the image is **private**, authenticate to GHCR before `pull` / `run`, e.g. [GitHub docs: Working with the Container registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) (`docker login ghcr.io` with a PAT that has `read:packages`).
+- For **Unity-Generator** integration over **HTTP**, publish the port the server uses for **Streamable HTTP**, then set **`UNITY_MCP_SERVER_URL`** (see table below).
+
+You can also build/run from a local **`Dockerfile`** / **`docker-compose.yml`** in the **[Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)** repo if you prefer; the **GHCR** image is the usual binary-free install path.
+
+#### How GHCR Docker maps to this app
 
 | Integration path in this app | Transport | How Docker usually fits |
 |------------------------------|-----------|-------------------------|
@@ -26,13 +51,14 @@ When Docker *is* documented upstream, use their image name, ports, and env vars 
 
 **Typical Docker flow for this app (HTTP-capable server):**
 
-1. Build/run the image **as documented in Unity-MCP-Server** (example shape only — replace with upstream values):
+1. **Pull** from GHCR and **run** the container (see [package tags](https://github.com/Ozymandros/Unity-MCP-Server/pkgs/container/unity-mcp-server)):
 
    ```bash
-   # Example only; use the exact commands from Ozymandros/Unity-MCP-Server README
-   docker compose up -d
-   # or: docker run -p <host>:<container> <image-from-upstream>
+   docker pull ghcr.io/ozymandros/unity-mcp-server:<tag>
+   docker run --rm -p <HOST_PORT>:<CONTAINER_PORT> ghcr.io/ozymandros/unity-mcp-server:<tag>
    ```
+
+   Alternatively, use **`docker compose`** or a **Dockerfile** from the **[Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)** repo if upstream documents it.
 
 2. Confirm the Unity Editor / MCP server can still communicate (same machine or documented networking).
 
@@ -101,7 +127,7 @@ When Docker *is* documented upstream, use their image name, ports, and env vars 
 
 ## Quick checklist
 
-1. Install **Unity-MCP-Server** from **[GitHub](https://github.com/Ozymandros/Unity-MCP-Server)** (upstream README), **or** run it via **Docker** if upstream documents `Dockerfile` / compose (see [Docker (only if upstream provides it)](#docker-only-if-upstream-provides-it)).
+1. Install **Unity-MCP-Server** from **[GitHub](https://github.com/Ozymandros/Unity-MCP-Server)** (upstream README), **or** run it from **[GHCR](https://github.com/Ozymandros/Unity-MCP-Server/pkgs/container/unity-mcp-server)** (`docker pull ghcr.io/ozymandros/unity-mcp-server:<tag>` — see [Docker install from GHCR](#docker-install-from-ghcr)).
 2. Ensure the server is running with Unity / Editor as required by that project.
 3. Set **`UNITY_MCP_COMMAND`** if `unity-mcp` is not on `PATH` (stdio / SK agent path).
 4. For finalize MCP automation, set **`UNITY_USE_MCP=1`** and configure **stdio** (`UNITY_MCP_COMMAND`) or **`UNITY_MCP_SERVER_URL`** (Docker/HTTP) per `unity_mcp_client.py`.
