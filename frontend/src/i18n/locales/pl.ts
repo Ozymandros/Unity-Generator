@@ -241,5 +241,6 @@ export default {
     zh: "Chiński",
     ar: "Arabski",
     de: "Niemiecki",
+    tr: "turecki",
   },
 } as const;

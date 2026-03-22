@@ -1,6 +1,22 @@
 # Unity MCP Integration with Semantic Kernel
 
-This document describes the integration of Unity's Model Context Protocol (MCP) with Semantic Kernel using the official MCPSsePlugin, replacing legacy TCP/JSON-RPC code with a robust, maintainable, and auto-discoverable approach.
+> **Unity MCP Server (install, Git URL, env vars — not the Python plugin):** see **[UNITY_MCP_SERVER.md](./UNITY_MCP_SERVER.md)**.
+
+This document describes the integration of Unity's Model Context Protocol (MCP) with Semantic Kernel using the Python **`unity-mcp-plugin`** package from **[Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin)** (Git URL or local editable install—see `backend/requirements.txt`). The backend talks to the **Unity MCP Server** over stdio. Both pieces are required and are separate GitHub repositories.
+
+## Required dependencies (two repositories)
+
+| Component | Purpose | GitHub repository | How this project uses it |
+|-----------|---------|-------------------|----------------------------|
+| **Unity-MCP-Server** | Official MCP server that exposes Unity Editor automation tools (JSON-RPC over stdio when used as a global .NET tool). | **[github.com/Ozymandros/Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)** | Install and run the `unity-mcp` global tool (or your built server executable). Point `UNITY_MCP_COMMAND` at that executable if it is not on `PATH`. |
+| **unity-mcp-plugin** (Python distribution) | Semantic Kernel bridge: discovers MCP tools and registers them as SK functions. | **[github.com/Ozymandros/Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin)** | `backend/requirements.txt`: default **`-e ../unity-mcp-server-plugin`**, or switch to **`unity-mcp-plugin @ git+...`** (SSH/fork if private). Imported as `from unity_mcp import UnityMCPPlugin, UnityMcpOptions`. |
+
+**Install order (typical dev setup):**
+
+1. Clone **[Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)** and install the server per its README (often a global .NET tool named `unity-mcp` on your `PATH`; follow that repo’s install script or `dotnet tool` instructions).
+2. Install **`unity-mcp-plugin`**: either follow the **default** in `backend/requirements.txt` (sibling clone + `-e`), **or** comment that out and use **`unity-mcp-plugin @ git+ssh://...`** (or your fork) so the app does not depend on a fixed folder next to this repo. If `git+https` fails with **404**, the GitHub repo is likely **private**—use SSH, a public fork, or a wheel.
+
+**Optional dev workflow:** clone **Unity-MCP-SK-Plugin** anywhere and use `pip install -e /path/to/clone` while developing the bridge.
 
 ## Path terminology (don’t confuse these)
 
@@ -10,13 +26,13 @@ This document describes the integration of Unity's Model Context Protocol (MCP) 
 ## Overview
 - **No Unity/C# code required**: This integration is entirely Python-side.
 - **Auto-discovery**: All Unity tools exposed by the MCP server are automatically available to Semantic Kernel.
-- **No manual kernel_function decorators**: The MCPSsePlugin handles tool registration.
+- **No manual kernel_function decorators**: The local Unity MCP plugin package handles tool registration.
 - **Robust error handling**: Connection and protocol errors are surfaced clearly.
 
 ## Configuration
-- **Install requirements**: Ensure `semantic-kernel[mcp]` is in `backend/requirements.txt`.
+- **Install requirements**: Ensure `backend/requirements.txt` installs **`unity-mcp-plugin`** (see comments in that file: Git URL vs `-e` sibling path).
 - **Set MCP server command** (this is the **Unity MCP Server executable**, not a Unity project path):
-  - `UNITY_MCP_COMMAND`: Path to the MCP server executable (default: `unity-mcp-server`)
+  - `UNITY_MCP_COMMAND`: Path to the MCP server executable (default: `unity-mcp`)
   - `UNITY_MCP_ARGS`: Arguments for the executable (default: empty)
 
 Example (path to the **server executable**, not to a Unity project):
@@ -25,7 +41,7 @@ export UNITY_MCP_COMMAND="C:\Path\To\UnityMcp.Server.exe"
 ```
 
 ## Usage
-- The integration is implemented in `backend/app/agents/unity_mcp_plugin.py` as `UnityMCPPluginWrapper`.
+- The integration is implemented in `backend/app/agents/unity_mcp_plugin.py` using `unity_mcp.UnityMCPPlugin` from the **`unity-mcp-plugin`** package.
 - The agent in `backend/app/agents/unity_agent.py` uses this wrapper to connect and interact with Unity tools.
 - All Unity automation tools (e.g., create_scene, create_script) are auto-discovered and callable from the agent.
 
@@ -60,8 +76,11 @@ export UNITY_MCP_COMMAND="C:\Path\To\UnityMcp.Server.exe"
 - All Unity tool changes/additions are now automatically available to the agent—no Python code changes required.
 
 ## References
-- [Semantic Kernel MCP Plugin Documentation](https://learn.microsoft.com/en-us/semantic-kernel/concepts/plugins/adding-mcp-plugins)
-- [Model Context Protocol (MCP) Spec](https://modelcontextprotocol.io/)
+- **[Unity MCP Server — install & config in this repo](./UNITY_MCP_SERVER.md)** (Git URLs, `UNITY_MCP_COMMAND`, file locations)
+- [Unity-MCP-Server (GitHub)](https://github.com/Ozymandros/Unity-MCP-Server)
+- [Unity-MCP-SK-Plugin / unity-mcp-plugin (GitHub)](https://github.com/Ozymandros/Unity-MCP-SK-Plugin)
+- [Semantic Kernel — MCP plugins](https://learn.microsoft.com/en-us/semantic-kernel/concepts/plugins/adding-mcp-plugins)
+- [Model Context Protocol (MCP) spec](https://modelcontextprotocol.io/)
 
 ---
 

@@ -107,5 +107,6 @@ export default {
     pt: "Portugis", gl: "Galisia", fr: "Prancis", it: "Italia", pl: "Polandia", zh: "Tionghoa",
     ar: "Arab", de: "Jerman", hi: "Hindi", bn: "Bengali", ur: "Urdu",
     id: "Indonesia", ja: "Jepang", vi: "Vietnam", ko: "Korea",
+    tr: "Turki",
   },
 } as const;

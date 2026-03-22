@@ -1,11 +1,15 @@
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from semantic_kernel import Kernel
-from semantic_kernel.connectors.mcp import MCPStdioPlugin
+from unity_mcp import UnityMcpOptions, UnityMCPPlugin
 
 LOGGER = logging.getLogger("unity_mcp_plugin")
+_ENV_MCP_COMMAND = "UNITY_MCP_COMMAND"
+_ENV_MCP_ARGS = "UNITY_MCP_ARGS"
+_DEFAULT_MCP_EXECUTABLE = "unity-mcp"
 
 
 async def _check_unity_mcp_live() -> bool:
@@ -20,6 +24,9 @@ async def _check_unity_mcp_live() -> bool:
             plugin = kernel.get_plugin("UnityMCP")
             if plugin and "ping" in plugin:
                 await kernel.invoke(plugin["ping"])
+            elif hasattr(mcp_plugin, "is_healthy"):
+                if not mcp_plugin.is_healthy():
+                    return False
             return True
     except Exception as e:
         LOGGER.debug("Unity MCP live check failed: %s", e)
@@ -41,22 +48,36 @@ def unity_mcp_plugin_available_for_writing() -> bool:
 @asynccontextmanager
 async def create_unity_mcp_plugin():
     """
-    Async context manager for the Unity MCP plugin (global unity-mcp tool).
+    Async context manager for the Unity MCP plugin.
+
+    Uses the local `unity-mcp-plugin` package implementation and initializes
+    the plugin against the configured Unity MCP executable.
+
     Use with: async with create_unity_mcp_plugin() as mcp_plugin: ...
     """
     LOGGER.info("Creating UnityMCP plugin...")
-    try:
-        plugin = MCPStdioPlugin(
-            name="UnityMCP",
-            description="Unity Editor automation tools",
-            command="unity-mcp",
-            args=[],
-            load_tools=True,
-            request_timeout=30,
+    command = os.environ.get(_ENV_MCP_COMMAND, _DEFAULT_MCP_EXECUTABLE).strip() or _DEFAULT_MCP_EXECUTABLE
+    mcp_args = os.environ.get(_ENV_MCP_ARGS, "").strip()
+    if mcp_args:
+        LOGGER.warning(
+            "%s is set but ignored by unity-mcp-plugin local package implementation.",
+            _ENV_MCP_ARGS,
         )
-        async with plugin as mcp_plugin:
-            LOGGER.info("UnityMCP plugin created successfully.")
-            yield mcp_plugin
+
+    try:
+        options = UnityMcpOptions(
+            executable_path=command,
+            connection_timeout_seconds=30,
+            request_timeout_seconds=30,
+            enable_message_logging=False,
+        )
+        plugin = UnityMCPPlugin.create(options)
+        await plugin.initialize()
+        LOGGER.info("UnityMCP plugin created successfully.")
+        try:
+            yield plugin
+        finally:
+            await plugin.cleanup()
     except Exception as e:
         LOGGER.error("Failed to create UnityMCP plugin: %s", e)
         raise

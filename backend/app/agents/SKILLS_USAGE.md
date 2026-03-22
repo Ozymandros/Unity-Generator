@@ -33,7 +33,7 @@ Provides real-time integration with a running Unity Editor via the Unity MCP Ser
 - Plugin Source: [Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin)
 - Server Source: [Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)
 
-Requires the `unity-mcp-plugin` package installed in the Python environment. For the full tool list and parameter details, see the server’s tool reference (e.g. Unity-MCP-Server `Skills/SKILL.md` or README).
+Requires the `unity-mcp-plugin` package installed in the Python environment (see `backend/requirements.txt` and [docs/UNITY_MCP_INTEGRATION.md](../../../docs/UNITY_MCP_INTEGRATION.md) for the SK bridge). **MCP server install, clone URL, and `UNITY_MCP_*` locations:** [docs/UNITY_MCP_SERVER.md](../../../docs/UNITY_MCP_SERVER.md). For the full tool list and parameter details, see the server’s tool reference (e.g. Unity-MCP-Server `Skills/SKILL.md` or README).
 
 **Path handling:** The server requires **projectPath** (project root) and **fileName** (or **folderName** for folder/list tools) on all file, scene, and asset tools. Pass `projectPath` as the project root directory and `fileName` as the path under the project (e.g. `Assets/Scenes/MyScene.unity`). Do not duplicate path segments (e.g. do not put the project root inside `fileName`).
 

@@ -108,5 +108,6 @@ export default {
     fr: "Tiếng Pháp", it: "Tiếng Ý", pl: "Tiếng Ba Lan", zh: "Tiếng Trung",
     ar: "Tiếng Ả Rập", de: "Tiếng Đức", hi: "Tiếng Hindi", bn: "Tiếng Bengali",
     ur: "Tiếng Urdu", id: "Tiếng Indonesia", ja: "Tiếng Nhật", vi: "Tiếng Việt", ko: "Tiếng Hàn",
+    tr: "Tiếng Thổ Nhĩ Kỳ",
   },
 } as const;

@@ -299,5 +299,6 @@ export default {
     ja: "Japonés",
     vi: "Vietnamita",
     ko: "Coreano",
+    tr: "Turco",
   },
 } as const;

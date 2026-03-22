@@ -315,5 +315,6 @@ export default {
     ja: "Japanese",
     vi: "Vietnamese",
     ko: "Korean",
+    tr: "Turkish",
   },
 } as const;

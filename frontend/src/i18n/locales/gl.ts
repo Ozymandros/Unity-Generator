@@ -241,5 +241,13 @@ export default {
     zh: "Chinés",
     ar: "Árabe",
     de: "Alemán",
+    hi: "Hindi",
+    bn: "Bengalí",
+    ur: "Urdu",
+    id: "Indonesio",
+    ja: "Xaponés",
+    vi: "Vietnamita",
+    ko: "Coreano",
+    tr: "Turco",
   },
 } as const;

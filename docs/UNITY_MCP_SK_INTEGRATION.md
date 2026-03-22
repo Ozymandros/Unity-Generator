@@ -1,74 +1,60 @@
-# Unity MCP + Semantic Kernel Integration
+# Unity MCP + Semantic Kernel Integration (Python)
 
-## Python Integration Modes
+> **Install/configure the Unity MCP *server* (Git URL, env vars):** [UNITY_MCP_SERVER.md](./UNITY_MCP_SERVER.md).
 
-The Python integration now supports two registration modes:
+This project relies on the **`unity-mcp-plugin`** Python package for Semantic Kernel integration. Source and releases live in **[Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin)**. That plugin is a **client** of the MCP server **[Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)** (stdio): you must have the server executable available (e.g. `unity-mcp` on `PATH`) or set `UNITY_MCP_COMMAND` (see [UNITY_MCP_INTEGRATION.md](./UNITY_MCP_INTEGRATION.md)).
 
-- **Expanded mode (recommended)**: each discovered MCP tool is exposed as an individual Semantic Kernel function under one plugin namespace (default: `unity`).
-- **Router mode (backward compatible)**: one generic `invoke` function routes calls to a chosen MCP tool.
+| Piece | Repository |
+|-------|------------|
+| MCP server (tools, Unity contract) | [github.com/Ozymandros/Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server) |
+| Python SK plugin (`unity_mcp` package) | [github.com/Ozymandros/Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin) |
 
-Expanded mode improves planner/autonomous agent tool selection because functions and parameter schemas are visible as first-class SK functions.
+**Dependency:** `backend/requirements.txt` documents two ways to get **`unity-mcp-plugin`**: **Git URL** (no sibling folder) or **`-e ../unity-mcp-server-plugin`** (default sibling clone). Use **SSH** or a fork if the GitHub repo is private. For hacking the bridge, clone that repo anywhere and use `pip install -e <path>`.
 
 ## Expanded Mode (Recommended)
 
 ```python
-from app.agents.unity_mcp_sk.sk_integration.kernel_factory import create_kernel_with_unity_async
+from unity_mcp import UnityMCPPlugin
 
-# client must implement list_tools() and invoke_tool(tool_name, arguments)
-kernel, unity_plugin = await create_kernel_with_unity_async(
-    client=my_mcp_client,
-    plugin_name="unity",
-    expanded_mode=True,
-)
+# Discovers MCP tools and registers them as individual SK functions
+# under one plugin namespace ("unity" by default).
+kernel = await UnityMCPPlugin.create_kernel_with_unity(plugin_name="unity")
 
-# SK now sees one plugin namespace ("unity") with many functions:
-# - unity_create_scene
-# - unity_add_gameobject
-# - unity_create_material
-# - ...
+# Example invocation:
+result = await kernel.invoke("unity", "unity_create_scene", projectPath="C:/MyProj", fileName="Assets/Scenes/Main.unity")
 ```
 
 ## Router Mode (Backward Compatible)
 
 ```python
-from app.agents.unity_mcp_sk.sk_integration.kernel_factory import create_kernel_with_unity_async
+from semantic_kernel import Kernel
+from unity_mcp import UnityMCPPlugin
 
-kernel, unity_plugin = await create_kernel_with_unity_async(
-    client=my_mcp_client,
-    plugin_name="unity",
-    expanded_mode=False,
+plugin = UnityMCPPlugin.create()
+await plugin.initialize()
+
+kernel = Kernel()
+kernel.add_plugin(plugin, plugin_name="unity")
+
+result = await kernel.invoke(
+    "unity",
+    "invoke_unity_tool",
+    tool_name="unity_create_scene",
+    arguments_json='{"projectPath":"C:/MyProj","fileName":"Assets/Scenes/Main.unity"}',
 )
-
-# SK sees one function:
-# unity.invoke(tool_name, arguments)
 ```
 
 ## Tradeoffs
 
-- **Expanded mode**
-  - Better discoverability and tool-calling reliability for planners/agents.
-  - Richer per-tool metadata (name, description, required/default, type mapping).
-  - Slightly larger function registry and token footprint.
-- **Router mode**
-  - Smallest function footprint (single generic function).
-  - Weaker discoverability, often requiring stronger prompting to choose tools correctly.
+- **Expanded mode**: better discoverability and more reliable autonomous tool calling.
+- **Router mode**: smaller tool-definition footprint but weaker discoverability.
 
-## Discovery and Registration Behavior
+## Metadata Fidelity
 
-- Tool discovery (`list_tools`) is performed once during plugin initialization.
-- Registration uses the mapper's cached `get_registered_tools()` output as the source of truth.
-- Tool registration order is deterministic (sorted by tool name).
+The `unity-mcp-plugin` package maps MCP tool schemas into SK metadata (parameter name, description, required/default, and base JSON types: `string`, `number`, `integer`, `boolean`, `array`, `object`).
 
-## Metadata Fidelity Notes
+Python SK limitation: advanced JSON Schema constructs are partially surfaced (typically via schema metadata) but not always fully interpreted as first-class planner constraints.
 
-For each MCP tool parameter, the integration preserves:
+## Router / parameter safety
 
-- exact parameter name,
-- description,
-- required/optional state,
-- default value when present,
-- JSON type mapping: `string`, `number`, `integer`, `boolean`, `array`, `object`.
-
-Current Python SK limitation/workaround:
-
-- Complex JSON Schema constructs (`oneOf`, `anyOf`, tuple schemas, advanced constraints) are passed through in `schema_data`, but SK planner behavior primarily uses simplified `KernelParameterMetadata` fields (`type_`, `is_required`, `default_value`).
+Older in-repo experiments under `backend/app/agents/unity_mcp_sk/` (removed) duplicated router logic; that path no longer exists here. The canonical implementation lives in the `unity-mcp-plugin` package: expanded-mode handlers only forward kwargs whose names match the MCP tool schema, and `invoke_unity_tool` strips `tool_name` / `toolName` from parsed JSON so they are never sent as MCP parameters.

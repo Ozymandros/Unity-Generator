@@ -1,10 +1,16 @@
 fastapi
 uvicorn
 mcp[cli]
-semantic-kernel[mcp]>=1.15.0
 pydantic
 requests
 Pillow
 jinja2
 google-genai
 anthropic
+semantic-kernel[mcp]>=1.15.0
+# unity-mcp-plugin (Semantic Kernel bridge for Unity MCP) — use ONE of:
+# (A) No sibling folder: install from Git (HTTPS or SSH). Example if you have access:
+#     unity-mcp-plugin @ git+ssh://git@github.com/Ozymandros/Unity-MCP-SK-Plugin.git
+#     (Public HTTPS fails with 404 if the repo is private — use SSH, a fork, or a wheel.)
+# (B) Default dev layout: clone Unity-MCP-SK-Plugin next to this repo as "unity-mcp-server-plugin":
+-e ../unity-mcp-server-plugin
