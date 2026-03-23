@@ -13,4 +13,4 @@ semantic-kernel[mcp]>=1.15.0
 #     unity-mcp-plugin @ git+ssh://git@github.com/Ozymandros/Unity-MCP-SK-Plugin.git
 #     (Public HTTPS fails with 404 if the repo is private — use SSH, a fork, or a wheel.)
 # (B) Default dev layout: clone Unity-MCP-SK-Plugin next to this repo as "unity-mcp-server-plugin":
--e ../unity-mcp-server-plugin
+unity-mcp-plugin @ git+https://github.com/Ozymandros/unity-mcp-server-plugin.git
