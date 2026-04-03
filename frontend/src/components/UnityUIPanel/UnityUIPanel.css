@@ -1,0 +1,42 @@
+.panel {
+  max-width: 820px;
+  margin: 1rem;
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+h2 {
+  margin: 0 0 6px;
+}
+
+.subtitle {
+  margin: 0;
+  color: #666;
+  font-size: 0.95em;
+}
+
+.field-group {
+  margin-bottom: 12px;
+}
+
+.options-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-pointer:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.results {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}

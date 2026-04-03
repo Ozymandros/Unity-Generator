@@ -57,17 +57,6 @@ const anchorPresetOptions = [
   { value: "stretch", label: "Stretch Horizontal" },
 ];
 
-/**
- * Handle quick action chip click — injects the chip's template prompt.
- *
- * @param action - The quick action that was clicked.
- *
- * @example
- * ```typescript
- * handleQuickActionClick(UI_QUICK_ACTIONS[0]);
- * // prompt.value is now the health bar template
- * ```
- */
 function handleQuickActionClick(action: UIQuickAction): void {
   if (!action?.prompt) return;
   prompt.value = action.prompt;
@@ -214,47 +203,4 @@ function handleQuickActionClick(action: UIQuickAction): void {
   </div>
 </template>
 
-<style scoped>
-.panel {
-  max-width: 820px;
-  margin: 1rem;
-}
-
-.header {
-  margin-bottom: 20px;
-}
-
-h2 {
-  margin: 0 0 6px;
-}
-
-.subtitle {
-  margin: 0;
-  color: #666;
-  font-size: 0.95em;
-}
-
-.field-group {
-  margin-bottom: 12px;
-}
-
-.options-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.cursor-pointer {
-  cursor: pointer;
-}
-
-.cursor-pointer:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-}
-
-.results {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-</style>
+<style scoped src="./UnityUIPanel.css"></style>

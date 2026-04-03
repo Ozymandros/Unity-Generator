@@ -83,25 +83,4 @@ const {
   </div>
 </template>
 
-<style scoped>
-.section-container {
-  max-width: 1200px;
-}
-
-.prompt-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  background: rgba(255, 255, 255, 0.02) !important;
-}
-
-.prompt-card:hover {
-  border-color: rgba(var(--v-theme-success), 0.5) !important;
-}
-
-.prompt-editor :deep(textarea) {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
-  font-size: 0.85rem !important;
-  line-height: 1.6 !important;
-  padding-top: 16px !important;
-  padding-bottom: 16px !important;
-}
-</style>
+<style scoped src="./PromptManagement.css"></style>

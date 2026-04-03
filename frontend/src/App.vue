@@ -27,16 +27,13 @@ const { t } = useI18n();
 const { tabs, active, backendStatus, setActive } = useApp();
 const { projectName, sessionProjectResetKey, resetSessionProject } = useSessionProject();
 const { loadProject } = useOpenProject();
-// Register the system media-query listener at app root so it lives for the full app lifetime
 useTheme();
-// Register locale at app root so Electron IPC sync is initialised once
 useLocale();
 const drawer = ref(true);
 const store = useIntelligenceStore();
 const unityUi = useUnityProjectUiStore();
 unityUi.enableAutoPersist();
 
-/** Map internal tab key → i18n nav key */
 const TAB_NAV_KEY: Record<string, string> = {
   Settings: "app.nav.settings",
   Scenes: "app.nav.scenes",
@@ -52,28 +49,34 @@ const TAB_NAV_KEY: Record<string, string> = {
 
 const getTabIcon = (tab: string) => {
   switch (tab) {
-    case 'Settings': return 'mdi-cog-outline';
-    case 'Scenes': return 'mdi-view-dashboard-outline';
-    case 'Code': return 'mdi-xml';
-    case 'Text': return 'mdi-text-box-outline';
-    case 'Image': return 'mdi-image-outline';
-    case 'Sprites': return 'mdi-grid';
-    case 'Audio': return 'mdi-volume-high';
-    case 'Unity UI': return 'mdi-palette-outline';
-    case 'Unity Physics': return 'mdi-atom';
-    case 'Unity Project': return 'mdi-unity';
-    default: return 'mdi-circle-medium';
+    case "Settings":
+      return "mdi-cog-outline";
+    case "Scenes":
+      return "mdi-view-dashboard-outline";
+    case "Code":
+      return "mdi-xml";
+    case "Text":
+      return "mdi-text-box-outline";
+    case "Image":
+      return "mdi-image-outline";
+    case "Sprites":
+      return "mdi-grid";
+    case "Audio":
+      return "mdi-volume-high";
+    case "Unity UI":
+      return "mdi-palette-outline";
+    case "Unity Physics":
+      return "mdi-atom";
+    case "Unity Project":
+      return "mdi-unity";
+    default:
+      return "mdi-circle-medium";
   }
 };
 
-// Menu event handlers
 let unsubscribeNewProject: (() => void) | undefined;
 let unsubscribeOpenProject: (() => void) | undefined;
 
-/**
- * Handle "New Project" menu action.
- * Resets the frontend store and reloads all initial values from backend/DB.
- */
 async function handleNewProject() {
   try {
     resetSessionProject("UnityProject");
@@ -82,9 +85,9 @@ async function handleNewProject() {
     unityUi.reset();
     unityUi.status = "New project started (UI state reset).";
     unityUi.tone = "ok";
-    setActive('Unity Project');
+    setActive("Unity Project");
   } catch {
-    setActive('Unity Project');
+    setActive("Unity Project");
   }
   try {
     store.$reset();
@@ -94,13 +97,9 @@ async function handleNewProject() {
   }
 }
 
-/**
- * Handle "Open Project" menu action.
- * Delegates to the shared useOpenProject composable.
- */
 async function handleOpenProject(projectPath: string) {
   await loadProject(projectPath);
-  setActive('Unity Project');
+  setActive("Unity Project");
 }
 
 onMounted(() => {
@@ -174,116 +173,4 @@ onUnmounted(() => {
   </v-app>
 </template>
 
-<style>
-/* Global App Styles */
-.line-height-1 {
-  line-height: 1;
-}
-
-/* Sidebar project name: borderless by default, border on hover/focus */
-.project-name-field :deep(.v-field__overlay) {
-  opacity: 0;
-}
-
-.project-name-field:hover :deep(.v-field__overlay),
-.project-name-field.v-field--focused :deep(.v-field__overlay) {
-  opacity: 1;
-}
-
-.project-name-field :deep(.v-field) {
-  --v-field-border-opacity: 0;
-}
-
-.project-name-field:hover :deep(.v-field),
-.project-name-field.v-field--focused :deep(.v-field) {
-  --v-field-border-opacity: 0.6;
-}
-
-.app-sidebar {
-  border-right: 1px solid rgba(255, 255, 255, 0.2) !important;
-}
-
-.nav-item {
-  transition: all 0.2s ease;
-}
-
-.nav-item.v-list-item--active {
-  background: rgba(var(--v-theme-primary), 0.15) !important;
-}
-
-/* Increase contrast for outlined inputs */
-:deep(.v-field--variant-outlined) {
-  --v-field-border-opacity: 0.5 !important;
-}
-
-:deep(.v-field--focused.v-field--variant-outlined) {
-  --v-field-border-opacity: 1 !important;
-}
-
-:deep(.v-label.v-field-label) {
-  opacity: 0.9 !important;
-  color: rgb(var(--v-theme-on-surface)) !important;
-  font-weight: 500 !important;
-}
-
-:deep(.v-field--focused .v-label.v-field-label) {
-  opacity: 1 !important;
-  color: rgb(var(--v-theme-primary)) !important;
-}
-
-:deep(.v-field__input::placeholder) {
-  opacity: 0.5 !important;
-  color: rgb(var(--v-theme-on-surface)) !important;
-}
-
-:deep(.v-checkbox .v-label) {
-  opacity: 1 !important;
-  color: rgb(var(--v-theme-on-surface)) !important;
-  font-weight: 500 !important;
-}
-
-/* Global Data Table Adjustments */
-:deep(.v-data-table) {
-  background: transparent !important;
-}
-
-:deep(.v-data-table-header__content) {
-  font-weight: 800 !important;
-  color: #ffffff !important;
-  text-transform: uppercase;
-  font-size: 0.7rem;
-  letter-spacing: 0.05em;
-}
-
-.app-main {
-  background: transparent;
-}
-
-/* Global Scrollbar Styles */
-:root {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(var(--v-theme-primary), 0.2) transparent;
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(var(--v-theme-primary), 0.2);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(var(--v-theme-primary), 0.4);
-}
-
-.content-wrapper {
-  height: 100%;
-  overflow-y: auto;
-}
-</style>
+<style src="./App.css"></style>

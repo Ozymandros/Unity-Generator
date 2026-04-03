@@ -1,58 +1,58 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, reactive } from 'vue';
+import { ref, onMounted, computed, reactive } from "vue";
 import {
-  listProviders, saveProvider, deleteProvider,
-  listModels, addModel, removeModel,
-  listApiKeys, saveApiKey, deleteApiKey,
-  listSystemPrompts, saveSystemPrompt,
+  listProviders,
+  saveProvider,
+  deleteProvider,
+  listModels,
+  addModel,
+  removeModel,
+  listApiKeys,
+  saveApiKey,
+  deleteApiKey,
+  listSystemPrompts,
+  saveSystemPrompt,
   getApiKey,
-  ProviderCapabilities, ModelEntry
-} from '@/api/client';
+  type ProviderCapabilities,
+  type ModelEntry,
+} from "@/api/client";
 
-// Tab management
 const activeTab = ref(0);
-const tabs = ['Providers', 'System Prompts', 'Global Keys'];
+const tabs = ["Providers", "System Prompts", "Global Keys"];
 
-// Providers State
 const providers = ref<ProviderCapabilities[]>([]);
 const selectedProvider = ref<(ProviderCapabilities & { api_key_value?: string }) | null>(null);
 const isLoadingProviders = ref(false);
 
-// Models State
 const providerModels = ref<ModelEntry[]>([]);
 const isLoadingModels = ref(false);
-const newModel = reactive({ value: '', label: '', modality: 'llm' });
-const modelModalities = ['llm', 'image', 'audio', 'video', 'sprite', 'text', 'code'];
+const newModel = reactive({ value: "", label: "", modality: "llm" });
+const modelModalities = ["llm", "image", "audio", "video", "sprite", "text", "code"];
 
-// API Keys State (Global list)
 const apiKeys = ref<Record<string, string>>({});
 const keyDialog = ref(false);
-const newKey = reactive({ name: '', value: '' });
+const newKey = reactive({ name: "", value: "" });
 
-// Prompts State
 const prompts = ref<Record<string, string>>({});
-const promptModalities = ['code', 'text', 'image', 'audio', 'music', 'video', 'sprite'];
+const promptModalities = ["code", "text", "image", "audio", "music", "video", "sprite"];
 const isLoadingPrompts = ref(false);
 
-// Feedback
-const snackbar = reactive({ show: false, text: '', color: 'success' });
+const snackbar = reactive({ show: false, text: "", color: "success" });
 
-// Table Headers
 const modelHeaders = [
-  { title: 'Label', key: 'label' },
-  { title: 'Value', key: 'value' },
-  { title: 'Modality', key: 'modality' },
-  { title: 'Actions', key: 'actions', sortable: false, align: 'end' as const },
+  { title: "Label", key: "label" },
+  { title: "Value", key: "value" },
+  { title: "Modality", key: "modality" },
+  { title: "Actions", key: "actions", sortable: false, align: "end" as const },
 ];
 
 const keyHeaders = [
-  { title: 'Service', key: 'name' },
-  { title: 'Key Status', key: 'status' },
-  { title: 'Actions', key: 'actions', sortable: false, align: 'end' as const },
+  { title: "Service", key: "name" },
+  { title: "Key Status", key: "status" },
+  { title: "Actions", key: "actions", sortable: false, align: "end" as const },
 ];
 
-// Methods
-const showMessage = (text: string, color = 'success') => {
+const showMessage = (text: string, color = "success") => {
   snackbar.text = text;
   snackbar.color = color;
   snackbar.show = true;
@@ -65,19 +65,18 @@ const loadData = async () => {
     const [pList, kList, prList] = await Promise.all([
       listProviders(),
       listApiKeys(),
-      listSystemPrompts()
+      listSystemPrompts(),
     ]);
     providers.value = pList;
     apiKeys.value = kList;
 
-    // Ensure all modalities exist in prompts object for reactivity
     const initializedPrompts: Record<string, string> = {};
-    promptModalities.forEach(m => {
-      initializedPrompts[m] = prList[m] || '';
+    promptModalities.forEach((m) => {
+      initializedPrompts[m] = prList[m] || "";
     });
     prompts.value = initializedPrompts;
   } catch (e) {
-    showMessage('Failed to load data', 'error');
+    showMessage("Failed to load data", "error");
     console.error(e);
   } finally {
     isLoadingProviders.value = false;
@@ -88,22 +87,21 @@ const loadData = async () => {
 const selectProvider = async (p: ProviderCapabilities) => {
   isLoadingModels.value = true;
   try {
-    // Fetch associated API key value if it exists
-    let apiKeyValue = '';
+    let apiKeyValue = "";
     if (p.api_key_name) {
-      apiKeyValue = await getApiKey(p.api_key_name) || '';
+      apiKeyValue = (await getApiKey(p.api_key_name)) || "";
     } else if (p.requires_api_key) {
-      apiKeyValue = await getApiKey(p.name) || '';
+      apiKeyValue = (await getApiKey(p.name)) || "";
     }
 
     selectedProvider.value = {
       ...JSON.parse(JSON.stringify(p)),
-      api_key_value: apiKeyValue
+      api_key_value: apiKeyValue,
     };
 
     providerModels.value = await listModels(p.name);
   } catch (e) {
-    showMessage('Error loading provider details', 'error');
+    showMessage("Error loading provider details", "error");
     console.error(e);
   } finally {
     isLoadingModels.value = false;
@@ -113,15 +111,15 @@ const selectProvider = async (p: ProviderCapabilities) => {
 const handleSaveProvider = async () => {
   if (selectedProvider.value) {
     if (!selectedProvider.value.name) {
-      showMessage('Provider name is required', 'warning');
+      showMessage("Provider name is required", "warning");
       return;
     }
     try {
       await saveProvider(selectedProvider.value);
       await loadData();
-      showMessage('Provider and associated key saved successfully');
+      showMessage("Provider and associated key saved successfully");
     } catch (e) {
-      showMessage('Failed to save provider', 'error');
+      showMessage("Failed to save provider", "error");
       console.error(e);
     }
   }
@@ -133,9 +131,9 @@ const handleDeleteProvider = async (name: string) => {
       await deleteProvider(name);
       selectedProvider.value = null;
       await loadData();
-      showMessage('Provider deleted');
+      showMessage("Provider deleted");
     } catch (e) {
-      showMessage('Failed to delete provider', 'error');
+      showMessage("Failed to delete provider", "error");
       console.error(e);
     }
   }
@@ -146,12 +144,12 @@ const handleAddModel = async () => {
     try {
       await addModel(selectedProvider.value.name, newModel.value, newModel.label, newModel.modality);
       providerModels.value = await listModels(selectedProvider.value.name);
-      newModel.value = '';
-      newModel.label = '';
-      newModel.modality = 'llm';
-      showMessage('Model added');
+      newModel.value = "";
+      newModel.label = "";
+      newModel.modality = "llm";
+      showMessage("Model added");
     } catch (e) {
-      showMessage('Failed to add model', 'error');
+      showMessage("Failed to add model", "error");
       console.error(e);
     }
   }
@@ -162,9 +160,9 @@ const handleRemoveModel = async (val: string) => {
     try {
       await removeModel(selectedProvider.value.name, val);
       providerModels.value = await listModels(selectedProvider.value.name);
-      showMessage('Model removed');
+      showMessage("Model removed");
     } catch (e) {
-      showMessage('Failed to remove model', 'error');
+      showMessage("Failed to remove model", "error");
       console.error(e);
     }
   }
@@ -175,12 +173,12 @@ const handleSaveGlobalKey = async () => {
     try {
       await saveApiKey(newKey.name, newKey.value);
       apiKeys.value = await listApiKeys();
-      newKey.name = '';
-      newKey.value = '';
+      newKey.name = "";
+      newKey.value = "";
       keyDialog.value = false;
-      showMessage('API Key saved');
+      showMessage("API Key saved");
     } catch (e) {
-      showMessage('Failed to save API Key', 'error');
+      showMessage("Failed to save API Key", "error");
       console.error(e);
     }
   }
@@ -191,9 +189,9 @@ const handleDeleteGlobalKey = async (name: string) => {
     try {
       await deleteApiKey(name);
       apiKeys.value = await listApiKeys();
-      showMessage('API Key deleted');
+      showMessage("API Key deleted");
     } catch (e) {
-      showMessage('Failed to delete API Key', 'error');
+      showMessage("Failed to delete API Key", "error");
       console.error(e);
     }
   }
@@ -204,26 +202,26 @@ const handleSavePrompt = async (modality: string) => {
     await saveSystemPrompt(modality, prompts.value[modality]);
     showMessage(`${modality.toUpperCase()} prompt saved`);
   } catch (e) {
-    showMessage('Failed to save prompt', 'error');
+    showMessage("Failed to save prompt", "error");
     console.error(e);
   }
 };
 
 const initiateAddProvider = () => {
   selectedProvider.value = {
-    name: '',
-    api_key_name: '',
-    api_key_value: '',
-    base_url: '',
+    name: "",
+    api_key_name: "",
+    api_key_value: "",
+    base_url: "",
     openai_compatible: true,
     requires_api_key: true,
     supports_vision: false,
     supports_streaming: true,
     supports_function_calling: false,
     supports_tool_use: false,
-    modalities: ['llm'],
+    modalities: ["llm"],
     default_models: {},
-    extra: {}
+    extra: {},
   };
   providerModels.value = [];
 };
@@ -231,7 +229,7 @@ const initiateAddProvider = () => {
 const formattedKeys = computed(() => {
   return Object.entries(apiKeys.value).map(([name, value]) => ({
     name,
-    status: value ? `••••••••${value.slice(-4)}` : 'No key set'
+    status: value ? `••••••••${value.slice(-4)}` : "No key set",
   }));
 });
 
@@ -479,72 +477,4 @@ onMounted(loadData);
   </v-app>
 </template>
 
-<style scoped>
-.glass-drawer {
-  background: rgba(15, 23, 42, 0.98) !important;
-  backdrop-filter: blur(20px);
-  border-right: 1px solid rgba(255, 255, 255, 0.2) !important;
-}
-
-.glass-card {
-  background: rgba(30, 41, 59, 0.8) !important;
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 20px !important;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.transparent-table :deep(table) {
-  background: transparent !important;
-}
-
-.transparent-table :deep(thead th) {
-  font-weight: 800 !important;
-  color: #cbd5e1 !important;
-  /* Brighter gray */
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-}
-
-.transparent-table :deep(tr:hover) {
-  background: rgba(255, 255, 255, 0.03) !important;
-}
-
-.code-font :deep(textarea) {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Roboto Mono', monospace !important;
-  font-size: 0.85rem !important;
-  line-height: 1.7 !important;
-  color: #e2e8f0 !important;
-}
-
-.v-list-subheader {
-  font-size: 0.7rem !important;
-  font-weight: 900 !important;
-  letter-spacing: 0.1em !important;
-  color: #cbd5e1 !important;
-  /* Brighter gray */
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--v-primary-base);
-}
-
-.h-100 {
-  height: 100%;
-}
-</style>
+<style scoped src="./ManagementDashboard.css"></style>

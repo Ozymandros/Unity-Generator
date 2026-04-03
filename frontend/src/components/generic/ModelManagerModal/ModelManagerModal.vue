@@ -1,10 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { 
-  listModels, 
-  addModel, 
-  removeModel 
-} from '@/api/client';
+import { ref, onMounted } from "vue";
+import { listModels, addModel, removeModel } from "@/api/client";
 
 const props = defineProps<{
   provider: string;
@@ -12,22 +8,22 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void;
-  (e: 'models-changed'): void;
+  (e: "update:modelValue", value: boolean): void;
+  (e: "models-changed"): void;
 }>();
 
 const models = ref<{ value: string; label: string }[]>([]);
-const newModelValue = ref('');
-const newModelLabel = ref('');
+const newModelValue = ref("");
+const newModelLabel = ref("");
 const loading = ref(false);
-const error = ref('');
+const error = ref("");
 
 async function fetchModels() {
   loading.value = true;
   try {
     models.value = await listModels(props.provider);
   } catch {
-    error.value = 'Failed to load models';
+    error.value = "Failed to load models";
   } finally {
     loading.value = false;
   }
@@ -37,12 +33,12 @@ async function handleAddModel() {
   if (!newModelValue.value || !newModelLabel.value) return;
   try {
     await addModel(props.provider, newModelValue.value, newModelLabel.value);
-    newModelValue.value = '';
-    newModelLabel.value = '';
+    newModelValue.value = "";
+    newModelLabel.value = "";
     await fetchModels();
-    emit('models-changed');
+    emit("models-changed");
   } catch {
-    error.value = 'Failed to add model';
+    error.value = "Failed to add model";
   }
 }
 
@@ -50,9 +46,9 @@ async function handleRemoveModel(value: string) {
   try {
     await removeModel(props.provider, value);
     await fetchModels();
-    emit('models-changed');
+    emit("models-changed");
   } catch {
-    error.value = 'Failed to remove model';
+    error.value = "Failed to remove model";
   }
 }
 
@@ -91,110 +87,4 @@ onMounted(fetchModels);
   </div>
 </template>
 
-<style scoped>
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
-}
-
-.modal-content {
-  background: #1e1e1e;
-  color: white;
-  padding: 2rem;
-  border-radius: 12px;
-  width: 500px;
-  max-width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-}
-
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.close-btn {
-  background: transparent;
-  border: none;
-  font-size: 1.5rem;
-  color: #888;
-  cursor: pointer;
-}
-
-.model-list {
-  margin-bottom: 2rem;
-}
-
-ul {
-  list-style: none;
-  padding: 0;
-}
-
-li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #333;
-}
-
-.add-model h4 {
-  margin-bottom: 1rem;
-}
-
-.field-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-input {
-  background: #2d2d2d;
-  border: 1px solid #444;
-  color: white;
-  padding: 0.6rem;
-  border-radius: 4px;
-}
-
-.danger-btn {
-  background: #ff4444;
-  color: white;
-  border: none;
-  padding: 0.3rem 0.6rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.8rem;
-}
-
-.primary {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 0.7rem;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 0.5rem;
-}
-
-.primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.error {
-  color: #ff4444;
-  margin-bottom: 1rem;
-}
-</style>
+<style scoped src="./ModelManagerModal.css"></style>
