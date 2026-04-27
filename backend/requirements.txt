@@ -1,7 +1,7 @@
 fastapi
 uvicorn
 mcp[cli]
-semantic-kernel[mcp]>=1.15.0
+semantic-kernel[mcp]>=1.41.2
 pydantic
 requests
 Pillow
