@@ -53,7 +53,7 @@ and assets without wiring multiple tools together. It’s not a full IDE or asse
 - **Unity UI Elements**: Generate Unity UI prefabs (health bars, buttons, dialogue boxes, HUD layouts) for both uGUI and UI Toolkit
 - **Incremental Asset Generation**: Save assets directly into an active Unity project
 - **Pixel-Art Sprites**: Generate and process 2D sprite sheets with automatic cropping
-- **Unity MCP Integration**: Real-time interaction with the Unity Editor using [Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin) and [Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)
+- **Unity MCP integration**: Python bridge [`unity-mcp-plugin`](https://github.com/Ozymandros/Unity-MCP-SK-Plugin) (Semantic Kernel; see `backend/requirements.txt` for Git vs local editable install) plus MCP server [**Unity-MCP-Server**](https://github.com/Ozymandros/Unity-MCP-Server) — both are required; see [docs/UNITY_MCP_SERVER.md](docs/UNITY_MCP_SERVER.md) for server install/Git URLs/env vars, and [docs/UNITY_MCP_INTEGRATION.md](docs/UNITY_MCP_INTEGRATION.md) for the full SK setup.
 - Save and reuse provider settings and preferences locally
 - Configure global and per-request system key prompts for tailored generation
 - Keep output structured so Unity can open it right away
@@ -80,6 +80,7 @@ Scaffolded and functional. See docs for development and packaging details. The p
 
 - [Architecture overview](docs/ARCHITECTURE.md)
 - [Development guide](docs/DEVELOPMENT.md)
+- [Unity MCP Server (install, Git URL, env vars)](docs/UNITY_MCP_SERVER.md)
 - [Packaging and distribution](docs/PACKAGING.md)
 - [System Prompts guide](docs/SYSTEM_PROMPTS.md)
 
@@ -358,9 +359,18 @@ Electron app.
 - If a provider request errors, check `logs/` for the failed request log.
 - If a Docker build is slow, ensure `node_modules/` and venvs are ignored.
 
-## Unity MCP Integration
+## Unity MCP integration
 
-See [docs/UNITY_MCP_INTEGRATION.md](docs/UNITY_MCP_INTEGRATION.md) for details on the Semantic Kernel MCP integration, configuration, and usage.
+Dependencies and setup (both repos are required):
+
+| Role | GitHub |
+|------|--------|
+| MCP server (Unity tools, stdio) | [Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server) |
+| Python Semantic Kernel plugin (`unity_mcp`) | [Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin) |
+
+- **Unity MCP Server only (not the Python plugin):** [docs/UNITY_MCP_SERVER.md](docs/UNITY_MCP_SERVER.md)  
+- **Semantic Kernel + paths:** [docs/UNITY_MCP_INTEGRATION.md](docs/UNITY_MCP_INTEGRATION.md)  
+- **Expanded vs router SK modes:** [docs/UNITY_MCP_SK_INTEGRATION.md](docs/UNITY_MCP_SK_INTEGRATION.md)
 
 ## Download
 

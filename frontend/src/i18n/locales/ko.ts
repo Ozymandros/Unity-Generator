@@ -8,7 +8,15 @@ export default {
     nav: {
       settings: "설정", scenes: "씬", code: "코드", text: "텍스트",
       image: "이미지", sprites: "스프라이트", audio: "오디오",
+      wizard: "Wizard",
+      video: "Video",
+      unityMcp: "Unity MCP",
+      unityLighting: "Unity Lighting",
+      unityCamera: "Unity Camera",
+      unityMaterials: "Unity Materials",
+      unityAnimations: "Unity Animations",
       unityUi: "Unity UI", unityPhysics: "Unity 물리", unityProject: "Unity 프로젝트",
+      logs: "Logs",
     },
     actions: { repository: "저장소" },
   },
@@ -107,5 +115,6 @@ export default {
     pt: "포르투갈어", gl: "갈리시아어", fr: "프랑스어", it: "이탈리아어", pl: "폴란드어", zh: "중국어",
     ar: "아랍어", de: "독일어", hi: "힌디어", bn: "벵골어", ur: "우르두어",
     id: "인도네시아어", ja: "일본어", vi: "베트남어", ko: "한국어",
+    tr: "터키어",
   },
 } as const;

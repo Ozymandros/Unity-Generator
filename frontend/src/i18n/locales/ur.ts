@@ -8,7 +8,15 @@ export default {
     nav: {
       settings: "ترتیبات", scenes: "مناظر", code: "کوڈ", text: "متن",
       image: "تصویر", sprites: "اسپرائٹس", audio: "آڈیو",
+      wizard: "Wizard",
+      video: "Video",
+      unityMcp: "Unity MCP",
+      unityLighting: "Unity Lighting",
+      unityCamera: "Unity Camera",
+      unityMaterials: "Unity Materials",
+      unityAnimations: "Unity Animations",
       unityUi: "Unity UI", unityPhysics: "Unity طبیعیات", unityProject: "Unity منصوبہ",
+      logs: "Logs",
     },
     actions: { repository: "ریپوزیٹری" },
   },
@@ -107,5 +115,6 @@ export default {
     pt: "پرتگالی", gl: "گالیشین", fr: "فرانسیسی", it: "اطالوی", pl: "پولش", zh: "چینی",
     ar: "عربی", de: "جرمن", hi: "ہندی", bn: "بنگالی", ur: "اردو",
     id: "انڈونیشیائی", ja: "جاپانی", vi: "ویتنامی", ko: "کوریائی",
+    tr: "ترکی",
   },
 } as const;

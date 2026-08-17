@@ -27,7 +27,8 @@
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
-    "env.d.ts"
-, "../main/errors.d.ts"  ],
+    "env.d.ts",
+    "../main/errors.d.ts"
+  ],
   "exclude": ["node_modules"]
 }

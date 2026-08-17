@@ -12,6 +12,8 @@ export type UnityProjectUiSettings = {
   template: string;
   version: string;
   platform: string;
+  /** Finalize backend: auto prefers MCP when unity-mcp is configured. */
+  automationMode: "auto" | "mcp" | "batch";
 };
 
 export type UnityProjectUiState = {
@@ -62,6 +64,7 @@ function getDefaultState(): UnityProjectUiState {
       template: "",
       version: "",
       platform: "",
+      automationMode: "mcp",
     },
   };
 }

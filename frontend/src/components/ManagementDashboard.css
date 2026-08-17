@@ -1,0 +1,69 @@
+.glass-drawer {
+  background: rgba(15, 23, 42, 0.98) !important;
+  backdrop-filter: blur(20px);
+  border-right: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.glass-card {
+  background: rgba(30, 41, 59, 0.8) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 20px !important;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+.transparent-table :deep(table) {
+  background: transparent !important;
+}
+
+.transparent-table :deep(thead th) {
+  font-weight: 800 !important;
+  color: #cbd5e1 !important;
+  /* Brighter gray */
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.transparent-table :deep(tr:hover) {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.code-font :deep(textarea) {
+  font-family: "JetBrains Mono", "Fira Code", "Roboto Mono", monospace !important;
+  font-size: 0.85rem !important;
+  line-height: 1.7 !important;
+  color: #e2e8f0 !important;
+}
+
+.v-list-subheader {
+  font-size: 0.7rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.1em !important;
+  color: #cbd5e1 !important;
+  /* Brighter gray */
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--v-primary-base);
+}
+
+.h-100 {
+  height: 100%;
+}

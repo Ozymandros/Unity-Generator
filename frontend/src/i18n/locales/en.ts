@@ -12,15 +12,23 @@ export default {
     },
     nav: {
       settings: "Settings",
+      wizard: "Wizard",
       scenes: "Scenes",
       code: "Code",
       text: "Text",
       image: "Image",
       sprites: "Sprites",
       audio: "Audio",
+      video: "Video",
+      unityMcp: "Unity MCP",
+      unityLighting: "Unity Lighting",
+      unityCamera: "Unity Camera",
+      unityMaterials: "Unity Materials",
+      unityAnimations: "Unity Animations",
       unityUi: "Unity UI",
       unityPhysics: "Unity Physics",
       unityProject: "Unity Project",
+      logs: "Logs",
     },
     actions: {
       repository: "Repository",
@@ -58,6 +66,8 @@ export default {
     viewSteps: "View Steps ({n})",
     waitingForLogs: "Waiting for logs…",
     errorsDetected: "Errors Detected",
+    enhancePrompt: "Enhance prompt",
+    samplePrompt: "Sample prompt",
   },
 
   // ── Settings panel ─────────────────────────────────────────────────────────
@@ -203,6 +213,7 @@ export default {
     subtitle: "Generate Unity scenes using AI.",
     fields: {
       prompt: "Scene Description",
+      applyViaMcp: "Apply via MCP tools",
     },
     actions: {
       generate: "Create Scene",
@@ -211,6 +222,8 @@ export default {
     mediaReadyText: "{type} \"{name}\" is ready to be imported to Unity. Review the prompt below and click \"Create Scene\" to proceed.",
     mediaTypeImage: "Image",
     mediaTypeAudio: "Audio",
+    mcpLiveEditor: "Unity MCP is live with Editor-backed tools available.",
+    mcpLiveFileOnly: "Unity MCP is live in file-only mode. Editor-gated tools will be skipped.",
   },
 
   // ── Unity UI panel ─────────────────────────────────────────────────────────
@@ -225,10 +238,13 @@ export default {
       anchorPreset: "Anchor Preset",
       colourTheme: "Colour Theme (optional)",
       includeAnimations: "Include animations",
+      applyViaMcp: "Apply via MCP tools",
     },
     actions: {
       generate: "Generate UI",
     },
+    mcpLiveEditor: "Unity MCP is live with Editor-backed tools available.",
+    mcpLiveFileOnly: "Unity MCP is live in file-only mode. File-only UI is a compatibility-surrogate.",
   },
 
   // ── Unity Physics panel ────────────────────────────────────────────────────
@@ -243,11 +259,109 @@ export default {
       includeRigidbody: "Include Rigidbody setup",
       includeColliders: "Include Collider setup",
       includeLayers: "Include Physics Layers",
+      applyViaMcp: "Apply via MCP tools",
     },
     actions: {
       generate: "Generate Physics Config",
     },
     quickActions: "Quick Actions",
+    mcpLiveEditor: "Unity MCP is live with Editor-backed tools available.",
+    mcpLiveFileOnly: "Unity MCP is live in file-only mode. File-only physics is a compatibility-surrogate.",
+  },
+
+  wizard: {
+    title: "Unity Wizard",
+    subtitle: "One goal, multi-tool orchestration across the full MCP surface.",
+    mcpReady: "Unity MCP is available for wizard orchestration.",
+    actions: { run: "Run Wizard" },
+  },
+
+  unityMcpHub: {
+    title: "Unity MCP Hub",
+    subtitle: "Focused panels for engine automation — not an 89-tool explorer.",
+    statusOnline: "Unity MCP server is reachable.",
+    statusOffline: "Unity MCP server is not configured or unreachable.",
+    toolCount: "{n} typed tools registered",
+    cards: {
+      wizard: "Wizard",
+      scenes: "Scenes",
+      lighting: "Lighting",
+      camera: "Camera",
+      materials: "Materials",
+      animations: "Animations",
+      ui: "Unity UI",
+      physics: "Physics",
+    },
+    descriptions: {
+      wizard: "Multi-step orchestration with the full tool surface.",
+      scenes: "Create and edit scenes and GameObjects.",
+      lighting: "Directional, point, spot, and area lights.",
+      camera: "Main and gameplay camera setups.",
+      materials: "Materials and texture assignment.",
+      animations: "Animators and Timeline assets.",
+      ui: "Canvas and UI Toolkit layouts.",
+      physics: "PhysX and DOTS physics configuration.",
+    },
+  },
+
+  unityLighting: {
+    title: "Unity Lighting",
+    subtitle: "Configure lights via unity_light_* MCP tools.",
+    quickActions: "Quick Actions",
+    promptPlaceholder: "Describe the lighting setup you want...",
+    applyViaMcp: "Apply via MCP tools",
+    mcpLiveEditor: "Unity MCP is live with Editor-backed lighting tools.",
+    mcpLiveFileOnly: "Unity MCP is live in file-only mode for lighting surrogates.",
+    actions: { generate: "Generate Lighting" },
+  },
+
+  unityCamera: {
+    title: "Unity Camera",
+    subtitle: "Configure cameras via unity_camera_* MCP tools.",
+    quickActions: "Quick Actions",
+    promptPlaceholder: "Describe the camera setup you want...",
+    applyViaMcp: "Apply via MCP tools",
+    mcpLiveEditor: "Unity MCP is live with Editor-backed camera tools.",
+    mcpLiveFileOnly: "Unity MCP is live in file-only mode for camera surrogates.",
+    actions: { generate: "Generate Camera Setup" },
+  },
+
+  unityMaterials: {
+    title: "Unity Materials",
+    subtitle: "Create materials via unity_create_material and related tools.",
+    quickActions: "Quick Actions",
+    promptPlaceholder: "Describe the materials you want...",
+    applyViaMcp: "Apply via MCP tools",
+    mcpLiveEditor: "Unity MCP is live with material tools.",
+    mcpLiveFileOnly: "Unity MCP is live in file-only mode for material surrogates.",
+    actions: { generate: "Generate Materials" },
+  },
+
+  unityAnimation: {
+    title: "Unity Animations",
+    subtitle: "Animators and timelines via animation MCP tools.",
+    quickActions: "Quick Actions",
+    promptPlaceholder: "Describe the animation or timeline you want...",
+    applyViaMcp: "Apply via MCP tools",
+    mcpLiveEditor: "Unity MCP is live with animation tools.",
+    mcpLiveFileOnly: "Unity MCP is live in file-only mode for animation surrogates.",
+    actions: { generate: "Generate Animation" },
+  },
+
+  video: {
+    title: "Video",
+    subtitle: "Generate cinematic video prompts and clips (provider stub until connected).",
+    duration: "Duration (seconds)",
+    resolution: "Resolution",
+    aspectRatio: "Aspect ratio",
+    actions: { generate: "Generate Video" },
+  },
+
+  logs: {
+    title: "Logs",
+    subtitle: "Backend generation log tail.",
+    refresh: "Refresh",
+    loadFailed: "Could not load logs.",
   },
 
   // ── Unity Project panel ────────────────────────────────────────────────────
@@ -267,7 +381,19 @@ export default {
       sceneName: "Scene Name",
       unityEditorPath: "Unity Editor Path (optional)",
       timeout: "Timeout (seconds)",
+      automationMode: "Automation mode",
       resultJson: "Result (JSON)",
+    },
+    mcp: {
+      title: "Unity MCP integration",
+      editorReady: "Unity MCP server is reachable and Unity Editor is connected.",
+      editorRequired:
+        "Unity MCP server is reachable, but Unity Editor is not connected. Open your project in Unity Editor, then refresh.",
+      notConfigured:
+        "Unity MCP server is not reachable from the backend. Ensure unity-mcp is on PATH or set UNITY_MCP_COMMAND.",
+      standaloneNote:
+        "Unity Generator runs as a standalone app (not inside Unity). MCP automates an open Unity Editor session.",
+      refresh: "Refresh MCP status",
     },
     actions: {
       generate: "Generate Project",
@@ -315,5 +441,6 @@ export default {
     ja: "Japanese",
     vi: "Vietnamese",
     ko: "Korean",
+    tr: "Turkish",
   },
 } as const;

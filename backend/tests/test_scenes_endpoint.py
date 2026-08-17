@@ -137,6 +137,37 @@ def test_create_scene_with_provider_and_options():
         assert call_args.kwargs["provider"] == "openai"
         assert call_args.kwargs["options"]["model"] == "gpt-4-turbo"
 
+
+def test_create_scene_forwards_media_import_payload():
+    with patch("app.routers.scenes.agent_manager") as mock_agent_manager, \
+         patch("app.routers.scenes.resolve_project_path", return_value="/output/UnityProject"):
+        mock_agent_manager.run_unity = MagicMock()
+
+        async def mock_run(*args, **kwargs):
+            return {"content": "Success"}
+
+        mock_agent_manager.run_unity.side_effect = mock_run
+
+        payload = {
+            "data": "iVBORw0KGgo=",
+            "name": "Icon.png",
+            "type": "image/png",
+            "texture_type": "sprite",
+        }
+        response = client.post(
+            "/api/scenes/create",
+            json={
+                "prompt": "Place this icon in the scene",
+                "provider": "openai",
+                "options": {"model": "gpt-4-turbo"},
+                "media_import": payload,
+            },
+        )
+
+        assert response.status_code == 200
+        mock_agent_manager.run_unity.assert_called_once()
+        assert mock_agent_manager.run_unity.call_args.kwargs["media_import"] == payload
+
 def test_create_scene_failure():
     with patch("app.routers.scenes.agent_manager") as mock_agent_manager, \
          patch("app.routers.scenes.get_pref") as mock_get_pref, \

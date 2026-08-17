@@ -28,53 +28,21 @@ const {
   providerOptions,
   TEMPERATURE_PRESETS,
   pendingMediaImport,
-  hasPendingMediaImport
+  hasPendingMediaImport,
+  mcpAvailable,
+  editorAvailable,
+  mcpWarning,
+  applyViaMcp,
 } = useScenesPanel();
 
-/**
- * Handle quick action button click by injecting prompt into input field.
- * Allows users to quickly start with pre-written prompts for common Unity tasks.
- * 
- * @param action - The quick action to execute
- * @throws {Error} If action or action.prompt is invalid
- * 
- * @example
- * ```typescript
- * const fpsAction: QuickAction = {
- *   label: "FPS Prototype",
- *   icon: "mdi-pistol",
- *   prompt: "Create a complete FPS prototype...",
- *   category: "prototype"
- * };
- * handleQuickActionClick(fpsAction);
- * // prompt.value now contains the FPS prototype prompt text
- * ```
- */
 function handleQuickActionClick(action: QuickAction): void {
   if (!action || !action.prompt) {
     throw new Error("Invalid quick action: action and action.prompt are required");
   }
-  
-  // Inject prompt into input field
   prompt.value = action.prompt;
-  
-  // Log analytics event
   console.log(`Quick action used: ${action.label} (${action.category})`);
 }
 
-/**
- * Get a random example prompt for placeholder text.
- * Provides variety and inspiration by showing different capabilities each time.
- * 
- * @returns Random example prompt text from EXAMPLE_PROMPTS array
- * 
- * @example
- * ```typescript
- * const placeholder = getRandomExamplePrompt();
- * // Returns: "Create a scene with a red cube, blue sphere, and directional light"
- * // or any other random example from the array
- * ```
- */
 function getRandomExamplePrompt(): string {
   const randomIndex = Math.floor(Math.random() * EXAMPLE_PROMPTS.length);
   return EXAMPLE_PROMPTS[randomIndex].text;
@@ -89,6 +57,13 @@ function getRandomExamplePrompt(): string {
     </div>
 
     <StatusBanner :status="status" :tone="tone" />
+
+    <v-alert v-if="mcpWarning" type="warning" variant="tonal" class="mb-4" icon="mdi-unity">
+      {{ mcpWarning }}
+    </v-alert>
+    <v-alert v-else-if="mcpAvailable" type="success" variant="tonal" class="mb-4" icon="mdi-unity">
+      {{ editorAvailable ? t('scenes.mcpLiveEditor') : t('scenes.mcpLiveFileOnly') }}
+    </v-alert>
 
     <v-alert v-if="hasPendingMediaImport()" type="info" variant="tonal" class="mb-4" icon="mdi-import" closable>
       <template v-slot:title>{{ t('scenes.mediaReady') }}</template>
@@ -138,6 +113,15 @@ function getRandomExamplePrompt(): string {
       <div class="mb-6">
         <SmartField :label="t('common.temperature')" type="select" v-model.number="temperature" :options="TEMPERATURE_PRESETS" />
       </div>
+
+      <v-checkbox
+        v-model="applyViaMcp"
+        :label="t('scenes.fields.applyViaMcp')"
+        :disabled="!mcpAvailable"
+        color="primary"
+        hide-details
+        class="mb-4"
+      />
 
       <v-expansion-panels class="mb-6">
         <v-expansion-panel :title="t('common.advancedOptions')" bg-color="surface" class="border rounded-lg" elevation="0">
@@ -203,124 +187,4 @@ function getRandomExamplePrompt(): string {
   </div>
 </template>
 
-<style scoped>
-.panel {
-  max-width: 820px;
-  margin: 1rem;
-}
-
-.header {
-  margin-bottom: 20px;
-}
-
-h2 {
-  margin: 0 0 6px;
-}
-
-.subtitle {
-  margin: 0;
-  color: #666;
-  font-size: 0.95em;
-}
-
-/* Matching CodePanel.css structure */
-.field-group {
-  margin-bottom: 12px;
-}
-
-.options-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.field-item {
-  flex: 1;
-}
-
-/* Ensure inputs verify box-sizing if not global */
-textarea,
-input,
-select {
-  box-sizing: border-box;
-  width: 100%;
-}
-
-.primary {
-  margin: 8px 0 14px;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 6px;
-  background: #2563eb;
-  color: white;
-  cursor: pointer;
-  width: 100%;
-  font-weight: 600;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.primary:hover:not(:disabled) {
-  background: #1d4ed8;
-}
-
-.primary:disabled {
-  background: #93c5fd;
-  cursor: not-allowed;
-}
-
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-top-color: white;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.results {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.result-content {
-  background: #020617;
-  padding: 12px;
-  border-radius: 6px;
-  margin-bottom: 12px;
-  white-space: pre-wrap;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.9em;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #f8fafc;
-}
-
-.files-list ul,
-.steps-list ul {
-  list-style: disc;
-  padding-left: 20px;
-  color: #cbd5e1;
-}
-
-summary {
-  cursor: pointer;
-  font-weight: 500;
-  color: #38bdf8;
-}
-
-.cursor-pointer {
-  cursor: pointer;
-}
-
-.cursor-pointer:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-}
-</style>
+<style scoped src="./ScenesPanel.css"></style>

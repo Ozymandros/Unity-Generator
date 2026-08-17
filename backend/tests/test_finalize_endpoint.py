@@ -103,7 +103,7 @@ class TestFinalizeEndpoint:
                 logs=["Done"],
             )
 
-        monkeypatch.setattr("app.services.unity_orchestrator.run_finalize_job", fake_finalize)
+        monkeypatch.setattr("app.routers.finalize.run_finalize_job", fake_finalize)
 
         resp = client.post(
             "/api/v1/project/finalize",
@@ -139,6 +139,57 @@ class TestFinalizeEndpoint:
         status = _wait_for_job(job_id)
         assert status["status"] == "failed"
         assert any("Unity" in e for e in status.get("errors", []))
+
+    def test_finalize_job_surfaces_setup_errors_not_cleanup_log(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Failed finalize should expose setup errors, not the last cleanup log line."""
+        from app.core import config
+        from app.services.unity_orchestrator import FinalizeResult
+
+        monkeypatch.setattr(config, "get_repo_root", lambda: tmp_path)
+        monkeypatch.setattr("app.routers.finalize.agent_manager", MagicMock())
+
+        unity_exe = tmp_path / "Unity.exe"
+        unity_exe.touch()
+        monkeypatch.setattr(
+            "app.routers.finalize.resolve_unity_editor_path",
+            lambda override=None: unity_exe,
+        )
+        monkeypatch.setattr(
+            "app.routers.finalize.create_unity_project",
+            lambda *args, **kwargs: {"project_path": str(tmp_path / "Project")},
+        )
+
+        license_error = (
+            "Unity batch mode failed (exit code 198): no valid Editor license. "
+            "Activate Unity in Unity Hub or set UNITY_USE_MCP=1."
+        )
+
+        def fake_finalize(*args: Any, **kwargs: Any) -> FinalizeResult:
+            return FinalizeResult(
+                success=False,
+                project_path=str(tmp_path / "Project"),
+                errors=[license_error],
+                logs=[
+                    "[setup] Launching Unity in batch mode...",
+                    license_error,
+                    "[cleanup] Removed injected Editor scripts",
+                ],
+            )
+
+        monkeypatch.setattr("app.routers.finalize.run_finalize_job", fake_finalize)
+
+        resp = client.post(
+            "/api/v1/project/finalize",
+            json={"project_name": "LicenseFailTest"},
+        )
+        job_id = resp.json()["job_id"]
+        status = _wait_for_job(job_id)
+
+        assert status["status"] == "failed"
+        assert status["errors"] == [license_error]
+        assert "[cleanup]" not in status["errors"][0]
 
 
 class TestFinalizeDownload:

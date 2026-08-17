@@ -8,7 +8,15 @@ export default {
     nav: {
       settings: "সেটিংস", scenes: "দৃশ্য", code: "কোড", text: "পাঠ্য",
       image: "ছবি", sprites: "স্প্রাইট", audio: "অডিও",
+      wizard: "Wizard",
+      video: "Video",
+      unityMcp: "Unity MCP",
+      unityLighting: "Unity Lighting",
+      unityCamera: "Unity Camera",
+      unityMaterials: "Unity Materials",
+      unityAnimations: "Unity Animations",
       unityUi: "Unity UI", unityPhysics: "Unity পদার্থবিজ্ঞান", unityProject: "Unity প্রকল্প",
+      logs: "Logs",
     },
     actions: { repository: "রিপোজিটরি" },
   },
@@ -107,5 +115,6 @@ export default {
     pt: "পর্তুগিজ", gl: "গ্যালিশিয়ান", fr: "ফরাসি", it: "ইতালীয়", pl: "পোলিশ", zh: "চীনা",
     ar: "আরবি", de: "জার্মান", hi: "হিন্দি", bn: "বাংলা", ur: "উর্দু",
     id: "ইন্দোনেশিয়ান", ja: "জাপানি", vi: "ভিয়েতনামি", ko: "কোরিয়ান",
+    tr: "তুর্কি",
   },
 } as const;

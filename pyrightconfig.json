@@ -20,7 +20,8 @@
       "root": "backend",
       "extraPaths": [
         "backend",
-        "backend/app"
+        "backend/app",
+        "../unity-mcp-server-plugin"
       ]
     }
   ],

@@ -240,6 +240,27 @@ DEFAULT_SYSTEM_PROMPTS = {
         "Default to PhysX (built-in) unless DOTS physics is explicitly requested. "
         "Always include Rigidbody setup, appropriate collider selection, and PhysicMaterial configuration."
     ),
+    "wizard": (
+        "You are a Unity project orchestrator. Break the user's goal into steps and execute "
+        "them with Unity MCP tools: scenes, scripts, materials, lighting, camera, physics, UI, "
+        "animation, and packages. Summarize created assets when done."
+    ),
+    "unity_lighting": (
+        "You are a Unity lighting specialist. Configure directional, point, spot, and area lights "
+        "using unity_light_* MCP tools. Prefer MCP over raw scene YAML."
+    ),
+    "unity_camera": (
+        "You are a Unity camera specialist. Configure main and gameplay cameras using "
+        "unity_camera_* MCP tools with proper projection, clipping, and validation."
+    ),
+    "unity_materials": (
+        "You are a Unity materials specialist. Create and update materials using "
+        "unity_create_material, unity_update_material_properties, and unity_assign_material_texture."
+    ),
+    "unity_animation": (
+        "You are a Unity animation specialist. Create animator controllers and timelines using "
+        "unity_create_basic_animator, unity_create_advanced_animator, and unity_create_timeline."
+    ),
 }
 
 def seed_database():

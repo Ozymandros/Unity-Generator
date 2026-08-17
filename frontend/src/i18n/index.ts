@@ -36,16 +36,17 @@ import id from "./locales/id";
 import ja from "./locales/ja";
 import vi from "./locales/vi";
 import ko from "./locales/ko";
+import tr from "./locales/tr";
 
 export type SupportedLocale =
   | "en" | "es" | "ca" | "eu" | "oc" | "uk"
   | "pt" | "gl" | "fr" | "it" | "pl" | "zh" | "ar" | "de"
-  | "hi" | "bn" | "ur" | "id" | "ja" | "vi" | "ko";
+  | "hi" | "bn" | "ur" | "id" | "ja" | "vi" | "ko" | "tr";
 
 export const SUPPORTED_LOCALES: SupportedLocale[] = [
   "en", "es", "ca", "eu", "oc", "uk",
   "pt", "gl", "fr", "it", "pl", "zh", "ar", "de",
-  "hi", "bn", "ur", "id", "ja", "vi", "ko",
+  "hi", "bn", "ur", "id", "ja", "vi", "ko", "tr",
 ];
 export const DEFAULT_LOCALE: SupportedLocale = "en";
 export const LOCALE_STORAGE_KEY = "appLocale";
@@ -77,7 +78,7 @@ const i18n = createI18n({
   legacy: false,           // Composition API mode
   locale: getPersistedLocale(),
   fallbackLocale: DEFAULT_LOCALE,
-  messages: { en, es, ca, eu, oc, uk, pt, gl, fr, it, pl, zh, ar, de, hi, bn, ur, id, ja, vi, ko },
+  messages: { en, es, ca, eu, oc, uk, pt, gl, fr, it, pl, zh, ar, de, hi, bn, ur, id, ja, vi, ko, tr },
   // Silence missing-key warnings in production
   missingWarn: import.meta.env.DEV,
   fallbackWarn: import.meta.env.DEV,

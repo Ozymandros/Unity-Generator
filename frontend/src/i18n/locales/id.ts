@@ -8,7 +8,15 @@ export default {
     nav: {
       settings: "Pengaturan", scenes: "Adegan", code: "Kode", text: "Teks",
       image: "Gambar", sprites: "Sprites", audio: "Audio",
+      wizard: "Wizard",
+      video: "Video",
+      unityMcp: "Unity MCP",
+      unityLighting: "Unity Lighting",
+      unityCamera: "Unity Camera",
+      unityMaterials: "Unity Materials",
+      unityAnimations: "Unity Animations",
       unityUi: "Unity UI", unityPhysics: "Unity Fisika", unityProject: "Proyek Unity",
+      logs: "Logs",
     },
     actions: { repository: "Repositori" },
   },
@@ -107,5 +115,6 @@ export default {
     pt: "Portugis", gl: "Galisia", fr: "Prancis", it: "Italia", pl: "Polandia", zh: "Tionghoa",
     ar: "Arab", de: "Jerman", hi: "Hindi", bn: "Bengali", ur: "Urdu",
     id: "Indonesia", ja: "Jepang", vi: "Vietnam", ko: "Korea",
+    tr: "Turki",
   },
 } as const;

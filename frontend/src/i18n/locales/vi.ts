@@ -8,7 +8,15 @@ export default {
     nav: {
       settings: "Cài đặt", scenes: "Cảnh", code: "Mã", text: "Văn bản",
       image: "Hình ảnh", sprites: "Sprites", audio: "Âm thanh",
+      wizard: "Wizard",
+      video: "Video",
+      unityMcp: "Unity MCP",
+      unityLighting: "Unity Lighting",
+      unityCamera: "Unity Camera",
+      unityMaterials: "Unity Materials",
+      unityAnimations: "Unity Animations",
       unityUi: "Unity UI", unityPhysics: "Unity Vật lý", unityProject: "Dự án Unity",
+      logs: "Logs",
     },
     actions: { repository: "Kho lưu trữ" },
   },
@@ -108,5 +116,6 @@ export default {
     fr: "Tiếng Pháp", it: "Tiếng Ý", pl: "Tiếng Ba Lan", zh: "Tiếng Trung",
     ar: "Tiếng Ả Rập", de: "Tiếng Đức", hi: "Tiếng Hindi", bn: "Tiếng Bengali",
     ur: "Tiếng Urdu", id: "Tiếng Indonesia", ja: "Tiếng Nhật", vi: "Tiếng Việt", ko: "Tiếng Hàn",
+    tr: "Tiếng Thổ Nhĩ Kỳ",
   },
 } as const;

@@ -13,6 +13,20 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.agents.unity_agent import UnityAgent
+from app.agents.unity_mcp_plugin import InjectingUnityMcpPlugin
+
+
+def _assert_injecting_plugin_registered(mock_kernel, inner_plugin) -> None:
+    """Assert UnityAgent registered the InjectingUnityMcpPlugin wrapper on the kernel."""
+    unity_calls = [
+        call
+        for call in mock_kernel.add_plugin.call_args_list
+        if call.kwargs.get("plugin_name") == "UnityMCP"
+    ]
+    assert len(unity_calls) == 1
+    registered = unity_calls[0][0][0]
+    assert isinstance(registered, InjectingUnityMcpPlugin)
+    assert registered._inner is inner_plugin
 
 # ======================================================================
 # UnityAgent integration tests
@@ -60,7 +74,7 @@ async def test_unity_agent_openai():
         )
         mock_kernel_instance.add_service.assert_called()
         MockFactory.assert_called_once()
-        mock_kernel_instance.add_plugin.assert_called_with(mock_plugin_instance, plugin_name="UnityMCP")
+        _assert_injecting_plugin_registered(mock_kernel_instance, mock_plugin_instance)
 
         # When use_tools is True, prompt must contain tool-use instruction
         call_kwargs = mock_kernel_instance.invoke_prompt.call_args[1]

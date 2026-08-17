@@ -15,8 +15,21 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.agents.unity_agent import UnityAgent
+from app.agents.unity_mcp_plugin import InjectingUnityMcpPlugin
 
 LOGGER = logging.getLogger(__name__)
+
+
+def _assert_injecting_plugin_registered(mock_kernel, inner_plugin) -> None:
+    unity_calls = [
+        call
+        for call in mock_kernel.add_plugin.call_args_list
+        if call.kwargs.get("plugin_name") == "UnityMCP"
+    ]
+    assert len(unity_calls) == 1
+    registered = unity_calls[0][0][0]
+    assert isinstance(registered, InjectingUnityMcpPlugin)
+    assert registered._inner is inner_plugin
 
 
 @pytest.mark.asyncio
@@ -67,10 +80,7 @@ async def test_llm_discovers_unity_mcp_tools():
 
         # Verify MCP plugin was created and registered
         MockFactory.assert_called_once()
-        mock_kernel_instance.add_plugin.assert_called_with(
-            mock_plugin_instance,
-            plugin_name="UnityMCP"
-        )
+        _assert_injecting_plugin_registered(mock_kernel_instance, mock_plugin_instance)
 
         # Verify the prompt was invoked with the kernel
         mock_kernel_instance.invoke_prompt.assert_called_once()
@@ -130,10 +140,7 @@ async def test_llm_uses_prototype_recipe_for_fps_prompt():
 
         # Verify MCP plugin was registered
         MockFactory.assert_called_once()
-        mock_kernel_instance.add_plugin.assert_called_with(
-            mock_plugin_instance,
-            plugin_name="UnityMCP"
-        )
+        _assert_injecting_plugin_registered(mock_kernel_instance, mock_plugin_instance)
 
         # Get the full prompt that was passed to invoke_prompt
         call_kwargs = mock_kernel_instance.invoke_prompt.call_args[1]
@@ -496,10 +503,7 @@ async def test_llm_tool_discovery_with_project_path(tmp_path):
 
         # Verify MCP plugin was registered
         MockFactory.assert_called_once()
-        mock_kernel_instance.add_plugin.assert_called_with(
-            mock_plugin_instance,
-            plugin_name="UnityMCP"
-        )
+        _assert_injecting_plugin_registered(mock_kernel_instance, mock_plugin_instance)
 
         # Get the full prompt
         call_kwargs = mock_kernel_instance.invoke_prompt.call_args[1]

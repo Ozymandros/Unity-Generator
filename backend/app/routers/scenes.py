@@ -28,7 +28,9 @@ async def create_scene(request: CreateSceneRequest) -> GenerationResponse:
                 "No provider specified and no preferred provider found in settings."
             )
 
-        options = request.options
+        options = dict(request.options or {})
+        if request.apply_via_mcp:
+            options["apply_via_mcp"] = True
         # Always: project_path = base_path + project_name
         project_path = resolve_project_path(request.project_name or "UnityProject")
 
@@ -39,6 +41,7 @@ async def create_scene(request: CreateSceneRequest) -> GenerationResponse:
             api_key=request.api_key,
             system_prompt=request.system_prompt,
             project_path=project_path,
+            media_import=request.media_import,
         )
         # Agent returns error in raw when Unity task fails; treat as error response
         raw = getattr(data, "raw", None) or {}

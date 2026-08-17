@@ -87,13 +87,13 @@ def test_agent_manager_run_code(mock_get_repo, mock_run, tmp_path: Path) -> None
     assert result.content == "test"
 
 
-@patch("app.services.agent_manager.save_asset_to_project")
+@patch("app.services.agent_manager.save_generated_asset")
 @patch("app.agents.code_agent.CodeAgent.run")
 @patch("app.repositories.get_api_key_repo")
 def test_run_code_saves_to_project_when_project_path_set(
     mock_get_repo, mock_run, mock_save
 ) -> None:
-    """When project_path is set, save_asset_to_project is always called."""
+    """When project_path is set, save_generated_asset is always called."""
     mock_run.return_value = {"content": "code", "provider": "openai"}
     mock_get_repo.return_value.get_all.return_value = {"openai": "sk-test"}
     mock_save.return_value = "Assets/Scripts/Test.cs"

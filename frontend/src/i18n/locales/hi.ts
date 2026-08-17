@@ -8,7 +8,15 @@ export default {
     nav: {
       settings: "सेटिंग्स", scenes: "दृश्य", code: "कोड", text: "पाठ",
       image: "छवि", sprites: "स्प्राइट्स", audio: "ऑडियो",
+      wizard: "Wizard",
+      video: "Video",
+      unityMcp: "Unity MCP",
+      unityLighting: "Unity Lighting",
+      unityCamera: "Unity Camera",
+      unityMaterials: "Unity Materials",
+      unityAnimations: "Unity Animations",
       unityUi: "Unity UI", unityPhysics: "Unity भौतिकी", unityProject: "Unity प्रोजेक्ट",
+      logs: "Logs",
     },
     actions: { repository: "रिपॉजिटरी" },
   },
@@ -108,5 +116,6 @@ export default {
     pt: "पुर्तगाली", gl: "गैलिशियन", fr: "फ्रेंच", it: "इतालवी", pl: "पोलिश", zh: "चीनी",
     ar: "अरबी", de: "जर्मन", hi: "हिंदी", bn: "बंगाली", ur: "उर्दू",
     id: "इंडोनेशियाई", ja: "जापानी", vi: "वियतनामी", ko: "कोरियाई",
+    tr: "तुर्की",
   },
 } as const;

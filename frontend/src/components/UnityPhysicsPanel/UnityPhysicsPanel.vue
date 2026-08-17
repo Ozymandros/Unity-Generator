@@ -1,13 +1,16 @@
+<!--
+  Unity Physics panel — SFC shell only: template, child components, and a thin script
+  that pulls state from UnityPhysicsPanel.vm.ts. Logic lives in .ts / .vm.ts; styles in .css.
+-->
 <script setup lang="ts">
-import { useI18n } from "vue-i18n";
 import { StatusBanner } from "@/components/StatusBanner";
 import { SmartField } from "@/components/generic/SmartField";
 import { ModelManagerModal } from "@/components/generic/ModelManagerModal";
-import { useUnityPhysicsPanel, type PhysicsAgentResult, PHYSICS_EXAMPLE_PROMPTS } from "./UnityPhysicsPanel";
-
-const { t } = useI18n();
+import type { PhysicsAgentResult } from "./UnityPhysicsPanel.vm";
+import { useUnityPhysicsPanelViewModel } from "./UnityPhysicsPanel.vm";
 
 const {
+  t,
   prompt,
   provider,
   model,
@@ -21,6 +24,10 @@ const {
   includeRigidbody,
   includeColliders,
   includeLayers,
+  mcpAvailable,
+  editorAvailable,
+  mcpWarning,
+  applyViaMcp,
   availableModels,
   showModelManager,
   refreshModels,
@@ -33,44 +40,12 @@ const {
   providerOptions,
   TEMPERATURE_PRESETS,
   PHYSICS_QUICK_ACTIONS,
-} = useUnityPhysicsPanel();
-
-const physicsBackendOptions = [
-  { value: "physx", label: "PhysX (Built-in)" },
-  { value: "dots", label: "DOTS Physics (ECS)" },
-];
-
-const simulationModeOptions = [
-  { value: "fixed_update", label: "FixedUpdate (recommended)" },
-  { value: "update", label: "Update (kinematic)" },
-  { value: "script", label: "Script-driven (Physics.Simulate)" },
-];
-
-const gravityPresetOptions = [
-  { value: "", label: "None (let LLM decide)" },
-  { value: "earth", label: "Earth (9.81 m/s²)" },
-  { value: "moon", label: "Moon (1.62 m/s²)" },
-  { value: "zero_g", label: "Zero-G (space)" },
-  { value: "low", label: "Low gravity (3.0 m/s²)" },
-  { value: "high", label: "High gravity (20.0 m/s²)" },
-];
-
-/**
- * Handle quick action chip click — injects the chip's template prompt and gravity preset.
- *
- * @param action - The quick action that was clicked.
- *
- * @example
- * ```typescript
- * handleQuickActionClick(PHYSICS_QUICK_ACTIONS[0]);
- * // prompt.value is now the bouncy ball template
- * ```
- */
-function handleQuickActionClick(action: typeof PHYSICS_QUICK_ACTIONS[number]): void {
-  if (!action?.prompt) return;
-  prompt.value = action.prompt;
-  if (action.gravityPreset) gravityPreset.value = action.gravityPreset;
-}
+  PHYSICS_EXAMPLE_PROMPTS,
+  physicsBackendOptions,
+  simulationModeOptions,
+  gravityPresetOptions,
+  handleQuickActionClick,
+} = useUnityPhysicsPanelViewModel();
 </script>
 
 <template>
@@ -81,6 +56,13 @@ function handleQuickActionClick(action: typeof PHYSICS_QUICK_ACTIONS[number]): v
     </div>
 
     <StatusBanner :status="status" :tone="tone" />
+
+    <v-alert v-if="mcpWarning" type="warning" variant="tonal" class="mb-4" icon="mdi-unity">
+      {{ mcpWarning }}
+    </v-alert>
+    <v-alert v-else-if="mcpAvailable" type="success" variant="tonal" class="mb-4" icon="mdi-unity">
+      {{ editorAvailable ? t('unityPhysics.mcpLiveEditor') : t('unityPhysics.mcpLiveFileOnly') }}
+    </v-alert>
 
     <div class="quick-actions mb-4">
       <h3 class="text-subtitle-2 mb-2">{{ t('unityPhysics.quickActions') }}</h3>
@@ -124,6 +106,7 @@ function handleQuickActionClick(action: typeof PHYSICS_QUICK_ACTIONS[number]): v
       <v-checkbox v-model="includeRigidbody" :label="t('unityPhysics.fields.includeRigidbody')" color="primary" hide-details />
       <v-checkbox v-model="includeColliders" :label="t('unityPhysics.fields.includeColliders')" color="primary" hide-details />
       <v-checkbox v-model="includeLayers" :label="t('unityPhysics.fields.includeLayers')" color="primary" hide-details />
+      <v-checkbox v-model="applyViaMcp" :label="t('unityPhysics.fields.applyViaMcp')" :disabled="!mcpAvailable" color="primary" hide-details />
     </div>
 
     <div class="field-group">
@@ -218,39 +201,4 @@ function handleQuickActionClick(action: typeof PHYSICS_QUICK_ACTIONS[number]): v
   </div>
 </template>
 
-<style scoped>
-.panel {
-  max-width: 820px;
-  margin: 1rem;
-}
-
-.header {
-  margin-bottom: 20px;
-}
-
-h2 {
-  margin: 0 0 6px;
-}
-
-.subtitle {
-  margin: 0;
-  color: #666;
-  font-size: 0.95em;
-}
-
-.field-group {
-  margin-bottom: 12px;
-}
-
-.options-row {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.results {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-</style>
+<style scoped src="./UnityPhysicsPanel.css"></style>

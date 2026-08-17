@@ -20,6 +20,7 @@ from app.services.unity_orchestrator import (
     run_finalize_job,
     run_unity_batch,
     zip_project,
+    _license_failure_message,
 )
 
 # ---------------------------------------------------------------------------
@@ -28,6 +29,15 @@ from app.services.unity_orchestrator import (
 
 
 class TestParseEditorLog:
+    def test_license_failure_message_detects_exit_198(self) -> None:
+        log = "No valid Unity Editor license found.\nreturn code 198"
+        message = _license_failure_message(log, 198)
+        assert message is not None
+        assert "licensing" in message.lower()
+
+    def test_license_failure_message_none_for_success(self) -> None:
+        assert _license_failure_message("Batchmode quit successfully", 0) is None
+
     def test_empty_log(self) -> None:
         result = parse_editor_log("")
         assert result["errors"] == []
@@ -536,14 +546,19 @@ class TestBatchUnitySetupBackend:
 
 
 class TestMcpUnitySetupBackend:
+    @patch("app.services.unity_mcp_client.mcp_available", return_value=True)
     @patch("app.services.unity_mcp_client._call_tool")
     def test_run_setup_success_when_mcp_returns_ok(
         self,
         mock_call_tool: MagicMock,
+        _mock_mcp_available: MagicMock,
         tmp_path: Path,
     ) -> None:
         """When MCP tools return success, McpUnitySetupBackend.run_setup succeeds."""
-        mock_call_tool.return_value = {"success": True}
+        mock_call_tool.return_value = {
+            "success": True,
+            "server": {"backend": "file", "editorAvailable": False},
+        }
 
         from app.services.unity_mcp_client import McpUnitySetupBackend
 
@@ -559,12 +574,14 @@ class TestMcpUnitySetupBackend:
 
         assert result.success is True
         assert result.errors == []
-        assert mock_call_tool.call_count >= 4  # packages, scene, urp, validate
+        assert mock_call_tool.call_count >= 5  # packages, scene, urp, capabilities, lint
 
+    @patch("app.services.unity_mcp_client.mcp_available", return_value=True)
     @patch("app.services.unity_mcp_client._call_tool")
     def test_run_setup_failure_when_mcp_tool_fails(
         self,
         mock_call_tool: MagicMock,
+        _mock_mcp_available: MagicMock,
         tmp_path: Path,
     ) -> None:
         """When an MCP tool returns success: false, run_setup fails with that message."""

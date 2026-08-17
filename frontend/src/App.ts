@@ -4,15 +4,23 @@ import { healthCheck } from "@/api/client";
 // Shared module-level state for useApp
 const tabs = [
   "Settings",
+  "Wizard",
   "Scenes",
   "Code",
   "Text",
   "Image",
   "Sprites",
   "Audio",
+  "Video",
+  "Unity MCP",
+  "Unity Lighting",
+  "Unity Camera",
+  "Unity Materials",
+  "Unity Animations",
   "Unity UI",
   "Unity Physics",
   "Unity Project",
+  "Logs",
   "Management",
 ] as const;
 

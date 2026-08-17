@@ -1,5 +1,5 @@
 {
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Desktop app to generate Unity assets using AI (Electron + FastAPI)",
   "name": "unity-generator",
   "private": true,
