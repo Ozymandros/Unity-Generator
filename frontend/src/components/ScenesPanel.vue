@@ -29,6 +29,10 @@ const {
   TEMPERATURE_PRESETS,
   pendingMediaImport,
   hasPendingMediaImport,
+  mcpAvailable,
+  editorAvailable,
+  mcpWarning,
+  applyViaMcp,
 } = useScenesPanel();
 
 function handleQuickActionClick(action: QuickAction): void {
@@ -53,6 +57,13 @@ function getRandomExamplePrompt(): string {
     </div>
 
     <StatusBanner :status="status" :tone="tone" />
+
+    <v-alert v-if="mcpWarning" type="warning" variant="tonal" class="mb-4" icon="mdi-unity">
+      {{ mcpWarning }}
+    </v-alert>
+    <v-alert v-else-if="mcpAvailable" type="success" variant="tonal" class="mb-4" icon="mdi-unity">
+      {{ editorAvailable ? t('scenes.mcpLiveEditor') : t('scenes.mcpLiveFileOnly') }}
+    </v-alert>
 
     <v-alert v-if="hasPendingMediaImport()" type="info" variant="tonal" class="mb-4" icon="mdi-import" closable>
       <template v-slot:title>{{ t('scenes.mediaReady') }}</template>
@@ -102,6 +113,15 @@ function getRandomExamplePrompt(): string {
       <div class="mb-6">
         <SmartField :label="t('common.temperature')" type="select" v-model.number="temperature" :options="TEMPERATURE_PRESETS" />
       </div>
+
+      <v-checkbox
+        v-model="applyViaMcp"
+        :label="t('scenes.fields.applyViaMcp')"
+        :disabled="!mcpAvailable"
+        color="primary"
+        hide-details
+        class="mb-4"
+      />
 
       <v-expansion-panels class="mb-6">
         <v-expansion-panel :title="t('common.advancedOptions')" bg-color="surface" class="border rounded-lg" elevation="0">

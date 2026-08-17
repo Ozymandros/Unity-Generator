@@ -11,6 +11,14 @@ import SpritesPanel from "./components/SpritesPanel/SpritesPanel.vue";
 import UnityProjectPanel from "./components/UnityProjectPanel/UnityProjectPanel.vue";
 import UnityUIPanel from "./components/UnityUIPanel/UnityUIPanel.vue";
 import UnityPhysicsPanel from "./components/UnityPhysicsPanel/UnityPhysicsPanel.vue";
+import WizardPanel from "./components/WizardPanel/WizardPanel.vue";
+import UnityMcpHubPanel from "./components/UnityMcpHubPanel/UnityMcpHubPanel.vue";
+import UnityLightingPanel from "./components/UnityLightingPanel/UnityLightingPanel.vue";
+import UnityCameraPanel from "./components/UnityCameraPanel/UnityCameraPanel.vue";
+import UnityMaterialsPanel from "./components/UnityMaterialsPanel/UnityMaterialsPanel.vue";
+import UnityAnimationsPanel from "./components/UnityAnimationsPanel/UnityAnimationsPanel.vue";
+import VideoPanel from "./components/VideoPanel/VideoPanel.vue";
+import LogsPanel from "./components/LogsPanel/LogsPanel.vue";
 import { useApp } from "./App";
 import { useSessionProject } from "./composables/useSessionProject";
 import { useOpenProject } from "./composables/useOpenProject";
@@ -36,15 +44,23 @@ unityUi.enableAutoPersist();
 
 const TAB_NAV_KEY: Record<string, string> = {
   Settings: "app.nav.settings",
+  Wizard: "app.nav.wizard",
   Scenes: "app.nav.scenes",
   Code: "app.nav.code",
   Text: "app.nav.text",
   Image: "app.nav.image",
   Sprites: "app.nav.sprites",
   Audio: "app.nav.audio",
+  Video: "app.nav.video",
+  "Unity MCP": "app.nav.unityMcp",
+  "Unity Lighting": "app.nav.unityLighting",
+  "Unity Camera": "app.nav.unityCamera",
+  "Unity Materials": "app.nav.unityMaterials",
+  "Unity Animations": "app.nav.unityAnimations",
   "Unity UI": "app.nav.unityUi",
   "Unity Physics": "app.nav.unityPhysics",
   "Unity Project": "app.nav.unityProject",
+  Logs: "app.nav.logs",
 };
 
 const getTabIcon = (tab: string) => {
@@ -63,12 +79,28 @@ const getTabIcon = (tab: string) => {
       return "mdi-grid";
     case "Audio":
       return "mdi-volume-high";
+    case "Video":
+      return "mdi-movie-open";
+    case "Wizard":
+      return "mdi-wizard-hat";
+    case "Unity MCP":
+      return "mdi-unity";
+    case "Unity Lighting":
+      return "mdi-lightbulb-on";
+    case "Unity Camera":
+      return "mdi-camera";
+    case "Unity Materials":
+      return "mdi-palette";
+    case "Unity Animations":
+      return "mdi-animation-play";
     case "Unity UI":
       return "mdi-palette-outline";
     case "Unity Physics":
       return "mdi-atom";
     case "Unity Project":
       return "mdi-unity";
+    case "Logs":
+      return "mdi-text-box-search-outline";
     default:
       return "mdi-circle-medium";
   }
@@ -157,15 +189,23 @@ onUnmounted(() => {
         <v-fade-transition hide-on-leave>
           <div :key="active" class="content-wrapper">
             <SettingsPanel v-if="active === 'Settings'" @switch-tab="setActive" />
+            <WizardPanel v-else-if="active === 'Wizard'" />
             <ScenesPanel v-else-if="active === 'Scenes'" />
             <CodePanel v-else-if="active === 'Code'" />
             <TextPanel v-else-if="active === 'Text'" />
             <ImagePanel v-else-if="active === 'Image'" />
             <SpritesPanel v-else-if="active === 'Sprites'" />
             <AudioPanel v-else-if="active === 'Audio'" />
+            <VideoPanel v-else-if="active === 'Video'" />
+            <UnityMcpHubPanel v-else-if="active === 'Unity MCP'" :on-navigate="setActive" />
+            <UnityLightingPanel v-else-if="active === 'Unity Lighting'" />
+            <UnityCameraPanel v-else-if="active === 'Unity Camera'" />
+            <UnityMaterialsPanel v-else-if="active === 'Unity Materials'" />
+            <UnityAnimationsPanel v-else-if="active === 'Unity Animations'" />
             <UnityUIPanel v-else-if="active === 'Unity UI'" />
             <UnityPhysicsPanel v-else-if="active === 'Unity Physics'" />
             <UnityProjectPanel v-else-if="active === 'Unity Project'" />
+            <LogsPanel v-else-if="active === 'Logs'" />
           </div>
         </v-fade-transition>
       </v-container>

@@ -65,7 +65,7 @@ FinalizeRequest
   -> Scaffold base project (if needed)
   -> Choose backend: batch or MCP (from unity_automation_mode)
   -> Batch: render & inject scripts -> Unity -batchmode -> cleanup
-  -> MCP:  call MCP-Unity tools (install_packages, create_scene, configure_urp, validate_import)
+  -> MCP:  call MCP tools (unity_install_packages, unity_create_default_scene, unity_configure_urp, unity_lint_project, unity_validate_import)
   -> Zip project for download
   -> Job completed / Job failed with diagnostics
 ```
@@ -166,12 +166,13 @@ When running in **MCP mode**, the backend calls the MCP-Unity (Semantic Kernel) 
 
 | Tool | Inputs | Outputs | Idempotent | Error reporting |
 |------|--------|---------|------------|-----------------|
-| `unity_install_packages` | `project_path: string`, `packages: string[]` | `success: bool`, `installed: string[]`, `message?: string` | No (installs add or upgrade) | On failure: `success: false`, `message` with reason (e.g. package not found, network error). |
-| `unity_create_default_scene` | `project_path: string`, `scene_name: string` | `success: bool`, `scene_path?: string`, `prefab_path?: string`, `message?: string` | Yes (overwrites scene if same name) | On failure: `success: false`, `message` with reason. |
-| `unity_configure_urp` | `project_path: string` | `success: bool`, `message?: string` | Yes | On failure: `success: false`, `message` (e.g. no URP asset found). |
-| `unity_validate_import` | `project_path: string` | `success: bool`, `error_count: int`, `warning_count: int`, `errors?: string[]`, `message?: string` | Yes | Compilation/import errors in `errors`; `success: false` if `error_count > 0`. |
+| `unity_install_packages` | `projectPath: string`, `packages: string[]` | `success: bool`, `installed: string[]`, `message?: string` | No (installs add or upgrade) | On failure: `success: false`, `message` with reason (e.g. package not found, network error). |
+| `unity_create_default_scene` | `projectPath: string`, `sceneName: string` | `success: bool`, `scene_path?: string`, `prefab_path?: string`, `message?: string` | Yes (overwrites scene if same name) | On failure: `success: false`, `message` with reason. |
+| `unity_configure_urp` | `projectPath: string` | `success: bool`, `message?: string` | Yes | On failure: `success: false`, `message` (e.g. no URP asset found). |
+| `unity_validate_import` | `projectPath: string` | `success: bool`, `error_count: int`, `warning_count: int`, `errors?: string[]`, `message?: string` | Yes | Compilation/import errors in `errors`; `success: false` if `error_count > 0`. Editor-gated: skipped with a warning when `unity_get_capabilities` reports no Editor. |
+| `unity_lint_project` | `projectPath: string` | envelope | Yes | File-only lint (missing .meta, broken GUIDs). |
 
-- All tools assume the Unity Editor is running and the project is open (or can be opened by the plugin). The backend maps plugin failures into the same `FinalizeResult` / job status format as batch mode.
+- File-only tools do **not** require the Unity Editor. Call `unity_get_capabilities` first; skip Editor-gated `unity_validate_import` when the Editor is unavailable (file-only `unity_lint_project` still runs).
 - Mode selection: request field `unity_automation_mode: "batch" | "mcp" | "auto"`. Default `"auto"`: use MCP when the plugin is available and configured, otherwise fall back to batch.
 
 ## MCP-Unity readiness checklist
@@ -180,32 +181,32 @@ Use this checklist to confirm the MCP-Unity plugin implements all required behav
 
 **Tool: `unity_install_packages`**
 
-- **Inputs:** `project_path`, `packages` (list of UPM package IDs, e.g. `com.unity.render-pipelines.universal`).
+- **Inputs:** `projectPath`, `packages` (list of UPM package IDs, e.g. `com.unity.render-pipelines.universal`).
 - **Behavior:** Install each package (equivalent to `PackageManager.Client.Add`); wait for completion; fail if any install fails.
 - **Required:** Same package set and order as batch (batch installs sequentially). No extra parameters in the current app.
 
 **Tool: `unity_create_default_scene`**
 
-- **Inputs:** `project_path`, `scene_name` (name without extension).
+- **Inputs:** `projectPath`, `sceneName` (name without extension).
 - **Behavior:** Create default scene equivalent to `ScenePrefabSetup.cs.j2`: new empty scene; Main Camera (tag `MainCamera`, position (0, 1, -10), Skybox clear); Directional Light (rotation 50, -30, 0); Ground plane (Plane, scale 5,1,5). Save scene to `Assets/Scenes/{scene_name}.unity` (create `Assets/Scenes` if needed). Save ground as prefab to `Assets/Prefabs/Ground.prefab` (create `Assets/Prefabs` if needed).
 - **Required:** Same paths and structure so generated projects behave like batch-generated ones.
 
 **Tool: `unity_configure_urp`**
 
-- **Inputs:** `project_path`.
+- **Inputs:** `projectPath`.
 - **Behavior:** Equivalent to `ProjectSettingsSetup.cs.j2`: set `PlayerSettings.colorSpace` to Linear; TagManager: add tags `Generated`, `AutoSetup`; set user layers 8 and 9 to `CustomLayer1`, `CustomLayer2`; find first `RenderPipelineAsset` in project, assign to `GraphicsSettings.defaultRenderPipeline` and `QualitySettings.renderPipeline`.
 - **Required:** Same tags, layer names, and linear color space so URP setup matches batch.
 
 **Tool: `unity_validate_import`**
 
-- **Inputs:** `project_path`.
+- **Inputs:** `projectPath`.
 - **Behavior:** Equivalent to `ImportValidation.cs.j2`: full asset refresh, trigger script compilation, report compilation errors and warnings; return `success` when error count is 0.
 - **Required:** Return structured result with `success`, `error_count`, `warning_count`, `errors` (and optionally `warnings`) so the backend can map to `FinalizeResult` / job status.
 
 **Cross-cutting**
 
 - **Timeout:** Batch path uses a single timeout (e.g. 300s) for the whole Unity process. MCP tools may run long (e.g. package install, full import). The MCP client or plugin should respect a timeout (per-tool or global) so the app can fail gracefully; the backend accepts `timeout` and passing it to MCP calls is recommended for parity.
-- **Project path:** All tools receive `project_path`; the plugin must operate on that project (open it if necessary, or assume it is already open).
+- **Project path:** All tools receive `projectPath`; the plugin must operate on that project (open it if necessary, or assume it is already open). Never use `path` or `scenePath`.
 
 ## Error Handling
 
@@ -234,7 +235,7 @@ troubleshooting.
 
 - **Preferred path**: MCP-Unity is the **preferred** path when it is enabled; batch mode (Unity.exe + injected scripts) is the **fallback** when MCP is unavailable or when `unity_automation_mode` is `"batch"`.
 - **When it is used**: When `unity_automation_mode` is `"mcp"` or when it is `"auto"` and the MCP-Unity plugin is enabled (see below). Otherwise the batch backend is used.
-- **Enabling MCP**: Set the environment variable `UNITY_USE_MCP=1` (or `true` / `yes`) so that `"auto"` uses the MCP-Unity plugin when available. You must also configure how the backend reaches the server: **`UNITY_MCP_SERVER_URL`** (Streamable HTTP URL) or, by default, **stdio** by running the server as a subprocess (command from **`UNITY_MCP_COMMAND`**, default `unity-mcp`; optional **`UNITY_MCP_ARGS`** for extra arguments). The backend uses the official MCP Python SDK and calls the four contract tools (install_packages, create_default_scene, configure_urp, validate_import).
+- **Enabling MCP**: Set the environment variable `UNITY_USE_MCP=1` (or `true` / `yes`) so that `"auto"` uses MCP when available. Configure the current Unity MCP server through **stdio** by running the server as a subprocess (command from **`UNITY_MCP_COMMAND`**, default `unity-mcp`; optional **`UNITY_MCP_ARGS`** for extra arguments). `UNITY_MCP_SERVER_URL` is only for alternate/future Streamable HTTP servers. The backend uses the official MCP Python SDK and calls the contract tools (install_packages, create_default_scene, configure_urp, validate_import) while normalizing the newer capability/result envelopes.
 - **Readiness**: Before relying on MCP as primary, verify the plugin implements all required behaviors using the [MCP-Unity readiness checklist](#mcp-unity-readiness-checklist) above.
 - **CI / headless**: Use `unity_automation_mode: "batch"` so that finalize always uses injected scripts and Unity batch mode; MCP-Unity is not required.
 

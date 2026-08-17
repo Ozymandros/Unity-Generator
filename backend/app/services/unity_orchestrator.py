@@ -104,6 +104,11 @@ _WARNING_PATTERNS = [
     re.compile(r"^Assets[\\/].*\.cs\(\d+,\d+\): warning CS\d+:", re.MULTILINE),
 ]
 
+_LICENSE_FAILURE_MARKERS = (
+    "No valid Unity Editor license found",
+    "com.unity.editor.headless",
+    "return code 198",
+)
 
 # ---------------------------------------------------------------------------
 # Editor.log location helpers
@@ -191,6 +196,28 @@ def parse_editor_log(log_content: str) -> dict[str, list[str]]:
                 break
 
     return {"errors": errors, "warnings": warnings}
+
+
+def _license_failure_message(log_content: str, exit_code: int) -> str | None:
+    """
+    Return a user-facing license error when Unity batch mode fails licensing.
+
+    Args:
+        log_content: Unity Editor log text for the batch run.
+        exit_code: Process exit code from Unity.
+
+    Returns:
+        Actionable error string, or None when licensing is not the cause.
+    """
+    if exit_code != 198 and not any(marker in log_content for marker in _LICENSE_FAILURE_MARKERS):
+        return None
+    return (
+        "Unity batch mode failed due to licensing (exit code 198). "
+        "Activate Unity Personal/Pro in Unity Hub, sign in, and ensure batch/headless "
+        "entitlement is available for your Editor version. "
+        "Alternatively use unity_automation_mode 'mcp' or 'auto' with Unity MCP Server "
+        "(unity-mcp on PATH) and open the project in Unity Editor."
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -328,6 +355,12 @@ def run_unity_batch(
         "-executeMethod",
         execute_method,
     ]
+    batch_log_path = log_path
+    if batch_log_path is None:
+        batch_log_path = project_path / "Logs" / "unity-generator-batch.log"
+        batch_log_path.parent.mkdir(parents=True, exist_ok=True)
+    cmd.extend(["-logFile", str(batch_log_path)])
+
     if extra_args:
         cmd.extend(extra_args)
 
@@ -362,8 +395,11 @@ def run_unity_batch(
         )
 
     # Read and parse Editor.log
-    editor_log = _read_editor_log(log_path)
+    editor_log = _read_editor_log(batch_log_path)
     parsed = parse_editor_log(editor_log)
+    license_error = _license_failure_message(editor_log, exit_code)
+    if license_error:
+        parsed["errors"].insert(0, license_error)
 
     success = exit_code == 0 and len(parsed["errors"]) == 0
 
@@ -595,6 +631,33 @@ def run_finalize_job(
     )
     errors = setup_result.errors
     logs = setup_result.logs
+
+    # Retry via MCP when batch failed due to licensing (exit 198) and MCP is available.
+    if (
+        not setup_result.success
+        and unity_automation_mode in ("auto", "batch")
+        and any("exit code 198" in err.lower() or "licensing" in err.lower() for err in errors)
+    ):
+        try:
+            from .unity_mcp_client import McpUnitySetupBackend, mcp_available
+
+            if mcp_available():
+                _progress("setup", 12, "Batch license failed; retrying via Unity MCP...")
+                mcp_backend = McpUnitySetupBackend()
+                setup_result = mcp_backend.run_setup(
+                    project_path,
+                    install_packages=install_packages,
+                    packages=packages,
+                    generate_scene=generate_scene,
+                    scene_name=scene_name,
+                    setup_urp=setup_urp,
+                    timeout=timeout,
+                    on_progress=on_progress,
+                )
+                errors = setup_result.errors
+                logs = setup_result.logs
+        except Exception as exc:
+            LOGGER.debug("MCP fallback after license failure unavailable: %s", exc)
 
     if not setup_result.success:
         return FinalizeResult(

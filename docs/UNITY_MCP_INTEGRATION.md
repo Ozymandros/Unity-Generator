@@ -2,31 +2,32 @@
 
 > **Unity MCP Server (install, Git URL, env vars — not the Python plugin):** see **[UNITY_MCP_SERVER.md](./UNITY_MCP_SERVER.md)**.
 
-This document describes the integration of Unity's Model Context Protocol (MCP) with Semantic Kernel using the Python **`unity-mcp-plugin`** package from **[Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin)** (Git URL or local editable install—see `backend/requirements.txt`). The backend talks to the **Unity MCP Server** over stdio. Both pieces are required and are separate GitHub repositories.
+This document describes the integration of Unity's Model Context Protocol (MCP) with Semantic Kernel using the Python **`unity-mcp-plugin`** package from **[unity-mcp-server-plugin](https://github.com/Ozymandros/unity-mcp-server-plugin)** (pinned in `backend/requirements.txt`). The backend talks to **Unity MCP Server 3.2.1** over **stdio only**. The C# NuGet Unity-MCP-SK-Plugin is a different host and is not loaded here.
 
 ## Required dependencies (two repositories)
 
 | Component | Purpose | GitHub repository | How this project uses it |
 |-----------|---------|-------------------|----------------------------|
 | **Unity-MCP-Server** | Official MCP server that exposes Unity Editor automation tools (JSON-RPC over stdio when used as a global .NET tool). | **[github.com/Ozymandros/Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)** | Install and run the `unity-mcp` global tool (or your built server executable). Point `UNITY_MCP_COMMAND` at that executable if it is not on `PATH`. |
-| **unity-mcp-plugin** (Python distribution) | Semantic Kernel bridge: discovers MCP tools and registers them as SK functions. | **[github.com/Ozymandros/Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin)** | `backend/requirements.txt`: default **`-e ../unity-mcp-server-plugin`**, or switch to **`unity-mcp-plugin @ git+...`** (SSH/fork if private). Imported as `from unity_mcp import UnityMCPPlugin, UnityMcpOptions`. |
+| **unity-mcp-plugin** (Python distribution) | Semantic Kernel bridge: typed domain skills + discovery fallback. | **[github.com/Ozymandros/unity-mcp-server-plugin](https://github.com/Ozymandros/unity-mcp-server-plugin)** | `backend/requirements.txt` pins a local/git ref. Imported as `from unity_mcp import UnityMCPPlugin, add_unity_mcp_skills`. |
 
 **Install order (typical dev setup):**
 
 1. Clone **[Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)** and install the server per its README (often a global .NET tool named `unity-mcp` on your `PATH`; follow that repo’s install script or `dotnet tool` instructions).
 2. Install **`unity-mcp-plugin`**: either follow the **default** in `backend/requirements.txt` (sibling clone + `-e`), **or** comment that out and use **`unity-mcp-plugin @ git+ssh://...`** (or your fork) so the app does not depend on a fixed folder next to this repo. If `git+https` fails with **404**, the GitHub repo is likely **private**—use SSH, a public fork, or a wheel.
 
-**Optional dev workflow:** clone **Unity-MCP-SK-Plugin** anywhere and use `pip install -e /path/to/clone` while developing the bridge.
+**Optional dev workflow:** clone **unity-mcp-server-plugin** next to this repo and use `pip install -e /path/to/unity-mcp-server-plugin` while developing the Python bridge. The C# NuGet **Unity-MCP-SK-Plugin** is a different host and is not loaded here.
 
 ## Path terminology (don’t confuse these)
 
 - **Unity project path**: The **root folder of the Unity project** that contains an `Assets/` folder (e.g. `C:/Projects/Unity-Generator/output/MyGame`). This is the path you set in the app (session/project name and path) and that the backend injects into the agent so MCP tools know which project to operate on. **This is not** the MCP server executable or a NuGet package path.
-- **Unity MCP Server**: The **executable or tool** that runs (typically inside the Unity Editor) and exposes MCP tools. Configure how the backend reaches it via `UNITY_MCP_COMMAND` (path to the **server executable**, e.g. `UnityMcp.Server.exe`) or by having `unity-mcp` on PATH. A path like `c:\...\UnityMcp.Server\nupkg` is the **NuGet package output** for the MCP server, not a Unity project path—never use that as the project path.
+- **Unity MCP Server**: The **stdio executable** (`unity-mcp`) that exposes MCP tools. Configure how the backend reaches it via `UNITY_MCP_COMMAND` (path to the **server executable**) or by having `unity-mcp` on PATH. A path like `c:\...\UnityMcp.Server\nupkg` is the **NuGet package output** for the MCP server, not a Unity project path—never use that as the project path. Editor-gated tools still require a live Unity Editor; call `unity_get_capabilities` first.
 
 ## Overview
 - **No Unity/C# code required**: This integration is entirely Python-side.
-- **Auto-discovery**: All Unity tools exposed by the MCP server are automatically available to Semantic Kernel.
-- **No manual kernel_function decorators**: The local Unity MCP plugin package handles tool registration.
+- **Typed skills**: `add_unity_mcp_skills` registers ~89 camelCase MCP tools as SK functions (`projectPath`/`fileName`).
+- **Discovery fallback**: unknown server tools still register; `invoke_unity_tool` remains.
+- **No Streamable HTTP** for the current upstream Unity-MCP-Server.
 - **Robust error handling**: Connection and protocol errors are surfaced clearly.
 
 ## Configuration
@@ -43,11 +44,11 @@ export UNITY_MCP_COMMAND="C:\Path\To\UnityMcp.Server.exe"
 ## Usage
 - The integration is implemented in `backend/app/agents/unity_mcp_plugin.py` using `unity_mcp.UnityMCPPlugin` from the **`unity-mcp-plugin`** package.
 - The agent in `backend/app/agents/unity_agent.py` uses this wrapper to connect and interact with Unity tools.
-- All Unity automation tools (e.g., create_scene, create_script) are auto-discovered and callable from the agent.
+- Typed skills register the ~89 camelCase tools (e.g. `unity_create_scene`, `unity_save_script`). Unknown tools remain available via discovery/`invoke_unity_tool`.
 
 ### Requirements for scene creation (assets in Unity)
 - **Tool-use provider**: The LLM provider used for scene creation must support **tool use** (e.g. OpenAI, DeepSeek, Google, Groq). If the provider does not support tool use, the MCP plugin is not registered and the agent cannot call Unity MCP tools—so no scenes or GameObjects are created in the Editor. Check provider capabilities in Settings; providers like Replicate may have tool use disabled.
-- **Unity MCP server**: The Unity MCP server must be running (e.g. via Unity-MCP-Server in the Editor) and reachable so the agent can invoke tools such as `create_scene`, `create_gameobject`, and `create_script`.
+- **Unity MCP server**: `unity-mcp` must be on PATH (or `UNITY_MCP_COMMAND` must point at the stdio executable) so the agent can invoke tools such as `unity_create_scene`, `unity_add_gameobject`, and `unity_save_script`. Call `unity_get_capabilities` before Editor-gated tools. Never pass `path`, `scenePath`, or unprefixed names such as `create_scene`.
 
 ### Project path injection
 - **Project path** comes from **session storage** (ProjectName; keys: `unity_session_project_name`, `unity_session_project_path`). The sidebar shows an editable project name; the path is set when you generate or finalize a project in the Unity Project panel.

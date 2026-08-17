@@ -5,6 +5,7 @@ import { TEMPERATURE_PRESETS } from "@/constants/providers";
 import { PHYSICS_EXAMPLE_PROMPTS } from "@/constants/unityPhysicsPrompts";
 import { useIntelligenceStore } from "@/store/intelligenceStore";
 import { useSessionProject } from "@/composables/useSessionProject";
+import { useUnityMcpStatus } from "@/composables/useUnityMcpStatus";
 
 export { PHYSICS_EXAMPLE_PROMPTS } from "@/constants/unityPhysicsPrompts";
 
@@ -40,6 +41,7 @@ export const PHYSICS_QUICK_ACTIONS = [
 export function useUnityPhysicsPanel() {
   const store = useIntelligenceStore();
   const { projectName } = useSessionProject();
+  const { available: mcpAvailable, editorAvailable, warning: mcpWarning, applyViaMcp } = useUnityMcpStatus();
 
   // Core generation fields
   const prompt = ref("");
@@ -151,6 +153,7 @@ export function useUnityPhysicsPanel() {
         include_rigidbody: includeRigidbody.value,
         include_colliders: includeColliders.value,
         include_layers: includeLayers.value,
+        apply_via_mcp: applyViaMcp.value,
         options: {
           model: model.value || undefined,
           temperature: temperature.value,
@@ -188,6 +191,10 @@ export function useUnityPhysicsPanel() {
     includeRigidbody,
     includeColliders,
     includeLayers,
+    mcpAvailable,
+    editorAvailable,
+    mcpWarning,
+    applyViaMcp,
     // Provider/model
     providers,
     providerOptions,

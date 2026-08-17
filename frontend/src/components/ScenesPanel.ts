@@ -5,11 +5,13 @@ import { TEMPERATURE_PRESETS } from "@/constants/providers";
 import { useIntelligenceStore } from "@/store/intelligenceStore";
 import { useSessionProject } from "@/composables/useSessionProject";
 import { useMediaImport } from "@/composables/useMediaImport";
+import { useUnityMcpStatus } from "@/composables/useUnityMcpStatus";
 
 export function useScenesPanel() {
   const store = useIntelligenceStore();
   const { projectName } = useSessionProject();
   const { pendingMediaImport, pendingPrompt, clearPendingMediaImport, hasPendingMediaImport } = useMediaImport();
+  const { available: mcpAvailable, editorAvailable, warning: mcpWarning, applyViaMcp } = useUnityMcpStatus();
 
   const prompt = ref("");
   const provider = ref("");
@@ -49,6 +51,7 @@ export function useScenesPanel() {
       temperature: number;
     };
     media_import?: MediaImportPayload;
+    apply_via_mcp?: boolean;
   }
 
   const result = ref<AgentResult | null>(null);
@@ -119,7 +122,8 @@ export function useScenesPanel() {
         options: {
              model: model.value || undefined,
              temperature: temperature.value
-        }
+        },
+        apply_via_mcp: applyViaMcp.value,
       };
 
       // Include media import data if present
@@ -177,6 +181,10 @@ export function useScenesPanel() {
     TEMPERATURE_PRESETS,
     // Media import state
     pendingMediaImport,
-    hasPendingMediaImport
+    hasPendingMediaImport,
+    mcpAvailable,
+    editorAvailable,
+    mcpWarning,
+    applyViaMcp,
   };
 }

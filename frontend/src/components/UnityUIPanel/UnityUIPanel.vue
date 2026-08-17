@@ -22,6 +22,10 @@ const {
   anchorPreset,
   colorTheme,
   includeAnimations,
+  mcpAvailable,
+  editorAvailable,
+  mcpWarning,
+  applyViaMcp,
   availableModels,
   showModelManager,
   refreshModels,
@@ -73,6 +77,13 @@ function handleQuickActionClick(action: UIQuickAction): void {
 
     <StatusBanner :status="status" :tone="tone" />
 
+    <v-alert v-if="mcpWarning" type="warning" variant="tonal" class="mb-4" icon="mdi-unity">
+      {{ mcpWarning }}
+    </v-alert>
+    <v-alert v-else-if="mcpAvailable" type="success" variant="tonal" class="mb-4" icon="mdi-unity">
+      {{ editorAvailable ? t('unityUi.mcpLiveEditor') : t('unityUi.mcpLiveFileOnly') }}
+    </v-alert>
+
     <div class="quick-actions mb-4">
       <h3 class="text-subtitle-2 mb-2">{{ t('unityPhysics.quickActions') }}</h3>
       <v-chip-group>
@@ -116,6 +127,8 @@ function handleQuickActionClick(action: UIQuickAction): void {
         placeholder="e.g. dark blue, gold accents" class="flex-grow-1" />
       <v-checkbox v-model="includeAnimations" :label="t('unityUi.fields.includeAnimations')"
         color="primary" hide-details class="mt-1 flex-shrink-0" />
+      <v-checkbox v-model="applyViaMcp" :label="t('unityUi.fields.applyViaMcp')"
+        :disabled="!mcpAvailable" color="primary" hide-details class="mt-1 flex-shrink-0" />
     </div>
 
     <div class="field-group">

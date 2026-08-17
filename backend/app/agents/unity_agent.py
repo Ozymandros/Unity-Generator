@@ -20,7 +20,15 @@ from semantic_kernel.connectors.ai.function_choice_behavior import FunctionChoic
 
 from ..services.providers import provider_registry
 from ..services.providers.capabilities import Modality
-from .unity_mcp_plugin import create_unity_mcp_plugin, unity_mcp_plugin_available_for_writing
+from .unity_auto_invoke import auto_invoke_csharp_blocks
+from .unity_mcp_plugin import (
+    InjectingUnityMcpPlugin,
+    create_unity_mcp_plugin,
+    fetch_runtime_capabilities_guidance,
+    persist_media_import,
+    register_unity_mcp_on_kernel,
+    unity_mcp_plugin_available_for_writing,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -139,7 +147,7 @@ class UnityAgent:
 
     def _build_enhanced_capabilities_guidance(self) -> str:
         """
-        Build comprehensive guidance for Unity-MCP-Server 3.0.5 tools.
+        Build comprehensive guidance for Unity-MCP-Server 3.2.1 tools.
 
         Returns:
             String containing all tool category guidance sections and workflow
@@ -154,17 +162,23 @@ class UnityAgent:
         """
         return """
 
-You have access to Unity-MCP-Server 3.0.5 tools for advanced Unity automation:
+You have access to Unity-MCP-Server 3.2.1 tools (~89) over stdio. Use camelCase args:
+projectPath (project root) + fileName (path under project, e.g. Assets/Scenes/New.unity).
+Call unity_get_capabilities before Editor-gated tools. Typed skills are registered by
+domain (server, project, scene, asset, packages, validation, ecosystem, camera, light,
+physics, ui, nav, input, animation, vfx, component, editor_bridge).
 
 SCENE BUILDING:
 - unity_create_detailed_scene: Create scenes with multiple GameObjects in one call
 - unity_add_gameobject: Add individual GameObjects (Cube, Sphere, Capsule, Light, Camera)
 - unity_create_material: Create materials with shader properties
 - unity_create_prefab: Create prefabs from GameObjects
+- unity_scene_list_gameobjects / unity_scene_add_gameobject: file-native graph edits
 
 UI CREATION:
 - unity_create_ui_canvas: Create UI Canvas with elements (Panel, Button, Text, Image)
 - unity_create_ui_layout: Create complex UI layouts
+- File-only UI is a compatibility-surrogate unless capabilities say native-editor
 
 ANIMATION & CUTSCENES:
 - unity_create_basic_animator: Create simple Animator Controllers with states and transitions
@@ -181,12 +195,19 @@ PROTOTYPING:
 MEDIA IMPORT:
 - unity_save_texture: Import images as Unity textures
 - unity_save_audio: Import audio files as Unity audio clips
+- Prefer these tools when base64 media is already present; do not invent base64
+
+PHYSICS / NAV / PACKAGES:
+- unity_create_physics_setup / unity_physics_* (create/update body are Editor-gated)
+- unity_configure_navmesh, unity_create_waypoint_graph
+- unity_add_packages / unity_install_packages; unity_search_packages is Editor-gated
 
 WORKFLOW RECOMMENDATIONS:
 1. For animations: Create animator → Create prefab with Animator component → Attach to GameObject
 2. For cutscenes: Create timeline → Add timeline component to GameObject → Configure tracks
 3. For prototypes: Use unity_create_prototype_recipe for instant playable setup
-4. Always validate with unity_validate_import after creating assets
+4. Always validate with unity_validate_import after creating assets (skip if Editor unavailable)
+5. Call unity_get_capabilities first when using Editor-gated tools
 
 When user requests animations, cutscenes, or prototypes, use these tools proactively.
 """
@@ -309,17 +330,40 @@ When user requests animations, cutscenes, or prototypes, use these tools proacti
                 " You do not have access to Unity tools; reply with plain text only."
             )
 
-        # Append enhanced capabilities guidance for Unity-MCP-Server 3.0.5
+        # Append enhanced capabilities guidance for Unity-MCP-Server 3.2.1
         system_message += self._build_enhanced_capabilities_guidance()
+        if options.get("apply_via_mcp"):
+            system_message += (
+                " APPLY VIA MCP: Prefer Unity MCP tools over raw C# dumps. "
+                "For UI use unity_create_ui_canvas and unity_create_ui_layout; "
+                "for physics use unity_create_physics_setup and unity_physics_* when live. "
+                "File-only UI/physics are compatibility-surrogates unless capabilities say native-editor."
+            )
+
+        media_import = options.get("media_import") if isinstance(options, dict) else None
+        if isinstance(media_import, dict) and media_import:
+            media_name = str(media_import.get("name") or "imported_media")
+            media_type = str(media_import.get("type") or "media")
+            import_tool = "unity_save_audio" if media_type.startswith("audio") else "unity_save_texture"
+            system_message += (
+                f" MEDIA PAYLOAD PRESENT: name={media_name}, type={media_type}. "
+                f"The backend will call {import_tool} with the provided base64; "
+                "do not invent base64 and do not skip import."
+            )
 
         full_prompt = f"{system_message}\n\nUser: {prompt}"
+
+        modality_key = options.get("modality_key") if isinstance(options, dict) else None
+        max_tokens = options.get("max_tokens", 2000) if isinstance(options, dict) else 2000
+        if str(modality_key or "").lower() == "wizard":
+            max_tokens = max(int(max_tokens), 8000)
 
         try:
             # Common settings setup
             execution_settings = sk_service.instantiate_prompt_execution_settings(
                 service_id=service_id,
                 temperature=options.get("temperature", 0.7),
-                max_tokens=options.get("max_tokens", 2000)
+                max_tokens=max_tokens,
             )
 
             # Some SK connectors expose ai_model_id as a settable attribute; set it
@@ -336,7 +380,19 @@ When user requests animations, cutscenes, or prototypes, use these tools proacti
                     provider,
                 )
                 async with create_unity_mcp_plugin() as mcp_plugin:
-                    kernel.add_plugin(mcp_plugin, plugin_name="UnityMCP")
+                    injecting_plugin = InjectingUnityMcpPlugin(
+                        mcp_plugin,
+                        project_path=project_path,
+                    )
+                    register_unity_mcp_on_kernel(
+                        kernel,
+                        injecting_plugin,
+                        modality_key=str(modality_key) if modality_key else None,
+                    )
+                    runtime_guidance = await fetch_runtime_capabilities_guidance(mcp_plugin)
+                    full_prompt = f"{system_message}{runtime_guidance}\n\nUser: {prompt}"
+                    if isinstance(media_import, dict) and media_import and project_path:
+                        await persist_media_import(mcp_plugin, project_path, media_import)
 
                     # Auto function-choice lets the LLM decide when to call tools
                     # rather than requiring explicit tool names in the prompt.
@@ -344,6 +400,21 @@ When user requests animations, cutscenes, or prototypes, use these tools proacti
                         execution_settings.function_choice_behavior = FunctionChoiceBehavior.Auto()
 
                     result = await kernel.invoke_prompt(prompt=full_prompt, settings=execution_settings)
+                    content = str(result)
+                    auto_saved = await auto_invoke_csharp_blocks(
+                        injecting_plugin,
+                        content,
+                        project_path=project_path,
+                        tools_already_called=injecting_plugin.tools_called,
+                    )
+                    metadata: dict[str, Any] = {"steps": [], "modality_key": modality_key}
+                    if auto_saved:
+                        metadata["auto_saved_files"] = auto_saved
+                    return {
+                        "content": content,
+                        "files": auto_saved,
+                        "metadata": metadata,
+                    }
             else:
                 # Provider does not allow tool use or MCP not available — run as plain LLM
                 LOGGER.debug(
@@ -355,7 +426,7 @@ When user requests animations, cutscenes, or prototypes, use these tools proacti
             return {
                 "content": str(result),
                 "files": [],
-                "metadata": {"steps": []},
+                "metadata": {"steps": [], "modality_key": modality_key},
             }
 
         except Exception as exc:

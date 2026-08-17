@@ -2,16 +2,38 @@
 
 > **Install/configure the Unity MCP *server* (Git URL, env vars):** [UNITY_MCP_SERVER.md](./UNITY_MCP_SERVER.md).
 
-This project relies on the **`unity-mcp-plugin`** Python package for Semantic Kernel integration. Source and releases live in **[Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin)**. That plugin is a **client** of the MCP server **[Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)** (stdio): you must have the server executable available (e.g. `unity-mcp` on `PATH`) or set `UNITY_MCP_COMMAND` (see [UNITY_MCP_INTEGRATION.md](./UNITY_MCP_INTEGRATION.md)).
+This project relies on the **`unity-mcp-plugin`** Python package for Semantic Kernel integration. Source lives in **[unity-mcp-server-plugin](https://github.com/Ozymandros/unity-mcp-server-plugin)** (import `unity_mcp`). That plugin is a **stdio client** of **[Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)** 3.2.1 (~89 tools). The C# NuGet **Unity-MCP-SK-Plugin** is a separate host and is **not** loaded by this app.
 
 | Piece | Repository |
 |-------|------------|
-| MCP server (tools, Unity contract) | [github.com/Ozymandros/Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server) |
-| Python SK plugin (`unity_mcp` package) | [github.com/Ozymandros/Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin) |
+| MCP server (tools, Unity contract, stdio only) | [github.com/Ozymandros/Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server) |
+| Python SK plugin (`unity_mcp` package) | [github.com/Ozymandros/unity-mcp-server-plugin](https://github.com/Ozymandros/unity-mcp-server-plugin) |
 
-**Dependency:** `backend/requirements.txt` documents two ways to get **`unity-mcp-plugin`**: **Git URL** (no sibling folder) or **`-e ../unity-mcp-server-plugin`** (default sibling clone). Use **SSH** or a fork if the GitHub repo is private. For hacking the bridge, clone that repo anywhere and use `pip install -e <path>`.
+**Dependency:** `backend/requirements.txt` pins **`unity-mcp-plugin`** to the sibling checkout (`file:../../unity-mcp-server-plugin`). After a git tag exists, switch to `git+https://github.com/Ozymandros/unity-mcp-server-plugin.git@<tag>`.
 
-## Expanded Mode (Recommended)
+## Typed skills (recommended)
+
+```python
+from semantic_kernel import Kernel
+from unity_mcp import UnityMCPPlugin, add_unity_mcp_skills
+
+plugin = UnityMCPPlugin.create()
+await plugin.initialize()
+kernel = Kernel()
+add_unity_mcp_skills(kernel, plugin)
+result = await kernel.invoke(
+    "scene",
+    "unity_create_scene",
+    projectPath="C:/MyProj",
+    fileName="Assets/Scenes/Main.unity",
+)
+```
+
+Typed namespaces: `server`, `project`, `scene`, `asset`, `packages`, `validation`, `ecosystem`, `camera`, `light`, `physics`, `ui`, `nav`, `input`, `animation`, `vfx`, `component`, `editor_bridge`.
+
+Call `unity_get_capabilities` before Editor-gated tools. Discovery/`invoke_unity_tool` remain as fallback for unknown server tools.
+
+## Expanded Mode (discovery fallback)
 
 ```python
 from unity_mcp import UnityMCPPlugin

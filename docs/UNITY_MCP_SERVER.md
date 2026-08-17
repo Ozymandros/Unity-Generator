@@ -31,14 +31,14 @@ Official container images are published here:
 docker pull ghcr.io/ozymandros/unity-mcp-server:<tag>
 ```
 
-**Run** (example only — **port and env vars** must match **Unity-MCP-Server** docs for MCP HTTP vs stdio; adjust `-p` and any `-e` flags per upstream):
+**Run** (stdio server; MCP hosts start it with stdin/stdout attached):
 
 ```bash
-docker run --rm -p <HOST_PORT>:<CONTAINER_PORT> ghcr.io/ozymandros/unity-mcp-server:<tag>
+docker run -i --rm ghcr.io/ozymandros/unity-mcp-server:<tag>
 ```
 
 - If the image is **private**, authenticate to GHCR before `pull` / `run`, e.g. [GitHub docs: Working with the Container registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) (`docker login ghcr.io` with a PAT that has `read:packages`).
-- For **Unity-Generator** integration over **HTTP**, publish the port the server uses for **Streamable HTTP**, then set **`UNITY_MCP_SERVER_URL`** (see table below).
+- Current **Unity-MCP-Server** builds use **stdio**. `UNITY_MCP_SERVER_URL` is reserved for alternate/future Streamable HTTP servers and is not used with the current upstream server.
 
 You can also build/run from a local **`Dockerfile`** / **`docker-compose.yml`** in the **[Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)** repo if you prefer; the **GHCR** image is the usual binary-free install path.
 
@@ -46,16 +46,16 @@ You can also build/run from a local **`Dockerfile`** / **`docker-compose.yml`** 
 
 | Integration path in this app | Transport | How Docker usually fits |
 |------------------------------|-----------|-------------------------|
-| **Finalize / orchestrator** (`unity_mcp_client.py`) | **Streamable HTTP** if you set **`UNITY_MCP_SERVER_URL`** | Run the container with a **published port** (e.g. `-p 8080:8080`). Set **`UNITY_USE_MCP=1`** and **`UNITY_MCP_SERVER_URL`** to the MCP HTTP endpoint the server exposes (must match upstream — often `http://127.0.0.1:<port>/...`). In `unity_mcp_client.py`, if **`UNITY_MCP_SERVER_URL`** is set, the **HTTP** client is used and **stdio** (`UNITY_MCP_COMMAND`) is not used for that call. |
-| **Semantic Kernel agent** (`unity_mcp_plugin.py`) | **stdio** (spawns **`UNITY_MCP_COMMAND`**) | A container is **not** a drop-in replacement unless you run a **host binary** or a small wrapper. Prefer installing the server on the host for the agent, or extend **`unity-mcp-plugin`** / server to support HTTP for the SK path (not configured in this repo today). |
+| **Finalize / orchestrator** (`unity_mcp_client.py`) | **stdio** by default (`UNITY_MCP_COMMAND` + `UNITY_MCP_ARGS`) | Prefer a host-installed `unity-mcp` binary. A container can be used only through a host wrapper command that keeps stdio connected. |
+| **Semantic Kernel agent** (`unity_mcp_plugin.py`) | **stdio** (spawns **`UNITY_MCP_COMMAND`**) | Prefer installing the server on the host for the agent. |
 
-**Typical Docker flow for this app (HTTP-capable server):**
+**Typical Docker flow for this app (stdio wrapper required):**
 
 1. **Pull** from GHCR and **run** the container (see [package tags](https://github.com/Ozymandros/Unity-MCP-Server/pkgs/container/unity-mcp-server)):
 
    ```bash
    docker pull ghcr.io/ozymandros/unity-mcp-server:<tag>
-   docker run --rm -p <HOST_PORT>:<CONTAINER_PORT> ghcr.io/ozymandros/unity-mcp-server:<tag>
+   docker run -i --rm ghcr.io/ozymandros/unity-mcp-server:<tag>
    ```
 
    Alternatively, use **`docker compose`** or a **Dockerfile** from the **[Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)** repo if upstream documents it.
@@ -66,12 +66,11 @@ You can also build/run from a local **`Dockerfile`** / **`docker-compose.yml`** 
 
    ```sh
    set UNITY_USE_MCP=1
-   set UNITY_MCP_SERVER_URL=http://127.0.0.1:<PORT><path-if-required>
+   set UNITY_MCP_COMMAND=unity-mcp
+   set UNITY_MCP_ARGS=
    ```
 
-   Use the **same URL** your browser or `curl` would use for the server’s **Streamable HTTP** MCP endpoint per upstream docs.
-
-4. For HTTP-only finalize flows, **`UNITY_MCP_SERVER_URL`** alone is enough for `unity_mcp_client` (stdio command is skipped when the URL is set).
+4. If you use Docker, point `UNITY_MCP_COMMAND` at a wrapper script that runs the `docker run -i --rm ...` command.
 
 **Security:** If the container exposes MCP on a network interface, restrict with firewall, bind to `127.0.0.1`, or upstream auth tokens — do not expose an unsecured MCP endpoint to the internet.
 
@@ -79,8 +78,8 @@ You can also build/run from a local **`Dockerfile`** / **`docker-compose.yml`** 
 
 ## What this app uses it for
 
-- **Semantic Kernel agent** (`unity_mcp_plugin.py`): spawns/connects to the server process for **tool discovery** and Unity automation from the LLM.
-- **Finalize / orchestrator** (`unity_mcp_client.py`, optional): when **`UNITY_USE_MCP=1`**, uses the MCP Python SDK to call **Unity-MCP-Server** tools (e.g. package install, scene setup) over **stdio** or **Streamable HTTP**.
+- **Semantic Kernel agent** (`unity_mcp_plugin.py`): spawns/connects to the server process, registers **typed skills**, and injects `unity_get_capabilities` guidance.
+- **Finalize / orchestrator** (`unity_mcp_client.py`, optional): when **`UNITY_USE_MCP=1`**, uses the MCP Python SDK to call **Unity-MCP-Server** tools (e.g. package install, scene setup) over **stdio**.
 
 ---
 
@@ -91,8 +90,8 @@ You can also build/run from a local **`Dockerfile`** / **`docker-compose.yml`** 
 | Variable | Purpose | Default / notes |
 |----------|-----------|-----------------|
 | **`UNITY_MCP_COMMAND`** | Path or name of the **server executable** (not your Unity project folder). | `unity-mcp` |
-| **`UNITY_MCP_ARGS`** | Extra arguments passed to that executable (space-separated in code). | empty |
-| **`UNITY_MCP_SERVER_URL`** | Optional **HTTP** MCP endpoint (Streamable HTTP). If set, used when applicable; otherwise **stdio** via `UNITY_MCP_COMMAND`. | empty |
+| **`UNITY_MCP_ARGS`** | Extra arguments passed to that executable (quoted tokens preserved, forwarded as plugin `args`). | empty |
+| **`UNITY_MCP_SERVER_URL`** | Optional Streamable HTTP MCP endpoint for alternate/future servers. The current Unity-MCP-Server is stdio-only, so leave this empty for upstream `unity-mcp`. | empty |
 | **`UNITY_USE_MCP`** | **`1` / `true` / `yes`** enables MCP in **`unity_mcp_client.py`** (finalize/orchestrator path). | off (MCP client not used) |
 
 **Code references:**
@@ -130,7 +129,7 @@ You can also build/run from a local **`Dockerfile`** / **`docker-compose.yml`** 
 1. Install **Unity-MCP-Server** from **[GitHub](https://github.com/Ozymandros/Unity-MCP-Server)** (upstream README), **or** run it from **[GHCR](https://github.com/Ozymandros/Unity-MCP-Server/pkgs/container/unity-mcp-server)** (`docker pull ghcr.io/ozymandros/unity-mcp-server:<tag>` — see [Docker install from GHCR](#docker-install-from-ghcr)).
 2. Ensure the server is running with Unity / Editor as required by that project.
 3. Set **`UNITY_MCP_COMMAND`** if `unity-mcp` is not on `PATH` (stdio / SK agent path).
-4. For finalize MCP automation, set **`UNITY_USE_MCP=1`** and configure **stdio** (`UNITY_MCP_COMMAND`) or **`UNITY_MCP_SERVER_URL`** (Docker/HTTP) per `unity_mcp_client.py`.
+4. For finalize MCP automation, set **`UNITY_USE_MCP=1`** and configure **stdio** (`UNITY_MCP_COMMAND`, optional `UNITY_MCP_ARGS`) per `unity_mcp_client.py`.
 
 ---
 
@@ -139,4 +138,5 @@ You can also build/run from a local **`Dockerfile`** / **`docker-compose.yml`** 
 | Role | GitHub |
 |------|--------|
 | **MCP server (this page)** | [Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server) |
-| **Python SK bridge (`unity_mcp` package)** | [Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin) |
+| **Python SK bridge (`unity_mcp` package)** | [unity-mcp-server-plugin](https://github.com/Ozymandros/unity-mcp-server-plugin) |
+| **C# SK plugin (not loaded by this app)** | [Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin) |

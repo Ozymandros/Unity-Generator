@@ -26,18 +26,20 @@ Provides secure file operations for Unity projects:
 - `create_unity_folder(relative_path)` - Creates folder structures in `output/Assets/`
 - `get_output_path()` - Returns the output directory path
 
-#### UnityMCPPlugin (External Package)
+#### UnityMCPPlugin (Python package `unity-mcp-plugin` 3.2.0)
 
-Provides real-time integration with a running Unity Editor via the Unity MCP Server.
+Provides stdio integration with **Unity MCP Server 3.2.1** (~89 tools).
 
-- Plugin Source: [Unity-MCP-SK-Plugin](https://github.com/Ozymandros/Unity-MCP-SK-Plugin)
-- Server Source: [Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)
+- Plugin source: [unity-mcp-server-plugin](https://github.com/Ozymandros/unity-mcp-server-plugin)
+- Server source: [Unity-MCP-Server](https://github.com/Ozymandros/Unity-MCP-Server)
 
-Requires the `unity-mcp-plugin` package installed in the Python environment (see `backend/requirements.txt` and [docs/UNITY_MCP_INTEGRATION.md](../../../docs/UNITY_MCP_INTEGRATION.md) for the SK bridge). **MCP server install, clone URL, and `UNITY_MCP_*` locations:** [docs/UNITY_MCP_SERVER.md](../../../docs/UNITY_MCP_SERVER.md). For the full tool list and parameter details, see the server’s tool reference (e.g. Unity-MCP-Server `Skills/SKILL.md` or README).
+Requires `unity-mcp-plugin` pinned in `backend/requirements.txt`. **Typed skills** (`add_unity_mcp_skills`) are the primary SK surface; discovery/`invoke_unity_tool` remain as fallback. **MCP server install and `UNITY_MCP_*`:** [docs/UNITY_MCP_SERVER.md](../../../docs/UNITY_MCP_SERVER.md).
 
-**Path handling:** The server requires **projectPath** (project root) and **fileName** (or **folderName** for folder/list tools) on all file, scene, and asset tools. Pass `projectPath` as the project root directory and `fileName` as the path under the project (e.g. `Assets/Scenes/MyScene.unity`). Do not duplicate path segments (e.g. do not put the project root inside `fileName`).
+**Path handling:** The server requires **projectPath** (project root) and **fileName** (or **folderName** for folder/list tools). Never pass `path` or `scenePath`.
 
-**Project writes:** When the Unity MCP plugin is live (verified by a connection check), all project writes go through MCP tools. Manual file writing (asset_saver, sprite_service) is used only as a fallback when the plugin is not available.
+**Project writes:** When the Unity MCP plugin is live, asset writes go through `unity_save_script` / `unity_save_text` / `unity_save_texture` / `unity_save_audio`. Disk `asset_saver` is fallback.
+
+**Capabilities:** Call `unity_get_capabilities` before Editor-gated tools. Finalize skips `unity_validate_import` when the Editor is unavailable and still runs file-only `unity_lint_project`.
 
 Representative tools (parameter names are camelCase in JSON-RPC):
 

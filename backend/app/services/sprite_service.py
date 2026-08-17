@@ -100,27 +100,29 @@ def generate_sprite(
     processed_img.save(buffered, format="PNG")
     img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
 
-    # 5. Optionally save to project_path if provided (fallback only when MCP not live)
+    # 5. Save into the project: MCP unity_save_texture when live, otherwise disk.
     saved_path = None
-    if project_path and str(project_path).strip() and not unity_mcp_plugin_available_for_writing():
+    if project_path and str(project_path).strip():
         import time
         from pathlib import Path
 
+        from ..agents.unity_mcp_plugin import save_asset_via_mcp
+        from .asset_saver import save_asset_to_project
+
         project_root = Path(project_path).resolve()
-        if project_root != Path.cwd().resolve():
-            sprites_dir = project_root / "Assets" / "Sprites"
-
-            if sprites_dir.exists() or (project_root / "Assets").exists():
-                sprites_dir.mkdir(parents=True, exist_ok=True)
-
-                # Generate filename
-                timestamp = int(time.time())
-                filename = f"sprite_{resolution}x{resolution}_{timestamp}.png"
-                sprite_path = sprites_dir / filename
-
-                # Save the sprite
-                processed_img.save(sprite_path, format="PNG")
-                saved_path = str(sprite_path.relative_to(project_root))
+        timestamp = int(time.time())
+        filename = f"sprite_{resolution}x{resolution}_{timestamp}.png"
+        file_name = f"Assets/Sprites/{filename}"
+        if unity_mcp_plugin_available_for_writing():
+            saved_path = save_asset_via_mcp(str(project_root), "image", file_name, img_str)
+        if not saved_path:
+            sprite_result = AgentResult(
+                image=img_str,
+                provider=response.provider,
+                model=response.model,
+                raw={"filename": filename},
+            )
+            saved_path = save_asset_to_project(str(project_root), "image", sprite_result)
 
     result_raw = {
         "original_prompt": prompt,

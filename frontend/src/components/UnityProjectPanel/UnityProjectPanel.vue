@@ -28,6 +28,10 @@ const {
   finalizeProgress,
   finalizeStep,
   finalizeDownloadUrl,
+  mcpStatus,
+  mcpStatusLoading,
+  refreshMcpStatus,
+  AUTOMATION_MODE_OPTIONS,
   run,
   runFinalize,
   openOutputFolder,
@@ -89,6 +93,38 @@ const {
     <SmartField :label="t('unityProject.fields.resultJson')" type="textarea" v-model="result" :rows="8" disabled />
 
     <h3 class="text-h5 font-weight-bold mb-4 mt-8">{{ t('unityProject.engineSettings') }}</h3>
+
+    <v-alert
+      v-if="mcpStatus"
+      :type="mcpStatus.available ? (mcpStatus.editor_available ? 'success' : 'warning') : 'info'"
+      variant="tonal"
+      density="compact"
+      class="mb-4"
+    >
+      <div class="text-body-2 font-weight-medium mb-1">{{ t('unityProject.mcp.title') }}</div>
+      <div v-if="mcpStatus.available && mcpStatus.editor_available">
+        {{ t('unityProject.mcp.editorReady') }}
+      </div>
+      <div v-else-if="mcpStatus.available">
+        {{ mcpStatus.editor_gated_warning || t('unityProject.mcp.editorRequired') }}
+      </div>
+      <div v-else>
+        {{ mcpStatus.error || t('unityProject.mcp.notConfigured') }}
+      </div>
+      <div class="text-caption mt-2 opacity-80">
+        {{ t('unityProject.mcp.standaloneNote') }}
+      </div>
+      <v-btn
+        variant="text"
+        size="small"
+        class="mt-1 px-0"
+        :loading="mcpStatusLoading"
+        @click="refreshMcpStatus"
+      >
+        {{ t('unityProject.mcp.refresh') }}
+      </v-btn>
+    </v-alert>
+
     <v-card variant="outlined" class="pa-6 rounded-xl bg-surface mb-6">
        <div class="toggle-row mb-6">
          <SmartField type="checkbox" :label="t('unityProject.fields.generateDefaultScene')" v-model="settings.generateScene" />
@@ -108,6 +144,17 @@ const {
            <SmartField :label="t('unityProject.fields.sceneName')" v-model="settings.sceneName" placeholder="MainScene" class="mb-4" />
          </div>
        </v-expand-transition>
+
+       <div class="options-row mb-4">
+         <div class="field-sm">
+           <SmartField
+             :label="t('unityProject.fields.automationMode')"
+             type="select"
+             v-model="settings.automationMode"
+             :options="AUTOMATION_MODE_OPTIONS"
+           />
+         </div>
+       </div>
 
        <div class="options-row">
          <div class="field-sm">

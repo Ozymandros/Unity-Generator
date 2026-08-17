@@ -58,12 +58,21 @@ def get_all_config():
     # 5. Get all preferences
     preferences = get_all_prefs()
 
+    unity_tool_names: list[str] = []
+    try:
+        from ..agents.unity_mcp_plugin import get_unity_tool_names
+
+        unity_tool_names = get_unity_tool_names()
+    except Exception as exc:
+        LOGGER.debug("Could not load unity_tool_names: %s", exc)
+
     return {
         "providers": providers,
         "models": all_models,
         "prompts": prompts,
         "keys": keys,
-        "preferences": preferences
+        "preferences": preferences,
+        "unity_tool_names": unity_tool_names,
     }
 
 # --- Schemas ---

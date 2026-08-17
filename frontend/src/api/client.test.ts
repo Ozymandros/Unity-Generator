@@ -8,6 +8,7 @@ import {
   generateUnityProject,
   getLatestOutput,
   getPref,
+  getUnityMcpStatus,
   healthCheck,
   saveApiKeys,
   setPref,
@@ -139,6 +140,22 @@ describe("api client", () => {
       defaultBackendUrl + "/output/latest",
       expect.objectContaining({ method: "GET" })
     );
+  });
+
+  it("calls getUnityMcpStatus", async () => {
+    mockFetch.mockReturnValueOnce(
+      mockResponse({
+        success: true,
+        data: { available: true, editor_available: false, backend: "file" },
+      })
+    );
+    const result = await getUnityMcpStatus();
+    expect(mockFetch).toHaveBeenCalledWith(
+      defaultBackendUrl + "/api/unity-mcp/status",
+      expect.objectContaining({ method: "GET" })
+    );
+    expect(result.data?.available).toBe(true);
+    expect(result.data?.editor_available).toBe(false);
   });
 
   it("calls healthCheck", async () => {

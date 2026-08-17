@@ -18,6 +18,7 @@ export type DiscoveryResponse = {
   preferences?: Record<string, string>;
   prompts?: Record<string, string>;
   settings?: Record<string, unknown>;
+  unity_tool_names?: string[];
 };
 
 export type CreateSceneRequest = {
@@ -28,10 +29,48 @@ export type CreateSceneRequest = {
   system_prompt?: string;
   project_name?: string;  // backend always uses base_path + project_name
   project_path?: string;  // ignored by backend
+  media_import?: Record<string, unknown>;
+  apply_via_mcp?: boolean;
 };
 
 export function createScene(body: CreateSceneRequest) {
     return post<GenerationResponse>("/api/scenes/create", body);
+}
+
+export type UnityMcpStatus = {
+  available: boolean;
+  editor_available: boolean;
+  backend?: string;
+  version?: string;
+  editor_gated_warning?: string | null;
+  error?: string;
+};
+
+/**
+ * Fetch Unity MCP availability and Editor-gated warnings.
+ *
+ * @returns Promise resolving to a GenerationResponse whose data is UnityMcpStatus.
+ * @throws {BackendError} If the request fails or backend is unavailable.
+ *
+ * @example
+ * ```typescript
+ * const response = await getUnityMcpStatus();
+ * console.log(response.data?.available);
+ * ```
+ */
+export async function getUnityMcpStatus(): Promise<GenerationResponse> {
+  const url = `${getBackendUrl()}/api/unity-mcp/status`;
+  try {
+    const response = await fetch(url, { method: "GET" });
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      const errorMessage = errorBody.detail || errorBody.error || `HTTP ${response.status}`;
+      throw new Error(errorMessage);
+    }
+    return (await response.json()) as GenerationResponse;
+  } catch (error) {
+    throw createFetchError(url, "GET", error);
+  }
 }
 
 export type GenerationRequest = {
@@ -143,6 +182,7 @@ export type UnityUIRequest = {
   anchor_preset?: string;
   color_theme?: string;
   include_animations?: boolean;
+  apply_via_mcp?: boolean;
   api_key?: string;
   system_prompt?: string;
   project_name?: string;
@@ -634,6 +674,7 @@ export type UnityPhysicsRequest = {
   include_rigidbody?: boolean;
   include_colliders?: boolean;
   include_layers?: boolean;
+  apply_via_mcp?: boolean;
   api_key?: string;
   system_prompt?: string;
   project_name?: string;
@@ -658,6 +699,75 @@ export type UnityPhysicsRequest = {
  */
 export function generateUnityPhysics(body: UnityPhysicsRequest) {
   return post<GenerationResponse>("/generate/unity-physics", body as unknown as GenerationRequest);
+}
+
+export type UnityModalityRequest = {
+  prompt: string;
+  provider?: string;
+  api_key?: string;
+  system_prompt?: string;
+  project_name?: string;
+  apply_via_mcp?: boolean;
+  options?: Record<string, unknown>;
+};
+
+export type WizardRequest = {
+  prompt: string;
+  provider?: string;
+  api_key?: string;
+  system_prompt?: string;
+  project_name?: string;
+  options?: Record<string, unknown>;
+};
+
+export type PromptAssistRequest = {
+  prompt: string;
+  mode?: "enhance" | "sample";
+  provider?: string;
+  api_key?: string;
+  options?: Record<string, unknown>;
+};
+
+export function generateWizard(body: WizardRequest) {
+  return post<GenerationResponse>("/generate/wizard", body as unknown as GenerationRequest);
+}
+
+export function generateUnityLighting(body: UnityModalityRequest) {
+  return post<GenerationResponse>("/generate/unity-lighting", body as unknown as GenerationRequest);
+}
+
+export function generateUnityCamera(body: UnityModalityRequest) {
+  return post<GenerationResponse>("/generate/unity-camera", body as unknown as GenerationRequest);
+}
+
+export function generateUnityMaterials(body: UnityModalityRequest) {
+  return post<GenerationResponse>("/generate/unity-materials", body as unknown as GenerationRequest);
+}
+
+export function generateUnityAnimation(body: UnityModalityRequest) {
+  return post<GenerationResponse>("/generate/unity-animation", body as unknown as GenerationRequest);
+}
+
+export function generateVideo(body: GenerationRequest) {
+  return post<GenerationResponse>("/generate/video", body);
+}
+
+export function promptAssist(body: PromptAssistRequest) {
+  return post<GenerationResponse>("/api/prompt-assist", body as unknown as GenerationRequest);
+}
+
+export async function getLogTail(lines = 200): Promise<GenerationResponse> {
+  const url = `${getBackendUrl()}/api/logs/tail?lines=${lines}`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({}));
+      throw new Error(errorBody.detail || errorBody.error || `HTTP ${response.status}`);
+    }
+    return (await response.json()) as GenerationResponse;
+  } catch (error) {
+    throw createFetchError(url, "GET", error);
+  }
 }
 
 export async function getLatestOutput(): Promise<GenerationResponse> {
@@ -766,6 +876,7 @@ export type UnityEngineSettings = {
   scene_name?: string;
   unity_editor_path?: string;
   timeout?: number;
+  unity_automation_mode?: "batch" | "mcp" | "auto";
 };
 
 export type FinalizeProjectRequest = {

@@ -202,10 +202,15 @@ def _run_finalize_in_background(job_id: str, request: FinalizeProjectRequest) ->
                 zip_path=result.zip_path,
             )
         else:
+            failure_message = "; ".join(result.errors) if result.errors else (
+                result.logs[-1] if result.logs else "Unknown error"
+            )
+            for err in result.errors:
+                finalize_store.update_job(job_id, log_line=f"[error] {err}")
             finalize_store.update_job(
                 job_id,
                 status=JobStatus.FAILED,
-                error=result.logs[-1] if result.logs else "Unknown error",
+                error=failure_message,
             )
 
     except Exception as exc:

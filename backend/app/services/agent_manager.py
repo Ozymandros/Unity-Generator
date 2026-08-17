@@ -12,7 +12,7 @@ from ..schemas import (
     TextOptions,
     VideoOptions,
 )
-from .asset_saver import save_asset_to_project
+from .asset_saver import save_generated_asset
 from .providers import Modality, provider_registry
 
 LOGGER = logging.getLogger(__name__)
@@ -90,7 +90,7 @@ class AgentManager:
         final_result = AgentResult(**result) if isinstance(result, dict) else result
 
         if project_path:
-            rel = save_asset_to_project(project_path, "code", final_result)
+            rel = save_generated_asset(project_path, "code", final_result)
             if rel:
                 LOGGER.info("Saved code asset to project: %s", rel)
         else:
@@ -132,7 +132,7 @@ class AgentManager:
         final_result = AgentResult(**result) if isinstance(result, dict) else result
 
         if project_path:
-            rel = save_asset_to_project(project_path, "text", final_result)
+            rel = save_generated_asset(project_path, "text", final_result)
             if rel:
                 LOGGER.info("Saved text asset to project: %s", rel)
         else:
@@ -173,7 +173,7 @@ class AgentManager:
         final_result = AgentResult(**result) if isinstance(result, dict) else result
 
         if project_path:
-            rel = save_asset_to_project(project_path, "image", final_result)
+            rel = save_generated_asset(project_path, "image", final_result)
             if rel:
                 LOGGER.info("Saved image asset to project: %s", rel)
         else:
@@ -229,7 +229,7 @@ class AgentManager:
         final_result = AgentResult(**result) if isinstance(result, dict) else result
 
         if project_path:
-            rel = save_asset_to_project(project_path, "audio", final_result)
+            rel = save_generated_asset(project_path, "audio", final_result)
             if rel:
                 LOGGER.info("Saved audio asset to project: %s", rel)
         else:
@@ -290,7 +290,7 @@ class AgentManager:
         final_result = AgentResult(**result) if isinstance(result, dict) else result
 
         if project_path:
-            save_asset_to_project(project_path, "video", final_result)
+            save_generated_asset(project_path, "video", final_result)
 
         return final_result
 
@@ -302,6 +302,7 @@ class AgentManager:
         api_key: str | None = None,
         system_prompt: str | None = None,
         project_path: str | None = None,
+        media_import: dict[str, Any] | None = None,
     ) -> AgentResult:
         """
         Runs the Unity Agent to orchestrate editor actions.
@@ -322,6 +323,28 @@ class AgentManager:
         effective_system_prompt = system_prompt
         if effective_system_prompt is None:
             effective_system_prompt = get_system_prompt_repo().get("code")
+
+        if media_import:
+            media_name = str(media_import.get("name") or "imported_media")
+            media_type = str(media_import.get("type") or "media")
+            import_tool = "unity_save_audio" if media_type.startswith("audio") else "unity_save_texture"
+            prompt = (
+                f"{prompt}\n\n"
+                "Media import request:\n"
+                f"- name: {media_name}\n"
+                f"- type: {media_type}\n"
+                f"- preferred MCP tool: {import_tool}\n"
+                "- Use the provided base64 media payload from request metadata when saving into the active Unity project.\n"
+            )
+            options = {
+                **options,
+                "media_import": media_import,
+            }
+
+        options = {
+            **options,
+            "modality_key": options.get("modality_key") or "scenes",
+        }
 
         # UnityAgent.run is async and returns a dict
         result = await self.unity_agent.run(
@@ -353,6 +376,7 @@ class AgentManager:
         include_animations: bool = False,
         system_prompt: str | None = None,
         project_path: str | None = None,
+        apply_via_mcp: bool = False,
     ) -> AgentResult:
         """
         Generate Unity UI prefab assets using a UI-aware system prompt.
@@ -373,6 +397,7 @@ class AgentManager:
             include_animations: Whether to include animation/transition code.
             system_prompt: Optional full system prompt override (skips auto-build).
             project_path: Optional Unity project root path.
+            apply_via_mcp: When True, instruct/call Unity MCP UI tools when live.
 
         Returns:
             :class:`AgentResult` with generated content and file list.
@@ -419,10 +444,21 @@ class AgentManager:
                 include_animations=include_animations,
             )
 
+        opts = dict(options or {})
+        opts["modality_key"] = "unity-ui"
+        if apply_via_mcp:
+            opts["apply_via_mcp"] = True
+            effective_system_prompt += (
+                "\n\nAPPLY VIA MCP TOOLS: When Unity MCP is live, call unity_create_ui_canvas "
+                "and unity_create_ui_layout with projectPath and fileName. "
+                "File-only UI is a compatibility-surrogate unless unity_get_capabilities "
+                "reports native-editor for UI."
+            )
+
         result = await self.unity_agent.run(
             prompt=prompt,
             provider=provider,
-            options=options,
+            options=opts,
             api_keys=api_keys,
             system_prompt=effective_system_prompt,
             project_path=project_path,
@@ -436,7 +472,7 @@ class AgentManager:
             content=str(result.get("content", "")),
             provider=provider or "unity",
             raw=result if isinstance(result, dict) else None,
-            model=str(options.get("model", "")),
+            model=str(opts.get("model", "")),
         )
 
     def _build_unity_ui_system_prompt(
@@ -555,6 +591,7 @@ class AgentManager:
         include_layers: bool = False,
         system_prompt: str | None = None,
         project_path: str | None = None,
+        apply_via_mcp: bool = False,
     ) -> AgentResult:
         """
         Generate Unity Physics configuration code using a physics-aware system prompt.
@@ -620,10 +657,20 @@ class AgentManager:
                 include_layers=include_layers,
             )
 
+        physics_opts = dict(options or {})
+        physics_opts["modality_key"] = "unity-physics"
+        if apply_via_mcp:
+            physics_opts["apply_via_mcp"] = True
+            effective_system_prompt += (
+                "\n\nAPPLY VIA MCP TOOLS: When Unity MCP is live, call unity_create_physics_setup "
+                "and unity_physics_* (list/validate are file-only; create/update body are Editor-gated). "
+                "File-only physics is a compatibility-surrogate unless capabilities say native-editor."
+            )
+
         result = await self.unity_agent.run(
             prompt=prompt,
             provider=provider,
-            options=options,
+            options=physics_opts,
             api_keys=api_keys,
             system_prompt=effective_system_prompt,
             project_path=project_path,
@@ -637,7 +684,7 @@ class AgentManager:
             content=str(result.get("content", "")),
             provider=provider or "unity",
             raw=result if isinstance(result, dict) else None,
-            model=str(options.get("model", "")),
+            model=str(physics_opts.get("model", "")),
         )
 
     def _build_unity_physics_system_prompt(
@@ -747,6 +794,314 @@ class AgentManager:
         ]
 
         return "\n".join(lines)
+
+    async def _run_unity_modality(
+        self,
+        *,
+        prompt: str,
+        provider: str | None,
+        options: dict[str, Any],
+        modality_key: str,
+        api_key: str | None = None,
+        system_prompt: str | None = None,
+        project_path: str | None = None,
+        apply_via_mcp: bool = False,
+        prompt_repo_key: str | None = None,
+        fallback_system_prompt: str | None = None,
+        apply_via_mcp_hint: str | None = None,
+    ) -> AgentResult:
+        """
+        Shared UnityAgent runner for modality-scoped MCP panels and wizard.
+
+        Args:
+            prompt: Natural-language instruction.
+            provider: LLM provider name.
+            options: Provider options (model, temperature, max_tokens).
+            modality_key: Modality filter key (e.g. ``unity-lighting``, ``wizard``).
+            api_key: Optional per-request API key override.
+            system_prompt: Optional full system prompt override.
+            project_path: Unity project root path.
+            apply_via_mcp: When True, prefer MCP tools over raw dumps.
+            prompt_repo_key: DB system prompt key when system_prompt is None.
+            fallback_system_prompt: Used when DB prompt is missing.
+            apply_via_mcp_hint: Extra system prompt appended when apply_via_mcp.
+
+        Returns:
+            AgentResult with generated content and optional auto-saved files.
+
+        Raises:
+            RuntimeError: If UnityAgent is unavailable.
+            ValueError: If prompt is empty.
+        """
+        self._ensure_agents()
+        from ..repositories import get_api_key_repo, get_system_prompt_repo
+
+        if not prompt or not prompt.strip():
+            raise ValueError("prompt must be a non-empty string")
+
+        api_keys = cast(dict[str, str], get_api_key_repo().get_all())
+        if provider and api_key:
+            caps = provider_registry.get(provider)
+            if caps and caps.api_key_name:
+                api_keys[caps.api_key_name] = api_key
+
+        if not self.unity_agent:
+            raise RuntimeError("UnityAgent is not available.")
+
+        if system_prompt:
+            effective_system_prompt = system_prompt
+        elif prompt_repo_key:
+            db_prompt = get_system_prompt_repo().get(prompt_repo_key)
+            effective_system_prompt = db_prompt or fallback_system_prompt or (
+                "You are a Unity Editor assistant. Use MCP tools to fulfill the request."
+            )
+        else:
+            effective_system_prompt = fallback_system_prompt or (
+                "You are a Unity Editor assistant. Use MCP tools to fulfill the request."
+            )
+
+        opts = dict(options or {})
+        opts["modality_key"] = modality_key
+        if apply_via_mcp:
+            opts["apply_via_mcp"] = True
+            if apply_via_mcp_hint:
+                effective_system_prompt += f"\n\n{apply_via_mcp_hint}"
+
+        result = await self.unity_agent.run(
+            prompt=prompt,
+            provider=provider,
+            options=opts,
+            api_keys=api_keys,
+            system_prompt=effective_system_prompt,
+            project_path=project_path,
+        )
+
+        if not isinstance(result, dict):
+            content = str(result)
+            result = {"content": content}
+
+        return AgentResult(
+            content=str(result.get("content", "")),
+            provider=provider or "unity",
+            raw=result if isinstance(result, dict) else None,
+            model=str(opts.get("model", "")),
+            metadata=result.get("metadata") if isinstance(result, dict) else {},
+        )
+
+    async def run_wizard(
+        self,
+        prompt: str,
+        provider: str | None,
+        options: dict[str, Any],
+        api_key: str | None = None,
+        system_prompt: str | None = None,
+        project_path: str | None = None,
+    ) -> AgentResult:
+        """Run multi-tool Unity orchestration with full MCP surface (wizard modality)."""
+        wizard_opts = dict(options or {})
+        wizard_opts.setdefault("max_tokens", 8000)
+        return await self._run_unity_modality(
+            prompt=prompt,
+            provider=provider,
+            options=wizard_opts,
+            modality_key="wizard",
+            api_key=api_key,
+            system_prompt=system_prompt,
+            project_path=project_path,
+            prompt_repo_key="wizard",
+            fallback_system_prompt=(
+                "You are a Unity project orchestrator. Plan and execute multi-step workflows "
+                "using Unity MCP tools: scenes, scripts, materials, lighting, camera, physics, "
+                "UI, animation, and packages. Call tools until the user's goal is complete, "
+                "then summarize what was created."
+            ),
+        )
+
+    async def run_unity_lighting(
+        self,
+        prompt: str,
+        provider: str | None,
+        options: dict[str, Any],
+        api_key: str | None = None,
+        system_prompt: str | None = None,
+        project_path: str | None = None,
+        apply_via_mcp: bool = False,
+    ) -> AgentResult:
+        """Generate Unity lighting setup via modality-filtered MCP tools."""
+        return await self._run_unity_modality(
+            prompt=prompt,
+            provider=provider,
+            options=options,
+            modality_key="unity-lighting",
+            api_key=api_key,
+            system_prompt=system_prompt,
+            project_path=project_path,
+            apply_via_mcp=apply_via_mcp,
+            prompt_repo_key="unity_lighting",
+            fallback_system_prompt=(
+                "You are a Unity lighting specialist. Use unity_light_* MCP tools to create "
+                "and configure directional, point, spot, and area lights."
+            ),
+            apply_via_mcp_hint=(
+                "APPLY VIA MCP: Call unity_light_create, unity_light_update, and unity_light_validate."
+            ),
+        )
+
+    async def run_unity_camera(
+        self,
+        prompt: str,
+        provider: str | None,
+        options: dict[str, Any],
+        api_key: str | None = None,
+        system_prompt: str | None = None,
+        project_path: str | None = None,
+        apply_via_mcp: bool = False,
+    ) -> AgentResult:
+        """Generate Unity camera setup via modality-filtered MCP tools."""
+        return await self._run_unity_modality(
+            prompt=prompt,
+            provider=provider,
+            options=options,
+            modality_key="unity-camera",
+            api_key=api_key,
+            system_prompt=system_prompt,
+            project_path=project_path,
+            apply_via_mcp=apply_via_mcp,
+            prompt_repo_key="unity_camera",
+            fallback_system_prompt=(
+                "You are a Unity camera specialist. Use unity_camera_* MCP tools for "
+                "main camera, cinemachine-style setups, and validation."
+            ),
+            apply_via_mcp_hint=(
+                "APPLY VIA MCP: Call unity_camera_create, unity_camera_update, unity_camera_validate."
+            ),
+        )
+
+    async def run_unity_materials(
+        self,
+        prompt: str,
+        provider: str | None,
+        options: dict[str, Any],
+        api_key: str | None = None,
+        system_prompt: str | None = None,
+        project_path: str | None = None,
+        apply_via_mcp: bool = False,
+    ) -> AgentResult:
+        """Generate Unity materials via modality-filtered MCP tools."""
+        return await self._run_unity_modality(
+            prompt=prompt,
+            provider=provider,
+            options=options,
+            modality_key="unity-materials",
+            api_key=api_key,
+            system_prompt=system_prompt,
+            project_path=project_path,
+            apply_via_mcp=apply_via_mcp,
+            prompt_repo_key="unity_materials",
+            fallback_system_prompt=(
+                "You are a Unity materials specialist. Use unity_create_material, "
+                "unity_update_material_properties, and unity_assign_material_texture."
+            ),
+            apply_via_mcp_hint=(
+                "APPLY VIA MCP: Prefer material MCP tools over raw YAML dumps."
+            ),
+        )
+
+    async def run_unity_animation(
+        self,
+        prompt: str,
+        provider: str | None,
+        options: dict[str, Any],
+        api_key: str | None = None,
+        system_prompt: str | None = None,
+        project_path: str | None = None,
+        apply_via_mcp: bool = False,
+    ) -> AgentResult:
+        """Generate Unity animation assets via modality-filtered MCP tools."""
+        return await self._run_unity_modality(
+            prompt=prompt,
+            provider=provider,
+            options=options,
+            modality_key="unity-animation",
+            api_key=api_key,
+            system_prompt=system_prompt,
+            project_path=project_path,
+            apply_via_mcp=apply_via_mcp,
+            prompt_repo_key="unity_animation",
+            fallback_system_prompt=(
+                "You are a Unity animation specialist. Use unity_create_basic_animator, "
+                "unity_create_advanced_animator, and unity_create_timeline."
+            ),
+            apply_via_mcp_hint=(
+                "APPLY VIA MCP: Create animator controllers and timelines via MCP tools."
+            ),
+        )
+
+    def run_prompt_assist(
+        self,
+        prompt: str,
+        mode: str,
+        provider: str | None,
+        options: dict[str, Any],
+        api_key: str | None = None,
+    ) -> AgentResult:
+        """
+        Enhance or sample a prompt without MCP tools (Godot PromptAssist parity).
+
+        Args:
+            prompt: User prompt to enhance or use as context for sampling.
+            mode: ``enhance`` or ``sample``.
+            provider: LLM provider name.
+            options: Text generation options.
+            api_key: Optional API key override.
+
+        Returns:
+            AgentResult with improved or sample prompt text.
+        """
+        self._ensure_agents()
+        from ..repositories import get_api_key_repo
+
+        if not prompt or not prompt.strip():
+            raise ValueError("prompt must be a non-empty string")
+
+        normalized_mode = (mode or "enhance").strip().lower()
+        if normalized_mode not in ("enhance", "sample"):
+            raise ValueError("mode must be 'enhance' or 'sample'")
+
+        api_keys = cast(dict[str, str], get_api_key_repo().get_all())
+        if provider and api_key:
+            caps = provider_registry.get(provider)
+            if caps and caps.api_key_name:
+                api_keys[caps.api_key_name] = api_key
+
+        if not self.text_agent:
+            raise RuntimeError("TextAgent is not available.")
+
+        if normalized_mode == "sample":
+            system_prompt = (
+                "Generate one concise, actionable example prompt for Unity game development "
+                "inspired by the user's topic. Return only the example prompt text."
+            )
+            user_prompt = f"Topic or seed: {prompt.strip()}"
+        else:
+            system_prompt = (
+                "Improve the user's Unity development prompt: make it specific, actionable, "
+                "and mention relevant Unity MCP tools when appropriate. Return only the improved prompt."
+            )
+            user_prompt = prompt.strip()
+
+        opts = dict(options or {})
+        opts.setdefault("temperature", 0.7)
+        opts.setdefault("max_tokens", 512)
+
+        result = self.text_agent.run(
+            user_prompt,
+            provider,
+            opts,
+            api_keys,
+            system_prompt,
+        )
+        return result if isinstance(result, AgentResult) else AgentResult(**result)
 
 
 # Module-level singleton

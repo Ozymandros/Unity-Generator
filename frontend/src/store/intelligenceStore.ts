@@ -8,6 +8,7 @@ export const useIntelligenceStore = defineStore("intelligence", {
     prompts: {} as Record<string, string>,
     keys: {} as Record<string, string>,
     preferences: {} as Record<string, string>,
+    unityToolNames: [] as string[],
     isLoaded: false,
     loading: false,
     error: null as string | null,
@@ -58,6 +59,7 @@ export const useIntelligenceStore = defineStore("intelligence", {
         this.prompts = (data.prompts as Record<string, string>) || {};
         this.keys = (data.keys as Record<string, string>) || {};
         this.preferences = (data.preferences as Record<string, string>) || {};
+        this.unityToolNames = (data.unity_tool_names as string[]) || [];
         this.isLoaded = true;
       } catch (e: unknown) {
         this.error = (e as Error).message || "Failed to load intelligence configuration";

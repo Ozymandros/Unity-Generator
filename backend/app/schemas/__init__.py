@@ -198,6 +198,8 @@ class CreateSceneRequest(BaseModel):
     system_prompt: str | None = None
     project_name: str | None = None  # project_path is always base_path + project_name
     project_path: str | None = None  # ignored; kept for API compatibility
+    media_import: dict[str, Any] | None = None
+    apply_via_mcp: bool = False
 
 
 class UnityUIRequest(BaseModel):
@@ -237,6 +239,7 @@ class UnityUIRequest(BaseModel):
     project_name: str | None = None
     project_path: str | None = None  # ignored; kept for API compatibility
     options: dict[str, Any] = Field(default_factory=dict)
+    apply_via_mcp: bool = False
 
 
 
@@ -274,6 +277,42 @@ class UnityPhysicsRequest(BaseModel):
     api_key: str | None = None
     system_prompt: str | None = None
     project_name: str | None = None
+    options: dict[str, Any] = Field(default_factory=dict)
+    apply_via_mcp: bool = False
+
+
+class UnityModalityRequest(BaseModel):
+    """Shared request body for modality-scoped Unity MCP panels."""
+
+    prompt: str
+    provider: str | None = None
+    api_key: str | None = None
+    system_prompt: str | None = None
+    project_name: str | None = None
+    project_path: str | None = None  # ignored; kept for API compatibility
+    options: dict[str, Any] = Field(default_factory=dict)
+    apply_via_mcp: bool = False
+
+
+class WizardRequest(BaseModel):
+    """Request body for multi-tool Unity wizard orchestration."""
+
+    prompt: str
+    provider: str | None = None
+    api_key: str | None = None
+    system_prompt: str | None = None
+    project_name: str | None = None
+    project_path: str | None = None  # ignored
+    options: dict[str, Any] = Field(default_factory=dict)
+
+
+class PromptAssistRequest(BaseModel):
+    """Request body for prompt enhancement or sampling (no MCP tools)."""
+
+    prompt: str
+    mode: Literal["enhance", "sample"] = "enhance"
+    provider: str | None = None
+    api_key: str | None = None
     options: dict[str, Any] = Field(default_factory=dict)
 
 

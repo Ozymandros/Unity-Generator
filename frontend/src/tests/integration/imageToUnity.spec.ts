@@ -641,9 +641,8 @@ describe("Image-to-Unity Integration Workflow", () => {
 
     await flushPromises();
 
-    // Verify no info banner is shown
-    const infoBanner = scenesPanel.findComponent({ name: 'VAlert' });
-    expect(infoBanner.exists()).toBe(false);
+    // Verify no media import banner is shown (MCP status alerts may still appear)
+    expect(scenesPanel.text()).not.toContain('Media Ready to Import');
 
     // Set a normal prompt
     const scenesPanelInstance = scenesPanel.vm as any;

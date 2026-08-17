@@ -7,6 +7,7 @@ import {
   getUnityVersions,
   addUnityVersion,
   getLatestOutput,
+  getUnityMcpStatus,
   type UnityVersionOption,
 } from "@/api/client";
 import type { FinalizeJobStatusResponse } from "@/api/client";
@@ -29,6 +30,20 @@ import { useOpenProject } from "@/composables/useOpenProject";
 const DEFAULT_UNITY_VERSIONS: UnityVersionOption[] = [
   { value: "6000.3.2f1", label: "6000.3.2f1" },
 ];
+
+const AUTOMATION_MODE_OPTIONS = [
+  { value: "auto", label: "Auto (MCP when available, else batch)" },
+  { value: "mcp", label: "Unity MCP (live Editor — recommended)" },
+  { value: "batch", label: "Batch mode (headless Unity.exe)" },
+] as const;
+
+export type UnityMcpStatusPayload = {
+  available?: boolean;
+  editor_available?: boolean;
+  backend?: string;
+  editor_gated_warning?: string | null;
+  error?: string;
+};
 
 export function useUnityProjectPanel() {
   const { projectName, projectPath, sessionProjectResetKey, setProjectPath } = useSessionProject();
@@ -72,6 +87,28 @@ export function useUnityProjectPanel() {
   const newVersionId = ref("");
   const newVersionLabel = ref("");
   const addVersionError = ref("");
+
+  const mcpStatus = ref<UnityMcpStatusPayload | null>(null);
+  const mcpStatusLoading = ref(false);
+
+  /**
+   * Refresh Unity MCP availability (server + Editor bridge) from the backend.
+   */
+  async function refreshMcpStatus(): Promise<void> {
+    mcpStatusLoading.value = true;
+    try {
+      const res = await getUnityMcpStatus();
+      mcpStatus.value = (res.data as UnityMcpStatusPayload | null) ?? null;
+    } catch {
+      mcpStatus.value = {
+        available: false,
+        editor_available: false,
+        error: "Could not reach Unity MCP status endpoint",
+      };
+    } finally {
+      mcpStatusLoading.value = false;
+    }
+  }
 
   async function loadUnityVersions() {
     try {
@@ -124,7 +161,8 @@ export function useUnityProjectPanel() {
   }
 
   onMounted(() => {
-    loadUnityVersions();
+    void loadUnityVersions();
+    void refreshMcpStatus();
   });
 
   // Persistence is handled by the store (enableAutoPersist), so it doesn't depend on this panel being mounted.
@@ -232,6 +270,7 @@ export function useUnityProjectPanel() {
           scene_name: settings.sceneName,
           unity_editor_path: settings.editorPath || undefined,
           timeout: settings.timeout,
+          unity_automation_mode: settings.automationMode,
         },
       });
 
@@ -403,6 +442,10 @@ export function useUnityProjectPanel() {
     finalizeProgress,
     finalizeStep,
     finalizeDownloadUrl,
+    mcpStatus,
+    mcpStatusLoading,
+    refreshMcpStatus,
+    AUTOMATION_MODE_OPTIONS,
     run,
     runFinalize,
     openOutputFolder,

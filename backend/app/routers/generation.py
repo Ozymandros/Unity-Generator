@@ -10,11 +10,14 @@ from app.schemas import (
     GenerationRequest,
     GenerationResponse,
     ImageOptions,
+    PromptAssistRequest,
     SpritesRequest,
     TextOptions,
+    UnityModalityRequest,
     UnityPhysicsRequest,
     UnityUIRequest,
     VideoOptions,
+    WizardRequest,
     error_response,
     ok_response,
 )
@@ -237,6 +240,7 @@ async def generate_unity_ui(request: UnityUIRequest) -> GenerationResponse:
             include_animations=request.include_animations,
             system_prompt=request.system_prompt,
             project_path=project_path,
+            apply_via_mcp=request.apply_via_mcp,
         )
         return ok_response(data)
     except ValueError as exc:
@@ -293,6 +297,7 @@ async def generate_unity_physics(request: UnityPhysicsRequest) -> GenerationResp
             include_layers=request.include_layers,
             system_prompt=request.system_prompt,
             project_path=project_path,
+            apply_via_mcp=request.apply_via_mcp,
         )
         return ok_response(data)
     except ValueError as exc:
@@ -301,3 +306,90 @@ async def generate_unity_physics(request: UnityPhysicsRequest) -> GenerationResp
     except Exception as exc:
         logging.getLogger("failed_requests").warning("Unity Physics generation failed: %s", exc)
         return error_response(str(exc))
+
+
+async def _generate_unity_modality(
+    request: UnityModalityRequest,
+    runner: Any,
+) -> GenerationResponse:
+    """Shared handler for modality-scoped Unity MCP panel routes."""
+    if not request.prompt or not request.prompt.strip():
+        return error_response("Prompt cannot be empty")
+
+    try:
+        provider = request.provider or get_pref("preferred_llm_provider")
+        if not provider:
+            return error_response(
+                "No provider specified and no preferred provider found in settings."
+            )
+        project_path = _project_path_from_request(request.project_name)
+        data = await runner(
+            prompt=request.prompt,
+            provider=provider,
+            options=request.options,
+            api_key=request.api_key,
+            system_prompt=request.system_prompt,
+            project_path=project_path,
+            apply_via_mcp=request.apply_via_mcp,
+        )
+        return ok_response(data)
+    except ValueError as exc:
+        logging.getLogger("failed_requests").warning("Unity modality generation failed (ValueError): %s", exc)
+        return error_response(str(exc))
+    except Exception as exc:
+        logging.getLogger("failed_requests").warning("Unity modality generation failed: %s", exc)
+        return error_response(str(exc))
+
+
+@router.post("/wizard", response_model=GenerationResponse)
+async def generate_wizard(request: WizardRequest) -> GenerationResponse:
+    """Multi-tool Unity orchestration (wizard) using the full MCP skill surface."""
+    if not request.prompt or not request.prompt.strip():
+        return error_response("Prompt cannot be empty")
+
+    try:
+        provider = request.provider or get_pref("preferred_llm_provider")
+        if not provider:
+            return error_response(
+                "No provider specified and no preferred provider found in settings."
+            )
+        project_path = _project_path_from_request(request.project_name)
+        data = await agent_manager.run_wizard(
+            prompt=request.prompt,
+            provider=provider,
+            options=request.options,
+            api_key=request.api_key,
+            system_prompt=request.system_prompt,
+            project_path=project_path,
+        )
+        return ok_response(data)
+    except ValueError as exc:
+        logging.getLogger("failed_requests").warning("Wizard generation failed (ValueError): %s", exc)
+        return error_response(str(exc))
+    except Exception as exc:
+        logging.getLogger("failed_requests").warning("Wizard generation failed: %s", exc)
+        return error_response(str(exc))
+
+
+@router.post("/unity-lighting", response_model=GenerationResponse)
+async def generate_unity_lighting(request: UnityModalityRequest) -> GenerationResponse:
+    """Generate Unity lighting via modality-filtered MCP tools."""
+    return await _generate_unity_modality(request, agent_manager.run_unity_lighting)
+
+
+@router.post("/unity-camera", response_model=GenerationResponse)
+async def generate_unity_camera(request: UnityModalityRequest) -> GenerationResponse:
+    """Generate Unity camera setup via modality-filtered MCP tools."""
+    return await _generate_unity_modality(request, agent_manager.run_unity_camera)
+
+
+@router.post("/unity-materials", response_model=GenerationResponse)
+async def generate_unity_materials(request: UnityModalityRequest) -> GenerationResponse:
+    """Generate Unity materials via modality-filtered MCP tools."""
+    return await _generate_unity_modality(request, agent_manager.run_unity_materials)
+
+
+@router.post("/unity-animation", response_model=GenerationResponse)
+async def generate_unity_animation(request: UnityModalityRequest) -> GenerationResponse:
+    """Generate Unity animation assets via modality-filtered MCP tools."""
+    return await _generate_unity_modality(request, agent_manager.run_unity_animation)

@@ -24,6 +24,10 @@ const {
   includeRigidbody,
   includeColliders,
   includeLayers,
+  mcpAvailable,
+  editorAvailable,
+  mcpWarning,
+  applyViaMcp,
   availableModels,
   showModelManager,
   refreshModels,
@@ -52,6 +56,13 @@ const {
     </div>
 
     <StatusBanner :status="status" :tone="tone" />
+
+    <v-alert v-if="mcpWarning" type="warning" variant="tonal" class="mb-4" icon="mdi-unity">
+      {{ mcpWarning }}
+    </v-alert>
+    <v-alert v-else-if="mcpAvailable" type="success" variant="tonal" class="mb-4" icon="mdi-unity">
+      {{ editorAvailable ? t('unityPhysics.mcpLiveEditor') : t('unityPhysics.mcpLiveFileOnly') }}
+    </v-alert>
 
     <div class="quick-actions mb-4">
       <h3 class="text-subtitle-2 mb-2">{{ t('unityPhysics.quickActions') }}</h3>
@@ -95,6 +106,7 @@ const {
       <v-checkbox v-model="includeRigidbody" :label="t('unityPhysics.fields.includeRigidbody')" color="primary" hide-details />
       <v-checkbox v-model="includeColliders" :label="t('unityPhysics.fields.includeColliders')" color="primary" hide-details />
       <v-checkbox v-model="includeLayers" :label="t('unityPhysics.fields.includeLayers')" color="primary" hide-details />
+      <v-checkbox v-model="applyViaMcp" :label="t('unityPhysics.fields.applyViaMcp')" :disabled="!mcpAvailable" color="primary" hide-details />
     </div>
 
     <div class="field-group">

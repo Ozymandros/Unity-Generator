@@ -46,12 +46,21 @@ def generate_video(
 
     opts = options if isinstance(options, dict) else options.model_dump()
 
-    # Note: Semantic Kernel does not yet have a standard Video service interface.
-    # Returning a stub result for now as previously done by adapters.
     return AgentResult(
-        content=f"Stub video content for {selected}",
+        content=(
+            f"Video generation is not yet connected to a live provider. "
+            f"Requested: {prompt[:120]}{'...' if len(prompt) > 120 else ''} "
+            f"(provider={selected}, duration={opts.get('duration', 5)}s, "
+            f"resolution={opts.get('resolution', '720p')})."
+        ),
         provider=selected,
         model=opts.get("model") or provider_registry.get(selected).default_models[Modality.VIDEO],
-        metadata={"status": "not_implemented_via_sk"}
+        metadata={
+            "status": "stub",
+            "duration": opts.get("duration", 5),
+            "aspect_ratio": opts.get("aspect_ratio", "16:9"),
+            "resolution": opts.get("resolution", "720p"),
+            "fps": opts.get("fps", 24),
+        },
     )
 

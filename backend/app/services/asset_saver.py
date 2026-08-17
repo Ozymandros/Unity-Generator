@@ -194,3 +194,71 @@ def save_asset_to_project(project_path: str, asset_type: str, result: AgentResul
 
     return rel_path
 
+
+def save_generated_asset(project_path: str, asset_type: str, result: AgentResult) -> str | None:
+    """
+    Save a generated asset via Unity MCP ``unity_save_*`` when live, else disk.
+
+    Args:
+        project_path: Unity project root. Empty values skip the save.
+        asset_type: One of ``code``, ``text``, ``image``, ``audio``.
+        result: Agent result containing text or base64 payload.
+
+    Returns:
+        Project-relative path on success, otherwise None.
+
+    Example:
+        >>> save_generated_asset("/proj", "code", AgentResult(content="class A {}"))
+        'Assets/Scripts/GeneratedScript_....cs'
+    """
+    if not project_path or not str(project_path).strip():
+        return None
+
+    from ..agents.unity_mcp_plugin import save_asset_via_mcp, unity_mcp_plugin_available_for_writing
+
+    planned = _planned_asset_location(project_path, asset_type, result)
+    if planned is None:
+        return save_asset_to_project(project_path, asset_type, result)
+
+    file_name, content = planned
+    if unity_mcp_plugin_available_for_writing():
+        saved = save_asset_via_mcp(project_path, asset_type, file_name, content)
+        if saved:
+            LOGGER.info("Saved %s via Unity MCP: %s", asset_type, saved)
+            return saved
+        LOGGER.warning("MCP save failed for %s; falling back to disk.", file_name)
+    return save_asset_to_project(project_path, asset_type, result)
+
+
+def _planned_asset_location(
+    project_path: str,
+    asset_type: str,
+    result: AgentResult,
+) -> tuple[str, str] | None:
+    """Return (fileName, content_or_base64) for an MCP save, or None if unknown."""
+    import time
+
+    ts = int(time.time())
+    filename = result.raw.get("filename") if result.raw else None
+    if asset_type == "code":
+        name = filename or f"GeneratedScript_{ts}.cs"
+        return f"Assets/Scripts/{name}", result.content or ""
+    if asset_type == "text":
+        name = filename or f"generated_text_{ts}.txt"
+        return f"Assets/Text/{name}", result.content or ""
+    if asset_type == "image":
+        name = filename or f"image_{ts}.png"
+        payload = result.image or ""
+        if payload.startswith("http"):
+            return None
+        if payload.startswith("data:") and "," in payload:
+            payload = payload.split(",", 1)[1]
+        return f"Assets/Sprites/{name}", payload
+    if asset_type == "audio":
+        name = filename or f"audio_{ts}.mp3"
+        payload = result.audio or ""
+        if payload.startswith("data:") and "," in payload:
+            payload = payload.split(",", 1)[1]
+        return f"Assets/Audio/{name}", payload
+    return None
+

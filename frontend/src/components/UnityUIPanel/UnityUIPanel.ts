@@ -4,6 +4,7 @@ import { DEFAULT_PROJECT_NAME } from "@/api/constants";
 import { TEMPERATURE_PRESETS } from "@/constants/providers";
 import { useIntelligenceStore } from "@/store/intelligenceStore";
 import { useSessionProject } from "@/composables/useSessionProject";
+import { useUnityMcpStatus } from "@/composables/useUnityMcpStatus";
 import {
   UI_QUICK_ACTIONS,
   UI_EXAMPLE_PROMPTS,
@@ -40,6 +41,7 @@ export interface AgentResult {
 export function useUnityUIPanel() {
   const store = useIntelligenceStore();
   const { projectName } = useSessionProject();
+  const { available: mcpAvailable, editorAvailable, warning: mcpWarning, applyViaMcp } = useUnityMcpStatus();
 
   // Core generation fields
   const prompt = ref("");
@@ -160,6 +162,7 @@ export function useUnityUIPanel() {
         anchor_preset: anchorPreset.value || undefined,
         color_theme: colorTheme.value || undefined,
         include_animations: includeAnimations.value,
+        apply_via_mcp: applyViaMcp.value,
         options: {
           model: model.value || undefined,
           temperature: temperature.value,
@@ -197,6 +200,10 @@ export function useUnityUIPanel() {
     anchorPreset,
     colorTheme,
     includeAnimations,
+    mcpAvailable,
+    editorAvailable,
+    mcpWarning,
+    applyViaMcp,
     // Provider/model
     providers,
     providerOptions,
