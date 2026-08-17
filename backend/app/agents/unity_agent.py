@@ -20,7 +20,7 @@ from semantic_kernel.connectors.ai.function_choice_behavior import FunctionChoic
 
 from ..services.providers import provider_registry
 from ..services.providers.capabilities import Modality
-from .unity_auto_invoke import auto_invoke_csharp_blocks
+from .unity_auto_invoke import auto_invoke_csharp_blocks, ensure_scene_file_if_missing
 from .unity_mcp_plugin import (
     InjectingUnityMcpPlugin,
     create_unity_mcp_plugin,
@@ -212,6 +212,15 @@ WORKFLOW RECOMMENDATIONS:
 When user requests animations, cutscenes, or prototypes, use these tools proactively.
 """
 
+    _SCENES_MODALITY_GUIDANCE = (
+        "\nSCENE CREATION ORDER (mandatory for scene requests):\n"
+        "1. FIRST call unity_create_scene or unity_create_detailed_scene to create the .unity file.\n"
+        "2. THEN add GameObjects with unity_add_gameobject or unity_create_detailed_scene sceneJson.\n"
+        "3. THEN create scripts with unity_create_script and attach via unity_attach_script when needed.\n"
+        "Never create scripts without first creating the target scene file. "
+        "Prefer unity_create_detailed_scene when the prompt describes multiple objects or a playable layout."
+    )
+
     async def run(
         self,
         prompt: str,
@@ -351,12 +360,15 @@ When user requests animations, cutscenes, or prototypes, use these tools proacti
                 "do not invent base64 and do not skip import."
             )
 
-        full_prompt = f"{system_message}\n\nUser: {prompt}"
-
         modality_key = options.get("modality_key") if isinstance(options, dict) else None
         max_tokens = options.get("max_tokens", 2000) if isinstance(options, dict) else 2000
-        if str(modality_key or "").lower() == "wizard":
+        modality_lower = str(modality_key or "").lower()
+        if modality_lower in ("wizard", "scenes"):
             max_tokens = max(int(max_tokens), 8000)
+        if modality_lower == "scenes":
+            system_message += self._SCENES_MODALITY_GUIDANCE
+
+        full_prompt = f"{system_message}\n\nUser: {prompt}"
 
         try:
             # Common settings setup
@@ -407,12 +419,25 @@ When user requests animations, cutscenes, or prototypes, use these tools proacti
                         project_path=project_path,
                         tools_already_called=injecting_plugin.tools_called,
                     )
+                    auto_scene: str | None = None
+                    if modality_lower == "scenes":
+                        auto_scene = await ensure_scene_file_if_missing(
+                            injecting_plugin,
+                            project_path=project_path,
+                            tools_invoked=injecting_plugin.tools_invoked,
+                            prompt=prompt,
+                            response_text=content,
+                        )
                     metadata: dict[str, Any] = {"steps": [], "modality_key": modality_key}
+                    files = list(auto_saved)
+                    if auto_scene:
+                        files.append(auto_scene)
+                        metadata["auto_created_scene"] = auto_scene
                     if auto_saved:
                         metadata["auto_saved_files"] = auto_saved
                     return {
                         "content": content,
-                        "files": auto_saved,
+                        "files": files,
                         "metadata": metadata,
                     }
             else:

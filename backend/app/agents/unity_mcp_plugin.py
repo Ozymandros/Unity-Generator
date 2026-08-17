@@ -14,6 +14,7 @@ from semantic_kernel import Kernel
 from unity_mcp import UnityMCPPlugin, UnityMcpOptions
 
 from ..core.mcp_config import get_mcp_stdio_config, parse_mcp_args
+from ..services.unity_mcp_sdk_client import OfficialMcpSdkClient
 from .modality_mcp_tool_policy import (
     allowed_namespace_plugins,
     filter_tool_names,
@@ -86,6 +87,7 @@ class InjectingUnityMcpPlugin:
         self._inner = inner
         self._project_path = project_path
         self.tools_called = False
+        self.tools_invoked: set[str] = set()
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self._inner, name)
@@ -109,6 +111,7 @@ class InjectingUnityMcpPlugin:
             project_path=self._project_path,
         )
         self.tools_called = True
+        self.tools_invoked.add(tool_name.strip())
         return await self._inner.invoke_tool(tool_name, args)
 
 
@@ -504,7 +507,8 @@ async def create_unity_mcp_plugin():
     plugin = None
     try:
         options = _build_unity_mcp_options(command, mcp_args)
-        plugin = UnityMCPPlugin.create(options)
+        sdk_client = OfficialMcpSdkClient(options)
+        plugin = UnityMCPPlugin(sdk_client, options)
         await plugin.initialize()
         LOGGER.info("UnityMCP plugin created successfully.")
         try:

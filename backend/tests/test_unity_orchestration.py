@@ -12,7 +12,13 @@ from app.agents.modality_mcp_tool_policy import (
     normalize_modality_key,
     should_apply_modality_filter,
 )
-from app.agents.unity_auto_invoke import auto_invoke_csharp_blocks, extract_csharp_blocks
+from app.agents.unity_auto_invoke import (
+    auto_invoke_csharp_blocks,
+    ensure_scene_file_if_missing,
+    extract_csharp_blocks,
+    infer_scene_file_name,
+    scene_creation_tool_was_called,
+)
 from app.agents.unity_tool_argument_injection import inject_unity_tool_arguments
 
 
@@ -42,6 +48,63 @@ def test_inject_project_path_and_file_name():
     )
     assert args["projectPath"] == "C:/Projects/MyGame"
     assert args["fileName"] == "Assets/Scripts/Player.cs"
+
+
+def test_inject_skips_project_path_for_validate_csharp():
+    args = inject_unity_tool_arguments(
+        "unity_validate_csharp",
+        {"code": "class Player {}"},
+        project_path="C:/Projects/MyGame",
+    )
+    assert "projectPath" not in args
+    assert args["code"] == "class Player {}"
+
+
+def test_inject_adds_project_path_for_list_assets():
+    args = inject_unity_tool_arguments(
+        "unity_list_assets",
+        {"folderName": "Assets"},
+        project_path="C:/Projects/MyGame",
+    )
+    assert args["projectPath"] == "C:/Projects/MyGame"
+    assert args["folderName"] == "Assets"
+
+
+def test_scene_creation_tool_detection():
+    assert scene_creation_tool_was_called({"project-unity_create_scene"}) is True
+    assert scene_creation_tool_was_called({"project-unity_create_script"}) is False
+
+
+def test_infer_scene_file_name():
+    assert infer_scene_file_name("Create a scene called Arena") == "Assets/Scenes/Arena.unity"
+
+
+@pytest.mark.asyncio
+async def test_ensure_scene_file_if_missing_creates_scene():
+    plugin = AsyncMock()
+    created = await ensure_scene_file_if_missing(
+        plugin,
+        project_path="/p",
+        tools_invoked={"project-unity_create_script"},
+        prompt="Create a side scrolling platformer scene",
+    )
+    assert created is not None
+    assert created.endswith(".unity")
+    plugin.invoke_tool.assert_awaited_once()
+    assert plugin.invoke_tool.await_args[0][0] == "unity_create_scene"
+
+
+@pytest.mark.asyncio
+async def test_ensure_scene_skips_when_scene_tool_used():
+    plugin = AsyncMock()
+    created = await ensure_scene_file_if_missing(
+        plugin,
+        project_path="/p",
+        tools_invoked={"scene-unity_create_detailed_scene"},
+        prompt="Create a scene",
+    )
+    assert created is None
+    plugin.invoke_tool.assert_not_called()
 
 
 def test_extract_csharp_blocks():

@@ -9,6 +9,17 @@ from typing import Any
 
 _CSHARP_CLASS_RE = re.compile(r"\bclass\s+([A-Za-z_][A-Za-z0-9_]*)")
 
+# Tools that must never receive injected projectPath (they use other parameters only).
+_NO_PROJECT_PATH_TOOLS = frozenset(
+    {
+        "unity_get_capabilities",
+        "unity_get_server_info",
+        "unity_validate_csharp",
+        "unity_query_documentation",
+        "unity_query_engine_documentation",
+    }
+)
+
 # Tools that require projectPath (camelCase MCP contract).
 _PROJECT_PATH_TOOLS = frozenset(
     name
@@ -100,6 +111,15 @@ def _default_file_name(tool_name: str, arguments: dict[str, Any]) -> str | None:
     return None
 
 
+def _should_inject_project_path(tool_name: str) -> bool:
+    """Return True when ``projectPath`` may be injected for this tool."""
+    if not tool_name or tool_name == "ping":
+        return False
+    if tool_name in _NO_PROJECT_PATH_TOOLS:
+        return False
+    return tool_name in _PROJECT_PATH_TOOLS or tool_name.startswith("unity_")
+
+
 def inject_unity_tool_arguments(
     tool_name: str,
     arguments: dict[str, Any] | None,
@@ -134,9 +154,8 @@ def inject_unity_tool_arguments(
 
     if project_path and str(project_path).strip():
         normalized = Path(project_path.strip()).as_posix()
-        if tool_name in _PROJECT_PATH_TOOLS or tool_name.startswith("unity_"):
-            if not args.get("projectPath"):
-                args["projectPath"] = normalized
+        if _should_inject_project_path(tool_name) and not args.get("projectPath"):
+            args["projectPath"] = normalized
 
     if tool_name in _FILE_NAME_TOOLS or tool_name.startswith("unity_save_"):
         if not args.get("fileName"):
